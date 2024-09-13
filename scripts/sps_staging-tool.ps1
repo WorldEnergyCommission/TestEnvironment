@@ -1,5 +1,5 @@
 # SPS Staging Tool
-# (c) EfficientIO GmbH
+# (c) Eneries GmbH
 # for use on Win10 Devices (e.g. C6015)
 
 using namespace System.Management.Automation.Host
@@ -15,22 +15,14 @@ function New-Menu {
         [string]$Question
     )
     
-    $effio = [ChoiceDescription]::new('&effio', 'platform choice: EfficientIO')
-    $tsg = [ChoiceDescription]::new('&tsg', 'platform choice: TSG')
-    $be = [ChoiceDescription]::new('&be', 'platform choice: BE')
-    $bms = [ChoiceDescription]::new('&bms', 'platform choice: BMS')
-    $eff = [ChoiceDescription]::new('&eff', 'platform choice: Effectas')
+    $eneries = [ChoiceDescription]::new('&eneries', 'platform choice: ENERIES')
 
-    $options = [ChoiceDescription[]]($effio, $tsg, $be, $bms, $eff)
+    $options = [ChoiceDescription[]]($eneries)
 
     $global:result = $host.ui.PromptForChoice($Title, $Question, $options, 0)
 
     switch ($result) {
-        0 { 'Your platform choice is: EfficientIO' }
-        1 { 'Your platform choice is: TSG' }
-        2 { 'Your platform choice is: BE' }
-        3 { 'Your platform choice is: BMS' }
-        4 { 'Your platform choice is: Effectas' }
+        0 { 'Your platform choice is: ENERIES' }
     }
 
 }
