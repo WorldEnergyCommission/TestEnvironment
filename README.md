@@ -26,7 +26,7 @@
 
 # Nice to know
 
-- Terraform was only used to setup clusters other than EFFICIENTIO and TSG, for all other clusters there are terraform state files in **./infrastructure/terraform/{CLUSTER_NAME}**.
+- Terraform was used to setup clusters, there are terraform state files in **./infrastructure/terraform/{CLUSTER_NAME}**.
 - To apply a new state run the script **scripts/check_terraform.py** with either the mode **check** or **apply**.
 - When adding a new node in Terraform, make sure the **label_ci_cd** is called to correctly label the nodes for the services, some services are only scheduled on big nodes.
 - To check the whole workflow order and dependencies except basic cluster setup, check the script in **scripts/deploy_all_components_to_cluster.py**.
