@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_GridConnection" Id="{cb6ac338-f146-4021-b688-14bc2bc7f2a3}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_GridConnection
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;						//Enable or disable the function
+	{attribute 'hide'}
+	bError								: BOOL;						//Grid Error
+	{attribute 'hide'}
+	bWarning							: BOOL;						//Grid Warning
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;						//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	iErrorCode							: INT;						//Error Code from external Grid
+	{attribute 'hide'}
+	iWarningCode						: INT;						//Warning Code from external Grid
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;					//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;					//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;					//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;					//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;					//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;					//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrPowerGrid							: LREAL;					//Input Value from the power of the Grid with unit W
+	{attribute 'hide'}
+	rSizeGridConn						: REAL;						//Max size from the grid connection with unit KW
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;				//Delay Time to write some Data to the Output
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataGridOut						: ST_GridConnection_Output;	//Grid output data	
+	{attribute 'hide'}
+	stDataGridOutDelay					: ST_GridConnection_Output;	//Grid output data with delay	
+END_VAR
+VAR
+	FPEnable							: R_TRIG;					//Internal positive Edge
+	FNEnable							: F_TRIG;					//Internal negative Edge
+	timDelayOutputs						: TON;						//Timer to send Data with Delay to the outputs
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.05.2021
+//Version : 1.0.0.0
+
+//With this function its possible to handle the general data from a grid connection
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+
+rSizeGridConn := LIMIT(0,rSizeGridConn,2000);
+
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrPowerGrid := LIMIT(-999999999999999,lrPowerGrid,999999999999999);
+
+(*---------------------------------------------------------------------------Enable----------------------------------------------------------------------------------*)
+
+stDataGridOut.bEnabled := bEnable;
+
+(*------------------------------------------------------------------Power data----------------------------------------------------------------------------------------------*)
+stDataGridOut.rSizeGridConn := DINT_TO_REAL(REAL_TO_DINT((rSizeGridConn) * 100)) / 100;
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+
+IF bEnable THEN
+	stDataGridOut.lrPower:= LINT_TO_LREAL(LREAL_TO_LINT((lrPowerGrid / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataGridOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataGridOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataGridOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataGridOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataGridOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataGridOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF 
+						
+		IF stDataGridOut.lrPower < 0 THEN
+				stDataGridOut.lrPowerProduction := (stDataGridOut.lrPower * - 1);
+				stDataGridOut.lrPowerConsumption := 0;
+		ELSIF stDataGridOut.lrPower > 0 THEN
+				stDataGridOut.lrPowerProduction := 0;
+				stDataGridOut.lrPowerConsumption := stDataGridOut.lrPower;
+		ELSIF stDataGridOut.lrPower = 0 THEN
+				stDataGridOut.lrPowerProduction := 0;
+				stDataGridOut.lrPowerConsumption := 0;
+		END_IF															
+ELSE																	
+	stDataGridOut.lrPower := 0;
+		stDataGridOut.lrCounterEnergyT1_Consumption := 0;
+			stDataGridOut.lrCounterEnergyT2_Consumption := 0;
+				stDataGridOut.lrCounterEnergyT1_Production := 0;
+					stDataGridOut.lrCounterEnergyT2_Production := 0;
+						stDataGridOut.lrPowerProduction := 0;
+							stDataGridOut.lrPowerConsumption := 0;
+								stDataGridOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataGridOut.lrTotalCounterEnergy_Production := 0;
+END_IF	
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------------------------*)
+
+stDataGridOut.byErrorWarning := 0;
+	IF bWarning THEN stDataGridOut.byErrorWarning := 1; END_IF 
+	IF bError THEN stDataGridOut.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF stDataGridOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataGridOut.eMessage := E_Message_Grid.eNoConnectionToBackend;
+ELSIF stDataGridOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataGridOut.eMessage := E_Message_Grid.eGridError;
+ELSIF stDataGridOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataGridOut.eMessage := E_Message_Grid.eTooMuchGrids;
+ELSE stDataGridOut.eMessage := E_Message_Grid.eNoMessage; 
+END_IF
+
+(*---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataGridOutDelay := stDataGridOut; 
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GridConnection">
+      <LineId Id="655" Count="2" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="658" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="659" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="557" Count="1" />
+      <LineId Id="639" Count="0" />
+      <LineId Id="824" Count="4" />
+      <LineId Id="646" Count="0" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="678" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="591" Count="0" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="712" Count="0" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="829" Count="4" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="387" Count="1" />
+      <LineId Id="390" Count="1" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="393" Count="1" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="588" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="284" Count="1" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="776" Count="0" />
+      <LineId Id="775" Count="0" />
+      <LineId Id="561" Count="1" />
+      <LineId Id="700" Count="1" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="702" Count="2" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="722" Count="5" />
+      <LineId Id="721" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

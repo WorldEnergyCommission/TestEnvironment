@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgHP4" Id="{b0c660a8-49c5-4f90-a712-d74e4cbd9ce4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHP4
+VAR
+	fbWb2Com4						: FB_OCHSNER_Web2Com4;
+	byHP1StateHeatProd		: BYTE;		//{#lynus.ag#()}
+	lrHP1TWVtemp			: LREAL;	//{#lynus.ag#()}
+	lrHP1TWRtemp			: LREAL;	//{#lynus.ag#()}
+	lrHP1TQAtemp			: LREAL;	//{#lynus.ag#()}
+	lrHP1TQEtemp			: LREAL;	//{#lynus.ag#()}
+	lrHP1ThEnergykWh		: LREAL;	//{#lynus.ag#()}
+	lrHP1ThEnergyMWh		: LREAL;	//{#lynus.ag#()}
+	byHC1StateHC			: BYTE;		//{#lynus.ag#()}
+	lrHC1OutTemp			: LREAL;	//{#lynus.ag#()}
+	lrHC1OutTempAvg			: LREAL;	//{#lynus.ag#()}
+	lrHC1SPRoomTemp			: LREAL;	//{#lynus.ag#()}
+	lrHC1PreFlowTemp		: LREAL;	//{#lynus.ag#()}
+	lrHC1SPFlowTemp			: LREAL;	//{#lynus.ag#()}
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbWb2Com4(
+	bStart:= TRUE, 
+	tDelayRequest:= T#60S, 
+	sHostname:= 'localhost', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	byHP1StateHeatProd => byHP1StateHeatProd,
+	lrHP1TWVtemp => lrHP1TWVtemp,
+	lrHP1TWRtemp => lrHP1TWRtemp,
+	lrHP1TQAtemp => lrHP1TQAtemp,
+	lrHP1TQEtemp => lrHP1TQEtemp,
+	lrHP1ThEnergykWh => lrHP1ThEnergykWh,
+	lrHP1ThEnergyMWh => lrHP1ThEnergyMWh,
+	byHC1StateHC => byHC1StateHC,
+	lrHC1OutTemp => lrHC1OutTemp,
+	lrHC1OutTempAvg => lrHC1OutTempAvg,
+	lrHC1SPRoomTemp => lrHC1SPRoomTemp,
+	lrHC1PreFlowTemp => lrHC1PreFlowTemp,
+	lrHC1SPFlowTemp => lrHC1SPFlowTemp);]]></ST>
+    </Implementation>
+    <LineIds Name="prgHP4">
+      <LineId Id="23" Count="18" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

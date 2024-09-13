@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_DWORD" Id="{2ef39598-413d-47f2-a492-00b66896307b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CV_WORD_TO_DWORD
+VAR_INPUT
+	wInputValue_1				: WORD;								//Input value that is converted into the output value
+	wInputValue_2				: WORD;								//Input value that is converted into the output value
+	eByteOrderForConvert		: eByteOrder;						//Byte Format
+END_VAR
+VAR_OUTPUT
+	dwOutputValue				: DWORD;							//Converted output value							
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//The byte order can be selected between BigEndian and LittleEndian
+//WORD TO DWORD
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+IF eByteOrderForConvert = eByteOrder.eBigEndian THEN
+	dwOutputValue := SHL(WORD_TO_DWORD(wInputValue_1),16) + WORD_TO_DWORD(wInputValue_2);
+ELSE
+	dwOutputValue := SHL(WORD_TO_DWORD(wInputValue_2),16) + WORD_TO_DWORD(wInputValue_1);
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_DWORD">
+      <LineId Id="68" Count="2" />
+      <LineId Id="17" Count="5" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="30" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

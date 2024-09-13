@@ -1,0 +1,232 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_BatteryInverter_T" Id="{3cefce7a-daaf-4c7a-80a7-ea54cbe8c566}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BatteryInverter_T
+VAR_INPUT
+
+	bEnable								: BOOL;								//Enable/Disable Battery Inverter
+
+	bInverterOnOff						: BOOL;								//Switch the Inverter On or Off
+
+	bError								: BOOL;								//Battery Inverter has a Error
+
+	bWarning							: BOOL;								//Battery Inverter has a Warning
+
+	bReset								: BOOL;								//Reset after the inverter switch off regarding a Error. Need also to reset the warning
+
+	bWorkOnIslandMode					: BOOL;								//True when the inverter work in island mode
+
+	bWriteWithDelay						: BOOL;								//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+
+	byPriority							: BYTE; 							//Priority of the device if controlled via the EMS block => 1 2 3 (If 0 then this device does not exist for the EMS block)
+
+	byReserveSOCEPO						: BYTE;								//Reserve SOC in battery for emergency power operation
+
+	byMaxDepthOfDischargeEPO			: BYTE; 							//If islanding is active, the maximum discharge depth of the batteries can be set here until the inverter switches off.
+
+	iErrorCode							: INT;								//Error Code from external Battery inverter
+
+	iWarningCode						: INT;								//Warning Code from external Battery inverter
+
+	dwBatterSOC							: DWORD;							//The actual Battery state of Charge
+
+	rTargetPower						: REAL;								//Target Power from the EMS Function
+
+	lrActualBatteryPower				: LREAL;							//Actual Battery power in W
+
+	rMaxChargePowerBattInverter			: REAL; 							//Max. charge power battery inverter with unit W
+
+	rMaxDischargePowerBattInverter		: REAL;								//Max. discharge power battery inverter with unit W
+
+	lrBattInverterPowerOnIslandMode		: LREAL;							//Power from the battery inverter when island mode is active with unit W
+
+	lrBattInverterPowerOnNormalMode		: LREAL;							//Power from the battery inverter when normal mode is active with unit W
+
+	tTimDelayOutput						: TIME := T#5S;						//Delay Time to write some Data to the Output	
+END_VAR
+VAR_OUTPUT
+
+	stDataBattInvertOut					: ST_BatteryInverter_Output;		//Batter Inverter output data
+
+	stDataBattInvertOutDelay			: ST_BatteryInverter_Output;		//Batter Inverter output data with delay
+END_VAR
+VAR
+	FPReset								: R_TRIG;							//Internal rising edge
+	FPResetTim							: R_TRIG;							//Internal rising edge
+	FPEnable							: R_TRIG;							//Internal positive Edge
+	FNEnable							: F_TRIG;							//Internal negative Edge
+	timReset							: TOF;								//Timer for Reset
+	timStandby							: TON;								//Timer to set the inverter in standby mode
+	timDisableInEPO						: TON;								//Timer do disable the inverter when work on Island mode an battery soc is under min
+	timDelayOutputs						: TON;								//Timer to send Data with Delay to the outputs
+	bMaxDephOfDischargeReached			: BOOL;								//True when the max of discharge in emergency power mode is reached
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 18.05.2021
+//Version : 1.0.0.0
+
+//With this function is possible to control the most popular things on a battery inverter
+//NOTE : With this Function its only poaaible to override the commands on a battery inverter
+//All limits and important things control the inverter by himself.
+//In Grid mode the Battery Inverter charge the battery to 100% SOC and discharge to 0% or to the limit for emergency power mode
+//On Island mode the battery inverter charge the battery to 100% SOC. Discharge its possible to the max discharge setting. If the soc from the battery is <= this value the inverter switch off after 5 minutes when no power goes inside the battery
+//With Reset you can reset the warnings and errors on the inverter.
+//Also when the battery inverter is enabled by the timer for max discharge limit in emergency mode you can restart the inverter with a reset.
+//When the target power for the inverter = 0 then the inverter go to the standby mode an switch off.
+
+//---------------------------------------------------------------------Check the limits of the inputs--------------------------------------------------------------------------------------
+byReserveSOCEPO := LIMIT(0,byReserveSOCEPO,100);
+	byMaxDepthOfDischargeEPO := LIMIT(0,byMaxDepthOfDischargeEPO,100);
+		dwBatterSOC := LIMIT(0,dwBatterSOC,100);
+			rTargetPower := LIMIT(-100,rTargetPower,100);
+				lrActualBatteryPower := LIMIT(-1000000,lrActualBatteryPower,1000000);
+					lrBattInverterPowerOnIslandMode := LIMIT(-1000000,lrBattInverterPowerOnIslandMode,1000000);
+						lrBattInverterPowerOnNormalMode := LIMIT(-1000000,lrBattInverterPowerOnNormalMode,1000000);
+							rMaxChargePowerBattInverter := LIMIT(-1000000,rMaxChargePowerBattInverter,1000000);
+								rMaxDischargePowerBattInverter := LIMIT(-1000000,rMaxDischargePowerBattInverter,1000000);
+
+//---------------------------------------------------------------------------Data directly to the output-------------------------------------------------------------------------------------------
+stDataBattInvertOut.byPriority := byPriority;
+	stDataBattInvertOut.bEnabled := bEnable;
+		stDataBattInvertOut.bWorkOnIslandMode := bWorkOnIslandMode;
+
+//--------------------------------------------------------------------------Max Deph of discharge SOC in Emergency power mode---------------------------------------------------------------
+IF dwBatterSOC <= byMaxDepthOfDischargeEPO AND lrActualBatteryPower >= 0 AND stDataBattInvertOut.bWorkOnIslandMode THEN timDisableInEPO.IN := TRUE; END_IF
+	IF dwBatterSOC > byMaxDepthOfDischargeEPO OR lrActualBatteryPower < 0 OR NOT stDataBattInvertOut.bWorkOnIslandMode OR NOT stDataBattInvertOut.bOnOff OR (FPResetTim.Q AND bMaxDephOfDischargeReached) THEN timDisableInEPO.IN := FALSE; bMaxDephOfDischargeReached := FALSE; END_IF	
+		timDisableInEPO(IN:= , PT:= T#5M, Q=> , ET=> );  
+			IF timDisableInEPO.Q THEN bMaxDephOfDischargeReached := TRUE; END_IF		
+		
+//-----------------------------------------------------------------------------Reset-------------------------------------------------------------------------------------------------------
+FPReset(CLK:= bReset, Q=> );
+	timReset(IN:= stDataBattInvertOut.byErrorWarning <> 0 AND FPReset.Q AND NOT timReset.Q, PT:= T#2S, Q=> stDataBattInvertOut.bStateReset, ET=> );
+		FPResetTim(CLK:= timReset.Q, Q=> );
+			IF FPResetTim.Q THEN stDataBattInvertOut.byErrorWarning := 0; END_IF	
+
+//--------------------------------------------------------------------------Error or Warning-------------------------------------------------------------------------------------------------
+IF bWarning AND stDataBattInvertOut.byErrorWarning <> 2 THEN stDataBattInvertOut.byErrorWarning := 1; END_IF 
+IF bError OR (timDisableInEPO.Q AND NOT FPResetTim.Q) THEN stDataBattInvertOut.byErrorWarning := 2; END_IF 			
+
+//Error Codes
+IF stDataBattInvertOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataBattInvertOut.eMessage := E_Message_BatteryInverter.eBatteryInverterError;
+ELSIF stDataBattInvertOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataBattInvertOut.eMessage := E_Message_BatteryInverter.eTooMuchBatteryInverter;
+ELSE stDataBattInvertOut.eMessage := E_Message_BatteryInverter.eNoMessage; 
+END_IF
+			
+//--------------------------------------------------------------------------Target power--------------------------------------------------------------------------------------------------
+stDataBattInvertOut.rTargetPower := rTargetPower;
+	//Target power to 0
+	IF (NOT stDataBattInvertOut.bWorkOnIslandMode AND stDataBattInvertOut.rTargetPower > 0 AND dwBatterSOC <= byReserveSOCEPO) OR
+		(stDataBattInvertOut.rTargetPower < 0 AND dwBatterSOC >= 100) OR
+			(NOT stDataBattInvertOut.bWorkOnIslandMode AND stDataBattInvertOut.rTargetPower > 0 AND dwBatterSOC <= 0) THEN 
+				stDataBattInvertOut.rTargetPower := 0; 
+	END_IF  
+		//Set the Inverter in Standby	
+		timStandby(IN:= stDataBattInvertOut.rTargetPower = 0 AND NOT stDataBattInvertOut.bWorkOnIslandMode, PT:= T#1M, Q=> , ET=> );
+	
+//--------------------------------------------------------------------Enable or disable the Inverter--------------------------------------------------------------------------------------
+IF bEnable AND bInverterOnOff AND stDataBattInvertOut.byErrorWarning <> 2 THEN
+	stDataBattInvertOut.bOnOff := TRUE;
+END_IF			
+	IF timStandby.Q OR stDataBattInvertOut.byErrorWarning = 2 OR NOT bEnable OR NOT bInverterOnOff THEN
+		stDataBattInvertOut.bOnOff := FALSE;
+	END_IF 				
+	
+//-------------------------------------------------------------------Outputs--------------------------------------------------------------------------------------------------------------
+IF stDataBattInvertOut.bWorkOnIslandMode THEN 
+	stDataBattInvertOut.lrPowerOnIslandMode := lrBattInverterPowerOnIslandMode / 1000;
+		stDataBattInvertOut.lrPowerOnIslandMode := LINT_TO_LREAL(LREAL_TO_LINT(stDataBattInvertOut.lrPowerOnIslandMode * 100)) / 100;
+			stDataBattInvertOut.lrPowerNormalMode := 0;	 
+ELSE
+	stDataBattInvertOut.lrPowerNormalMode := lrBattInverterPowerOnNormalMode / 1000;
+		stDataBattInvertOut.lrPowerNormalMode := LINT_TO_LREAL(LREAL_TO_LINT(stDataBattInvertOut.lrPowerNormalMode * 100)) / 100; 	 
+			stDataBattInvertOut.lrPowerOnIslandMode := 0;
+END_IF
+
+stDataBattInvertOut.rMaxChargePower := rMaxChargePowerBattInverter / 1000;
+	stDataBattInvertOut.rMaxChargePower := DINT_TO_REAL(REAL_TO_DINT(stDataBattInvertOut.rMaxChargePower * 100)) / 100; 
+	
+stDataBattInvertOut.rMaxDischargePower := rMaxDischargePowerBattInverter / 1000;
+	stDataBattInvertOut.rMaxDischargePower := DINT_TO_REAL(REAL_TO_DINT(stDataBattInvertOut.rMaxDischargePower * 100)) / 100; 
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+		
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataBattInvertOutDelay := stDataBattInvertOut;	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BatteryInverter_T">
+      <LineId Id="11" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="125" Count="4" />
+      <LineId Id="131" Count="3" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="42" Count="2" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="111" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="156" Count="1" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="220" Count="1" />
+      <LineId Id="225" Count="2" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="86" Count="1" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="123" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="79" Count="2" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="99" Count="1" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="231" Count="1" />
+      <LineId Id="145" Count="1" />
+      <LineId Id="148" Count="3" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="239" Count="2" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="257" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

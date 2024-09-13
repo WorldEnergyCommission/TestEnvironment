@@ -1,0 +1,2215 @@
+{
+  "LightSwitch": {
+    "title": "Gerätebeschreibung",
+    "name": "Lichtschalter",
+    "overview": "Mit diesem Gerät kann ein einfaches Licht ein- und ausgeschaltet werden. Die Ereignisanzeige kann dazu verwendet werden, einen Fehler des Gerätes anzuzeigen <br> HINWEIS ZUM SCHALTER : Wenn innerhalb von 5 Sekunden der entsprechende Status nicht zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den \"Ein\"-Befehl und dann den \"Aus\"-Befehl.",
+    "table": [
+      {
+        "name": "Ein (Schalter)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für das Licht gesendet werden.",
+        "allowedValues": "Auf = 0-1"
+      },
+      {
+        "name": "Aus (Schalter)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für das Licht gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status (Schalter)",
+        "description": "Status = Der Licht Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2= Fehler"
+      }
+    ]
+  },
+  "TimeSwitch": {
+    "title": "Gerätebeschreibung",
+    "name": "Zeitschaltuhr",
+    "overview": "Ein Schaltgerät, das den Zeitplan konfiguriert, der dann vom Backend-Worker zum Senden von Impulsen an die entsprechenden Variablen verwendet wird. Das Impulssignal wird als Wert 1 gesendet und wechselt nach 1 Sekunde auf den Wert 0.",
+    "table": [
+      {
+        "name": "Ein",
+        "description": "Variable, die das EIN-Impulssignal empfängt.",
+        "allowedValues": "Auf = 0-1"
+      },
+      {
+        "name": "Aus",
+        "description": "Variable, die das AUS-Impulssignal empfängt.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status",
+        "description": "Variable, die von der Geräteanzeige angezeigt wird. Diese Variable wird nicht automatisch durch das Backend aktualisiert.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2= Fehler"
+      }
+    ]
+  },
+  "GeneralSwitchV2": {
+    "title": "Gerätebeschreibung",
+    "name": "Allgemein Schalter V2",
+    "overview": "Mit diesem Gerät kann ein allgemeiner Schalter realisiert werden. Der Schalter sendet immer das Gegenteil des Wertes, den der Status gerade hat. Sobald der Status den Wert ändert, ändert sich auch der Sendebefehl des Schalters.",
+    "table": [
+      {
+        "name": "Schalter_V2 (Ein,Aus,Zustand)",
+        "description": "Ein/Aus = Wenn die Zustandsvariable den Wert 0 hat, wird immer eine 1 gesendet, wenn der Schalter durch einen Klick aktiviert wird. Solange der Wert der Zustandsvariablen den Wert 1 hat, wird bei der Aktivierung des Schalters durch einen Klick eine 0 gesendet. Status = Der Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Ein/Aus = 0-1 \nZustand = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ImpulseButton": {
+    "title": "Gerätebeschreibung",
+    "name": "Stromstoßschalter",
+    "overview": "Gerät, das ein Signal mit dem Wert 1 sendet und nach einer Sekunde wieder auf den Wert 0 zurückgeht.",
+    "table": [
+      {
+        "name": "Taster (Ein)",
+        "description": "Ein = Variable für Impulssignal.",
+        "allowedValues": "Ein/Aus = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "Indicator": {
+    "title": "Gerätebeschreibung",
+    "name": "@:basicControls.Indicator",
+    "overview": "Ein Gerät mit konfigurierbarem Symbol, das den booleschen Zustand des Sensors anzeigt.",
+    "table": [
+      {
+        "name": "Ein/Aus",
+        "description": "Indikator Status variabel",
+        "allowedValues": "Ein/Aus = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "LightDimmer": {
+    "title": "Gerätebeschreibung",
+    "name": "Lichtdimmer",
+    "overview": "Mit diesem Gerät kann ein Dimmer realisiert werden. Über den Schalter bietet er die Möglichkeit, das Licht ein- und auszuschalten. Über den Schieberegler kann die Helligkeit eingestellt werden. Das Ausgabefeld zeigt den aktuellen Istwert vom Dimmer an. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. <br> HINWEIS ZUM SCHALTER : Wenn innerhalb von 5 Sekunden der entsprechende Zustand nicht auf den gesendeten Befehl zurück, sendet der Schalter automatisch einmal den \"Ein\"-Befehl und danach den \"Aus\"-Befehl",
+    "table": [
+      {
+        "name": "Ein (Schalter)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für das Licht gesendet werden.",
+        "allowedValues": "Auf = 0-1"
+      },
+      {
+        "name": "Aus (Schalter)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für das Licht gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status (Schalter)",
+        "description": "Status = Der Licht Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Zielwert Helligkeit (Schieberegler)",
+        "description": "Der Schieberegler sendet den aktuellen Sollwert für die Helligkeit an den Controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Istwert Helligkeit (Ausgabefeld)",
+        "description": "Das Ausgabefeld liefert den aktuellen Helligkeitswert vom Dimmer am Controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "Temperature": {
+    "title": "Gerätebeschreibung",
+    "name": "Temperatur Sensor",
+    "overview": "Mit diesem Gerät kann ein Sensor, der die Temperatur misst, angezeigt werden. Im Ausgabefeld wird der Wert von -100 - 1500 °C angezeigt. Über die Ereignisanzeige kann ein Fehler vom Gerät ausgegeben werden.",
+    "table": [
+      {
+        "name": "Aktuelle Temperatur (Ausgabefeld)",
+        "description": "Das Ausgabefeld gibt die aktuelle Temperatur vom Sensor am Controller zurück.",
+        "allowedValues": "-100 to 1500 °C"
+      },
+      {
+        "name": "ErrorWarningState (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt.Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "TimeDerivative": {
+    "title": "Gerätebeschreibung",
+    "name": "Zählerleistung",
+    "overview": "Die Geräte verwenden die Quellvariable als kumulativen Gesamtverbrauch und berechnen die Zählerleistung für das angegebene Intervall.",
+    "table": [
+      {
+        "name": "Quellvariable",
+        "description": "Variable mit kumulativem Gesamtverbrauch.",
+        "allowedValues": "Fließkommazahl"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "VariableOutputField": {
+    "title": "Gerätebeschreibung",
+    "name": "Variables Ausgabefeld",
+    "overview": "Mit diesem Gerät ist es möglich sein, einen beliebigen Zahlenwert anzuzeigen. Sie können dem Gerät ein beliebiges Icon hinzufügen und vergeben Sie die passende Einheit dazu.",
+    "table": [
+      {
+        "name": "Ausgabefeld",
+        "description": "Das Ausgabefeld zeigt einen Variablenwert an, der vom Controller gesendet wird.",
+        "allowedValues": "Min/Max von 64-Bit-Variablen"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "VariableInputField": {
+    "title": "Gerätebeschreibung",
+    "name": "Variables Eingabefeld",
+    "overview": "Mit diesem Gerät ist es möglich, einen beliebigen Zahlenwert einzugeben und an den Controller zu senden. Das Symbol und die Einheit können frei zugewiesen und ausgewählt werden.",
+    "table": [
+      {
+        "name": "Eingabefeld",
+        "description": "Mit diesem Eingabefeld kann ein Variablenwert an die Steuerung gesendet werden.",
+        "allowedValues": "Min/Max von 64-Bit-Variablen"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "VariableTextOutputField": {
+    "title": "Gerätebeschreibung",
+    "name": "Variables Text Ausgabefeld",
+    "overview": "Mit diesem Gerät ist es möglich einen beliebigen Text anzuzeigen. Das Icon für das Gerät kann frei vergeben werden. Das Format ASCII und UTF-8 wird hierbei unterstützt. Achtung, der Text wird nicht historisch gespeichert, es wird nur der aktuelle, direkt empfangene Wert angezeigt.",
+    "table": [
+      {
+        "name": "Ausgabefeld Text",
+        "description": "Das Ausgabefeld zeigt den Text einer Variable an, der von der Steuerung gesendet wird.",
+        "allowedValues": "ASCII und UTF-8 (max. 30 Zeichen)"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "VariableTextInputField": {
+    "title": "Gerätebeschreibung",
+    "name": "Variables Text Eingabefeld",
+    "overview": "Mit diesem Gerät ist es möglich, einen Text einzugeben und diesen an den Controller zu senden. Das Icon für das Gerät kann frei vergeben werden.  Das Format Ascii und UTF-8 wird hierbei unterstützt. Achtung, der Text wird nicht historisch gespeichert, es wird nur der aktuelle Wert angezeigt, der direkt gesendet wurde.",
+    "table": [
+      {
+        "name": "Eingabefeld Text",
+        "description": "Mit diesem Texteingabefeld kann ein variabler Text an die Steuerung gesendet werden.",
+        "allowedValues": "ASCII und UTF-8 (max. 30 Zeichen)"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "LightRGB": {
+    "title": "Gerätebeschreibung",
+    "name": "RGB Licht",
+    "overview": "Dieses Gerät kann zur Steuerung einer RGB-Beleuchtung verwendet werden.Es kann mit dem Schalter ein- und ausgeschaltet werden.Mit dem RGB-Schieberegler können Sie die Farbe der Lampe einstellen.Die Helligkeit kann mit dem Schieberegler eingestellt werden. Das Ausgabefeld zeigt den aktuellen Istwert des Dimmers an. Die 3 Ausgabefelder oberhalb des Farbsliders zeigen den aktuellen Wert der Farben an.Ein Fehler des Gerätes kann über die Ereignisanzeige angezeigt werden. <br> HINWEIS ZUM SCHALTER : Wenn innerhalb von 5 Sekunden der entsprechende Zustand nicht zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Ein (Schalter)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für das Licht gesendet werden.",
+        "allowedValues": "Auf = 0-1"
+      },
+      {
+        "name": "Aus (Schalter)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für das Licht gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status (Schalter)",
+        "description": "Status = Der Licht Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Zielwert Helligkeit (Schieberegler)",
+        "description": "Der Schieberegler sendet den aktuellen Sollwert für die Helligkeit an den Controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Zielwert Rot, Grün und Blau (Schieberegler RGB)",
+        "description": "Rot = Hier kann der Farbwert für Rot an den Controller gesendet werden. <br> Grün = Hier kann der Farbwert für Grün an den Controller gesendet werden. <br> Blau = Hier kann der Farbwert für Blau an den Controller gesendet werden.",
+        "allowedValues": "0-255 <br> 0-255 <br> 0-255"
+      },
+      {
+        "name": "Istwert Helligkeit (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld liefert den aktuellen Helligkeitswert auf dem Controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Istwert Rote Farbe(Ausgabefeld 2)",
+        "description": "Das Ausgabefeld liefert den aktuellen Farbwert der Farbe Rot auf dem Controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Istwert Grüne Farbe (Ausgabefeld 3)",
+        "description": "Das Ausgabefeld liefert den aktuellen Farbwert der Farbe Grün auf dem Controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Istwert Farbe Blau (Ausgabefeld 4)",
+        "description": "Das Ausgabefeld liefert den aktuellen Farbwert der Farbe Blau auf dem Controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "LightPushButton": {
+    "title": "Gerätebeschreibung",
+    "name": "Drucktaster",
+    "overview": "Mit diesem Gerät kann ein Licht ein- und ausgeschaltet werden. Das Licht bleibt eingeschaltet, wenn man das erste Mal auf den Push-Button drückt. Wenn man ein zweites Mal auf den Taster drückt, wird das Licht ausgeschaltet. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Toggle Ein-Aus (Taster)",
+        "description": "On-Off = Ein-Aus = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. So kann das Licht über 1 Signal abwechselnd ein- und ausgeschaltet werden.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Toggle Ein-Aus (Zustand)",
+        "description": "Status = Der Licht Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "SocketSwitch": {
+    "title": "Gerätebeschreibung",
+    "name": "Steckdosenschalter",
+    "overview": "Mit diesem Gerät kann eine Steckdose ein- und ausgeschaltet werden. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. HINWEIS FÜR SCHALTER : Wenn innerhalb von 5 Sekunden der entsprechende Zustand nicht zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Ein (Schalter)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Socket gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus (Schalter)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für die Steckdose gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status (Schalter)",
+        "description": "Status = Der Steckdosen Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ControlBlinds": {
+    "title": "Gerätebeschreibung",
+    "name": "Jalousien",
+    "overview": "Mit diesem Gerät ist es möglich, eine Jalousie zu steuern. Mit den Pfeiltasten kann die Jalousie mit voller Geschwindigkeit nach oben oder unten gefahren werden. Der aktuelle Wert des Schiebereglers zeigt die aktuelle Position der Jalousie an.Durch Bewegen des Schiebereglers können Sie die gewünschte Zielposition verändern und die Jalousie entsprechend der Position des Schiebereglers dorthin fahren. Mit Hilfe des Dropdowns wäre es möglich, eine gewünschte Lamellenposition der Jalousie einzustellen. Die aktuelle Position wird im Ausgabefeld angezeigt. Über die Ereignisanzeige kann ein Fehler des Gerätes angezeigt werden. Zusätzlich kann die Fahrzeit separat in Sekunden eingestellt werden. Es ist auch möglich, die Bewegung der Grundposition zu steuern. Die Fahrzeit der Lamellen von ganz offen bis ganz geschlossen kann separat vorgegeben werden.",
+    "table": [
+      {
+        "name": "Auf (Pfeil nach oben)",
+        "description": "Auf = Mit Auf kann der Auf-Befehl für die Jalousien gesendet werden.",
+        "allowedValues": "Aufwärts = 0-1"
+      },
+      {
+        "name": "Status (Oben)",
+        "description": "Status = Der Auf Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Ab (Pfeil nach unten)",
+        "description": "Ab = Mit Ab kann der Ab-Befehl für die Jalousie gesendet werden. ",
+        "allowedValues": "Ab = 0-1"
+      },
+      {
+        "name": "Status (Ab)",
+        "description": "Status = Der Ab Status dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Sollwert Position (Slider)",
+        "description": "Der Slider sendet den aktuellen Sollwert für die Jalousieposition an das Gerät.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Zielwert Lamellenposition (Dropdown)",
+        "description": "Mit der Auswahl im Dropdown können verschiedene Positionen der Lamellen der Jalousie gewählt werden.",
+        "allowedValues": "0 = Vollständig geöffnet <br> 1 = DreiviertelOffen <br> 2 = Halb offen <br> 3 = Vierteloffen <br> 4 = Geschlossen"
+      },
+      {
+        "name": "Istwert Position (Ausgabefeld)",
+        "description": "Das Ausgabefeld liefert die aktuelle Jalousieposition auf dem Controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Anfahren der Grundstellung (Taster)",
+        "description": "Ein-Aus = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals kann die Grundstellung der Jalousie angefahren werden.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Grundstellung (Taster)",
+        "description": "Status = Status der Grundstellung dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Sollwert Hochlaufzeit (Eingabefeld 1)",
+        "description": "Eingabefeld für die Hochlaufzeit",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Sollwert Abfahrtszeit (Eingabefeld 2)",
+        "description": "Eingabefeld für die Abfahrtszeit",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Sollwert Lamellen Fahrzeit (Eingabefeld 3)",
+        "description": "Eingabefeld für die Verfahrzeit der Lamellen",
+        "allowedValues": "0-10 sek"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ControlAwning": {
+    "title": "Gerätebeschreibung",
+    "name": "Markise",
+    "overview": "Mit diesem Gerät kann eine Markise gesteuert werden. Mit den Pfeiltasten können Sie die Markise mit voller Geschwindigkeit nach außen oder nach innen fahren. Der Istwert des Schiebereglers zeigt die aktuelle Position der Markise an. Durch Betätigen des Schiebereglers kann die gewünschte Zielposition verändert und die Markise entsprechend der Position des Schiebereglers dorthin gefahren werden. Die aktuelle Position wird im Ausgabefeld angezeigt. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. Zusätzlich kann die Fahrzeit separat in Sekunden eingestellt werden. Es ist auch möglich, die Bewegung der Grundposition zu steuern.",
+    "table": [
+      {
+        "name": "Ausfahren (Pfeil Ausfahren)",
+        "description": "Ausfahren = Mit Ausfahren kann der Ausfahr-Befehl gesendet werden.",
+        "allowedValues": "Ausfahren = 0-1"
+      },
+      {
+        "name": "Status (Pfeil Ausfahren)",
+        "description": "Status = Der Ausfahr Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Einfahren (Pfeil Einfahren)",
+        "description": "Einfahren = Mit Einfahren kann der Einfahr-Befehl gesendet werden.",
+        "allowedValues": "Einfahren = 0-1"
+      },
+      {
+        "name": "Status (Pfeil Einfahren)",
+        "description": "Status = Der Einfahr Status dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Zielwert Position (Schieberegler)",
+        "description": "Der Slider sendet den aktuellen Sollwert der Position für die Markise an das Gerät.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Istwert Position (Ausgabefeld)",
+        "description": "Das Ausgabefeld liefert die aktuelle Markisenposition auf dem Controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Anfahren der Grundstellung (Taster)",
+        "description": "Ein-Aus = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals kann die Grundstellung der Markise angefahren werden.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Grundstellung(Taster)",
+        "description": "Status = Status der Grundstellung dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Sollwert Aus-Zeit (Eingabefeld 1)",
+        "description": "Eingabefeld für die Ausfahr-Zeit",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Zielwert In-Zeit (Eingabefeld 2)",
+        "description": "Eingabefeld für die Einfahrzeit-Zeit",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ControlShutter": {
+    "title": "Gerätebeschreibung",
+    "name": "Rolladen",
+    "overview": "Mit diesem Gerät kann ein Rollladen gesteuert werden.  Mit den Pfeiltasten kann der Rollladen in voller Geschwindigkeit aufwärts oder abwärts bewegt werden.  Der Istwert des Schiebereglers zeigt die aktuelle Position des Rollladens an. Durch Betätigung des Schiebereglers kann die gewünschte Zielposition verändert und der Rollladen entsprechend der Position des Schieberegelers dorthin gefahren werden. Die aktuelle Position wird im Ausgabefeld angezeigt. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. Zusätzlich kann die Fahrzeit separat in Sekunden eingestellt werden. Es ist auch möglich, die Bewegung der Grundposition zu steuern.",
+    "table": [
+      {
+        "name": "Auf (Pfeil nach oben)",
+        "description": "Auf = Mit Auf kann der Auf-Befehl für den Rollladen gesendet werden.",
+        "allowedValues": "Aufwärts = 0-1"
+      },
+      {
+        "name": "Status (Oben)",
+        "description": "Status = Der Auf Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Ab (Pfeil nach unten)",
+        "description": "Ab = Mit Ab kann der Ab-Befehl für den Rollladen gesendet werden.",
+        "allowedValues": "Ab = 0-1"
+      },
+      {
+        "name": "Status (Ab)",
+        "description": "Status = Der Ab Status dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Sollwert Position (Slider)",
+        "description": "Der Slider sendet den aktuellen Sollwert für die Rollladenposition an das Gerät.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Istwert Position (Ausgabefeld)",
+        "description": "Das Ausgabefeld gibt die aktuelle Rolladenposition am Controller zurück.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Anfahren der Grundstellung (Taster)",
+        "description": "Ein-Aus = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals kann die Grundstellung des Rollladens angefahren werden.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Grundstellung (Taster)",
+        "description": "Status = Status der Grundstellung dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Sollwert Hochlaufzeit (Eingabefeld 1)",
+        "description": "Eingabefeld für die Hochlaufzeit",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Sollwert Abfahrtszeit (Eingabefeld 2)",
+        "description": "Eingabefeld für die Abfahrzeit",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ThermostatDigital": {
+    "title": "Gerätebeschreibung",
+    "name": "Digital Thermostat",
+    "overview": "Mit diesem Gerät kann ein digitaler Thermostat realisiert werden. Die Solltemperatur kann über die Plus- und Minustaste eingestellt werden. Über das Ausgabefeld kann der aktuell gewünschte und eingestellte Sollwert am Regler angezeigt werden. Über die 2 Schalter ist es möglich, einen Absenkbetrieb zu aktivieren und von Heizen auf Kühlen umzuschalten. Über die 4 Eingabefelder für die Zeiten kann 1 separate Heiz- oder Kühlzeit vorgegeben werden, ab der der Thermostat aktiv sein soll. Diese Funktion muss über den Schalter 2 aktiviert werden.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. Der rote Kreis zeigt an, ob geheizt wird. Der blaue Kreis zeigt an, ob gekühlt wird. <br> HINWEIS ZUM SCHALTER : Wenn der entsprechende Zustand nicht innerhalb von 5 Sekunden zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\". ",
+    "table": [
+      {
+        "name": "Befehl Plus (Plus)",
+        "description": "Mit der Plus-Taste kann ein Signal an die Steuerung gesendet werden, um die Soll-Temperatur zu erhöhen",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Befehl Minus (Minus)",
+        "description": "Mit der Minus-Taste kann ein Signal an die Steuerung gesendet werden, um die Solltemperatur zu senken.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Istwert Solltemperatur (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld gibt die aktuelle Solltemperatur vom Thermostat auf der Steuerung zurück.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Sollwert Phase 1 EIN-Stunden (Eingabefeld 1)",
+        "description": "Eingabefeld für die Einschaltstunde der 1 Heiz- oder Kühlphase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Sollwert Phase 1 AUS-Stunden (Eingabefeld 2)",
+        "description": "Eingabefeld für die Ausschaltstunde der 1 Heiz- oder Kühlphase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Sollwert Phase 1 EIN-Minuten (Eingabefeld 3)",
+        "description": "Eingabefeld für die Einschaltminute der 1 Heiz- bzw. Kühlphase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Sollwert Phase 1 AUS-Minuten (Eingabefeld 4)",
+        "description": "Eingabefeld für die Ausschaltminute der 1 Heiz- bzw. Kühlphase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Ein Absenkmodus (Schalter 1)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Absenkbetrieb gesendet werden. ",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Absenkmodus (Schalter 1)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für den Absenkmodus gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Absenkbetrieb (Schalter 1)",
+        "description": "Status = Der Absenkstatus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Ein Ändern Heizen Kühlen (Schalter 2)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Heiz- oder Kühlmodus gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Ändern Heizen Kühlen (Schalter 2)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für den Heiz- oder Kühlmodus gesendet werden",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Ändern Heizen Kühlen (Schalter 2)",
+        "description": "Status = Der Heizen Kühlen Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Ein Zeitsteuerung (Schalter 3)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Zeitbetrieb gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Zeitsteuerung (Schalter 3)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für den Zeitbetrieb gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Zeitsteuerung (Schalter 3)",
+        "description": "Status = Der Status der Zeitsteuerung dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Heizen Aktiv (Ereignis anzeigen)",
+        "description": "Dieses Steuerelement zeigt an, ob sich der Thermostat gerade im Heizmodus befindet.",
+        "allowedValues": "251 = Rot <br>Alle anderen Werte = kein Licht"
+      },
+      {
+        "name": "Kühlen Aktiv (Ereignis anzeigen)",
+        "description": "Dieses Steuerelement zeigt an, ob sich der Thermostat gerade im Kühlbetrieb befindet.",
+        "allowedValues": "251 = Blau <br>Alle anderen Werte = kein Licht"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ThermostatAnalog": {
+    "title": "Gerätebeschreibung",
+    "name": "Analog Thermostat",
+    "overview": "Mit diesem Gerät kann ein analoger Thermostat realisiert werden. Über die 2 Eingabefelder kann der Sollwert für \"\"Normaltemperatur\"\" und für \"\"Absenktemperatur\"\" eingegeben werden.  Über die 2 Schalter ist es möglich, einen Absenkbetrieb zu aktivieren und von Heizen auf Kühlen umzuschalten. Über die 4 Eingabefelder für die Zeiten können 1 separate Heiz- oder Kühlzeiten vorgegeben werden, ab denen der Thermostat aktiv sein soll. Diese Funktion muss mit dem Schalter 2 aktiviert werden. Über die Ereignisanzeige kann ein Fehler vom Gerät ausgegeben werden. Der rote Kreis zeigt an, ob geheizt wird. Der blaue Kreis zeigt an, ob gekühlt wird. <br> HINWEIS ZUM SCHALTER : Wenn innerhalb von 5 Sekunden der entsprechende Zustand nicht zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Sollwert Temperatur (Eingabefeld 1)",
+        "description": "Eingabefeld für den Sollwert Temperatur.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Sollwert Temperatur Absenkbetrieb (Eingabefeld 1)",
+        "description": "Eingabefeld für den Sollwert Temperatur, wenn der Absenkbetrieb aktiv ist.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Sollwert Phase 1 EIN-Stunden (Eingabefeld 1)",
+        "description": "Eingabefeld für die Einschaltstunde der 1 Heiz- oder Kühlphase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Sollwert Phase 1 AUS-Stunden (Eingabefeld 2)",
+        "description": "Eingabefeld für die Ausschaltstunde der 1 Heiz- oder Kühlphase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Sollwert Phase 1 EIN-Minuten (Eingabefeld 3)",
+        "description": "Eingabefeld für die Einschaltminute der 1 Heiz- bzw. Kühlphase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Sollwert Phase 1 AUS Minuten (Eingabefeld 4)",
+        "description": "Eingabefeld für die Ausschaltminute der 1 Heiz- bzw. Kühlphase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Ein Absenkmodus (Schalter 1)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Absenkbetrieb gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Absenkmodus (Schalter 1)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für den Absenkmodus gesendet werden. ",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Absenkbetrieb (Schalter 1)",
+        "description": "Status = Der Absenkstatus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Ein Ändern Heizen Kühlen (Schalter 2)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Heiz- oder Kühlmodus gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Ändern Heizen Kühlen (Schalter 2)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für den Heiz- oder Kühlmodus gesendet werden.",
+        "allowedValues": "Aus = 0-1 "
+      },
+      {
+        "name": "Status Ändern Heizen Kühlen (Schalter 2)",
+        "description": "Status = Der Heizen Kühlen Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Ein Zeitsteuerung (Schalter 3)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Zeitbetrieb gesendet werden. ",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Zeitsteuerung (Schalter 3)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für den Zeitbetrieb gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Zeitsteuerung (Schalter 3)",
+        "description": "Status = Der Status der Zeitsteuerung dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "HeatingActive (Ereignis anzeigen)",
+        "description": "Dieses Steuerelement zeigt an, ob sich der Thermostat gerade im Heizmodus befindet.",
+        "allowedValues": "251 = Rot <br>Alle anderen Werte = kein Licht"
+      },
+      {
+        "name": "CoolingActive (Ereignis anzeigen)",
+        "description": "Dieses Steuerelement zeigt an, ob sich der Thermostat gerade im Kühlbetrieb befindet.",
+        "allowedValues": "251 = Blau <br>Alle anderen Werte = kein Licht"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken angezeigt, ein Fehler durch rotes Blinken.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "AirHumiditySensor": {
+    "title": "Gerätebeschreibung",
+    "name": "Luft Feuchte Sensor",
+    "overview": "Mit diesem Gerät kann ein Sensor, der die Luftfeuchtigkeit misst, visualisiert werden. Im Ausgabefeld wird der Wert von 0-100% angezeigt.  Über die Ereignisanzeige kann ein Fehler vom Gerät ausgegeben werden.",
+    "table": [
+      {
+        "name": "Istwert Feuchte (Ausgabefeld)",
+        "description": "Das Ausgabefeld gibt die aktuelle Feuchte vom Sensor am Controller zurück.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "BrightnessSensor": {
+    "title": "Gerätebeschreibung",
+    "name": "Helligkeits Sensor",
+    "overview": "Mit diesem Gerät kann ein Sensor, der die Helligkeit misst, visualisiert werden. Das Ausgabefeld zeigt den Wert von 0-100 kLux an.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert Helligkeit (Ausgabefeld)",
+        "description": "Das Ausgabefeld gibt die aktuelle Helligkeit vom Sensor am Controller zurück.",
+        "allowedValues": "0-100 kLux"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "SensorCO2": {
+    "title": "Gerätebeschreibung",
+    "name": "CO2 Sensor",
+    "overview": "Mit diesem Gerät kann ein Sensor angezeigt werden, der den CO2-Gehalt in der Luft misst. Im Ausgabefeld wird der Wert von 0-5000 ppm angezeigt.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert CO2 (Ausgabefeld)",
+        "description": "Das Ausgabefeld gibt den aktuellen CO2 Wert vom Sensor am Controller zurück.",
+        "allowedValues": "0-5000 ppm"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "SensorLevel": {
+    "title": "Gerätebeschreibung",
+    "name": "Füllstandssensor",
+    "overview": "Mit diesem Gerät kann ein Sensor, der z. B. den Füllstand in einem Behälter misst, angezeigt werden. In der Füllstandsanzeige wird der Wert von 0-100 % angezeigt.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert Füllstand (Füllstandsanzeige)",
+        "description": "Die Anzeige zeigt den aktuellen Füllstand vom Sensor am Controller an.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "WeatherStation": {
+    "title": "Gerätebeschreibung",
+    "name": "Wetterstation",
+    "overview": "Mit diesem Gerät kann eine Wetterstation mit ihren gängigsten Messpunkten visualisiert werden. Es kann der Helligkeitswert der Himmels Richtungen Ost, Süd und West gemessen werden. Der Dämmerungswert kann auch angezeigt werden. Außerdem können die Luftfeuchtigkeit und die Windgeschwindigkeit erfasst werden. Außerdem wird angezeigt, ob es gerade regnet oder nicht.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert Helligkeit Ost (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld gibt den aktuellen Helligkeitswert Ost von der Wetterstation am Controller zurück.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Istwert Helligkeit Süd (Ausgabefeld 2)",
+        "description": "Das Ausgabefeld gibt den aktuellen Helligkeitswert Süd von der Wetterstation am Controller zurück.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Istwert Helligkeit West (Ausgabefeld 3)",
+        "description": "Das Ausgabefeld gibt den aktuellen Helligkeitswert West von der Wetterstation am Controller zurück.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Istwert Dämmerung (Ausgabefeld 4)",
+        "description": "Das Ausgabefeld gibt den aktuellen Dämmerungswert von der Wetterstation am Controller zurück.",
+        "allowedValues": "0-1000 Lux"
+      },
+      {
+        "name": "Istwert Außenluftfeuchtigkeit (Ausgabefeld 5)",
+        "description": "Das Ausgabefeld gibt die aktuelle Außenluftfeuchtigkeit von der Wetterstation am Controllers zurück.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Istwert Windgeschwindigkeit (Ausgabefeld 6)",
+        "description": "Das Ausgabefeld gibt die aktuelle Windgeschwindigkeit von der Wetterstation am Controller zurück.",
+        "allowedValues": "0-50 m/s"
+      },
+      {
+        "name": "Istwert Niederschlag (Ausgabefeld 7)",
+        "description": "Das Ausgabefeld gibt zurück, ob die Wetterstation am Controller Niederschlag erkannt hat oder nicht.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": " Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "HotWaterMeter": {
+    "title": "Gerätebeschreibung",
+    "name": "Warmwasser Zähler",
+    "overview": "Mit diesem Gerät kann ein Warmwasserzähler realisiert werden. Dieser liefert die 2 gängigsten Werte, den Zählerstand in m³ und den tatsächlichen Durchfluss in m³/h.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert-Zähler (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand des Warmwasserzählers zurück.",
+        "allowedValues": "0-Max von 64Bit Variable in m³"
+      },
+      {
+        "name": "Istwer Durchfluss (Ausgabefeld 2)",
+        "description": "Das Ausgabefeld gibt den aktuellen Durchfluss vom Warmwasserzähler zurück.",
+        "allowedValues": "0-Max von 64Bit Variable in m³/h"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ColdWaterMeter": {
+    "title": "Gerätebeschreibung",
+    "name": "Kaltwasser Zähler",
+    "overview": "Mit diesem Gerät kann ein Kaltwasserzähler angezeigt werden. Dieser liefert die 2 gängigsten Werte, den Zählerstand in m³ und die tatsächliche Durchflussmenge in m³/h.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert-Zähler (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand des Kaltwasserzählers zurück.",
+        "allowedValues": "0-Max von 64Bit Variable in m³"
+      },
+      {
+        "name": "Istwertfluss (Ausgabefeld 2)",
+        "description": "Das Ausgabefeld gibt den aktuellen Durchfluss vom Kaltwasserzählers zurück.",
+        "allowedValues": "0-Max von 64Bit Variable in m³/h"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "HeatingMeter": {
+    "title": "Gerätebeschreibung",
+    "name": "Heizungs-Zähler",
+    "overview": "Mit diesem Gerät kann ein Heizungs Zähler visualisiert werden. Es werden die 9 gängigsten Werte angezeigt. Die aktuelle Heizleistung in kW und die 3 Zählerstände in kW/h. Dies sind die Zählerstände T1 und T2 der Heizung und der daraus resultierende Gesamtzählerstand der Heizung. Außerdem wird der Zählerstand des Wasserverbrauchs in m³ und der aktuelle Durchfluss in m³/h angezeigt. Zusätzlich werden die Vorlauf- und Rücklauftemperatur in °C und deren Differenz in K angezeigt. Über die Ereignisanzeige kann ein Fehler vom Gerät gemeldet werden.",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld gibt die aktuelle Leistung vom Heizungszähler zurück.",
+        "allowedValues": "0-Max der 32Bit-Variable in KW"
+      },
+      {
+        "name": "Istwert Zähler (Summe Ausgabefeld 2)",
+        "description": "Das Ausgabefeld gibt den aktuellen gesamten Zählerstand vom Heizungszähler zurück.",
+        "allowedValues": "0-Max der 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zähler Tarif 1 (Ausgabefeld 3)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand von Tarif 1 vom Heizungszähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zähler Tarif 2 (Ausgabefeld 4)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand von Tarif 2 vom Heizungszähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zähler Wasser (Ausgabefeld 5)",
+        "description": "Das Ausgabefeld gibt den aktuellen Wasser Zählerstand vom Heizungszähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Durchfluss (Ausgabefeld 6)",
+        "description": "Das Ausgabefeld gibt den aktuellen Durchfluss vom Heizungszähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Vorlauftemperatur (Ausgabefeld 7)",
+        "description": "Das Ausgabefeld gibt die tatsächliche Vorlauftemperatur vom Heizungszähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Rücklauftemperatur (Ausgabefeld 8)",
+        "description": "Das Ausgabefeld gibt die tatsächliche Rücklauftemperatur vom Heizungszähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Temperaturdifferenz (Ausgabefeld 9)",
+        "description": "Das Ausgabefeld gibt die tatsächliche Differenztemperatur vom Heizungszähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ElectricityMeter": {
+    "title": "Gerätebeschreibung",
+    "name": "Strom Zähler",
+    "overview": "Mit diesem Gerät kann ein Stromzähler visualisiert werden. Damit können die gängigsten 7 Werte angezeigt werden. Für den Zählerstandsbezug T1 und T2 jeweils in kW/h und den daraus resultierenden Gesamtzählerstandsbezug. Das gleiche gilt für den Zählerstandsverbrauch. Die aktuelle Wirkleistung in kW wird ebenfalls angezeigt.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld gibt die aktuelle Leistung vom Stromzähler zurück.",
+        "allowedValues": "0-Max der 32Bit-Variable in KW"
+      },
+      {
+        "name": "Istwert Zählerstand gesamt Tarif 1 (Ausgabefeld 2)",
+        "description": "Das Ausgabefeld gibt den aktuellen gesamten Zählerstand von Tarif 1 vom Stromzähler zurück.",
+        "allowedValues": "0-Max der 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zählerstand gesamt Tarif 2 (Ausgabefeld 3)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand von Tarif 2 vom Stromzähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zählerstand Tarif 1 Verbrauch (Ausgabefeld 4)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand vom Verbrauch Tarif 1 vom Stromzähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zählerstand Tarif 1 Produktion (Ausgabefeld 5)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand der Produktion Tarif 1 vom Stromzähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zählerstand Tarif 2 Verbrauch (Ausgabefeld 6)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand vom Verbrauch Tarif 2 vom Stromzähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Istwert Zählerstand Tarif 2 Produktion (Ausgabefeld 7)",
+        "description": "Das Ausgabefeld gibt den aktuellen Zählerstand der Produktion Tarif 2 vom Stromzähler zurück.",
+        "allowedValues": "0-Max von 64Bit-Variable in KW/h"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "MotionSensor": {
+    "title": "Gerätebeschreibung",
+    "name": "Bewegungs-Sensor",
+    "overview": "Mit diesem Gerät kann ein Bewegungsmelder realisiert werden. Über das Eingabefeld kann die Zeitspanne eingestellt werden, für die der Bewegungsmelder nach Erkennen einer Person eingeschaltet bleiben soll. Über den Schalter kann der Bewegungsmelder manuell in einen Dauerzustand versetzt werden. Dies kann dauerhaft aus oder dauerhaft ein sein. Über den Taster kann ein Impuls an den Bewegungsmelder gesendet werden, um ihn für die eingestellte Zeit einzuschalten.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. HINWEIS ZUM SCHALTER : Wenn innerhalb von 5 Sekunden der entsprechende Zustand nicht zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Sollwert Einschaltzeit (1 Eingabefeld)",
+        "description": "Eingabefeld für die Dauer der Einschaltzeit",
+        "allowedValues": "0-1200 sek"
+      },
+      {
+        "name": "Ein Dauer-Ein (Schalter 1)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für Dauer-Ein gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Dauer-Ein (Schalter 1)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für Dauer-Ein gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Dauerhaft Ein (Schalter 1)",
+        "description": "Status = Dauer Ein Status dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Impuls Ein (Taster 1)",
+        "description": "Ein-Aus = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals kann der Ein-Aus-Impuls zum Einschalten des Lichts an die Steuerung gesendet werden.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Impuls Ein (Taster 1)",
+        "description": "Status = Der Status für Impuls Ein dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "Battery": {
+    "title": "Gerätebeschreibung",
+    "name": "Batterie",
+    "overview": "Mit diesem Gerät kann eine Batterie mit ihren wichtigsten Leistungsdaten angezeigt werden. Das Batteriesymbol zeigt aktiv den SoC von 0-100 % an. Über die 4 Ausgabefelder werden die Batteriespannung, die Batterietemperatur, die Batterieleistung und der SoH der Batterie angezeigt.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert SOC (1 Batterie)",
+        "description": "Die Batterie zeigt den aktuellen SOC-Wert der Batterie an.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Istwert Spannung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld gibt die tatsächliche Spannung von der Batterie zurück.",
+        "allowedValues": "0-1000 V"
+      },
+      {
+        "name": "Istwert Temperatur (Ausgabefeld 2)",
+        "description": "Das Ausgabefeld gibt die tatsächliche Temperatur von der Batterie zurück.",
+        "allowedValues": "-30 bis 120 °C"
+      },
+      {
+        "name": "Istwert Leistung (Ausgabefeld 3)",
+        "description": "Das Ausgabefeld gibt die tatsächliche Leistung von der Batterie zurück.",
+        "allowedValues": "-1000 bis 1000 KW"
+      },
+      {
+        "name": "Istwert SOH (Ausgabefeld 4)",
+        "description": "Das Ausgabefeld gibt die aktuelle SOH von der Batterie zurück.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "PVSystem": {
+    "title": "Gerätebeschreibung",
+    "name": "PV Anlage",
+    "overview": "Mit diesem Gerät können die Daten einer PV-Anlage angezeigt werden. Im Feld Leistung wird die Wirkleistung der aktiven PV-Anlage angezeigt.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Leistung der PV-Anlage an.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "HouseConsumption": {
+    "title": "Gerätebeschreibung",
+    "name": "Verbrauch Haus",
+    "overview": "Mit diesem Gerät kann der Verbrauch eines Hauses angezeigt werden. Im Ausgabefeld wird die aktive Wirkleistung angezeigt.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die tatsächliche Leistung des Hausverbrauchs an.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken angezeigt, ein Fehler durch rotes Blinken.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "Generator": {
+    "title": "Gerätebeschreibung",
+    "name": "Generator",
+    "overview": "Mit diesem Gerät kann die Leistung eines Generators angezeigt werden. Die aktive Wirkleistung wird über das Ausgabefeld angezeigt. Der Generator kann bei Bedarf manuell über den Schalter gestartet werden. Der Status am Schalter zeigt dann an, ob er ein- oder ausgeschaltet ist. Über den Taster kann der Generator bei Bedarf im Falle eines Fehlers Resettet werden.  Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. HINWEIS ZUM SCHALTER : Wenn der entsprechende Status nicht innerhalb von 5 Sekunden zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Leistung des Generators an.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Ein Manuell Ein (Schalter 1)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für Manuelles Ein gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Manuell Ein (Schalter 1)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für Manuell Ein gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Manuell Ein (Schalter 1)",
+        "description": "Status = Der Status für Manuell Ein dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Ein-Aus Reset (Taster 1)",
+        "description": "Ein-Aus = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals kann der Ein-Aus-Impuls an den Controller gesendet werden, um den Fehler am Generator zu beheben.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Reset (Taster 1)",
+        "description": "Status = Der Status für den Reset dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Zustand = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "MainsConnection": {
+    "title": "Gerätebeschreibung",
+    "name": "Netzanschluss",
+    "overview": "Mit diesem Gerät kann die Leistung eines Netzanschlusses angezeigt werden. Die Wirkleistung wird im Ausgabefeld in kW angezeigt.   Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden.",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Leistung des Netzanschlusses an.",
+        "allowedValues": "-5000 to 5000 kW"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken angezeigt, ein Fehler durch rotes Blinken.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "ElectricChargingStation": {
+    "title": "Gerätebeschreibung",
+    "name": "Elektrische Ladestation",
+    "overview": "Mit diesem Gerät kann eine Ladestation realisiert werden. Im Ausgabefeld kann die Wirkleistung der Ladestation und die abgelaufene Ladezeit angezeigt werden. Im Eingabefeld kann die Mindestleistung in kW eingegeben werden, die der Ladestation immer zur Verfügung stehen soll. Dies kann z. B. sinnvoll sein, wenn die Ladestation über ein EMS an der Steuerung betrieben wird. Mit einem Schalter kann die Ladestation in einen manuellen Modus versetzt werden und mit dem Schieberegler kann ausgewählt werden, welche Leistung zur Verfügung stehen soll. Mit dem zweiten Schalter kann der Modus für die Mindestleistung aktiviert werden. Der kleine grüne Kreis zeigt an, ob das Fahrzeug erfolgreich mit der Ladestation verbunden wurde. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. HINWEIS ZUM SCHALTER : Wenn der entsprechende Status nicht innerhalb von 5 Sekunden zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die tatsächliche Leistung der Ladestation an.",
+        "allowedValues": "0- 1000 kW"
+      },
+      {
+        "name": "Istwert Ladezeit (Ausgabefeld 2)",
+        "description": "Das Ausgabefeld zeigt die tatsächliche Ladezeit von der Ladestation an.",
+        "allowedValues": "0-2000 min"
+      },
+      {
+        "name": "Sollwert Min-Ladeleistung (Eingabefeld 1)",
+        "description": "Eingabefeld für den Sollwert der Min-Ladeleistung von der Ladestation.",
+        "allowedValues": "0-1000KW"
+      },
+      {
+        "name": "Schalter 1 (Ein Modus Min. Ladeleistung, Aus Min. Ladeleistung, Status Min. Ladeleistung",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Modus Min. Ladeleistung gesendet werden. <br> Aus = Mit Aus kann der Aus-Befehl für den Modus Min. Ladeleistung gesendet werden. <br> Status = Der Status für den Modus Min. Ladeleistung dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Ein = 0-1 <br> Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Schalter 2 (Ein Manuell Ein, Aus Manuell Ein, Status Manuell Ein)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für Manuell Ein gesendet werden. <br> Aus = Mit Aus kann der Aus-Befehl für Manuell Ein gesendet werden. <br> Status = Der Status Manuell Ein dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein = 0-1 <br> Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Schieberegler 1 (Sollwert Manuelle Leistung)",
+        "description": "Der Schieberegler sendet den Sollwert für die Manuelle Leistung an die Ladestation.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      },
+      {
+        "name": "Fahrzeug verbunden (Ereignis anzeigen)",
+        "description": "Diese Kontrolle zeigt an, ob die Ladestation mit dem Fahrzeug verbunden ist.",
+        "allowedValues": "251 = Grün <br> Alle anderen Werte = kein Licht"
+      },
+      {
+        "name": "Ausgabefeld 3 (Istwert Manuelle Leistung)",
+        "description": "Das Ausgabefeld zeigt die tatsächliche manuelle Leistung von der Ladestation an.",
+        "allowedValues": "0-100%"
+      }
+    ]
+  },
+  "ElectronicBoiler": {
+    "title": "Gerätebeschreibung",
+    "name": "Elektrischer Boilereinsatz",
+    "overview": "Mit diesem Gerät können Sie einen elektrischen Einsatz in einem Boiler realisieren. Die Wirkleistung des Einsatzes wird über eines der Ausgabefelder angezeigt. Über die 4 Eingabefelder für die Zeit haben Sie die Möglichkeit, bestimmte Programme an der Steuerung auszuführen. Über den Schalter kann der Einsatz manuell eingeschaltet werden und über den Schieberegler kann die Leistung eingestellt werden. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. HINWEIS ZUM SCHALTER : Wenn der entsprechende Zustand nicht innerhalb von 5 Sekunden zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Istwert Leistung (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Leistung des Elektroboilers an.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Istwert Heizphase EIN-Stunden (Eingabefeld 1)",
+        "description": "Eingabefeld für die Einschaltstunde der Heizphase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Istwert Heizphase AUS-Stunden (Eingabefeld 2)",
+        "description": "Eingabefeld für die Ausschaltstunde der Heizphase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Istwert Heizphase EIN-Minuten (Eingabefeld 3)",
+        "description": "Eingabefeld für die Einschaltminute der Heizphase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Istwert Heizphase AUS Minuten (Eingabefeld 4)",
+        "description": "Eingabefeld für die Ausschaltminute der Heizphase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Schalter 1 (Ein Manuell Ein, Aus Manuell Ein, Status Manuell Ein)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für Manuelles Ein gesendet werden. <br> Aus = Mit Aus kann der Aus-Befehl für Manuell Ein gesendet werden. <br> Status = Der Status für Manuell Ein dient als Rückmeldung vom Endgerät und liefert den aktuellen Status.",
+        "allowedValues": "Ein = 0-1 <br> Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Sollwert Manuelle Leistung (Schieberegler 1)",
+        "description": "Der Schieberegler sendet den Sollwert für die Manuelle Leistung an den Elektroboiler.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Istwert Manuelle Leistung (Ausgabefeld 2)",
+        "description": "Im Ausgabefeld wird die aktuelle Manuelle Leistung vom Elektroboiler angezeigt.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Schalter 2 (Ein Zeitfunktion, Aus Zeitfunktion, Status Zeitfunktion)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für die Zeitfunktion gesendet werden. <br> Aus = Mit Aus kann der Aus-Befehl für die Zeitfunktion gesendet werden. <br> Status = Der Status der Zeitfunktion dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein = 0-1 <br> Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "VentilatorSwitch": {
+    "title": "Gerätebeschreibung",
+    "name": "Lüftersteuerung",
+    "overview": "Mit diesem Gerät kann ein Lüfter, z. B. ein Badlüfter, ein- und ausgeschaltet werden. Ein Fehler kann vom Gerät über die Ereignisanzeige angezeigt werden. HINWEIS FÜR SCHALTER : Wenn innerhalb von 5 Sekunden der entsprechende Zustand nicht zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Ein (Schalter)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für den Lüfter gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus (Schalter)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für den Lüfter gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status (Schalter)",
+        "description": "Status = Der Status vom Lüfter dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": " Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen.  Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "MusicSystem": {
+    "title": "Gerätebeschreibung",
+    "name": "Musik Anlage",
+    "overview": "Mit diesem Gerät lassen sich die gängigsten Signale zur Steuerung einer Musikanlage realisieren. Der Lautstärkepegel kann über Plus und Minus eingestellt werden. Mit Play, Stop und Pause kann die Musik entsprechend gesteuert werden. Die Titelauswahl kann über vorwärts und rückwärts eingestellt werden. Mit dem Schalter kann die Musikanlage ein- oder ausgeschaltet werden. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. <br> HINWEIS ZUM SCHALTER : Wenn der entsprechende Zustand nicht innerhalb von 5 Sekunden zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Lautstärke Plus(1 Plus)",
+        "description": "Mit der Plus-Taste kann ein Signal an die Steuerung gesendet werden, um die Lautstärke zu erhöhen.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Lautstärke Minus(1 Minus)",
+        "description": "Mit der Minus-Taste kann ein Signal an den Controller gesendet werden, um die Lautstärke zu verringern.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Play (Play 1)",
+        "description": "Mit der Play-Taste kann ein Signal an den Controller gesendet werden, um die Musik abzuspielen.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Stop(Stop 1)",
+        "description": "Mit der Play-Taste kann ein Signal an den Controller gesendet werden, um die Musik zu stoppen.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Pause  (Pause 1)",
+        "description": "Mit der Pause-Taste kann ein Signal an den Controller gesendet werden, um die Musik zu unterbrechen.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Vorwärts  (Vorwärts 1)",
+        "description": "Mit der Vorwärts-Taste kann ein Signal an den Controller gesendet werden, um einen Titel hochzuschalten.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Rückwärts  (Rückwärts 1)",
+        "description": "Mit der Rückwärts-Taste kann ein Signal an den Controller gesendet werden, um einen Titel zurückzuschalten",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Musikanlage Ein (Schalter 1)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für die Musikanlage gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Musikanlage Aus (Schalter 1)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für die Musikanlage gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Musikanlage (Schalter 1)",
+        "description": "Status = Der Status der Musikanlage dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": " Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen.  Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "TV": {
+    "title": "Gerätebeschreibung",
+    "name": "TV",
+    "overview": "Mit diesem Gerät können die gängigsten Signale zur Steuerung eines Fernsehers realisiert werden. Über Plus und Minus kann der Lautstärkepegel eingestellt werden. Über vorwärts und rückwärts kann die Kanalwahl eingestellt werden. Mit dem Schalter kann der Fernseher ein- oder ausgeschaltet werden. Über die Ereignisanzeige kann ein Fehler vom Gerät angezeigt werden. <br> HINWEIS ZUM SCHALTER : Wenn der entsprechende Zustand nicht innerhalb von 5 Sekunden zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Lautstärke Plus  (Plus 1)",
+        "description": "Mit der Plus-Taste kann ein Signal an die Steuerung gesendet werden, um die Lautstärke zu erhöhen.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Lautstärke Minus  (Minus 1)",
+        "description": "Mit der Minus-Taste kann ein Signal an die Steuerung gesendet werden, um die Lautstärke zu verringern.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Vorwärts  (Vorwärts 1)",
+        "description": "Mit der Vorwärts-Taste kann ein Signal an den Controller gesendet werden, um einen TV-Kanal hoch zu schalten.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Rückwärts  (Rückwärts 1)",
+        "description": "Mit der Rückwärts-Taste kann ein Signal an den Controller gesendet werden, um einen TV-Kanal zurückzuschalten.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Ein TV (Schalter 1)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für das TV-System gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus TV (Schalter 1)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für das TV-System gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status TV (Schalter 1)",
+        "description": "Status = Der Status für den Fernseher dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": " Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "MotorWithoutVFD": {
+    "title": "Gerätebeschreibung",
+    "name": "Motor ohne Drehzahlregelung",
+    "overview": "Mit diesem Gerät kann ein Motor gesteuert werden, der nicht Drehzahlgeregelt ist. Mit den oberen 3 Drucktasten kann zwischen den Modi Auto, Manuell und Inaktiv gewechselt werden. Mit dem 4 Drucktaster kann der Motor im Falle einer Störung Resetet werden. Mit dem Ausgabefeld kann die aktuelle Stromaufnahme des Motors angezeigt werden Mit den Pfeilen kann im Handbetrieb die Drehrichtung gewählt werden. Die aktuelle Drehrichtung wird ebenfalls angezeigt. Die Ereignisanzeige kann verwendet werden, um einen Fehler des Geräts anzuzeigen.",
+    "table": [
+      {
+        "name": "Taster 1 (Auto-Modus aktivieren, Status Auto-Modus",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Auto Modus an die Steuerung geschickt. Status = Der Status für den Auto Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Taster 2 (Handbetrieb aktivieren, Status Handbetrieb)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Hand Modus an die Steuerung geschickt. Status = Der Status für den Hand Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Taster 3 (Inaktiven Modus aktivieren, Status Inaktiver Modus)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Inaktiv Modus an die Steuerung geschickt. Status = Der Status für den Inaktiv Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Taster 4 (Taster Reset, Status Reset)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum Resettieren des Motors an die Steuerung geschickt. Status = Der Status für das Resettieren dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Pfeil links 1 (Links, Status)",
+        "description": "Links = Mit Links kann der Links-Befehl für den Motor gesendet werden. Status = Der Status für Links dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Links = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Rechts, Status (Pfeil rechts 1)",
+        "description": "Rechts = Mit Rechts kann der rechts-Befehl für den Motor gesendet werden. Status = Der Status für Rechts dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Rechts = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Ausgabefeld 1 (Istwert Strom)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Stromaufnahme vom Motor an.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, um eine Warnung oder einen Fehler direkt am Gerät anzuzeigen. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "PumpWithoutVFD": {
+    "title": "Gerätebeschreibung",
+    "name": "Pumpe mit Drehzahlregelung",
+    "overview": "Mit diesem Gerät kann die Steuerung für einen Pumpe, die Drehzahlgeregelt ist, realisiert werden. Mit den oberen 3 Tastern kann zwischen den Modi Auto, Manuell und Inaktiv umgeschaltet werden. Über den 4 Taster kann die Pumpe im Falle einer Störung Resetet werden. Über das Ausgabefeld kann die aktuelle Stromaufnahme der Pumpe angezeigt werden. Mit den Pfeilen kann im Handbetrieb die Drehrichtung gewählt werden. Die aktuelle Drehrichtung wird ebenfalls angezeigt. Zusätzlich kann mit dem Schieberegler die Drehzahl im Handbetrieb eingestellt werden. Das zusätzliche Ausgabefeld zeigt die aktuelle Drehzahl dann in % an. Die aktuelle Drehzahl wird dann auch im Schieberegler angezeigt und angepasst. Ein Fehler kann in der Ereignisanzeige angezeigt werden.",
+    "table": [
+      {
+        "name": "Taster 1 (Auto-Modus aktivieren)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Auto Modus an die Steuerung geschickt. Status = Der Status für den Auto Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Taster 2 (Handbetrieb aktivieren, Status Handbetrieb) ",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Hand Modus an die Steuerung geschickt. Status = Der Status für den Hand Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "On-Off = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Taster 3 (Inaktiven Modus aktivieren, Status Inaktiver Modus)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Inaktiv Modus an die Steuerung geschickt. Status = Der Status für den Inaktiv Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Taster 4 (Taster Resett, Status Resett) ",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum Resettieren der Pumpe an die Steuerung geschickt. Status = Der Status für das Resettieren dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Pfeil links 1 (Links, Status)",
+        "description": "Links = Mit Links kann der Links-Befehl für die Pumpe gesendet werden. Status = Der Status für Links dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Links = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Pfeil rechts 1 (Rechts, Status)",
+        "description": "Rechts = Mit Rechts kann der rechts-Befehl für die Pumpe gesendet werden. Status = Der Status für Rechts dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Rechts = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Ausgabefeld 1 (Istwert Strom)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Drehzahl der Pumpe an.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": " Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "MotorWithVFD": {
+    "title": "Gerätebeschreibung",
+    "name": "Motor mit Drehzahlregelung",
+    "overview": "Mit diesem Gerät kann die Steuerung für einen Motor, der Drehzahlgeregelt ist, realisiert werden. Mit den oberen 3 Tastern kann zwischen den Modi Auto, Manuell und Inaktiv umgeschaltet werden. Über den 4 Taster kann der Motor im Falle einer Störung Resetet werden. Über das Ausgabefeld kann die aktuelle Stromaufnahme des Motors angezeigt werden. Mit den Pfeilen kann im Handbetrieb die Drehrichtung gewählt werden. Die aktuelle Drehrichtung wird ebenfalls angezeigt. Zusätzlich kann mit dem Schieberegler die Drehzahl im Handbetrieb eingestellt werden. Das zusätzliche Ausgabefeld zeigt die aktuelle Drehzahl dann in % an. Die aktuelle Drehzahl wird dann auch im Schieberegler angezeigt und angepasst. Ein Fehler kann in der Ereignisanzeige angezeigt werden.",
+    "table": [
+      {
+        "name": "Taster 1 (Auto-Modus aktivieren, Status Auto-Modus)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Auto Modus an die Steuerung geschickt. Status = Der Status für den Auto Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Taster 2 (Handbetrieb aktivieren, Status Handbetrieb)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Hand Modus an die Steuerung geschickt. Status = Der Status für den Hand Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Taster 3 (Inaktiven Modus aktivieren, Status Inaktiver Modus)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Inaktiv Modus an die Steuerung geschickt. Status = Der Status für den Inaktiv Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Taster 4 (Taster Reset, Status Reset)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum Resettieren des Motors an die Steuerung geschickt. Status = Der Status für das Resettieren dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 Status = 0-1"
+      },
+      {
+        "name": "Pfeil links 1 (Links, Status)",
+        "description": "Links = Mit Links kann der Links-Befehl für den Motor gesendet werden. Status = Der Status für Links dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Links = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Pfeil rechts 1 (Rechts, Status)",
+        "description": "Direction Right = Rechts = Mit Rechts kann der rechts-Befehl für den Motor gesendet werden. Status = Der Status für Rechts dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Rechts = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Istwert Strom (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Stromaufnahme vom Motor an.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Sollwert Manuelle Geschwindigkeit (Schieberegler 1)",
+        "description": "Der Schieberegler sendet den Sollwert für die Geschwindigkeit an den Motor.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Ausgabefeld 2 (Istwert Geschwindigkeit)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Drehzahl des Motors an.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "PumpWithVFD": {
+    "title": "Gerätebeschreibung",
+    "name": "Pumpe mit Drehzahlregelung",
+    "overview": "Mit diesem Gerät kann die Steuerung für einen Pumpe, die Drehzahlgeregelt ist, realisiert werden. Mit den oberen 3 Tastern kann zwischen den Modi Auto, Manuell und Inaktiv umgeschaltet werden. Über den 4 Taster kann die Pumpe im Falle einer Störung Resetet werden. Über das Ausgabefeld kann die aktuelle Stromaufnahme der Pumpe angezeigt werden. Mit den Pfeilen kann im Handbetrieb die Drehrichtung gewählt werden. Die aktuelle Drehrichtung wird ebenfalls angezeigt. Zusätzlich kann mit dem Schieberegler die Drehzahl im Handbetrieb eingestellt werden. Das zusätzliche Ausgabefeld zeigt die aktuelle Drehzahl dann in % an. Die aktuelle Drehzahl wird dann auch im Schieberegler angezeigt und angepasst. Ein Fehler kann in der Ereignisanzeige angezeigt werden.",
+    "table": [
+      {
+        "name": "Taster 1 (Auto-Modus aktivieren, Status Auto-Modus)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Auto Modus an die Steuerung geschickt. Status = Der Status für den Auto Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Taster 2 (Handbetrieb aktivieren, Status Handbetrieb)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Hand Modus an die Steuerung geschickt. Status = Der Status für den Hand Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Taster 3 (Inaktiven Modus aktivieren, Status Inaktiver Modus)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Inaktiv Modus an die Steuerung geschickt. Status = Der Status für den Inaktiv Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Taster 4 (Taster Resett, Status Resett)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum Resettieren der Pumpe an die Steuerung geschickt. Status = Der Status für das Resettieren dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Ein-Aus = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Pfeil links 1 (Links, Status)",
+        "description": "Links = Mit Links kann der Links-Befehl für die Pumpe gesendet werden. Status = Der Status für Links dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Links = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Pfeil rechts 1 (Rechts,Status)",
+        "description": "Rechts = Mit Rechts kann der rechts-Befehl für die Pumpe gesendet werden. Status = Der Status für Rechts dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Rechts = 0-1 <br> Status = 0-1"
+      },
+      {
+        "name": "Ausgabefeld 1 (Istwert Strom)",
+        "description": "Das Ausgabefeld zeigt den aktuellen Strom von der Pumpe am Controller an.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Schieberegler 1 (Sollwert Manuelle Geschwindigkeit)",
+        "description": "Der Schieberegler sendet den Sollwert für die Geschwindigkeit an die Pumpe.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Ausgabefeld 2 (Istwert Geschwindigkeit)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Drehzahl der Pumpe an.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler-Warnstatus)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "MixingValve": {
+    "title": "Gerätebeschreibung",
+    "name": "Analoges Mischventil",
+    "overview": "Mit diesem Gerät kann die Steuerung für ein Mischventil realisiert werden. Mit den oberen 3 Tastern kann zwischen den Modi auto, manuell und inaktiv umgeschaltet werden. Mit dem 4 Taster kann das Mischventil im Falle eines Fehlers Resetet werden. Mit dem Schieberegler kann die Position des Mischventils im manuellen Modus gewählt werden. Der Schieberegler passt sich der aktuellen Position des Ventils an. Das Ausgabefeld zeigt die aktuelle Position des Ventils an. Ein Fehler kann in der Ereignisanzeige angezeigt werden.",
+    "table": [
+      {
+        "name": "Auto-Modus aktivieren (Taster 1)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Auto Modus an die Steuerung geschickt.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Auto-Modus(Taste 1)",
+        "description": "Status = Der Status für den Auto Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Handbetrieb aktivieren (Taster 2)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Hand Modus an die Steuerung geschickt.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Handbetrieb (Taster 2)",
+        "description": "Status = Der Status für den Hand Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Inaktiven Modus aktivieren (Taster 3)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum aktivieren des Inaktiv Modus an die Steuerung geschickt.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Inaktiver Modus (Taster 3)",
+        "description": "Status = Der Status für den Inaktiv Modus dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Taster Reset (Taster 4)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum Resettieren des Ventils an die Steuerung geschickt.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Reset (Taster 4)",
+        "description": "Status = Der Status für das Resettieren dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Sollwert Manuelle Position (Schieberegler 1)",
+        "description": "Der Schieberegler sendet die neue Position des Ventils an die Steuerung.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Istwert Position (Ausgabefeld)",
+        "description": "Das Ausgabefeld zeigt die Istposition vom Mischventil an.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 =  Fehler"
+      }
+    ]
+  },
+  "Ventilation": {
+    "title": "Gerätebeschreibung",
+    "name": "Belüftung",
+    "overview": "Dieses Gerät kann zur Steuerung einer Lüftungsanlage verwendet werden. Mit dem Schalter kann geändert werden, ob die Lüftung im Auto-Modus oder im manuellen Modus laufen soll. Im manuellen Modus kann über das Eingabefeld die Leistung eingestellt werden, mit der die Lüftung laufen soll. Die 2 Ausgabefelder zeigen die Geschwindigkeiten für das Zuluft- und Abluftgebläse an. Die 2 grünen Punkte zeigen den Wechsel des Zu- oder Abluftfilters an.  Mit der roten Ereignisanzeige kann ein Fehler des Gerätes angezeigt werden. Mit der Resett-Taste kann der Fehler zurückgesetzt werden. <br> HINWEIS ZUM SCHALTER : Wenn der entsprechende Zustand nicht innerhalb von 5 Sekunden zum gesendeten Befehl zurückkehrt, sendet der Schalter automatisch einmal den Befehl \"Ein\" und dann den Befehl \"Aus\".",
+    "table": [
+      {
+        "name": "Ein Manuell (Schalter 1)",
+        "description": "Ein = Mit Ein kann der Ein-Befehl für Manuell Ein gesendet werden.",
+        "allowedValues": "Ein = 0-1"
+      },
+      {
+        "name": "Aus Manuell (Schalter 1)",
+        "description": "Aus = Mit Aus kann der Aus-Befehl für Manuell Ein gesendet werden.",
+        "allowedValues": "Aus = 0-1"
+      },
+      {
+        "name": "Status Manuell (Schalter 1)",
+        "description": "Status = Der Status Manuell Ein dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Sollwert Drehzahl (Eingabefeld 1)",
+        "description": "Eingabefeld für den Sollwert für die Drehzahl",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Istwert Zuluftdrehzahl (Ausgabefeld 1)",
+        "description": "Das Ausgabefeld zeigt die aktuelle Zuluft Geschwindigkeit von der Lüftung an.",
+        "allowedValues": "0-3000 U/min"
+      },
+      {
+        "name": "Istwert Abluftdrehzahl (Ausgabefeld 2)",
+        "description": "Das Ausgabefeld zeigt die tatsächliche Abluftgeschwindigkeit von der Lüftung an.",
+        "allowedValues": "0-3000 U/min"
+      },
+      {
+        "name": "Wechsel Zuluftfilter (Ereignis 1 anzeigen)",
+        "description": "Zeigt an, ob der Zuluftfilter gewechselt werden muss.",
+        "allowedValues": "251 = Grün <br> Alle anderen Werte = Kein Licht"
+      },
+      {
+        "name": "Wechsel Abluftfilter (Ereignis 2 anzeigen)",
+        "description": "Zeigt an, ob der Abluftfilter gewechselt werden muss.",
+        "allowedValues": "251 = Grün <br> Al andere Werte = kein Licht"
+      },
+      {
+        "name": "Taster Reset (Taster 1)",
+        "description": "\"Ein-Aus\" = Der Taster erzeugt das folgende Signal. Beim Drücken wird ein 1-Signal gesendet. Erst beim Loslassen wird die 0 gesendet. Durch das Senden des Signals wird der Ein-Aus-Impuls zum Resettieren der Lüftung an die Steuerung geschickt.",
+        "allowedValues": "Ein-Aus = 0-1"
+      },
+      {
+        "name": "Status Reset (Taster 1)",
+        "description": "Status = Der Status für das Resetieren dient als Rückmeldung vom Endgerät und gibt den aktuellen Status zurück.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, <br>2 = Fehler"
+      }
+    ]
+  },
+  "Gauge": {
+    "title": "Gerätebeschreibung",
+    "name": "Grafische Anzeige",
+    "overview": "Mit dieser Grafischen Anzeige ist es möglich Live-Daten direkt anzuzeigen. Es besteht wieder die Möglichkeit, die Skalierung manuell einzustellen. Auch die Einheit kann wieder manuell vergeben werden. Dieses Grafische Anzeige verwendet nur die Live-Daten direkt über Mqtt.",
+    "table": [
+      {
+        "name": "Istwert 1",
+        "description": "Hier kann 1 Variable gemappt werden die dann angezeigt werden soll.",
+        "allowedValues": "Min und Max von 64 Bit Variable"
+      },
+      {
+        "name": "Skallierung",
+        "description": "Sie können die automatische Skalierung verwenden oder manuell einen Min- und Max-Wert eingeben.",
+        "allowedValues": "Handbuch"
+      },
+      {
+        "name": "Min-Max-Wert (nur sichtbar, wenn die Skalierung für diese Variable manuell ist)",
+        "description": "Min- und Max-Wert für die Skallierung wenn Sie die Skalierung im manuellen Modus gewählt wurde.",
+        "allowedValues": "Min und Max von 64 Bit Variable"
+      }
+    ]
+  },
+  "DropDownOutputFieldWithVariable": {
+    "title": "Gerätebeschreibung",
+    "name": "DropDown Ausgabefeld",
+    "overview": "Mit diesem Dropdown-Ausgabefeld können Texte in Verbindung mit einer Nummer ausgegeben werden. Beim Anlegen des Geräts können Nummern hinzugefügt und die entsprechenden Texte zugewiesen werden. Wenn das Gerät die jeweilige Nummer vom Controller empfängt, wird der entsprechende Text ausgegeben. Dieses Gerät ist besonders für den Datentyp ENUM auf der Seite der Steuerung geeignet. Mit dem Drop-Down-Feld kann mit diesem Device nur empfangen und angezeigt werden, es kann nichts gesendet werden. Dem Device kann beim Anlegen ein Icon frei zugewiesen werden.",
+    "table": [
+      {
+        "name": "Istwert (Drop Down)",
+        "description": "Dieses Drop Down Ausgabefeld kann variablen Text anzeigen, der sich auf eine Zahl im Hintergrund bezieht.",
+        "allowedValues": "Min -32768 , Max 32767"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, 2 = Fehler"
+      }
+    ]
+  },
+  "DropDownInputFieldWithVariable": {
+    "title": "Gerätebeschreibung",
+    "name": "DropDown Eingabefeld",
+    "overview": "Mit diesem Drop-Down-Eingabefeld können Texte in Verbindung mit einer Nummer eingegeben werden. Beim Anlegen des Geräts können Nummern hinzugefügt und die entsprechenden Texte zugewiesen werden. Wenn Sie nun einen Text im Gerät auswählen, wird die entsprechende Nummer an die Steuerung gesendet. Dieses Gerät ist besonders für den Datentyp ENUM auf der Seite der Steuerung geeignet.  Dem Gerät kann beim Anlegen ein Symbol frei zugewiesen werden.",
+    "table": [
+      {
+        "name": "Sollwert (Drop Down)",
+        "description": "Mit diesem DropDown-Eingabefeld können verschiedene Texte ausgewählt werden, die im Hintergrund eine Zahl an die Steuerung senden.",
+        "allowedValues": "Min -32768 , Max 32767"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, 2 = Fehler"
+      }
+    ]
+  },
+  "TSGFrischwasser": {
+    "title": "Gerätebeschreibung",
+    "name": "TSGFrischwasser",
+    "overview": "Mit diesem Device kann eine Frischwasseranlage der Firma TSG gesteuert und Visualisiert werden.",
+    "table": [
+      {
+        "name": "Offset Redox",
+        "description": "Mit diesem Wert kann der Offset der Redox Sonde angegeben werden um den Ausgabewert zu korrigieren.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Min Value Redox",
+        "description": "Mit diesem Wert kann der Min Wert für die Redox Sonde angegeben werden, bei der ein Alarm erzeugt wird. ",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Max Value Redox",
+        "description": "Mit diesem Wert kann der Max Wert für die Redox Sonde angegeben werden, bei der ein Alarm erzeugt wird und auf dessen geregelt wird sollten eine bestimmte Zeit keine Impulse vom Wasserzähler kommen aber der Max Wert noch nicht erreicht sein.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Allways On",
+        "description": "Mit diesem Wert kann die Pumpe in den Dauermodus geschalten werden. Das heißt wenn der Max Wert noch nicht erreicht ist oder der Wasserzähler Impulse liefert, liefert die Pumpe anstatt Impulse ein Dauersignal, ist also solange Ein, solange Impulse vom Wasserzähler kommen oder der Max Wert noch nicht erreicht ist.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Pulse Duration",
+        "description": "Mit diesem Wert kann die Impulslänge der Pumpe angegeben werden.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Break Time",
+        "description": "Mit diesem Wert kann die Pausezeit zwischen den Impulsen der Pumpe eingestellt werden.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Allways On Time",
+        "description": "Mit diesem Wert kann die Nachlaufzeit angegeben werden wenn die Pumpe im Dauer Ein Modus betrieben wird. Die Pumpe läuft dann um die Zeit noch nach wenn der letzte Impuls empfangen wurde.",
+        "allowedValues": "0 – 25000 in ms"
+      },
+      {
+        "name": "Hour On",
+        "description": "Mit diesem Wert kann die Stunden angegeben werden ab wann sich die Waschanlage im Einschaltmodus befindet.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute On",
+        "description": "Mit diesem Wert kann die Minute angegeben werden ab wann sich die Waschanlage im Einschaltmodus befindet.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Hour Off",
+        "description": "Mit diesem Wert kann die Stunden angegeben werden ab wann sich die Waschanlage im Ausschaltmodus befindet.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute Off",
+        "description": "Mit diesem Wert kann die Minute angegeben werden ab wann sich die Waschanlage im Ausschaltmodus befindet.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Time to go Max Value",
+        "description": "Mit diesem Wert kann eingestellt werden wann die Pumpe nach dem letzten Impuls des Wasserzählers auf den Max Wert der Sonde regeln soll wenn dieser nicht erreicht wurde. In Sekunden",
+        "allowedValues": "0 - 60"
+      },
+      {
+        "name": "Max Water Flow",
+        "description": "Mit diesem Wert kann eingestellt werden wieviel maximal Frischwasser fließen darf wenn sich die Waschanlage im Ausschaltmodus befindet.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Max Chemistry Flow",
+        "description": "Mit diesem Wert kann eingestellt werden wieviel maximal Chemie fließen darf wenn sich die Waschanlage im Ausschaltmodus befindet.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Min Chemistry Flow",
+        "description": "Mit diesem Wert kann eingestellt werden wieviel minimal Chemie fließen muss in 24 Stunden.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Reset",
+        "description": "Mit diesem Wert können einige Alarme der Funktion resetiert werden. Nicht alle Alarme können manuell Resetiert werden",
+        "allowedValues": "0 – 1"
+      },
+      {
+        "name": "Reset State",
+        "description": "Dieser Wert liefert den aktuellen Reset Status zurück.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Error Warning State",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung 2 = Error"
+      },
+      {
+        "name": "State Float Switch",
+        "description": "Mit diesem Wert kann der Status des Schwimmerschalters angezeigt werden.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Reed Contact",
+        "description": "Mit diesem Wert kann der Status des Reed Kontaktes im Chemiebehälter angezeigt werden.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Allways On",
+        "description": "Dieser Wert liefert den aktuellen Staus des Dauer Ein Betriebes der Pumpe.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Value Redox",
+        "description": "Dieser Wert liefert den aktuellen Wert der Redox Sonde.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Actual Flow Water",
+        "description": "Dieser Wert liefert den aktuellen Durchfluss des Wasserzählers.",
+        "allowedValues": "0 – Max of 64 Bit Variable in l/min"
+      },
+      {
+        "name": "Actual Flow Chemistry",
+        "description": "Dieser Wert liefert den aktuellen Durchfluss des Chemiezählers.",
+        "allowedValues": "0 – Max of 64Bit Variable in l/min"
+      },
+      {
+        "name": "Counter Water",
+        "description": "Dieser Wert liefert den aktuellen Zählerstand des Wasserzählers.",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Counter Chemistry",
+        "description": "Dieser Wert liefert den aktuellen Zählerstand des Chemiezählers",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Alarm Message",
+        "description": "Dieser Wert zeigt die aktuelle Alarmmeldung an.",
+        "allowedValues": "0 = Kein Alarm <br> 1 = Zu hoher Frischwasserverbrauch <br> 2 = Zu hoher Chemieverbrauch <br> 3 = Zu hoher Chemie und Frischwasserverbrauch <br> 4 = Chemieverbrauch zu tief <br> 5 = Min Wert der Redox Sonde erreicht <br> 6 = Max Wert der Redox Sonde erreicht <br> 7 = Schwimmerschalter hat ausgelöst <br> 8 = Reed Contact Chemiebehälter hat ausgelöst"
+      },
+      {
+        "name": "Error Message",
+        "description": "Dieser Wert zeigt die aktuelle Fehlermeldung an.",
+        "allowedValues": "0 = Keine Fehler <br> 1 = KL1512 Konfiguration Fehler <br> 2 = Redox Sensor AI Fehler <br> 3 = Systemzeit Fehler <br> 4 = Fehler Ein-Aus Schaltzeit"
+      }
+    ]
+  },
+  "TSGBrauchwasser": {
+    "title": "Gerätebeschreibung",
+    "name": "TSGBrauchwasserwasser",
+    "overview": "Mit diesem Device kann eine Brauchwasseranlage der Firma TSG gesteuert und Visualisiert werden.",
+    "table": [
+      {
+        "name": "Offset Redox",
+        "description": "Mit diesem Wert kann der Offset der Redox Sonde angegeben werden um den Ausgabewert zu korrigieren.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Min Value Redox",
+        "description": "Mit diesem Wert kann der Min Wert für die Redox Sonde angegeben werden, bei der ein Alarm erzeugt wird.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Max Value Redox",
+        "description": "Mit diesem Wert kann der Max Wert für die Redox Sonde angegeben werden, bei der ein Alarm erzeugt wird und auf dessen geregelt wird sollten eine bestimmte Zeit keine Impulse vom Wasserzähler kommen aber der Max Wert noch nicht erreicht sein.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Allways On",
+        "description": "Mit diesem Wert kann die Pumpe in den Dauermodus geschalten werden. Das heißt wenn der Max Wert noch nicht erreicht ist oder der Wasserzähler Impulse liefert, liefert die Pumpe anstatt Impulse ein Dauersignal, ist also solange Ein, solange Impulse vom Wasserzähler kommen oder der Max Wert noch nicht erreicht ist.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Pulse Duration",
+        "description": "Mit diesem Wert kann die Impulslänge der Pumpe angegeben werden.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Break Time",
+        "description": "Mit diesem Wert kann die Pausezeit zwischen den Impulsen der Pumpe eingestellt werden.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Allways On Time",
+        "description": "Mit diesem Wert kann die Nachlaufzeit angegeben werden wenn die Pumpe im Dauer Ein Modus betrieben wird. Die Pumpe läuft dann um die Zeit noch nach wenn der letzte Impuls empfangen wurde.",
+        "allowedValues": "0 – 25000 in ms"
+      },
+      {
+        "name": "Hour On",
+        "description": "Mit diesem Wert kann die Stunden angegeben werden ab wann sich die Waschanlage im Einschaltmodus befindet.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute On",
+        "description": "Mit diesem Wert kann die Minute angegeben werden ab wann sich die Waschanlage im Einschaltmodus befindet.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Hour Off",
+        "description": "Mit diesem Wert kann die Stunden angegeben werden ab wann sich die Waschanlage im Ausschaltmodus befindet.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute Off",
+        "description": "Mit diesem Wert kann die Minute angegeben werden ab wann sich die Waschanlage im Ausschaltmodus befindet.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Max Chemistry Flow",
+        "description": "Mit diesem Wert kann eingestellt werden wieviel maximal Chemie fließen darf wenn sich die Waschanlage im Ausschaltmodus befindet.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Min Chemistry Flow",
+        "description": "Mit diesem Wert kann eingestellt werden wieviel minimal Chemie fließen muss in 24 Stunden.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Reset",
+        "description": "Mit diesem Wert können einige Alarme der Funktion resetiert werden. Nicht alle Alarme können manuell Resetiert werden",
+        "allowedValues": "0 – 1"
+      },
+      {
+        "name": "Reset State",
+        "description": "Dieser Wert liefert den aktuellen Reset Status zurück.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Error Warning State",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung 2 = Error"
+      },
+      {
+        "name": "State Float Switch",
+        "description": "Mit diesem Wert kann der Status des Schwimmerschalters angezeigt werden.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Reed Contact",
+        "description": "Mit diesem Wert kann der Status des Reed Kontaktes im Chemiebehälter angezeigt werden.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Allways On",
+        "description": "Dieser Wert liefert den aktuellen Staus des Dauer Ein Betriebes der Pumpe.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Value Redox",
+        "description": "Dieser Wert liefert den aktuellen Wert der Redox Sonde.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Actual Flow Water",
+        "description": "Dieser Wert liefert den aktuellen Durchfluss des Wasserzählers.",
+        "allowedValues": "0 – Max of 64 Bit Variable in l/min"
+      },
+      {
+        "name": "Actual Flow Chmistry",
+        "description": "Dieser Wert liefert den aktuellen Durchfluss des Chemiezählers.",
+        "allowedValues": "0 – Max of 64Bit Variable in l/min"
+      },
+      {
+        "name": "Counter Chemistry",
+        "description": "Dieser Wert liefert den aktuellen Zählerstand des Chemiezählers",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Alarm Message",
+        "description": "Dieser Wert zeigt die aktuelle Alarmmeldung an.",
+        "allowedValues": "0 = Kein Alarm <br> 1 = Zu hoher Frischwasserverbrauch <br> 2 = Zu hoher Chemieverbrauch <br> 3 = Zu hoher Chemie und Frischwasserverbrauch <br> 4 = Chemieverbrauch zu tief <br> 5 = Min Wert der Redox Sonde erreicht <br> 6 = Max Wert der Redox Sonde erreicht <br> 7 = Schwimmerschalter hat ausgelöst <br> 8 = Reed Contact Chemiebehälter hat ausgelöst"
+      },
+      {
+        "name": "Error Message",
+        "description": "Dieser Wert zeigt die aktuelle Fehlermeldung an.",
+        "allowedValues": "0 = Keine Fehler <br> 1 = KL1512 Konfiguration Fehler <br> 2 = Redox Sensor AI Fehler <br> 3 = Systemzeit Fehler <br> 4 = Fehler Ein-Aus Schaltzeit"
+      }
+    ]
+  },
+  "EnergyView": {
+    "title": "Gerätebeschreibung",
+    "name": "Energie Ansicht",
+    "overview": "Dieses Gerät stellt eine Energieübersicht über alle gängigen großen Erzeuger und Verbraucher in einem Gebäude dar. In der Hauptansicht erscheint jedes Gerät maximal 1 Mal. Gibt es mehrere Geräte des gleichen Typs, wird dies in der Hauptansicht angezeigt. Der Leistungswert ist dann die Summe aller Leistungswerte der einzelnen Geräte. Für den SOC der Batterie wird der Durchschnitt angezeigt, wenn es mehrere Batteriesysteme gibt. Um jedes Gerät einzeln zu sehen, können Sie in der Hauptansicht auf das jeweilige Gerät klicken. Dadurch öffnet sich ein 2-Fenster mit allen Geräten des jeweiligen Typs. Die Stromlinien in der Grafik sind animiert, um die Richtung, in die die Energien fließen, anzuzeigen. Je nach Auswahl und Anzahl der Geräte wird die Darstellung der Energieansicht unterschiedlich zusammengestellt.",
+    "table": [
+      {
+        "name": "Ausgangsfeld 0 - 10 (PV-Produktion)",
+        "description": "Diese Ausgangsfelder können zur Anzeige der PV-Leistung jeder einzelnen PV-Anlage verwendet werden. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Generator)",
+        "description": "Mit diesen Ausgangsfeldern kann die Generatorleistung jeder einzelnen Generatoranlage angezeigt werden. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Netz)",
+        "description": "Diese Ausgangsfelder können zur Anzeige der Netzleistung jeder einzelnen Netzanlage verwendet werden. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-5000KW +5000KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Batterie Leistung)",
+        "description": "Diese Ausgangsfelder können verwendet werden, um die Batterieleistung jedes einzelnen Batteriesystems anzuzeigen. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Batterie-SOC)",
+        "description": "Diese Ausgangsfelder können verwendet werden, um den Batterie-SOC eines jeden einzelnen Batteriesystems anzuzeigen. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Hausverbrauch)",
+        "description": "Diese Ausgangsfelder können zur Anzeige des Hausverbrauchs der einzelnen Haussysteme verwendet werden. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Elektro-Ladestation)",
+        "description": "Diese Ausgangsfelder können verwendet werden, um die Ladeleistung jeder einzelnen Ladestation anzuzeigen. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Elektro Boiler)",
+        "description": "Diese Ausgangsfelder können verwendet werden, um die Leistung jedes einzelnen Elektro Boilers anzuzeigen. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Wärmepumpe)",
+        "description": "Diese Ausgangsfelder können zur Anzeige der elektrischen Leistung jeder einzelnen Wärmepumpe verwendet werden. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Ausgangsfeld 0 - 10 (Andere Großverbraucher)",
+        "description": "Diese Ausgangsfelder können zur Anzeige der Leistung jedes anderen Großverbrauchers verwendet werden. Es ist möglich, zwischen 0 und 10 Felder hinzuzufügen.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Fehler-Warnstatus (Ereignis anzeigen)",
+        "description": "Hier können Sie eine Variable angeben, die eine Warnung oder einen Fehler direkt am Gerät anzeigt. Die Warnung wird durch oranges Blinken, ein Fehler durch rotes Blinken angezeigt.",
+        "allowedValues": "0 = OK, 1 = Warnung, 2 = Fehler"
+      }
+    ]
+  },
+  "TSGLadestationNotAus": {
+    "title": "Gerätebeschreibung",
+    "name": "TSGLadestationNotAusPreview",
+    "overview": "Mit diesem Device kann eine Not Aus Überwachung für Ladestationen der Firma TSG realisiert werden.",
+    "table": [
+      {
+        "name": "Emergency Off State",
+        "description": "Dieser Wert zeigt den aktuellen Status des Not Aus Kreises an.",
+        "allowedValues": "0 = NotAus Kreis ist aktiv; 1 = NotAus Kreis hat ausgelöst"
+      },
+      {
+        "name": "Reset Button",
+        "description": "Mit diesem Wert kann der Not Aus Kreis resetiert werden.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Reset Button State",
+        "description": "Dieser Wert liefert den aktuellen Reset Status zurück",
+        "allowedValues": "0 - 1"
+      }
+    ]
+  },
+  "TSGModulLadestation": {
+    "title": "Gerätebeschreibung",
+    "name": "TSGModulLadestation",
+    "overview": "",
+    "table": [
+      {
+        "name": "Status Ladestation",
+        "description": "Betriebszustand der Ladestation. Grün = Frei; Orange = Auto verbunden; Blau = Ladend",
+        "allowedValues": "1 = frei, 2 = Auto verbunden, 3 = Auto läd"
+      },
+      {
+        "name": "Aktuelle Ladeleistung",
+        "description": "Aktuelle Ladeleistung in kW",
+        "allowedValues": "Zahlenwerte"
+      },
+      {
+        "name": "Geladene Energie der Session",
+        "description": "Geladene Energie während des aktuellen Ladevorgangs",
+        "allowedValues": "Zahlenwerte"
+      },
+      {
+        "name": "Ladedauer der Session",
+        "description": "Vergangene Zeit seit des Beginns des Ladevorgangs",
+        "allowedValues": "Zahlenwerte"
+      },
+      {
+        "name": "Ladezustand",
+        "description": "Aktueller Ladezustand der Batterie in Prozent",
+        "allowedValues": "Zahlenwerte"
+      },
+      {
+        "name": "Total Energy",
+        "description": "Insgesamt gelieferte Energie aller Ladevorgänge",
+        "allowedValues": "Zahlenwerte"
+      }
+    ]
+  }
+}

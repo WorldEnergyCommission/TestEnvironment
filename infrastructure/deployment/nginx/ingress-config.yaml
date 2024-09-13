@@ -1,0 +1,20 @@
+---
+# See: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-config
+  namespace: ingress-nginx
+data:
+  keep-alive: "65"
+  default-type: "application/octet-stream"
+  ssl-protocols: "TLSv1 TLSv1.1 TLSv1.2 TLSv1.3"
+  # enables ssl_prefer_server_ciphers
+  ssl-ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"
+  use-gzip: "true"
+  gzip_types: "text/css text/plain text/javascript application/javascript application/json application/x-javascript application/xml application/xml+rss application/xhtml+xml application/x-font-ttf application/x-font-opentype application/vnd.ms-fontobject image/svg+xml image/x-icon"
+  gzip-level: "9"
+  gzip-min-length: "50"
+  proxy-body-size: 20m
+---
+

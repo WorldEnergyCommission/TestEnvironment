@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="ST_Hoymiles_DTU_Pro_PV_OutData" Id="{5bbc6d72-fd64-43f6-b1fe-6b8c12ea54f7}">
+    <Declaration><![CDATA[TYPE ST_Hoymiles_DTU_Pro_PV_OutData :
+STRUCT
+	bError					: BOOL;						//True, when the Inverter has a Error
+	bFunctionIsActive		: BOOL;						//Shows if the Function is active or not
+	lrPowerAcInverter		: LREAL;					//Show the actual AC Power from the Inverter in kW
+	lrPVVoltage				: LREAL;					//Show the actual PV Voltage
+	lrPVCurrent				: LREAL;					//Show the actual PV Current
+	lrGridVoltage			: LREAL;					//Show the actual Grid Voltage
+	lrGridFrequency			: LREAL;					//Show the actual Grid Frequency
+	lrPVProductionEnergy	: LREAL;					//Show the actual porduced energy in kWh
+	eErrorState				: E_Hoymiles_PV_Error;		//Error state
+	eOperatingState			: E_Hoymiles_OperatingState; //Operating state
+	iPortNumber				: INT;						// Port number of the PV Module
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

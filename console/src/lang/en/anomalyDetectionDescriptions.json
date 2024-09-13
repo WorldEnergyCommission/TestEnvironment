@@ -1,0 +1,126 @@
+{
+  "HistoryAnomalyDetection": {
+    "title": "HistoryAnomalyDetection",
+    "name": "HistoryAnomalyDetection",
+    "overview": "This algorithm trains on historical sensor data, after training new samples are compared to the trainings-data and than graded with an Anomaly-score between 0-100. An anomaly-score of 0 means the data is behaving normally. A value of 100 indicates a highly abnormal behaviour of the observed data. Usually a score above 15 means that an Anomaly has been observed, but this also depends heavily on the sensor data.",
+    "table": [
+      {
+        "name": "Add Variable",
+        "description": "Adds a Variable which shall be monitored by the Anomaly Detector, max 10 variables",
+        "allowedValues": ""
+      },
+      {
+        "name": "Unit",
+        "description": "Unit of the variable which will be displayed on the chart [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "var",
+        "description": "Name of the Variable [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "agg",
+        "description": "Aggregation type of the Variable",
+        "allowedValues": ""
+      },
+      {
+        "name": "type",
+        "description": "Type of the chart scaling",
+        "allowedValues": "Manual or automatic"
+      },
+      {
+        "name": "heartbeat",
+        "description": "The Anomaly Detector generates a heartbeat. The value switches every 60 seconds between 0 and 1, this indicates that the service is still active.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "errorWarning",
+        "description": "Error/Warning State from the Anomaly Detector",
+        "allowedValues": "0 = OK\n1 = Warning\n2 = Error"
+      },
+      {
+        "name": "mpcReady",
+        "description": "This variable indicates whether the Anomaly Detector is ready or not.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "anomalyScore",
+        "description": "Output mapping of the detectors anomaly score, gets written every minute",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Threshold",
+        "description": "The threshold at which data points are marked as anomalies, good default = 15",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "StartDate",
+        "description": "Start date of the historic data",
+        "allowedValues": ""
+      },
+      {
+        "name": "EndDate",
+        "description": "End date of the historic data",
+        "allowedValues": ""
+      }
+    ]
+  },
+  "StreamAnomalyDetection": {
+    "title": "StreamAnomalyDetection",
+    "name": "StreamAnomalyDetection",
+    "overview": "This algorithm takes in live-streaming sensor data and outputs an anomaly-score between 0 and 100. An anomaly-score of 0 means the data is behaving normally. A value of 100 indicates a highly abnormal behaviour of the observed data. Usually a score above 15 means that an Anomaly has been observed, but this also depends heavily on the sensor data.",
+    "table": [
+      {
+        "name": "Add Variable",
+        "description": "Adds a Variable which shall be monitored by the Anomaly Detector, max 10 variables",
+        "allowedValues": ""
+      },
+      {
+        "name": "Unit",
+        "description": "Unit of the variable which will be displayed on the chart [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "var",
+        "description": "Name of the Variable [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "agg",
+        "description": "Aggregation type of the Variable",
+        "allowedValues": ""
+      },
+      {
+        "name": "type",
+        "description": "Type of the chart scaling",
+        "allowedValues": "Manual or automatic"
+      },
+      {
+        "name": "heartbeat",
+        "description": "The Anomaly Detector generates a heartbeat. The value switches every 60 seconds between 0 and 1, this indicates that the service is still active.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "errorWarning",
+        "description": "Error/Warning State from the Anomaly Detector",
+        "allowedValues": "0 = OK\n1 = Warning\n2 = Error"
+      },
+      {
+        "name": "mpcReady",
+        "description": "This variable indicates whether the Anomaly Detector is ready or not.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "anomalyScore",
+        "description": "Output mapping of the detectors anomaly score, gets written every minute",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Threshold",
+        "description": "The threshold at which data points are marked as anomalies, good default = 15",
+        "allowedValues": "0-100"
+      }
+    ]
+  }
+}

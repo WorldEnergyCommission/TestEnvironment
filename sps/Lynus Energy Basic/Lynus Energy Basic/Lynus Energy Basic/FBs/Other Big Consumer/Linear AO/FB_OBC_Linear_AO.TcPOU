@@ -1,0 +1,388 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_OBC_Linear_AO" Id="{b624ba26-8a52-43ae-9a8a-c7369008d0f6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OBC_Linear_AO
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;												//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bPowerDataInvers						: BOOL;												//With True its possible to invert all received power data from the electric meter
+	bNoLinear								: BOOL;												//Output Power from the device is not linear. Use the Values from the Table Of Interpolation Points.
+	diNrOfEMS_IN							: DINT;												//Number of EMS what control this Device.
+	diNrOfEM_IN_OBC							: DINT;												//Number of the electric meter for incoming power data. (Power Data for this Device)
+	stSetupOBC								: ST_Setup_OBC;										//{#lynus.ag#()} //Setup other big consumer
+	arrTableOfInterpolationPoints			: ARRAY[1..10] OF REAL;								//Table Of Interpolation Points. Corresponds to the different power values in the non-linear curve of the device. The last value must correspond to the maximum power.
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataOBC								: ST_OBC_Output;									//{#lynus.ag#()} //Output Data other big consumer
+	diNrOfOBC_OUT							: DINT;												//Active Number from the other big consumer for using on other functions
+	rTargetPowerForExtFunc					: REAL;												//Target Power from 0% to +100% to use on a external Function
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbOBC									: FB_BigConsumer;									//Function for other big consumer
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;								//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	fbInterpolation							: FB_Lin_Interpolation;								//Function for interpolation
+	fbDIExternalLock						: FB_XL1XXX_DI;										//Digital Input from external loock signal
+	fbAOOBC									: FB_XL4XXX_AO;										//Analog Output to swtich on and off and controll the OBC
+	{attribute 'hide'}
+	timDissableFunctions					: TON;												//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;												//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD									: ARRAY[1..23] OF FB_PersistentData_Number;			//Function to save persistent data 
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;												//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData							: INT;												//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diNumberOfActiveBatterys				: DINT;												//Number of active batterys
+	{attribute 'hide'}
+	diNumberOfBatteryInverterInEPO			: DINT;												//Number of battery inverters that work in Emergency Power operation 
+	{attribute 'hide'}
+	diCounterForGVL							: DINT;												//Counter to clean old data on GVL
+	{attribute 'hide'}
+	diLPForGVL								: DINT;												//Loop to clean old data on GVL
+	{attribute 'hide'}
+	dwSumSOC								: DWORD;											//Sum of the SOC from all batterys
+	{attribute 'hide'}
+	liLPBatteryData							: LINT;												//Loop to check some data from batterys
+	{attribute 'hide'}
+	liLPInEPO								: LINT;												//Loop to check if 1 or more battery inverters build a island grid	
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	diNrOfEMS_IN_CP							: DINT;												//Number of EMS what control this Device to compare with the original
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 19.05.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to control a other big consumer with the plc
+//The output signal to control the big consumer is a analog output signal (0-10V or 4-20mA)
+//With this function block its possible to control the OBC with a target power value over the analog signal. The output signal is linear
+//Also the Power Data can by displayed with this functionblock
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+	diNrOfEM_IN_OBC := LIMIT(0,diNrOfEM_IN_OBC,Constants_Energy.diMaxNumberOfElectricMeters);
+			
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+IF NOT bPowerDataInvers THEN
+	fbOBC.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT1_Production * 1000;
+	fbOBC.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT2_Production * 1000;
+	fbOBC.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT1_Consumption * 1000;
+	fbOBC.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT1_Consumption * 1000;
+	fbOBC.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrTotalCounterEnergy_Production * 1000;
+	fbOBC.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrTotalCounterEnergy_Consumption * 1000;
+		fbOBC.lrPowerOBC := (Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrPower * 1000) * - 1;
+ELSE
+	fbOBC.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT1_Consumption * 1000;
+	fbOBC.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT2_Consumption * 1000;
+	fbOBC.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT1_Production * 1000;
+	fbOBC.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrCounterEnergyT2_Production * 1000;
+	fbOBC.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrTotalCounterEnergy_Consumption * 1000;
+	fbOBC.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrTotalCounterEnergy_Production * 1000;
+		fbOBC.lrPowerOBC := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_OBC].lrPower * 1000;
+END_IF
+
+(*-------------------------------------------------------------Calcualte the number of OBC---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfOBC, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfOtherBigConsumers, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfOBC_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfOBC := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfOBC := diNrOfOBC_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------Error----------------------------------------------------------------------------*)
+
+IF timDissableFunctions.Q THEN fbOBC.bWarning := TRUE; fbOBC.iWarningCode := 0; ELSE fbOBC.bWarning := FALSE; END_IF 
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfOBC > Constants_Energy.diMaxNumberOfOtherBigConsumers THEN 
+		fbOBC.bError := TRUE;
+			fbOBC.iErrorCode := 1; 
+	ELSE 
+		fbOBC.bError := FALSE; 
+			fbOBC.iErrorCode := 0;
+	END_IF 	
+	
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+	
+//Calcualte the total SOC if we have more then 1 battery in our system
+diNumberOfActiveBatterys := 0;
+	dwSumSOC := 0;
+		FOR liLPBatteryData := 1 TO Constants_Energy.diMaxNumberOfBatterys BY 1 DO
+			IF Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].bEnabled THEN diNumberOfActiveBatterys := diNumberOfActiveBatterys + 1; END_IF
+				dwSumSOC := dwSumSOC + Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].dwSOC;
+		END_FOR
+	
+IF diNumberOfActiveBatterys > 0 THEN
+	fbOBC.dwBatterySOC := DINT_TO_DWORD(DWORD_TO_DINT(dwSumSOC) / diNumberOfActiveBatterys);
+ELSE
+	fbOBC.dwBatterySOC := 100;	//When we have no battery in the ems system
+END_IF
+
+//Check if one or more Batterysystems or batteryinverter make island mode
+diNumberOfBatteryInverterInEPO := 0;
+	FOR liLPInEPO := 1 TO Constants_Energy.diMaxNumberOfBatteryInverters BY 1 DO
+		IF Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,liLPInEPO].bWorkOnIslandMode THEN fbOBC.bEPOIsActive := TRUE; diNumberOfBatteryInverterInEPO := diNumberOfBatteryInverterInEPO + 1; END_IF
+	END_FOR 
+		IF diNumberOfBatteryInverterInEPO <= 0 THEN fbOBC.bEPOIsActive := FALSE; END_IF
+
+//Digital input for external lock signal
+fbDIExternalLock(bInvers:= FALSE, bSignal=> );
+
+//Functionblock OBC
+fbOBC(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q,
+	bError:= , 
+	bEPOIsActive:= , 
+	bExternalLock:= fbDIExternalLock.bSignal, 
+	bWriteWithDelay:= TRUE, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	dwBatterySOC:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrPowerOBC:= , 
+	rTargetPower:= Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].rTargetPowerEMS, 
+	tTimDelayOutput:= T#5S, 
+	stSetupOBC:= stSetupOBC, 
+	stDataOBCOut=> , 
+	stDataOBCOutDelay=> stDataOBC);
+						
+(*-------------------------------------------------------------------------Output----------------------------------------------------------------------*)
+	
+IF bNoLinear THEN 
+	fbInterpolation.rXInputValue := (stSetupOBC.rMaxPower * fbOBC.stDataOBCOut.rTargetPower) / 100; 
+		fbInterpolation.arrYIntermediateValues[1] := 10;
+			fbInterpolation.arrYIntermediateValues[2] := 20;
+				fbInterpolation.arrYIntermediateValues[3] := 30;
+					fbInterpolation.arrYIntermediateValues[4] := 40;
+						fbInterpolation.arrYIntermediateValues[5] := 50;
+	fbInterpolation.arrYIntermediateValues[6] := 60;
+		fbInterpolation.arrYIntermediateValues[7] := 70;
+			fbInterpolation.arrYIntermediateValues[8] := 80;
+				fbInterpolation.arrYIntermediateValues[9] := 90;
+					fbInterpolation.arrYIntermediateValues[10] := 100;
+	fbInterpolation(rXInputValue:=, arrXIntermediateValues:= arrTableOfInterpolationPoints, arrYIntermediateValues:=, rYOutputValue=> );
+END_IF
+
+IF bNoLinear THEN 
+	fbAOOBC.rSignal := fbInterpolation.rYOutputValue;
+	//Target Power, to use this on a external Function
+	rTargetPowerForExtFunc := fbInterpolation.rYOutputValue;
+ELSE
+	fbAOOBC.rSignal := fbOBC.stDataOBCOut.rTargetPower;
+	//Target Power, to use this on a external Function
+	rTargetPowerForExtFunc := fbOBC.stDataOBCOut.rTargetPower;
+END_IF
+
+fbAOOBC(
+	rYMinTerminalValue:= 0, 
+	rXMinInputSignal:= 0, 
+	rYMaxTerminalValue:= 32767, 
+	rXMaxInputSignal:= 100, 
+	rSignal:= , 
+	usiState=> );
+
+(*-----------------------------------------------------------Handle data to Global structure for the other big consumers-----------------------------------------------------------------*)
+
+//Delte al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN iStateGVLData := 10; END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO 
+			Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].bIsControllable := FALSE;
+					Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].byPriority := 0;
+						Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].byErrorWarning := 0;
+							Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].lrPower := 0;
+								Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].lrPowerConsumption := 0;
+									Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].lrPowerProduction := 0;
+										Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].rMaxPower := 0;
+											//Set also the target value from ems back here to 0 and not in EMS function because EMS is in Standy when we have a online change (Problem when we delete a ems function and make a online change)
+											Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diLPForGVL,diCounterForGVL].rTargetPowerEMS := 0;
+		END_FOR
+			diCounterForGVL := diCounterForGVL + 1;
+				diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfOtherBigConsumers);
+					//Back to the init step
+					IF diCounterForGVL >= Constants_Energy.diMaxNumberOfOtherBigConsumers THEN iStateGVLData := 0; END_IF
+
+	10://Clear old Data on GVL 	
+		Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].bIsControllable := FALSE;
+				Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].byPriority := 0;
+					Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].byErrorWarning := 0;
+						Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].lrPower := 0;
+							Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].lrPowerConsumption := 0;
+								Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].lrPowerProduction := 0;
+									Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN_CP,diNrOfOBC_OUT].rMaxPower := 0;
+	
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+			//Back to the init step
+			iStateGVLData := 0;
+
+END_CASE 	 
+
+IF diNrOfOBC_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].bEnabled := fbOBC.stDataOBCOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].bIsControllable := TRUE;
+			Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].byPriority := fbOBC.stDataOBCOut.byPriority;
+				Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].byErrorWarning := fbOBC.stDataOBCOut.byErrorWarning;
+					Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].lrPower := fbOBC.stDataOBCOut.lrPower;
+						Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].lrPowerConsumption := fbOBC.stDataOBCOut.lrPowerConsumption;
+							Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].lrPowerProduction := fbOBC.stDataOBCOut.lrPowerProduction;
+								Lynus_Standards.GVL_Energy.stDataOtherBigConsumers[diNrOfEMS_IN,diNrOfOBC_OUT].rMaxPower := fbOBC.stDataOBCOut.rMaxPower;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_OBC), bEventBasedActive=> );
+arrPD[5](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );
+arrPD[6](lrValue:= BOOL_TO_LREAL(stSetupOBC.bManualyOn), bEventBasedActive=> );
+arrPD[7](lrValue:= BOOL_TO_LREAL(stSetupOBC.bOnEmergPowerOff), bEventBasedActive=> );
+arrPD[8](lrValue:= BYTE_TO_LREAL(stSetupOBC.byDisableSOC), bEventBasedActive=> );
+arrPD[9](lrValue:= BYTE_TO_LREAL(stSetupOBC.byEnableSOC), bEventBasedActive=> );
+arrPD[10](lrValue:= BYTE_TO_LREAL(stSetupOBC.byManualyTargetPower), bEventBasedActive=> );
+arrPD[11](lrValue:= BYTE_TO_LREAL(stSetupOBC.byPriority), bEventBasedActive=> );
+arrPD[12](lrValue:= REAL_TO_LREAL(stSetupOBC.rMaxPower), bEventBasedActive=> );
+arrPD[13](lrValue:= BOOL_TO_LREAL(bNoLinear), bEventBasedActive=> );
+arrPD[14](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[1]), bEventBasedActive=> );
+arrPD[15](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[2]), bEventBasedActive=> );
+arrPD[16](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[3]), bEventBasedActive=> );
+arrPD[17](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[4]), bEventBasedActive=> );
+arrPD[18](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[5]), bEventBasedActive=> );
+arrPD[19](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[6]), bEventBasedActive=> );
+arrPD[20](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[7]), bEventBasedActive=> );
+arrPD[21](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[8]), bEventBasedActive=> );
+arrPD[22](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[9]), bEventBasedActive=> );
+arrPD[23](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[10]), bEventBasedActive=> );
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_OBC_Linear_AO">
+      <LineId Id="581" Count="2" />
+      <LineId Id="579" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="967" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="1086" Count="1" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="606" Count="3" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="610" Count="17" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="630" Count="1" />
+      <LineId Id="1006" Count="18" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="1137" Count="0" />
+      <LineId Id="1139" Count="1" />
+      <LineId Id="1196" Count="4" />
+      <LineId Id="1138" Count="0" />
+      <LineId Id="645" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="1146" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="1026" Count="5" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="646" Count="0" />
+      <LineId Id="651" Count="13" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="668" Count="4" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="675" Count="0" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="676" Count="1" />
+      <LineId Id="1034" Count="19" />
+      <LineId Id="1033" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="1308" Count="16" />
+      <LineId Id="1402" Count="1" />
+      <LineId Id="1325" Count="1" />
+      <LineId Id="1400" Count="1" />
+      <LineId Id="1327" Count="7" />
+      <LineId Id="705" Count="1" />
+      <LineId Id="716" Count="20" />
+      <LineId Id="738" Count="2" />
+      <LineId Id="742" Count="1" />
+      <LineId Id="790" Count="1" />
+      <LineId Id="793" Count="0" />
+      <LineId Id="751" Count="6" />
+      <LineId Id="797" Count="6" />
+      <LineId Id="795" Count="1" />
+      <LineId Id="769" Count="0" />
+      <LineId Id="772" Count="5" />
+      <LineId Id="806" Count="6" />
+      <LineId Id="804" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="815" Count="0" />
+      <LineId Id="872" Count="12" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="1336" Count="9" />
+      <LineId Id="1335" Count="0" />
+      <LineId Id="862" Count="0" />
+      <LineId Id="859" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

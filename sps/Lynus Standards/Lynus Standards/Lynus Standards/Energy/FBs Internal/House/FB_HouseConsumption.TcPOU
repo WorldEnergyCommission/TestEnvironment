@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HouseConsumption" Id="{1aa898db-55be-41cc-888f-06d5b370cc25}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HouseConsumption
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;							//Enable or disable this function
+	{attribute 'hide'}
+	bError								: BOOL;							//Error from the house consumption
+	{attribute 'hide'}
+	bWarning							: BOOL;							//Warning from the house consumption
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;							//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	iErrorCode							: INT;							//Error Code from external House Consumption
+	{attribute 'hide'}
+	iWarningCode						: INT;							//Warning Code from external House Consumption
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;						//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;						//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;						//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;						//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;						//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;						//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrPowerHouseConsumption				: LREAL;						//Input Value from the power of the House with unit W
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;					//Delay Time to write some Data to the Output
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataHouseCOut						: ST_HouseConsumption_Output;	//House consumption output data
+	{attribute 'hide'}
+	stDataHouseCOutDelay				: ST_HouseConsumption_Output;	//House consumption output data with delay
+END_VAR
+VAR	
+	FPEnable							: R_TRIG;						//Internal positive Edge
+	FNEnable							: F_TRIG;						//Internal negative Edge
+	timDelayOutputs						: TON;							//Timer to send Data with Delay to the outputs
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 29.05.2021
+//Version : 1.0.0.0
+
+//With this function its possible to handle the most important values from a hous consumption
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrPowerHouseConsumption := LIMIT(-999999999999999,lrPowerHouseConsumption,999999999999999);
+
+(*---------------------------------------------------------------Enable-------------------------------------------------------------------------------*)
+stDataHouseCOut.bEnabled := bEnable;
+
+(*---------------------------------------------------------------Power data-------------------------------------------------------------------------------*)
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+
+IF bEnable THEN
+	stDataHouseCOut.lrPower:= LINT_TO_LREAL(LREAL_TO_LINT((lrPowerHouseConsumption / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataHouseCOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataHouseCOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataHouseCOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataHouseCOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataHouseCOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataHouseCOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF 	 
+				
+		IF stDataHouseCOut.lrPower < 0 THEN
+				stDataHouseCOut.lrPowerProduction := (stDataHouseCOut.lrPower * - 1);
+				stDataHouseCOut.lrPowerConsumption := 0;
+		ELSIF stDataHouseCOut.lrPower > 0 THEN
+				stDataHouseCOut.lrPowerProduction := 0;
+				stDataHouseCOut.lrPowerConsumption := stDataHouseCOut.lrPower;
+		ELSIF stDataHouseCOut.lrPower = 0 THEN
+				stDataHouseCOut.lrPowerProduction := 0;
+				stDataHouseCOut.lrPowerConsumption := 0;
+		END_IF															
+ELSE																			
+	stDataHouseCOut.lrPower := 0;
+		stDataHouseCOut.lrCounterEnergyT1_Consumption := 0;
+			stDataHouseCOut.lrCounterEnergyT2_Consumption := 0;
+				stDataHouseCOut.lrCounterEnergyT1_Production := 0;
+					stDataHouseCOut.lrCounterEnergyT2_Production := 0;
+						stDataHouseCOut.lrPowerProduction := 0;
+							stDataHouseCOut.lrPowerConsumption := 0;
+								stDataHouseCOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataHouseCOut.lrTotalCounterEnergy_Production := 0;
+END_IF	
+
+(*---------------------------------------------------------------Error and Warning-------------------------------------------------------------------------------*)
+
+stDataHouseCOut.byErrorWarning := 0;
+	IF bWarning THEN stDataHouseCOut.byErrorWarning := 1; END_IF
+	IF bError THEN stDataHouseCOut.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF stDataHouseCOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataHouseCOut.eMessage := E_Message_HouseC.eNoConnectionToBackend;
+ELSIF stDataHouseCOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataHouseCOut.eMessage := E_Message_HouseC.eErrorHouseC;
+ELSIF stDataHouseCOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataHouseCOut.eMessage := E_Message_HouseC.eTooMuchHouseC;
+ELSE stDataHouseCOut.eMessage := E_Message_HouseC.eNoMessage; 
+END_IF
+
+(*---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataHouseCOutDelay := stDataHouseCOut; 
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HouseConsumption">
+      <LineId Id="643" Count="2" />
+      <LineId Id="641" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="613" Count="1" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="787" Count="4" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="646" Count="1" />
+      <LineId Id="677" Count="0" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="678" Count="0" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="792" Count="4" />
+      <LineId Id="582" Count="0" />
+      <LineId Id="581" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="387" Count="1" />
+      <LineId Id="390" Count="1" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="393" Count="1" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="284" Count="1" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="583" Count="1" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="684" Count="1" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="740" Count="0" />
+      <LineId Id="561" Count="1" />
+      <LineId Id="665" Count="1" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="667" Count="2" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="690" Count="5" />
+      <LineId Id="689" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

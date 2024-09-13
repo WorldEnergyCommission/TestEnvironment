@@ -1,0 +1,33 @@
+<div class="box">
+  <div class="box-content flex flex-column">
+    <p
+      [style.color]="userData?.colors?.default"
+      [style.font-size]="titleFontSize"
+    >
+      {{ getTitle() }}
+    </p>
+
+    <div class="flex margin flex-column pb-2" *ngFor="let x of energy">
+      <div
+        [style.color]="userData?.colors?.default"
+        [style.font-size]="textFontSize"
+      >
+        {{ x.title }}
+      </div>
+      <div class="flex row h-100">
+        <div
+          class="graph"
+          [style.width]="getGraphWidth(x.val)"
+          [style.border-bottom-color]="userData?.colors?.secondary"
+        ></div>
+        <div
+          class="default-text-transform"
+          [style.color]="userData?.colors?.default"
+          [style.font-size]="numberFontSize"
+        >
+          {{ x.val_formatted }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

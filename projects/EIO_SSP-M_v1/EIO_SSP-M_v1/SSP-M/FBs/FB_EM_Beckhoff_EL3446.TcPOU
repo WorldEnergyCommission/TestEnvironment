@@ -1,0 +1,781 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_EM_Beckhoff_EL3446" Id="{b5543a61-632d-4eb7-a6e2-bdfe5c09d1ca}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EM_Beckhoff_EL3446
+VAR_INPUT
+	bEnable							: BOOL;											//Enable the function
+  	bEnableVariantValues 			: BOOL; //Enables the Variant values to be queried using the multiplexer functions of the block
+    pDpmData 						: POINTER TO ARRAY[1..20] OF UDINT;
+	nSlaveAddr						: UINT;											//EtherCat Slave ID	
+ 	bInvers_CH1						: BOOL;											//Invert the Output data from Channel 1 
+	bInvers_CH2						: BOOL;											//Invert the Output data from Channel 2 
+	bInvers_CH3						: BOOL;											//Invert the Output data from Channel 3
+	bInvers_CH4						: BOOL;											//Invert the Output data from Channel 4
+	bInvers_CH5						: BOOL;											//Invert the Output data from Channel 5
+	bInvers_CH6						: BOOL;											//Invert the Output data from Channel 6
+	uiCurrentTransformerRatio_CH1	: UINT;											//Current Transformer Ratio for Channel 1 
+	uiCurrentTransformerRatio_CH2	: UINT;											//Current Transformer Ratio for Channel 2 
+	uiCurrentTransformerRatio_CH3	: UINT;											//Current Transformer Ratio for Channel 3 
+	uiCurrentTransformerRatio_CH4	: UINT;											//Current Transformer Ratio for Channel 4 
+	uiCurrentTransformerRatio_CH5	: UINT;											//Current Transformer Ratio for Channel 5 
+	uiCurrentTransformerRatio_CH6	: UINT;											//Current Transformer Ratio for Channel 6
+	uiVoltagePhaseSelector_CH1		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 1
+	uiVoltagePhaseSelector_CH2		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 2
+	uiVoltagePhaseSelector_CH3		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 3
+	uiVoltagePhaseSelector_CH4		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 4
+	uiVoltagePhaseSelector_CH5		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 5
+	uiVoltagePhaseSelector_CH6		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 6 
+	bEnable3PhaseCH13				: BOOL;											//Enable 3 phase measurement Channel 1-3
+	bEnable3PhaseCH46				: BOOL;											//Enable 3 phase measurement Channel 4-6
+	stDataEMPowerRealTime			: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime) used adding voltage to output struct
+    stEL3446_IO : MDP5001_342_066CA8C6; 
+END_VAR
+VAR_OUTPUT
+	stDataEMPower_CH1				: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) for Channel 1
+	stDataEMCounter_CH1				: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) for Channel 1
+	stDataEMPowerRealTime_CH1		: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime) for Channel 1
+	stDataEMCounterRealTime_CH1		: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) for Channel 1
+
+	stDataEMPower_CH2				: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) for Channel 2
+	stDataEMCounter_CH2				: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) for Channel 2
+	stDataEMPowerRealTime_CH2		: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime) for Channel 2
+	stDataEMCounterRealTime_CH2		: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) for Channel 2
+
+	stDataEMPower_CH3				: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) for Channel 3
+	stDataEMCounter_CH3				: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) for Channel 3
+	stDataEMPowerRealTime_CH3		: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime) for Channel 3
+	stDataEMCounterRealTime_CH3		: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) for Channel 3
+
+	stDataEMPower_CH4				: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) for Channel 4
+	stDataEMCounter_CH4				: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) for Channel 4
+	stDataEMPowerRealTime_CH4		: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime) for Channel 4
+	stDataEMCounterRealTime_CH4		: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) for Channel 4
+
+	stDataEMPower_CH5				: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) for Channel 5
+	stDataEMCounter_CH5				: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) for Channel 5
+	stDataEMPowerRealTime_CH5		: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime) for Channel 5
+	stDataEMCounterRealTime_CH5		: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) for Channel 5
+
+	stDataEMPower_CH6				: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) for Channel 6
+	stDataEMCounter_CH6				: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) for Channel 6
+	stDataEMPowerRealTime_CH6		: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime) for Channel 6
+	stDataEMCounterRealTime_CH6		: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) for Channel 6	
+	
+END_VAR
+VAR
+	fbEM_CH1						: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter_CH1				: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbEM_CH2						: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter_CH2				: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbEM_CH3						: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter_CH3				: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbEM_CH4						: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter_CH4				: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbEM_CH5						: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter_CH5				: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbEM_CH6						: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter_CH6				: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbEL3446_wEL3443	: FB_EL3446; 		//EL3446 | 6-channel current input terminal 1 A AC/DC for distributed power measurement (FW02 or higher) for DPM with EL3443
+	
+	timDissableFunctions			: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL			: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	timSetCounterValues				: TON;											//Timer to set the counter values from the KL3403 Function to the EM Function
+	arrPD							: ARRAY[1..7] OF FB_PersistentData_Number;		//Function to save persistent data
+	byWaitInStep					: BYTE;											//Wait in Step before start to clean data on PLC
+	iStateGVLData					: INT;											//State machine to handle the data on the GVL
+	diCounterForGVL					: DINT;											//Counter to clean old data on GVL
+	bInit: BOOL;
+	m_COE_Done: BOOL;
+	FB_CoE_EL3446 :FB_CoE_EL3446;
+	uiVoltagePhaseSelector_old_CH1		: UINT;											
+	uiVoltagePhaseSelector_old_CH2		: UINT;											
+	uiVoltagePhaseSelector_old_CH3		: UINT;											
+	uiVoltagePhaseSelector_old_CH4		: UINT;											
+	uiVoltagePhaseSelector_old_CH5		: UINT;											
+	uiVoltagePhaseSelector_old_CH6		: UINT;											
+	
+	f_trig_Busy: f_trig;
+
+	real_Multiplier_CH1: REAL;
+	real_Multiplier_CH2: REAL;
+	real_Multiplier_CH3: REAL;
+	real_Multiplier_CH4: REAL;
+	real_Multiplier_CH5: REAL;
+	real_Multiplier_CH6: REAL;
+	
+
+			
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner
+//Company : EfficientIO
+//Date : xx.09.2023
+//Version : 1.0.0.0
+
+
+//With this function is possible to read out all Information from a EL3446
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+IF timResetConnectionOnGVL.Q THEN 
+	Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; 
+END_IF
+IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN 
+	timDissableFunctions.IN := TRUE; 
+ELSE 
+	timDissableFunctions.IN := FALSE; 
+END_IF  
+timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+// limit inputs
+uiCurrentTransformerRatio_CH1 := LIMIT (1,uiCurrentTransformerRatio_CH1,10000);
+uiCurrentTransformerRatio_CH2 := LIMIT (1,uiCurrentTransformerRatio_CH2,10000);
+uiCurrentTransformerRatio_CH3 := LIMIT (1,uiCurrentTransformerRatio_CH3,10000);
+uiCurrentTransformerRatio_CH4 := LIMIT (1,uiCurrentTransformerRatio_CH4,10000);
+uiCurrentTransformerRatio_CH5 := LIMIT (1,uiCurrentTransformerRatio_CH5,10000);
+uiCurrentTransformerRatio_CH6 := LIMIT (1,uiCurrentTransformerRatio_CH6,10000);
+uiVoltagePhaseSelector_CH1 := LIMIT (1,uiVoltagePhaseSelector_CH1,3);
+uiVoltagePhaseSelector_CH2 := LIMIT (1,uiVoltagePhaseSelector_CH2,3);
+uiVoltagePhaseSelector_CH3 := LIMIT (1,uiVoltagePhaseSelector_CH3,3);
+uiVoltagePhaseSelector_CH4 := LIMIT (1,uiVoltagePhaseSelector_CH4,3);
+uiVoltagePhaseSelector_CH5 := LIMIT (1,uiVoltagePhaseSelector_CH5,3);
+uiVoltagePhaseSelector_CH6 := LIMIT (1,uiVoltagePhaseSelector_CH6,3);
+
+
+(*----------------------------------------------------------------------------------------EL3446 Communication----------------------------------------------------------------------------------------------*)
+
+// write CoE values for phase selector
+
+IF 	NOT m_COE_Done OR uiVoltagePhaseSelector_CH1 <> uiVoltagePhaseSelector_old_CH1 OR uiVoltagePhaseSelector_CH2 <> uiVoltagePhaseSelector_old_CH2 OR
+ 	uiVoltagePhaseSelector_CH3 <> uiVoltagePhaseSelector_old_CH3 OR uiVoltagePhaseSelector_CH4 <> uiVoltagePhaseSelector_old_CH4 OR
+  	uiVoltagePhaseSelector_CH5 <> uiVoltagePhaseSelector_old_CH5 OR uiVoltagePhaseSelector_CH6 <> uiVoltagePhaseSelector_old_CH6 
+	THEN
+	FB_CoE_EL3446.m_start := TRUE;
+	m_COE_Done := TRUE;
+	 uiVoltagePhaseSelector_old_CH1 := uiVoltagePhaseSelector_CH1;
+	 uiVoltagePhaseSelector_old_CH2 := uiVoltagePhaseSelector_CH2;
+	 uiVoltagePhaseSelector_old_CH3 := uiVoltagePhaseSelector_CH3;
+	 uiVoltagePhaseSelector_old_CH4 := uiVoltagePhaseSelector_CH4;
+	 uiVoltagePhaseSelector_old_CH5 := uiVoltagePhaseSelector_CH5;
+	 uiVoltagePhaseSelector_old_CH6 := uiVoltagePhaseSelector_CH6;
+END_IF
+f_trig_Busy(CLK := FB_CoE_EL3446.m_Busy );
+IF f_trig_Busy.Q AND (FB_CoE_EL3446.m_CoE_Write_done OR FB_CoE_EL3446.m_Error) THEN 
+	FB_CoE_EL3446.m_start := FALSE;
+END_IF
+FB_CoE_EL3446(
+	m_start:= , 
+	nSlaveAddr:= nSlaveAddr, 
+	uiVoltagePhaseSelector_CH1:= uiVoltagePhaseSelector_CH1, 
+	uiVoltagePhaseSelector_CH2:= uiVoltagePhaseSelector_CH2, 
+	uiVoltagePhaseSelector_CH3:= uiVoltagePhaseSelector_CH3, 
+	uiVoltagePhaseSelector_CH4:= uiVoltagePhaseSelector_CH4, 
+	uiVoltagePhaseSelector_CH5:= uiVoltagePhaseSelector_CH5, 
+	uiVoltagePhaseSelector_CH6:= uiVoltagePhaseSelector_CH6, 
+	m_Busy=> , 
+	m_CoE_Write_done=> , 
+	udint_GetAMSNetID_Error=> , 
+	udint_WriteCoE_Error=> );
+
+fbEL3446_wEL3443(
+	bEnable:= TRUE, 
+	pDpmData:= pDpmData, 
+	stEL3446_IO:= , 
+	stStatusPhase_I1=> , 
+	stStatusPhase_I2=> , 
+	stStatusPhase_I3=> , 
+	stStatusPhase_I4=> , 
+	stStatusPhase_I5=> , 
+	stStatusPhase_I6=> , 
+	stDPMVariantValues=> , 
+	bError=> );
+fbEL3446_wEL3443.stEL3446_IO.MDP5001_342_Input := stEL3446_IO.MDP5001_342_Input;
+stEL3446_IO.MDP5001_342_Output := fbEL3446_wEL3443.stEL3446_IO.MDP5001_342_Output;
+//Invert the Output data, because it is possible that the current transformers have been mounted in different mounting positions.
+IF NOT bInvers_CH1 THEN
+	real_Multiplier_CH1 := 1;
+ELSE
+	real_Multiplier_CH1 := -1;
+END_IF
+IF NOT bInvers_CH2 THEN
+	real_Multiplier_CH2 := 1;
+ELSE
+	real_Multiplier_CH2 := -1;
+END_IF
+IF NOT bInvers_CH3 THEN
+	real_Multiplier_CH3 := 1;
+ELSE
+	real_Multiplier_CH3 := -1;
+END_IF
+IF NOT bInvers_CH4 THEN
+	real_Multiplier_CH4 := 1;
+ELSE
+	real_Multiplier_CH4 := -1;
+END_IF
+IF NOT bInvers_CH5 THEN
+	real_Multiplier_CH5 := 1;
+ELSE
+	real_Multiplier_CH5 := -1;
+END_IF
+IF NOT bInvers_CH6 THEN
+	real_Multiplier_CH6 := 1;
+ELSE
+	real_Multiplier_CH6 := -1;
+END_IF
+
+//Function
+IF NOT bEnable3PhaseCH13 THEN
+	fbEM_CH1(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH1.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH1.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH1.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH1.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH1.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH1.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I1.fCurrent * uiCurrentTransformerRatio_CH1,
+		lrVoltageL1N:= , 
+		lrVoltageL1L2:= , 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I1.fActive_Power * uiCurrentTransformerRatio_CH1 * real_Multiplier_CH1, 
+		lrCurrentL2:= ,
+		lrVoltageL2N:= , 
+		lrVoltageL2L3:= , 
+		lrPowerL2:= , 
+		lrCurrentL3:= , 
+		lrVoltageL3N:= , 
+		lrVoltageL3L1:= , 
+		lrPowerL3:= , 
+		lrPowerTotal:= fbEM_CH1.lrPowerL1, 
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency,  
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I1.fApparent_Power * uiCurrentTransformerRatio_CH1 ,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I1.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH1, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH1, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH1, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH1,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH1,
+		bReadOutMeter=> );
+	fbEM_CH2(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH2.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH2.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH2.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH2.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH2.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH2.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I2.fCurrent * uiCurrentTransformerRatio_CH2,
+		lrVoltageL1N:= , 
+		lrVoltageL1L2:= , 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I2.fActive_Power * uiCurrentTransformerRatio_CH2 * real_Multiplier_CH2, 
+		lrCurrentL2:= ,
+		lrVoltageL2N:= , 
+		lrVoltageL2L3:= , 
+		lrPowerL2:= , 
+		lrCurrentL3:= , 
+		lrVoltageL3N:= , 
+		lrVoltageL3L1:= , 
+		lrPowerL3:= , 
+		lrPowerTotal:= fbEM_CH2.lrPowerL1, 
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency, 
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I2.fApparent_Power * uiCurrentTransformerRatio_CH2 ,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I2.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH2, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH2, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH2, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH2,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH2,
+		bReadOutMeter=> );
+	fbEM_CH3(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH3.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH3.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH3.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH3.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH3.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH3.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I3.fCurrent * uiCurrentTransformerRatio_CH3,
+		lrVoltageL1N:= , 
+		lrVoltageL1L2:= , 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I3.fActive_Power * uiCurrentTransformerRatio_CH3 * real_Multiplier_CH3, 
+		lrCurrentL2:= ,
+		lrVoltageL2N:= , 
+		lrVoltageL2L3:= , 
+		lrPowerL2:= , 
+		lrCurrentL3:= , 
+		lrVoltageL3N:= , 
+		lrVoltageL3L1:= , 
+		lrPowerL3:= , 
+		lrPowerTotal:= fbEM_CH3.lrPowerL1, 
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency,
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I3.fApparent_Power * uiCurrentTransformerRatio_CH3 ,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I3.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH3, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH3, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH3, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH3,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH3,
+		bReadOutMeter=> );
+	fbEnergyCounter_CH1(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH1.lrPowerL1) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+	fbEnergyCounter_CH2(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH2.lrPowerL1) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+	fbEnergyCounter_CH3(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH3.lrPowerL1) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+	CASE uiVoltagePhaseSelector_CH1 OF
+		1: 	fbEM_CH1.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL1N;
+		2: 	fbEM_CH1.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL2N;
+		3: 	fbEM_CH1.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL3N;	
+	END_CASE
+	CASE uiVoltagePhaseSelector_CH2 OF
+		1: 	fbEM_CH2.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL1N;
+		2: 	fbEM_CH2.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL2N;
+		3: 	fbEM_CH2.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL3N;	
+	END_CASE
+	CASE uiVoltagePhaseSelector_CH3 OF
+		1: 	fbEM_CH3.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL1N;
+		2: 	fbEM_CH3.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL2N;
+		3: 	fbEM_CH3.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL3N;	
+	END_CASE	
+ELSE
+	fbEM_CH1(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH1.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH1.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH1.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH1.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH1.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH1.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I1.fCurrent * uiCurrentTransformerRatio_CH1,
+		lrVoltageL1N:= stDataEMPowerRealTime.lrVoltageL1N, 
+		lrVoltageL1L2:= stDataEMPowerRealTime.lrVoltageL1L2, 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I1.fActive_Power * uiCurrentTransformerRatio_CH1 * real_Multiplier_CH1, 
+		lrCurrentL2:= fbEL3446_wEL3443.stStatusPhase_I2.fCurrent * uiCurrentTransformerRatio_CH2,
+		lrVoltageL2N:= stDataEMPowerRealTime.lrVoltageL2N, 
+		lrVoltageL2L3:=stDataEMPowerRealTime.lrVoltageL2L3 , 
+		lrPowerL2:= fbEL3446_wEL3443.stStatusPhase_I2.fActive_Power * uiCurrentTransformerRatio_CH2 * real_Multiplier_CH2, 
+		lrCurrentL3:=  fbEL3446_wEL3443.stStatusPhase_I3.fCurrent * uiCurrentTransformerRatio_CH3, 
+		lrVoltageL3N:= stDataEMPowerRealTime.lrVoltageL3N, 
+		lrVoltageL3L1:= stDataEMPowerRealTime.lrVoltageL3L1 , 
+		lrPowerL3:= fbEL3446_wEL3443.stStatusPhase_I3.fActive_Power * uiCurrentTransformerRatio_CH3 * real_Multiplier_CH3, 
+		lrPowerTotal:= fbEM_CH1.lrPowerL1 + fbEM_CH1.lrPowerL2 + fbEM_CH1.lrPowerL3,
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency, 
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I1.fApparent_Power * uiCurrentTransformerRatio_CH1 + fbEL3446_wEL3443.stStatusPhase_I2.fApparent_Power * uiCurrentTransformerRatio_CH2 + fbEL3446_wEL3443.stStatusPhase_I3.fApparent_Power * uiCurrentTransformerRatio_CH3,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I1.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH1 + fbEL3446_wEL3443.stStatusPhase_I2.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH2 + fbEL3446_wEL3443.stStatusPhase_I3.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH3, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH1, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH1, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH1,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH1,
+		bReadOutMeter=> );	
+	fbEnergyCounter_CH1(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH1.lrPowerTotal) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+END_IF	
+IF NOT bEnable3PhaseCH46 THEN 	
+	fbEM_CH4(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH4.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH4.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH4.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH4.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH4.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH4.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I4.fCurrent * uiCurrentTransformerRatio_CH4,
+		lrVoltageL1N:= , 
+		lrVoltageL1L2:= , 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I4.fActive_Power * uiCurrentTransformerRatio_CH4 * real_Multiplier_CH4, 
+		lrCurrentL2:= ,
+		lrVoltageL2N:= , 
+		lrVoltageL2L3:= , 
+		lrPowerL2:= , 
+		lrCurrentL3:= , 
+		lrVoltageL3N:= , 
+		lrVoltageL3L1:= , 
+		lrPowerL3:= , 
+		lrPowerTotal:= fbEM_CH4.lrPowerL1, 
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency,
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I4.fApparent_Power * uiCurrentTransformerRatio_CH4 ,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I4.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH4, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH4, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH4, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH4,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH4,
+		bReadOutMeter=> );
+	fbEM_CH5(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH5.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH5.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH5.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH5.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH5.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH5.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I5.fCurrent * uiCurrentTransformerRatio_CH5,
+		lrVoltageL1N:= , 
+		lrVoltageL1L2:= , 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I5.fActive_Power * uiCurrentTransformerRatio_CH5 * real_Multiplier_CH5, 
+		lrCurrentL2:= ,
+		lrVoltageL2N:= , 
+		lrVoltageL2L3:= , 
+		lrPowerL2:= , 
+		lrCurrentL3:= , 
+		lrVoltageL3N:= , 
+		lrVoltageL3L1:= , 
+		lrPowerL3:= , 
+		lrPowerTotal:= fbEM_CH5.lrPowerL1, 
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency,
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I5.fApparent_Power * uiCurrentTransformerRatio_CH5 ,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I5.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH5, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH5, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH5, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH5,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH5,
+		bReadOutMeter=> );
+	fbEM_CH6(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH6.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH6.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH6.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH6.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH6.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH6.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I6.fCurrent * uiCurrentTransformerRatio_CH6,
+		lrVoltageL1N:= , 
+		lrVoltageL1L2:= , 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I6.fActive_Power * uiCurrentTransformerRatio_CH6 * real_Multiplier_CH6, 
+		lrCurrentL2:= ,
+		lrVoltageL2N:= , 
+		lrVoltageL2L3:= , 
+		lrPowerL2:= , 
+		lrCurrentL3:= , 
+		lrVoltageL3N:= , 
+		lrVoltageL3L1:= , 
+		lrPowerL3:= , 
+		lrPowerTotal:= fbEM_CH6.lrPowerL1, 
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency,
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I6.fApparent_Power * uiCurrentTransformerRatio_CH6 ,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I6.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH6, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH6, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH6, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH6,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH6,
+		bReadOutMeter=> );
+	fbEnergyCounter_CH4(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH4.lrPowerL1) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+	fbEnergyCounter_CH5(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH5.lrPowerL1) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+	fbEnergyCounter_CH6(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH6.lrPowerL1) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+	CASE uiVoltagePhaseSelector_CH4 OF
+		1: 	fbEM_CH4.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL1N;
+		2: 	fbEM_CH4.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL2N;
+		3: 	fbEM_CH4.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL3N;	
+	END_CASE
+	CASE uiVoltagePhaseSelector_CH5 OF
+		1: 	fbEM_CH5.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL1N;
+		2: 	fbEM_CH5.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL2N;
+		3: 	fbEM_CH5.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL3N;	
+	END_CASE
+	CASE uiVoltagePhaseSelector_CH6 OF
+		1: 	fbEM_CH6.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL1N;
+		2: 	fbEM_CH6.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL2N;
+		3: 	fbEM_CH6.lrVoltageL1N := stDataEMPowerRealTime.lrVoltageL3N;	
+	END_CASE
+ELSE 
+	fbEM_CH4(
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= FALSE, 
+		bWriteWithDelay:= TRUE, 
+		bPowerDataInvers:= FALSE,
+		bReadOutDataDone:= timSetCounterValues.Q,
+		iTimeReadOutInterval:= 0, 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= fbEnergyCounter_CH4.lrTotalCounterEnergy_Consumption,
+		lrTotalCounterEnergy_Production:= fbEnergyCounter_CH4.lrTotalCounterEnergy_Production, 
+		lrCounterEnergyT1_Consumption:= fbEnergyCounter_CH4.lrCounterEnergyT1_Consumption,
+		lrCounterEnergyT2_Consumption:= fbEnergyCounter_CH4.lrCounterEnergyT2_Consumption,
+		lrCounterEnergyT1_Production:= fbEnergyCounter_CH4.lrCounterEnergyT1_Production, 
+		lrCounterEnergyT2_Production:= fbEnergyCounter_CH4.lrCounterEnergyT2_Production, 
+		lrCurrentL1:=  fbEL3446_wEL3443.stStatusPhase_I4.fCurrent * uiCurrentTransformerRatio_CH4,
+		lrVoltageL1N:= stDataEMPowerRealTime.lrVoltageL1N, 
+		lrVoltageL1L2:= stDataEMPowerRealTime.lrVoltageL1L2, 
+		lrPowerL1:= fbEL3446_wEL3443.stStatusPhase_I4.fActive_Power * uiCurrentTransformerRatio_CH4 * real_Multiplier_CH4, 
+		lrCurrentL2:= fbEL3446_wEL3443.stStatusPhase_I5.fCurrent * uiCurrentTransformerRatio_CH5,
+		lrVoltageL2N:= stDataEMPowerRealTime.lrVoltageL2N, 
+		lrVoltageL2L3:=stDataEMPowerRealTime.lrVoltageL2L3 , 
+		lrPowerL2:= fbEL3446_wEL3443.stStatusPhase_I5.fActive_Power * uiCurrentTransformerRatio_CH5 * real_Multiplier_CH5, 
+		lrCurrentL3:=  fbEL3446_wEL3443.stStatusPhase_I6.fCurrent * uiCurrentTransformerRatio_CH6, 
+		lrVoltageL3N:= stDataEMPowerRealTime.lrVoltageL3N, 
+		lrVoltageL3L1:= stDataEMPowerRealTime.lrVoltageL3L1 , 
+		lrPowerL3:= fbEL3446_wEL3443.stStatusPhase_I6.fActive_Power * uiCurrentTransformerRatio_CH6 * real_Multiplier_CH6, 
+		lrPowerTotal:= fbEM_CH4.lrPowerL1 + fbEM_CH4.lrPowerL2 + fbEM_CH4.lrPowerL3,
+		lrFrequency:= stDataEMPowerRealTime.lrFrequency, 
+		lrApparentPowerTotal:= fbEL3446_wEL3443.stStatusPhase_I4.fApparent_Power * uiCurrentTransformerRatio_CH4 + fbEL3446_wEL3443.stStatusPhase_I5.fApparent_Power * uiCurrentTransformerRatio_CH5 + fbEL3446_wEL3443.stStatusPhase_I6.fApparent_Power * uiCurrentTransformerRatio_CH6,
+		lrReactivePowerTotal:= fbEL3446_wEL3443.stStatusPhase_I4.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH4 + fbEL3446_wEL3443.stStatusPhase_I5.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH5 + fbEL3446_wEL3443.stStatusPhase_I6.fReactive_Power_Fundamental * uiCurrentTransformerRatio_CH6, 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> stDataEMPowerRealTime_CH4, 
+		stDataEMOutPowerDelay=> stDataEMPower_CH4, 
+		stDataEMOutCounter=> stDataEMCounterRealTime_CH4,
+		stDataEMOutCounterDelay=> stDataEMCounter_CH4,
+		bReadOutMeter=> );	
+	fbEnergyCounter_CH4(
+		byActiveTariff:= 1, 
+		lrPowerInput:= (fbEM_CH4.lrPowerTotal) / 1000, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+END_IF
+(*----------------------------------------------------------------------------------------Electric Meter Function----------------------------------------------------------------------------------------------*)
+
+//Error
+IF timDissableFunctions.Q THEN 
+	fbEM_CH1.bWarning := TRUE; 
+	fbEM_CH1.iWarningCode := 0; 
+ELSE 
+	fbEM_CH1.bWarning := FALSE; 
+END_IF 
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN 
+	fbEM_CH1.bError := TRUE; 
+ELSE 
+	fbEM_CH1.bError := FALSE; 
+END_IF
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN 
+	fbEM_CH1.iErrorCode := 1;
+ELSE 
+	fbEM_CH1.iErrorCode := 0;
+END_IF
+
+timSetCounterValues(IN:= bEnable AND NOT timSetCounterValues.Q, PT:= T#2S, Q=> , ET=> );		
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EM_Beckhoff_EL3446">
+      <LineId Id="774" Count="3" />
+      <LineId Id="1065" Count="0" />
+      <LineId Id="1064" Count="0" />
+      <LineId Id="779" Count="0" />
+      <LineId Id="781" Count="4" />
+      <LineId Id="807" Count="7" />
+      <LineId Id="1414" Count="1" />
+      <LineId Id="815" Count="0" />
+      <LineId Id="1416" Count="3" />
+      <LineId Id="816" Count="0" />
+      <LineId Id="1656" Count="0" />
+      <LineId Id="1659" Count="0" />
+      <LineId Id="1668" Count="5" />
+      <LineId Id="1665" Count="0" />
+      <LineId Id="1661" Count="3" />
+      <LineId Id="1657" Count="1" />
+      <LineId Id="817" Count="2" />
+      <LineId Id="1584" Count="0" />
+      <LineId Id="1620" Count="0" />
+      <LineId Id="1583" Count="0" />
+      <LineId Id="1629" Count="2" />
+      <LineId Id="1588" Count="0" />
+      <LineId Id="1615" Count="0" />
+      <LineId Id="1632" Count="5" />
+      <LineId Id="1586" Count="0" />
+      <LineId Id="1653" Count="0" />
+      <LineId Id="1614" Count="0" />
+      <LineId Id="1616" Count="1" />
+      <LineId Id="1601" Count="11" />
+      <LineId Id="1492" Count="1" />
+      <LineId Id="1638" Count="10" />
+      <LineId Id="1421" Count="0" />
+      <LineId Id="2239" Count="0" />
+      <LineId Id="2382" Count="0" />
+      <LineId Id="832" Count="1" />
+      <LineId Id="1674" Count="0" />
+      <LineId Id="849" Count="0" />
+      <LineId Id="1677" Count="0" />
+      <LineId Id="1675" Count="0" />
+      <LineId Id="1723" Count="3" />
+      <LineId Id="1722" Count="0" />
+      <LineId Id="1728" Count="3" />
+      <LineId Id="1727" Count="0" />
+      <LineId Id="1733" Count="3" />
+      <LineId Id="1732" Count="0" />
+      <LineId Id="1738" Count="3" />
+      <LineId Id="1737" Count="0" />
+      <LineId Id="1743" Count="3" />
+      <LineId Id="1742" Count="0" />
+      <LineId Id="1747" Count="0" />
+      <LineId Id="1678" Count="0" />
+      <LineId Id="2137" Count="0" />
+      <LineId Id="1679" Count="28" />
+      <LineId Id="2235" Count="0" />
+      <LineId Id="1709" Count="6" />
+      <LineId Id="850" Count="0" />
+      <LineId Id="1808" Count="28" />
+      <LineId Id="2236" Count="0" />
+      <LineId Id="1838" Count="6" />
+      <LineId Id="886" Count="0" />
+      <LineId Id="1846" Count="36" />
+      <LineId Id="1845" Count="0" />
+      <LineId Id="2110" Count="25" />
+      <LineId Id="2108" Count="0" />
+      <LineId Id="2242" Count="1" />
+      <LineId Id="2248" Count="1" />
+      <LineId Id="2246" Count="0" />
+      <LineId Id="2250" Count="3" />
+      <LineId Id="2244" Count="0" />
+      <LineId Id="2255" Count="3" />
+      <LineId Id="2254" Count="0" />
+      <LineId Id="2136" Count="0" />
+      <LineId Id="2142" Count="36" />
+      <LineId Id="2139" Count="0" />
+      <LineId Id="2179" Count="7" />
+      <LineId Id="2141" Count="0" />
+      <LineId Id="2138" Count="0" />
+      <LineId Id="2109" Count="0" />
+      <LineId Id="1884" Count="36" />
+      <LineId Id="1883" Count="0" />
+      <LineId Id="1922" Count="36" />
+      <LineId Id="1921" Count="0" />
+      <LineId Id="1960" Count="28" />
+      <LineId Id="1990" Count="0" />
+      <LineId Id="2237" Count="0" />
+      <LineId Id="1991" Count="5" />
+      <LineId Id="1959" Count="0" />
+      <LineId Id="887" Count="0" />
+      <LineId Id="1782" Count="25" />
+      <LineId Id="2260" Count="13" />
+      <LineId Id="2259" Count="0" />
+      <LineId Id="900" Count="0" />
+      <LineId Id="2189" Count="45" />
+      <LineId Id="2187" Count="1" />
+      <LineId Id="901" Count="3" />
+      <LineId Id="1756" Count="4" />
+      <LineId Id="905" Count="0" />
+      <LineId Id="907" Count="4" />
+      <LineId Id="1761" Count="0" />
+      <LineId Id="912" Count="0" />
+      <LineId Id="1762" Count="0" />
+      <LineId Id="913" Count="3" />
+      <LineId Id="1126" Count="0" />
+      <LineId Id="1651" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

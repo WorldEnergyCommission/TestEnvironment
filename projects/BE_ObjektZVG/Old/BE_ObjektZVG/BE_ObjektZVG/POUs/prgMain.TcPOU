@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgMain" Id="{9e015174-fc58-41d6-96df-19d2772e1e2f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMain
+VAR
+	intLiveCount			: INT;				//{#lynus.ag#()}
+	intArray  AT%MB0        :ARRAY[0..255] OF INT;		//Modbus Adress list for GLT
+	
+	TON_HeartBeat1: TON;
+	TON_HeartBeat2: TON;
+	real_RoomTemperature_409: REAL;			//{#lynus.ag#()}
+	real_RoomTemperature_210: REAL;			//{#lynus.ag#()}
+	bool_Mode_Zone_East_Off: BOOL;			//{#lynus.ag#()}
+	bool_Mode_Zone_East_Cooling: BOOL;		//{#lynus.ag#()}
+	bool_Mode_Zone_East_Heating: BOOL;		//{#lynus.ag#()}
+	real_SupplyTempEast: REAL;				//{#lynus.ag#()}
+	real_RoomTemperature_404: REAL;			//{#lynus.ag#()}
+	real_RoomTemperature_204: REAL;			//{#lynus.ag#()}
+	bool_Mode_Zone_West_Off: BOOL;			//{#lynus.ag#()}
+	bool_Mode_Zone_West_Cooling: BOOL;		//{#lynus.ag#()}
+	bool_Mode_Zone_West_Heating: BOOL;		//{#lynus.ag#()}
+	real_SupplyTempWest: REAL;				//{#lynus.ag#()}
+	real_RoomTemperature_Meeting6OG: REAL;	//{#lynus.ag#()}
+	real_RoomTemperature_DinningRoomSmall: REAL;	//{#lynus.ag#()}
+	real_RoomTemperature_DinningRoom: REAL;	//{#lynus.ag#()}
+	bool_Mode_Zone_West2_Off: BOOL;			//{#lynus.ag#()}
+	bool_Mode_Zone_West2_Cooling: BOOL;		//{#lynus.ag#()}
+	bool_Mode_Zone_West2_Heating: BOOL;		//{#lynus.ag#()}
+	real_SupplyTempWest2: REAL;				//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bool_EnableHeartbeat		:BOOL;		//{#lynus.ag#()}
+	real_Setpoint_ZoneWest		:REAL;		//{#lynus.ag#()}
+	real_Setpoint_ZoneEast		:REAL;		//{#lynus.ag#()}
+	real_Setpoint2_ZoneWest		:REAL;		//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner
+//Company : Efficient IO
+//Date : 23.09.2022
+//Version : 0.0.0.9
+
+//pre Release, not tested with GLT
+
+
+intLiveCount:=intLiveCount+1;
+
+// Heartbeat Bit 0 changing every 30s
+// MB Adress 12288
+//The Heartbear will only get sent, when the received enable bit is high
+IF bool_EnableHeartbeat THEN
+	IF TON_HeartBeat1.Q THEN
+		intArray[0]:=1;
+	ELSE
+		intArray[0]:=0;
+	END_IF
+END_IF
+TON_HeartBeat1(	IN:= TRUE AND NOT TON_HeartBeat2.Q ,
+		PT:= T#30S,
+		Q=> );
+TON_HeartBeat2(	IN:= TON_HeartBeat1.Q,
+		PT:= T#30S);
+		
+// MB Adress 12298
+real_RoomTemperature_409 	:= INT_TO_REAL (intArray[10])/10;
+// MB Adress 12299
+real_RoomTemperature_210 	:= INT_TO_REAL (intArray[11])/10;
+// MB Adress 12300
+CASE intArray[12] OF
+	0:	
+		bool_Mode_Zone_East_Off		:=TRUE;
+		bool_Mode_Zone_East_Cooling	:=FALSE;
+		bool_Mode_Zone_East_Heating	:=FALSE;
+	1:	
+		bool_Mode_Zone_East_Off		:=FALSE;
+		bool_Mode_Zone_East_Cooling	:=TRUE;
+		bool_Mode_Zone_East_Heating	:=FALSE;
+	2:	
+		bool_Mode_Zone_East_Off		:=FALSE;
+		bool_Mode_Zone_East_Cooling	:=FALSE;
+		bool_Mode_Zone_East_Heating	:=TRUE;
+END_CASE
+// MB Adress 12301
+real_SupplyTempEast			:= INT_TO_REAL (intArray[13])/10;
+// MB Adress 12302
+real_RoomTemperature_404 	:= INT_TO_REAL (intArray[14])/10;
+// MB Adress 12303
+real_RoomTemperature_204 	:= INT_TO_REAL (intArray[15])/10;
+// MB Adress 12304
+CASE intArray[16] OF
+	0:	
+		bool_Mode_Zone_West_Off		:=TRUE;
+		bool_Mode_Zone_West_Cooling	:=FALSE;
+		bool_Mode_Zone_West_Heating	:=FALSE;
+	1:	
+		bool_Mode_Zone_West_Off		:=FALSE;
+		bool_Mode_Zone_West_Cooling	:=TRUE;
+		bool_Mode_Zone_West_Heating	:=FALSE;
+	2:	
+		bool_Mode_Zone_West_Off		:=FALSE;
+		bool_Mode_Zone_West_Cooling	:=FALSE;
+		bool_Mode_Zone_West_Heating	:=TRUE;
+END_CASE
+// MB Adress 12305
+real_SupplyTempWest						:= INT_TO_REAL (intArray[17])/10;	
+// MB Adress 12306
+real_RoomTemperature_Meeting6OG 		:= INT_TO_REAL (intArray[18])/10;
+// MB Adress 12307
+real_RoomTemperature_DinningRoomSmall	:= INT_TO_REAL (intArray[19])/10;
+// MB Adress 12308
+real_RoomTemperature_DinningRoom		:= INT_TO_REAL (intArray[20])/10;
+// MB Adress 12309
+CASE intArray[21] OF
+	0:	
+		bool_Mode_Zone_West2_Off		:=TRUE;
+		bool_Mode_Zone_West2_Cooling	:=FALSE;
+		bool_Mode_Zone_West2_Heating	:=FALSE;
+	1:	
+		bool_Mode_Zone_West2_Off		:=FALSE;
+		bool_Mode_Zone_West2_Cooling	:=TRUE;
+		bool_Mode_Zone_West2_Heating	:=FALSE;
+	2:	
+		bool_Mode_Zone_West2_Off		:=FALSE;
+		bool_Mode_Zone_West2_Cooling	:=FALSE;
+		bool_Mode_Zone_West2_Heating	:=TRUE;
+END_CASE
+// MB Adress 12310
+real_SupplyTempWest2 	:= INT_TO_REAL (intArray[22])/10;		
+
+
+// received setpoints from AI
+// MB Adress 12488-12490
+intArray[200] := REAL_TO_INT(real_Setpoint_ZoneWest*10);
+intArray[201] := REAL_TO_INT(real_Setpoint_ZoneEast*10);
+intArray[202] := REAL_TO_INT(real_Setpoint2_ZoneWest*10);
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMain">
+      <LineId Id="234" Count="4" />
+      <LineId Id="231" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="33" Count="3" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="73" Count="1" />
+      <LineId Id="82" Count="7" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="95" Count="13" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="124" Count="12" />
+      <LineId Id="122" Count="1" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="172" Count="2" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

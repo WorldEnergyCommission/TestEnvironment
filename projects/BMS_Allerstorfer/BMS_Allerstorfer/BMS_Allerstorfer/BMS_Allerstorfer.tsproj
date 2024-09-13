@@ -1,0 +1,648 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.47">
+	<DataTypes>
+		<DataType>
+			<Name GUID="{06BAC70B-DEC6-CE82-2A3F-D4FB4146F020}" Namespace="Tc2_IoFunctions" AutoDeleteType="true">ST_KL320xInData</Name>
+			<BitSize>32</BitSize>
+			<SubItem>
+				<Name>iState</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000002}">USINT</Type>
+				<BitSize>8</BitSize>
+				<BitOffs>0</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>iDataIn</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
+				<BitSize>16</BitSize>
+				<BitOffs>16</BitOffs>
+			</SubItem>
+		</DataType>
+		<DataType>
+			<Name GUID="{1BADB2EA-A3F4-C423-BA38-4403C3D4DAB1}" Namespace="Tc2_IoFunctions" AutoDeleteType="true">ST_KL320xOutData</Name>
+			<BitSize>32</BitSize>
+			<SubItem>
+				<Name>iCtrl</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000002}">USINT</Type>
+				<BitSize>8</BitSize>
+				<BitOffs>0</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>iDataOut</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000006}">INT</Type>
+				<BitSize>16</BitSize>
+				<BitOffs>16</BitOffs>
+			</SubItem>
+		</DataType>
+	</DataTypes>
+	<Project ProjectGUID="{FB225F69-3741-4DDD-BFFB-5B4EE5B3A439}" TargetNetId="5.109.229.150.1.1" ShowHideConfigurations="#x3c6">
+		<System>
+			<Licenses>
+				<Target BkhfOrder="01197676" CustomOrder="60000492">
+					<ManualSelect>{6952449D-F68C-49A2-ADE4-8639D85B33A4}</ManualSelect>
+				</Target>
+			</Licenses>
+			<Tasks>
+				<Task Id="4" Priority="21" CycleTime="100000" AmsPort="351" AdtTasks="true">
+					<Name>PlcTask1</Name>
+				</Task>
+				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>PlcTask</Name>
+				</Task>
+				<Task Id="5" Priority="22" CycleTime="100000" AmsPort="352" AdtTasks="true">
+					<Name>SlowTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project GUID="{513212A6-4904-4763-962A-2BE236148E00}" Name="BMS_Allerstorfer" PrjFilePath="BMS_Allerstorfer\BMS_Allerstorfer.plcproj" TmcFilePath="BMS_Allerstorfer\BMS_Allerstorfer.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="BMS_Allerstorfer\BMS_Allerstorfer.tmc" TmcHash="{705C07C4-E7ED-EF8A-1375-F480598DACB2}">
+					<Name>BMS_Allerstorfer Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Vars VarGrpType="1">
+						<Name>MiddleTask Inputs</Name>
+						<Var>
+							<Name>prgGrid.fbKBusState.uiKBusState_OUT</Name>
+							<Comment><![CDATA[K-Bus State from the Basestation on wich the Terminal KL6301 is connected]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stInData_1</Name>
+							<Type GUID="{06BAC70B-DEC6-CE82-2A3F-D4FB4146F020}" Namespace="Tc2_IoFunctions">ST_KL320xInData</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.byStateCH1</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.iDataInCH1</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.byStateCH2</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.iDataInCH2</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.byStateCH3</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.iDataInCH3</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stInData_2</Name>
+							<Type GUID="{06BAC70B-DEC6-CE82-2A3F-D4FB4146F020}" Namespace="Tc2_IoFunctions">ST_KL320xInData</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stInData_3</Name>
+							<Type GUID="{06BAC70B-DEC6-CE82-2A3F-D4FB4146F020}" Namespace="Tc2_IoFunctions">ST_KL320xInData</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stInData_4</Name>
+							<Type GUID="{06BAC70B-DEC6-CE82-2A3F-D4FB4146F020}" Namespace="Tc2_IoFunctions">ST_KL320xInData</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2" AreaNo="1">
+						<Name>MiddleTask Outputs</Name>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.byCntrCH1</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.byCntrCH2</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgGrid.fbEM1.fbKL3403.byCntrCH3</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stOutData_1</Name>
+							<Type GUID="{1BADB2EA-A3F4-C423-BA38-4403C3D4DAB1}" Namespace="Tc2_IoFunctions">ST_KL320xOutData</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stOutData_2</Name>
+							<Type GUID="{1BADB2EA-A3F4-C423-BA38-4403C3D4DAB1}" Namespace="Tc2_IoFunctions">ST_KL320xOutData</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stOutData_3</Name>
+							<Type GUID="{1BADB2EA-A3F4-C423-BA38-4403C3D4DAB1}" Namespace="Tc2_IoFunctions">ST_KL320xOutData</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.stOutData_4</Name>
+							<Type GUID="{1BADB2EA-A3F4-C423-BA38-4403C3D4DAB1}" Namespace="Tc2_IoFunctions">ST_KL320xOutData</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.mOut_1</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.mOut_2</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.mOut_3</Name>
+							<Type>BOOL</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2" ContextId="2" AreaNo="33">
+						<Name>SlowTask Outputs</Name>
+						<Var>
+							<Name>prgTemperature.mOut_4</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.mOut_5</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.mOut_6</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.mOut_7</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgTemperature.mOut_8</Name>
+							<Type>BOOL</Type>
+						</Var>
+					</Vars>
+					<Contexts>
+						<Context>
+							<Id>0</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010030</OTCID>
+							</ManualConfig>
+							<Priority>20</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>1</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>21</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>22</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="20" OTCID="#x08502001"/>
+						<TaskPouOid Prio="21" OTCID="#x08502002"/>
+						<TaskPouOid Prio="22" OTCID="#x08502003"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+		</Plc>
+		<Io>
+			<Device Id="2" DevType="120">
+				<Name>Gerät 2 (CX-BK)</Name>
+				<DevData>000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffff0000000000000100000007000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</DevData>
+				<Image Id="1" AddrType="1" ImageType="3" SizeIn="26" SizeOut="26">
+					<Name>Prozessabbild</Name>
+				</Image>
+				<Box Id="1" BoxType="9703" AmsPort="28928">
+					<Name>Box 1 (CX-BK)</Name>
+					<ImageId>5</ImageId>
+					<Vars VarGrpType="1">
+						<Name>Eingänge</Name>
+						<Var>
+							<Name>State</Name>
+							<Comment><![CDATA[Bit 0 = K-Bus Err
+Bit 1 = Terminal State Err
+Bit 2 = Process Data Length Err
+Bit 7 = K-Bus invalid
+Bit 8 = No valid Inputs
+Bit 9 = K-Bus Input Update busy
+Bit 10 = K-Bus Output Update busy
+Bit 11 = Watchdog Err
+Bit 15 = Acyc. Function atcive (e.g. K-Bus Reset)
+]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2">
+						<Name>Ausgänge</Name>
+						<Var>
+							<Name>Ctrl</Name>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<BusCoupler ComplexTermSupport="true" NewHardware="true">
+						<Term Id="2" TermType="#x580" Fieldbus="6">
+							<Name>Klemme 2 (KL1408)</Name>
+							<ImageId>7</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>200</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>201</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>202</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 4</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>203</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 5</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>204</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 6</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>205</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 7</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>206</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 8</Name>
+								<Var>
+									<Name>Eingang</Name>
+									<Type>BIT</Type>
+									<BitOffs>207</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="3" TermType="#x968" Fieldbus="6">
+							<Name>Klemme 3 (KL2408)</Name>
+							<ImageId>31</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>200</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>201</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>202</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 4</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>203</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 5</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>204</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 6</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>205</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 7</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>206</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 8</Name>
+								<Var>
+									<Name>Ausgang</Name>
+									<Type>BIT</Type>
+									<BitOffs>207</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="4" TermType="#xc84" Fieldbus="6">
+							<Name>Klemme 4 (KL3204)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>40</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>40</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>56</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>56</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>88</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>88</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 4</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>104</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>112</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>104</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x5">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>112</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="5" TermType="#xd4b" Fieldbus="6">
+							<Name>Klemme 5 (KL3403)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>128</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>136</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>128</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>136</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>152</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>160</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>152</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>160</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>176</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>184</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>176</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>184</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="1" TermType="#x2332" Fieldbus="6">
+							<Name>End-Klemme (KL9010)</Name>
+							<ImageId>32</ImageId>
+						</Term>
+					</BusCoupler>
+					<CxBk/>
+				</Box>
+			</Device>
+		</Io>
+	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-2001-0850-0020-500810000403}" Id="#x02030010"/>
+		<MappingInfo Identifier="{08502003-0010-0304-0020-500810000403}" Id="#x02030020" Watchdog="04000000040000000400000004000000"/>
+		<OwnerA Name="TIPC^BMS_Allerstorfer^BMS_Allerstorfer Instance">
+			<OwnerB Name="TIID^Device 2 (CX-BK)^Box 1 (CX-BK)">
+				<Link VarA="MiddleTask Inputs^prgGrid.fbEM1.fbKL3403.byStateCH1" VarB="Term 5 (KL3403)^Channel 1^Status"/>
+				<Link VarA="MiddleTask Inputs^prgGrid.fbEM1.fbKL3403.byStateCH2" VarB="Term 5 (KL3403)^Channel 2^Status"/>
+				<Link VarA="MiddleTask Inputs^prgGrid.fbEM1.fbKL3403.byStateCH3" VarB="Term 5 (KL3403)^Channel 3^Status"/>
+				<Link VarA="MiddleTask Inputs^prgGrid.fbEM1.fbKL3403.iDataInCH1" VarB="Term 5 (KL3403)^Channel 1^Daten Ein"/>
+				<Link VarA="MiddleTask Inputs^prgGrid.fbEM1.fbKL3403.iDataInCH2" VarB="Term 5 (KL3403)^Channel 2^Daten Ein"/>
+				<Link VarA="MiddleTask Inputs^prgGrid.fbEM1.fbKL3403.iDataInCH3" VarB="Term 5 (KL3403)^Channel 3^Daten Ein"/>
+				<Link VarA="MiddleTask Inputs^prgGrid.fbKBusState.uiKBusState_OUT" VarB="Inputs^State"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_1^iDataIn" VarB="Term 4 (KL3204)^Channel 1^Daten Ein"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_1^iState" VarB="Term 4 (KL3204)^Channel 1^Status"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_2^iDataIn" VarB="Term 4 (KL3204)^Channel 2^Daten Ein"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_2^iState" VarB="Term 4 (KL3204)^Channel 2^Status"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_3^iDataIn" VarB="Term 4 (KL3204)^Channel 3^Daten Ein"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_3^iState" VarB="Term 4 (KL3204)^Channel 3^Status"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_4^iDataIn" VarB="Term 4 (KL3204)^Channel 4^Daten Ein"/>
+				<Link VarA="MiddleTask Inputs^prgTemperature.stInData_4^iState" VarB="Term 4 (KL3204)^Channel 4^Status"/>
+				<Link VarA="MiddleTask Outputs^prgGrid.fbEM1.fbKL3403.byCntrCH1" VarB="Term 5 (KL3403)^Channel 1^Kontrolle"/>
+				<Link VarA="MiddleTask Outputs^prgGrid.fbEM1.fbKL3403.byCntrCH2" VarB="Term 5 (KL3403)^Channel 2^Kontrolle"/>
+				<Link VarA="MiddleTask Outputs^prgGrid.fbEM1.fbKL3403.byCntrCH3" VarB="Term 5 (KL3403)^Channel 3^Kontrolle"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.mOut_1" VarB="Term 3 (KL2408)^Channel 1^Ausgang"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.mOut_2" VarB="Term 3 (KL2408)^Channel 2^Ausgang"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.mOut_3" VarB="Term 3 (KL2408)^Channel 3^Ausgang"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_1^iCtrl" VarB="Term 4 (KL3204)^Channel 1^Kontrolle"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_1^iDataOut" VarB="Term 4 (KL3204)^Channel 1^Daten Aus"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_2^iCtrl" VarB="Term 4 (KL3204)^Channel 2^Kontrolle"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_2^iDataOut" VarB="Term 4 (KL3204)^Channel 2^Daten Aus"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_3^iCtrl" VarB="Term 4 (KL3204)^Channel 3^Kontrolle"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_3^iDataOut" VarB="Term 4 (KL3204)^Channel 3^Daten Aus"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_4^iCtrl" VarB="Term 4 (KL3204)^Channel 4^Kontrolle"/>
+				<Link VarA="MiddleTask Outputs^prgTemperature.stOutData_4^iDataOut" VarB="Term 4 (KL3204)^Channel 4^Daten Aus"/>
+				<Link VarA="SlowTask Outputs^prgTemperature.mOut_4" VarB="Term 3 (KL2408)^Channel 4^Ausgang"/>
+				<Link VarA="SlowTask Outputs^prgTemperature.mOut_5" VarB="Term 3 (KL2408)^Channel 5^Ausgang"/>
+				<Link VarA="SlowTask Outputs^prgTemperature.mOut_6" VarB="Term 3 (KL2408)^Channel 6^Ausgang"/>
+				<Link VarA="SlowTask Outputs^prgTemperature.mOut_7" VarB="Term 3 (KL2408)^Channel 7^Ausgang"/>
+				<Link VarA="SlowTask Outputs^prgTemperature.mOut_8" VarB="Term 3 (KL2408)^Channel 8^Ausgang"/>
+			</OwnerB>
+		</OwnerA>
+	</Mappings>
+</TcSmProject>

@@ -1,0 +1,1541 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{7e3e5c98-652e-41ac-8480-ba3e07a2188c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV					: FB_Symo_PV_Inverter_FLOAT_1_DM_30_Inverter;
+	fbPV_2					: FB_Symo_PV_Inverter_FLOAT_1_DM_30_Inverter;
+	fbPV_3					: FB_Symo_PV_Inverter_FLOAT_1_DM_30_Inverter;
+	fbPV_4					: FB_Symo_PV_Inverter_FLOAT_1_DM_30_Inverter;		//Neu
+	fbPVInt					: FB_PV_Power;
+	fbPVInt_2				: FB_PV_Power;
+	fbPVInt_3				: FB_PV_Power;
+	fbPVInt_4				: FB_PV_Power;										//Neu
+	fbPVCounter				: FB_EnergyCounter;
+	fbPVCounter_1			: FB_EnergyCounter;
+	fbPVCounter_2			: FB_EnergyCounter;
+	fbPVCounter_3			: FB_EnergyCounter;
+	fbPVCounter_4			: FB_EnergyCounter;
+	fbPVCounter_5			: FB_EnergyCounter;
+	fbPVCounter_6			: FB_EnergyCounter;
+	fbPVCounter_7			: FB_EnergyCounter;
+	fbPVCounter_8			: FB_EnergyCounter;
+	fbPVCounter_9			: FB_EnergyCounter;
+	fbPVCounter_10			: FB_EnergyCounter;
+	fbPVCounter_11			: FB_EnergyCounter;
+	fbPVCounter_12			: FB_EnergyCounter;
+	fbPVCounter_13			: FB_EnergyCounter;
+	fbPVCounter_14			: FB_EnergyCounter;
+	fbPVCounter_15			: FB_EnergyCounter;
+	fbPVCounter_16			: FB_EnergyCounter;		//Neu
+	fbPVCounter_17			: FB_EnergyCounter;		//Neu
+	fbPVCounter_18			: FB_EnergyCounter;		//Neu
+	fbPVCounter_19			: FB_EnergyCounter;		//Neu
+	
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV		: BYTE;					//{#lynus.ag#()}
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_3				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_4				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_5				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_6				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_7				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_8				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_9				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_10			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_11			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_12			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_13			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_14			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_15			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_16			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_17			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_18			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_19			: LREAL;				//{#lynus.ag#()}
+		
+	
+	
+	byte_Fault_PV_1			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_2			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_3			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_4			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_5			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_6			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_7			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_8			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_9			: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_10		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_11		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_12		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_13		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_14		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_15		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_16		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_17		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_18		: BYTE;					//{#lynus.ag#()}
+	byte_Fault_PV_19		: BYTE;					//{#lynus.ag#()}
+	ton_Delay_Fault			: ARRAY[1..19] OF TON;
+	time_PVFaultDelay		: TIME:=T#10S;
+	i: INT;
+	fb_readOut : FB_ModBus_100Registers_FC3_inclID;	
+	usint_ID: USINT;
+	Str_Ip: STRING(20);
+	w_Adress:WORD;
+	usint_Quantity:USINT;
+	arrBuffer_FC3				: ARRAY[1..15,1..20] OF WORD;							
+	ton_wait_read_out: Ton;
+	y: INT;
+	z: INT;
+	int_Data_Received_old: INT;
+	int_readOut:INT;
+
+
+	m_Enable: BOOL;
+	
+	udint_Event1_PV1		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV1		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV1	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV1	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV1	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV2		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV2		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV2	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV2	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV2	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV3		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV3		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV3	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV3	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV3	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV4		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV4		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV4	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV4	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV4	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV5		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV5		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV5	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV5	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV5	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV6		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV6		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV6	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV6	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV6	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV7		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV7		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV7	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV7	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV7	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV8		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV8		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV8	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV8	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV8	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV9		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV9		: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV9	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV9	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV9	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV10		: udint;							//{#lynus.ag#()}
+	udint_Event2_PV10		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV10	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV10	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV10	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV11		: udint;							//{#lynus.ag#()}
+	udint_Event2_PV11		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV11	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV11	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV11	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV12		: udint;							//{#lynus.ag#()}
+	udint_Event2_PV12		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV12	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV12	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV12	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV13		: udint;							//{#lynus.ag#()}
+	udint_Event2_PV13		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV13	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV13	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV13	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV14		: udint;							//{#lynus.ag#()}
+	udint_Event2_PV14		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV14	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV14	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV14	: udint;							//{#lynus.ag#()}
+	udint_Event1_PV15		: udint;							//{#lynus.ag#()}
+	udint_Event2_PV15		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV15	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV15	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV15	: UDINT;							//{#lynus.ag#()}
+	udint_Event1_PV16		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV16		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV16	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV16	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV16	: UDINT;							//{#lynus.ag#()}
+	udint_Event1_PV17		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV17		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV17	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV17	: UDINT;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV17	: UDINT;							//{#lynus.ag#()}
+	udint_Event1_PV18		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV18		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV18	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV18	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV18	: UDINT;							//{#lynus.ag#()}
+	udint_Event1_PV19		: UDINT;							//{#lynus.ag#()}
+	udint_Event2_PV19		: udint;							//{#lynus.ag#()}
+	udint_VendorEvent1_PV19	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent2_PV19	: udint;							//{#lynus.ag#()}
+	udint_VendorEvent3_PV19	: UDINT;							//{#lynus.ag#()}
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+
+	w: INT;
+
+	lrPowerPV_temp: LREAL;
+	word_1: WORD;
+	word_2: WORD;
+	udint_Out: DWORD;
+	dword_Out3: DWORD;
+	
+
+	b_ModbusFault_PV_1		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_2		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_3		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_4		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_5		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_6		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_7		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_8		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_9		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_10		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_11		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_12		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_13		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_14		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_15		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_16		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_17		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_18		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_19		: BOOL;					//{#lynus.ag#()}
+	b_ModbusFault_PV_any	: BOOL;					//{#lynus.ag#()}
+END_VAR	
+VAR PERSISTENT
+	lrCounterPV				: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_1			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_2			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_3			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_4			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_5			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_6			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_7			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_8			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_9			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_10			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_11			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_12			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_13			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_14			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_15			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_16			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_17			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_18			: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_19			: LREAL;				//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbPV.arrUnitID_Inverter[1] := 1;
+fbPV.arrUnitID_Inverter[2] := 2;
+fbPV.arrUnitID_Inverter[3] := 3;
+fbPV.arrUnitID_Inverter[4] := 4;
+fbPV.arrUnitID_Inverter[5] := 5;
+fbPV.arrUnitID_Inverter[6] := 6;
+fbPV.arrUnitID_Inverter[7] := 7;
+fbPV.arrUnitID_Inverter[8] := 8;
+fbPV.arrUnitID_Inverter[9] := 9;
+fbPV.arrUnitID_Inverter[10] := 10;
+fbPV.arrUnitID_Inverter[11] := 11;
+fbPV.arrUnitID_Inverter[12] := 12;
+fbPV.arrUnitID_Inverter[13] := 13;
+
+fbPV(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.0.101', 							//IP-Adresse vom Wechselrichter Master 1 [20.0-3-M](7)
+	arrUnitID_Inverter:=  , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+lrPowerPV_1 := fbPV.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_2 := fbPV.arrDataSymo10[2].lrPowerAcInverter;
+lrPowerPV_3 := fbPV.arrDataSymo10[3].lrPowerAcInverter;
+lrPowerPV_4 := fbPV.arrDataSymo10[4].lrPowerAcInverter;
+lrPowerPV_5 := fbPV.arrDataSymo10[5].lrPowerAcInverter;
+lrPowerPV_6 := fbPV.arrDataSymo10[6].lrPowerAcInverter;
+lrPowerPV_7 := fbPV.arrDataSymo10[7].lrPowerAcInverter;
+lrPowerPV_8 := fbPV.arrDataSymo10[8].lrPowerAcInverter;
+lrPowerPV_9 := fbPV.arrDataSymo10[9].lrPowerAcInverter;
+lrPowerPV_10 := fbPV.arrDataSymo10[10].lrPowerAcInverter;
+lrPowerPV_11 := fbPV.arrDataSymo10[11].lrPowerAcInverter;
+lrPowerPV_12 := fbPV.arrDataSymo10[12].lrPowerAcInverter;
+lrPowerPV_13 := fbPV.arrDataSymo10[13].lrPowerAcInverter;
+
+fbPV_2.arrUnitID_Inverter[1] := 1;
+fbPV_2(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.0.102', 
+	arrUnitID_Inverter:=  , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+lrPowerPV_14 := fbPV_2.arrDataSymo10[1].lrPowerAcInverter;
+
+fbPV_3.arrUnitID_Inverter[1] := 1;
+fbPV_3(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.0.103', 
+	arrUnitID_Inverter:=  , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+lrPowerPV_15 := fbPV_3.arrDataSymo10[1].lrPowerAcInverter;
+
+// Wohngebaeude 2024
+fbPV_4.arrUnitID_Inverter[1] := 1;
+fbPV_4.arrUnitID_Inverter[2] := 2;
+fbPV_4.arrUnitID_Inverter[3] := 3;
+fbPV_4.arrUnitID_Inverter[4] := 4;
+fbPV_4(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.0.104', 								//IP-Adresse von Wechselrichter Master 2
+	arrUnitID_Inverter:=  , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+	
+lrPowerPV_16 := fbPV_4.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_17 := fbPV_4.arrDataSymo10[2].lrPowerAcInverter;
+lrPowerPV_18 := fbPV_4.arrDataSymo10[3].lrPowerAcInverter;
+lrPowerPV_19 := fbPV_4.arrDataSymo10[4].lrPowerAcInverter;
+
+fbPVInt(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPV.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+fbPVInt_2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPV_2.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+fbPVInt_3(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPV_3.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+fbPVInt_4(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPV_4.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+
+
+lrPowerPV_temp := fbPVInt.stDataPv.lrPower +  fbPVInt_2.stDataPv.lrPower +  fbPVInt_3.stDataPv.lrPower;
+byErrorWarningPV := fbPVInt.stDataPv.byErrorWarning OR fbPVInt_2.stDataPv.byErrorWarning OR fbPVInt_3.stDataPv.byErrorWarning;
+
+lrPowerPV := lrPowerPV_1 + lrPowerPV_2 + lrPowerPV_3 + lrPowerPV_4 + lrPowerPV_5 + lrPowerPV_6 + lrPowerPV_7 + lrPowerPV_8 + lrPowerPV_9 + lrPowerPV_10 + lrPowerPV_11 + lrPowerPV_12 + lrPowerPV_13; // 14+15 auf eigener Einspeisung   + lrPowerPV_14 + lrPowerPV_15 + lrPowerPV_16 + lrPowerPV_17 + lrPowerPV_18 + lrPowerPV_19; 16 bis 19 von den neuen Wechselrichtern
+
+
+// EnergyCounter Total
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+// EnergyCounter Separated
+fbPVCounter_1(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_1, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_2(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_2, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_3(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_3, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_4(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_4, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_5(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_5, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_6(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_6, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_7(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_7, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_8(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_8, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_9(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_9, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_10(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_10, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_11(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_11, 
+	lrTotalCounterEnergy_Production=> );
+
+fbPVCounter_12(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_12, 
+	lrTotalCounterEnergy_Production=> );
+
+fbPVCounter_13(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_13, 
+	lrTotalCounterEnergy_Production=> );
+
+fbPVCounter_14(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_14, 
+	lrTotalCounterEnergy_Production=> );	
+
+fbPVCounter_15(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_15, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_16(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_16, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_17(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_17, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_18(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_18, 
+	lrTotalCounterEnergy_Production=> );
+	
+fbPVCounter_19(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_19, 
+	lrTotalCounterEnergy_Production=> );
+	
+	
+
+	
+IF fbPVCounter_1.lrTotalCounterEnergy_Production > lrCounterPV_1 THEN  	
+	lrCounterPV_1 := fbPVCounter_1.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_2.lrTotalCounterEnergy_Production > lrCounterPV_2 THEN  	
+	lrCounterPV_2 := fbPVCounter_2.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_3.lrTotalCounterEnergy_Production > lrCounterPV_3 THEN  	
+	lrCounterPV_3 := fbPVCounter_3.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_4.lrTotalCounterEnergy_Production > lrCounterPV_4 THEN  	
+	lrCounterPV_4 := fbPVCounter_4.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_5.lrTotalCounterEnergy_Production > lrCounterPV_5 THEN  	
+	lrCounterPV_5 := fbPVCounter_5.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_6.lrTotalCounterEnergy_Production > lrCounterPV_6 THEN  	
+	lrCounterPV_6 := fbPVCounter_6.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_7.lrTotalCounterEnergy_Production > lrCounterPV_7 THEN  	
+	lrCounterPV_7 := fbPVCounter_7.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_8.lrTotalCounterEnergy_Production > lrCounterPV_8 THEN  	
+	lrCounterPV_8 := fbPVCounter_8.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_9.lrTotalCounterEnergy_Production > lrCounterPV_9 THEN  	
+	lrCounterPV_9 := fbPVCounter_9.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_10.lrTotalCounterEnergy_Production > lrCounterPV_10 THEN  	
+	lrCounterPV_10 := fbPVCounter_10.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_11.lrTotalCounterEnergy_Production > lrCounterPV_11 THEN  	
+	lrCounterPV_11 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_12.lrTotalCounterEnergy_Production > lrCounterPV_12 THEN  	
+	lrCounterPV_12 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_13.lrTotalCounterEnergy_Production > lrCounterPV_13 THEN  	
+	lrCounterPV_13 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_14.lrTotalCounterEnergy_Production > lrCounterPV_14 THEN  	
+	lrCounterPV_14 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_15.lrTotalCounterEnergy_Production > lrCounterPV_15 THEN  	
+	lrCounterPV_15 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_16.lrTotalCounterEnergy_Production > lrCounterPV_16 THEN  	
+	lrCounterPV_16 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_17.lrTotalCounterEnergy_Production > lrCounterPV_17 THEN  	
+	lrCounterPV_17 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_18.lrTotalCounterEnergy_Production > lrCounterPV_18 THEN  	
+	lrCounterPV_18 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+IF fbPVCounter_19.lrTotalCounterEnergy_Production > lrCounterPV_19 THEN  	
+	lrCounterPV_19 := fbPVCounter_11.lrTotalCounterEnergy_Production;
+END_IF
+
+
+// PV inverter Fault Bits
+// arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eFaults;
+
+
+FOR i:= 1 TO 15 BY 1 DO
+	ton_Delay_Fault[i](pt := time_PVFaultDelay);
+END_FOR
+ton_Delay_Fault[1].IN	:=	fbPV.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[2].IN	:=	fbPV.arrDataSymo10[2].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[2].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[3].IN	:=	fbPV.arrDataSymo10[3].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[3].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[4].IN	:=	fbPV.arrDataSymo10[4].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[4].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[5].IN	:=	fbPV.arrDataSymo10[5].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[5].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[6].IN	:=	fbPV.arrDataSymo10[6].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[6].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[7].IN	:=	fbPV.arrDataSymo10[7].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[7].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[8].IN	:=	fbPV.arrDataSymo10[8].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[8].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[9].IN	:=	fbPV.arrDataSymo10[9].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[9].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[10].IN	:=	fbPV.arrDataSymo10[10].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[10].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[11].IN	:=	fbPV.arrDataSymo10[11].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[11].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[12].IN	:=	fbPV.arrDataSymo10[12].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[12].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[13].IN	:=	fbPV.arrDataSymo10[13].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV.arrDataSymo10[13].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[14].IN	:=	fbPV_2.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV_2.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[15].IN	:=	fbPV_3.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV_3.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[16].IN	:=	fbPV_4.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV_4.arrDataSymo10[1].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[17].IN	:=	fbPV_4.arrDataSymo10[2].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV_4.arrDataSymo10[2].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[18].IN	:=	fbPV_4.arrDataSymo10[3].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV_4.arrDataSymo10[3].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+ton_Delay_Fault[19].IN	:=	fbPV_4.arrDataSymo10[4].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults OR fbPV_4.arrDataSymo10[4].eOperatingStateInverter = E_Symo_PV_OperatingState.eNoDataReceived;
+
+
+(*
+Byte_Fault_PV_1		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[1].Q);
+Byte_Fault_PV_2		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[2].Q);
+Byte_Fault_PV_3		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[3].Q);
+Byte_Fault_PV_4		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[4].Q);
+Byte_Fault_PV_5		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[5].Q);
+Byte_Fault_PV_6		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[6].Q);
+Byte_Fault_PV_7		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[7].Q);
+Byte_Fault_PV_8		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[8].Q);
+Byte_Fault_PV_9		:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[9].Q);
+Byte_Fault_PV_10	:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[10].Q);
+Byte_Fault_PV_11	:=  2 * BOOL_TO_BYTE(ton_Delay_Fault[11].Q);
+Byte_Fault_PV_12	:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[12].Q);
+Byte_Fault_PV_13	:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[13].Q);
+Byte_Fault_PV_14	:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[14].Q);
+Byte_Fault_PV_15	:=	2 * BOOL_TO_BYTE(ton_Delay_Fault[15].Q);
+
+*)
+
+
+// read out event registers
+IF NOT m_Enable THEN 
+	int_readOut := -1;
+END_IF
+CASE int_readOut OF
+	0: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	1: // read out IP 192.168.0.101 ID1  PV1 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_Quantity := 16;
+		w_Adress := 40117;
+		usint_ID := 1;
+		int_readOut := int_readOut +1;
+	2: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=1;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	3: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	4: // read out IP 192.168.0.101 ID2   PV2 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 2;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	5: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=2;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	6: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	7: // read out IP 192.168.0.101  ID3 PV3 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 3;
+		int_readOut := int_readOut +1;
+	8: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=3;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	9: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	10: // read out IP 192.168.0.101 ID4  PV4 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 4;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	11: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=4;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	12: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	13: // read out IP 192.168.0.101 ID 5  PV5
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 5;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	14: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=5;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	15: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF	
+	16: // read out IP 192.168.0.101 ID 6 PV6  
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 6;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	17: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=6;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF	
+	18: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF		
+	19: // read out IP 192.168.0.101 ID7  PV7 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 7;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	20: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=7;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	21: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+	22: // read out IP 192.168.0.101 ID8  PV8 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 8;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	23: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=8;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	24: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+	25: // read out IP 192.168.0.101 ID9  PV9 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 9;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	26: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=9;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	27: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+	28: // read out IP 192.168.0.101 ID10  PV10 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 10;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	29: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=10;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	30: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+	31: // read out IP 192.168.0.101 ID11  PV11 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 11;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	32: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=11;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	33: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+	34: // read out IP 192.168.0.101 ID12  PV12 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 12;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	35: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=12;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	36: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+	37: // read out IP 192.168.0.101 ID13  PV13 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.101';
+		usint_ID := 13;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	38: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=13;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	39: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+	40: // read out IP 192.168.0.102 ID1  PV14 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.102';
+		usint_ID := 1;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	41: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=14;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	42: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	43: // read out IP 192.168.0.103 ID1  PV15 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.103';
+		usint_ID := 1;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	44: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=14;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	45: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF	
+
+	46: // read out IP 192.168.0.104 ID1  PV16 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.104';
+		usint_ID := 1;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	47: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=16;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF	
+	48: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF	
+		
+	49: // read out IP 192.168.0.104 ID2  PV17 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.104';
+		usint_ID := 2;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	50: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=17;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF	
+	51: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+		
+		
+	52: // read out IP 192.168.0.104 ID3  PV18 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.104';
+		usint_ID := 3;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	53: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=18;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF	
+	54: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+		
+		
+	55: // read out IP 192.168.0.104 ID4  PV19 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.0.104';
+		usint_ID := 4;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	56: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=19;
+			FOR z:=1 TO 20 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF	
+	57: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := 60; //int_readOut +1;
+		END_IF
+		
+		
+	60:
+		w:=1;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV1);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV1);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV1);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV1);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV1);
+		w:=2;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV2);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV2);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV2);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV2);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV2);
+		w:=3;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV3);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV3);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV3);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV3);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV3);
+		w:=4;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV4);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV4);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV4);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV4);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV4);
+		w:=5;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV5);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV5);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV5);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV5);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV5);
+		w:=6;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV6);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV6);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV6);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV6);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV6);
+		w:=7;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV7);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV7);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV7);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV7);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV7);
+		w:=8;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV8);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV8);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV8);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV8);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV8);
+		w:=9;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV9);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV9);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV9);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV9);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV9);
+		w:=10;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV10);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV10);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV10);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV10);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV10);
+		w:=11;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV11);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV11);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV11);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV11);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV11);
+		w:=12;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV12);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV12);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV12);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV12);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV12);
+		w:=13;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV13);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV13);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV13);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV13);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV13);
+		w:=14;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV14);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV14);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV14);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV14);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV14);
+		w:=15;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV15);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV15);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV15);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV15);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV15);
+		w:=16;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV16);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV16);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV16);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV16);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV16);
+		w:=17;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV17);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV17);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV17);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV17);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV17);
+		w:=18;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV18);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV18);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV18);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV18);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV18);
+		w:=19;		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,3], wInputValue_2:= arrBuffer_FC3[w,4], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event1_PV19);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,5], wInputValue_2:= arrBuffer_FC3[w,6], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Event2_PV19);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,7], wInputValue_2:= arrBuffer_FC3[w,8], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent1_PV19);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,9], wInputValue_2:= arrBuffer_FC3[w,10], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent2_PV19);
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[w,11], wInputValue_2:= arrBuffer_FC3[w,12], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_VendorEvent3_PV19);
+	
+		int_readOut := 0;		
+END_CASE
+
+// test
+fbConvertWordToDword(wInputValue_1:= word_1, wInputValue_2:= word_2, eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> udint_Out);
+
+
+
+ton_wait_read_out( 	In :=,
+					PT := T#1S);
+	
+fb_readOut(
+	m_Enable:= , 
+	str_IPAdress:=Str_Ip , 
+	w_Adress:=w_Adress , 
+	usint_Quantity:= usint_Quantity, 
+	usint_ID:= usint_ID,
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+	
+// Modbus Fault for each PV 
+	
+b_ModbusFault_PV_1 :=  	fbPV.arrDataSymo10[1].eErrorState = 1;
+b_ModbusFault_PV_2 :=  	fbPV.arrDataSymo10[2].eErrorState = 1;
+b_ModbusFault_PV_3 :=  	fbPV.arrDataSymo10[3].eErrorState = 1;
+b_ModbusFault_PV_4 :=  	fbPV.arrDataSymo10[4].eErrorState = 1;
+b_ModbusFault_PV_5 :=  	fbPV.arrDataSymo10[5].eErrorState = 1;
+b_ModbusFault_PV_6 :=  	fbPV.arrDataSymo10[6].eErrorState = 1;
+b_ModbusFault_PV_7 :=  	fbPV.arrDataSymo10[7].eErrorState = 1;
+b_ModbusFault_PV_8 :=  	fbPV.arrDataSymo10[8].eErrorState = 1;
+b_ModbusFault_PV_9 :=  	fbPV.arrDataSymo10[9].eErrorState = 1;
+b_ModbusFault_PV_10:=  	fbPV.arrDataSymo10[10].eErrorState = 1;
+b_ModbusFault_PV_11:=  	fbPV.arrDataSymo10[11].eErrorState = 1;
+b_ModbusFault_PV_12:=  	fbPV.arrDataSymo10[12].eErrorState = 1;
+b_ModbusFault_PV_13:=  	fbPV.arrDataSymo10[13].eErrorState = 1;
+b_ModbusFault_PV_14:=  	fbPV_2.arrDataSymo10[1].eErrorState = 1;
+b_ModbusFault_PV_15 :=  fbPV_3.arrDataSymo10[1].eErrorState = 1;
+b_ModbusFault_PV_16 :=  fbPV_4.arrDataSymo10[1].eErrorState = 1;
+b_ModbusFault_PV_17 :=  fbPV_4.arrDataSymo10[2].eErrorState = 1;
+b_ModbusFault_PV_18 :=  fbPV_4.arrDataSymo10[3].eErrorState = 1;
+b_ModbusFault_PV_19 :=  fbPV_4.arrDataSymo10[4].eErrorState = 1;
+
+b_ModbusFault_PV_any := b_ModbusFault_PV_1 OR b_ModbusFault_PV_2 OR b_ModbusFault_PV_3 OR b_ModbusFault_PV_4 OR b_ModbusFault_PV_5 OR b_ModbusFault_PV_6
+						 OR b_ModbusFault_PV_7 OR b_ModbusFault_PV_8 OR b_ModbusFault_PV_9 OR b_ModbusFault_PV_10 OR b_ModbusFault_PV_11 OR b_ModbusFault_PV_12;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="21" Count="5" />
+      <LineId Id="73" Count="5" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="2765" Count="0" />
+      <LineId Id="28" Count="14" />
+      <LineId Id="79" Count="5" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="362" Count="6" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="376" Count="8" />
+      <LineId Id="3013" Count="4" />
+      <LineId Id="2470" Count="0" />
+      <LineId Id="2472" Count="7" />
+      <LineId Id="2769" Count="0" />
+      <LineId Id="2469" Count="0" />
+      <LineId Id="2760" Count="2" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="1759" Count="4" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="1765" Count="4" />
+      <LineId Id="1764" Count="0" />
+      <LineId Id="44" Count="5" />
+      <LineId Id="2446" Count="4" />
+      <LineId Id="2445" Count="0" />
+      <LineId Id="1772" Count="0" />
+      <LineId Id="50" Count="3" />
+      <LineId Id="1755" Count="1" />
+      <LineId Id="1754" Count="0" />
+      <LineId Id="54" Count="12" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="203" Count="54" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="397" Count="2" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="401" Count="3" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="405" Count="3" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="412" Count="2" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="2529" Count="0" />
+      <LineId Id="2531" Count="2" />
+      <LineId Id="2530" Count="0" />
+      <LineId Id="2534" Count="0" />
+      <LineId Id="2536" Count="2" />
+      <LineId Id="2535" Count="0" />
+      <LineId Id="2539" Count="0" />
+      <LineId Id="2541" Count="2" />
+      <LineId Id="2540" Count="0" />
+      <LineId Id="2544" Count="0" />
+      <LineId Id="2546" Count="2" />
+      <LineId Id="2545" Count="0" />
+      <LineId Id="2522" Count="1" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="258" Count="32" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="420" Count="11" />
+      <LineId Id="2550" Count="1" />
+      <LineId Id="2549" Count="0" />
+      <LineId Id="2553" Count="1" />
+      <LineId Id="2552" Count="0" />
+      <LineId Id="2556" Count="1" />
+      <LineId Id="2555" Count="0" />
+      <LineId Id="2559" Count="1" />
+      <LineId Id="2558" Count="0" />
+      <LineId Id="500" Count="1" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="522" Count="1" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="548" Count="13" />
+      <LineId Id="2562" Count="0" />
+      <LineId Id="2564" Count="2" />
+      <LineId Id="2563" Count="0" />
+      <LineId Id="2561" Count="0" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="577" Count="14" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="680" Count="1" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="960" Count="1" />
+      <LineId Id="684" Count="43" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="731" Count="29" />
+      <LineId Id="763" Count="30" />
+      <LineId Id="796" Count="124" />
+      <LineId Id="963" Count="30" />
+      <LineId Id="921" Count="0" />
+      <LineId Id="995" Count="30" />
+      <LineId Id="994" Count="0" />
+      <LineId Id="1027" Count="30" />
+      <LineId Id="1026" Count="0" />
+      <LineId Id="1059" Count="30" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="1091" Count="30" />
+      <LineId Id="1090" Count="0" />
+      <LineId Id="1123" Count="30" />
+      <LineId Id="1122" Count="0" />
+      <LineId Id="1155" Count="30" />
+      <LineId Id="1154" Count="0" />
+      <LineId Id="1187" Count="30" />
+      <LineId Id="1186" Count="0" />
+      <LineId Id="2568" Count="24" />
+      <LineId Id="2567" Count="0" />
+      <LineId Id="2594" Count="5" />
+      <LineId Id="2593" Count="0" />
+      <LineId Id="2600" Count="0" />
+      <LineId Id="2602" Count="30" />
+      <LineId Id="2601" Count="0" />
+      <LineId Id="2633" Count="1" />
+      <LineId Id="2636" Count="30" />
+      <LineId Id="2635" Count="0" />
+      <LineId Id="2667" Count="1" />
+      <LineId Id="2670" Count="30" />
+      <LineId Id="2669" Count="0" />
+      <LineId Id="1218" Count="0" />
+      <LineId Id="922" Count="1" />
+      <LineId Id="1395" Count="1" />
+      <LineId Id="1482" Count="3" />
+      <LineId Id="1487" Count="23" />
+      <LineId Id="1949" Count="59" />
+      <LineId Id="2702" Count="4" />
+      <LineId Id="2701" Count="0" />
+      <LineId Id="2708" Count="4" />
+      <LineId Id="2707" Count="0" />
+      <LineId Id="2715" Count="4" />
+      <LineId Id="2713" Count="0" />
+      <LineId Id="2721" Count="4" />
+      <LineId Id="2720" Count="0" />
+      <LineId Id="1546" Count="0" />
+      <LineId Id="932" Count="1" />
+      <LineId Id="2009" Count="1" />
+      <LineId Id="2013" Count="0" />
+      <LineId Id="2012" Count="0" />
+      <LineId Id="2011" Count="0" />
+      <LineId Id="934" Count="12" />
+      <LineId Id="2212" Count="2" />
+      <LineId Id="682" Count="0" />
+      <LineId Id="2217" Count="1" />
+      <LineId Id="2216" Count="0" />
+      <LineId Id="2220" Count="0" />
+      <LineId Id="2219" Count="0" />
+      <LineId Id="2222" Count="0" />
+      <LineId Id="2221" Count="0" />
+      <LineId Id="2224" Count="0" />
+      <LineId Id="2223" Count="0" />
+      <LineId Id="2226" Count="0" />
+      <LineId Id="2225" Count="0" />
+      <LineId Id="2228" Count="0" />
+      <LineId Id="2227" Count="0" />
+      <LineId Id="2230" Count="0" />
+      <LineId Id="2756" Count="3" />
+      <LineId Id="2237" Count="0" />
+      <LineId Id="2236" Count="0" />
+      <LineId Id="2238" Count="0" />
+      <LineId Id="2233" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

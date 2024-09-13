@@ -1,0 +1,394 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mpc
+  namespace: lynus
+  labels:
+    app: mpc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mpc
+  template:
+    metadata:
+      labels:
+        app: mpc
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: mpc
+          image: ghcr.io/efficientio/efficientio/ai:TAG
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "500m"
+            limits:
+              memory: "4024Mi"
+              cpu: "3000m"
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+          env:
+            - name: DB_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: DB_NAME
+              value: lynus
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: DB_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: EMPA_ADDR
+              value: http://empa/
+            - name: S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  key: S3_URL
+                  name: lynus-credentials
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: S3_ACCESS_KEY
+                  name: lynus-credentials
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: S3_SECRET_KEY
+                  name: lynus-credentials
+            - name: S3_SECURE
+              value: "1"
+            - name: CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: CLUSTER_NAME
+                  name: lynus-credentials
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: ENVIRONMENT
+              value: PRODUCTION
+            - name: WEATHER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: METEOTEST_API_KEY
+                  name: lynus-credentials
+            - name: EMS-NG
+              value: "True"
+            - name: PROMETHEUS_MULTIPROC_DIR
+              value: /tmp
+      nodeSelector:
+        nodetype: huge
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: mpc-worker-priority
+value: -1
+globalDefault: false
+description:
+  "This priority class should be used for mpc-worker service pods only.
+  It is set below the default of 0 in order for MPC workers to not get scheduled before the general mpc module."
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mpc-worker
+  namespace: lynus
+  labels:
+    app: mpc-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mpc-worker
+  template:
+    metadata:
+      labels:
+        app: mpc-worker
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: mpc-worker
+          image: ghcr.io/efficientio/efficientio/ai-worker:TAG
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "750m"
+            limits:
+              memory: "4024Mi"
+              cpu: "3000m"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: DB_NAME
+              value: lynus
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: DB_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: EMPA_ADDR
+              value: http://empa/
+            - name: S3_ENDPOINT
+              value: sos-at-vie-1.exo.io
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: S3_ACCESS_KEY
+                  name: lynus-credentials
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: S3_SECRET_KEY
+                  name: lynus-credentials
+            - name: S3_SECURE
+              value: "1"
+            - name: CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: CLUSTER_NAME
+                  name: lynus-credentials
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: ENVIRONMENT
+              value: PRODUCTION
+            - name: WEATHER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: METEOTEST_API_KEY
+                  name: lynus-credentials
+            - name: EMS-NG
+              value: "True"
+            - name: MPC_ADDR
+              value: http://mpc
+            - name: TASK_QUEUE
+              value: task_queue
+      priorityClassName: mpc-worker-priority
+      terminationGracePeriodSeconds: 300 # Time to wait before moving from a TERM signal to the pod's main process to a KILL signal.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpc
+  namespace: lynus
+spec:
+  selector:
+    app: mpc
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: mpc-worker
+  namespace: lynus
+spec:
+  scaleTargetRef:
+    name: mpc-worker
+  pollingInterval: 15 # Optional. Default: 30 seconds
+  cooldownPeriod: 300 # Optional. Default: 300 seconds
+  minReplicaCount: 2 # Optional. Default: 0
+  maxReplicaCount: 48 # Optional. Default: 100
+  advanced:
+    scalingModifiers:
+      formula: "mpc_pod_count < 1 || postgres_pod_count < 1 ? 0 : queue_trigger"
+      target: "1"
+  triggers:
+    - type: kubernetes-workload
+      name: mpc_pod_count
+      metadata:
+        podSelector: "app=mpc"
+    - type: kubernetes-workload
+      name: postgres_pod_count
+      metadata:
+        podSelector: "app=postgres"
+    - type: rabbitmq
+      name: queue_trigger
+      metadata:
+        host: amqp://guest:guest@rabbit-mq.lynus:5672
+        queueName: task_queue
+        mode: QueueLength # QueueLength or MessageRate
+        value: "3" # message backlog or publish/sec. target per instance, must be a string
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: mpc-training-worker-priority
+value: -2
+globalDefault: false
+description:
+  "This priority class should be used for mpc-training-worker service pods only.
+  It is set below the default of 0 in order for MPC workers to not get scheduled before the general mpc module."
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mpc-training-worker
+  namespace: lynus
+  labels:
+    app: mpc-training-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mpc-training-worker
+  template:
+    metadata:
+      labels:
+        app: mpc-training-worker
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: mpc-training-worker
+          image: ghcr.io/efficientio/efficientio/ai-worker:TAG
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "750m"
+            limits:
+              memory: "4024Mi"
+              cpu: "3000m"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: DB_NAME
+              value: lynus
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: DB_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: EMPA_ADDR
+              value: http://empa/
+            - name: S3_ENDPOINT
+              value: sos-at-vie-1.exo.io
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: S3_ACCESS_KEY
+                  name: lynus-credentials
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: S3_SECRET_KEY
+                  name: lynus-credentials
+            - name: S3_SECURE
+              value: "1"
+            - name: CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: CLUSTER_NAME
+                  name: lynus-credentials
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: ENVIRONMENT
+              value: PRODUCTION
+            - name: WEATHER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: METEOTEST_API_KEY
+                  name: lynus-credentials
+            - name: EMS-NG
+              value: "True"
+            - name: MPC_ADDR
+              value: http://mpc
+            - name: TASK_QUEUE
+              value: training_task_queue
+      priorityClassName: mpc-training-worker-priority
+      terminationGracePeriodSeconds: 600 # Time to wait before moving from a TERM signal to the pod's main process to a KILL signal.
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: mpc-training-worker
+  namespace: lynus
+spec:
+  scaleTargetRef:
+    name: mpc-training-worker
+  pollingInterval: 15 # Optional. Default: 30 seconds
+  cooldownPeriod: 300 # Optional. Default: 300 seconds
+  minReplicaCount: 2 # Optional. Default: 0
+  maxReplicaCount: 12 # Optional. Default: 100
+  advanced:
+    scalingModifiers:
+      formula: "mpc_pod_count < 1 || postgres_pod_count < 1 ? 0 : queue_trigger"
+      target: "1"
+  triggers:
+    - type: kubernetes-workload
+      name: mpc_pod_count
+      metadata:
+        podSelector: "app=mpc"
+    - type: kubernetes-workload
+      name: postgres_pod_count
+      metadata:
+        podSelector: "app=postgres"
+    - type: rabbitmq
+      name: queue_trigger
+      metadata:
+        host: amqp://guest:guest@rabbit-mq.lynus:5672
+        queueName: training_task_queue
+        mode: QueueLength # QueueLength or MessageRate
+        value: "3" # message backlog or publish/sec. target per instance, must be a string
+---
+

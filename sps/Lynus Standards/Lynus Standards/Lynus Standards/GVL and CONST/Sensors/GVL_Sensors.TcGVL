@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <GVL Name="GVL_Sensors" Id="{5e370ce0-bc48-4fea-b046-58657e34f7f7}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'conditionalshow'}
+VAR_GLOBAL		
+	//Global Data for all Temperatur Devices (The Array[0] or Array[0,0] must filled always with default values)
+	{attribute 'hide'}
+	stDataTemperatureSensors			: ARRAY[0..Constants_Sensors.diMaxNumberOfTemperatureSensors]				OF ST_Temperature_GVL;
+	{attribute 'hide'}
+	diNumberOfTemperatureSensors		: DINT; //Number of Temperature Sensors on this plc project		
+	{attribute 'hide'}
+	diNumberOfKNXSensors				: DINT; //Number of KNX Sensors on this plc project							
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

@@ -1,0 +1,2215 @@
+{
+  "LightSwitch": {
+    "title": "Device description",
+    "name": "LightSwitch",
+    "overview": "With this device a simple light can be switched on and off. The event display can be used to indicate an error from the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "On (Switch)",
+        "description": "On = With On, the On command for the light can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off (Switch)",
+        "description": "Off = With Off the off-command for the light can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State (Switch)",
+        "description": "State = Light State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "TimeSwitch": {
+    "title": "Device description",
+    "name": "Time Switch",
+    "overview": "A switch device, that configures the schedule, which is then used by backend worker to send impulses to related variables. Impulse signal is sent as value 1 and changes to value 0 after 1 second.",
+    "table": [
+      {
+        "name": "On",
+        "description": "Variable which receives the ON impulse signal.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Off",
+        "description": "Variable which receives the OFF impulse signal.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "State",
+        "description": "Variable that is displayed by device indicator. This variable is not automatically updated by the backend.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "GeneralSwitchV2": {
+    "title": "Device description",
+    "name": "GeneralSwitchV2",
+    "overview": "With this device a general switch can be realized. The switch always sends the opposite of the value that the status currently has. As soon as the status changes the value, the send command from the switch also changes.",
+    "table": [
+      {
+        "name": "Switch_V2 (On, Off, State)",
+        "description": "On/Off = If the state variable has the value 0, a 1 is always sent when the switch is activated by a click. As long as the value of the state variable has the value 1, a 0 is sent when the switch is activated by a click. State = The State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On/Off = 0-1 \nState = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ImpulseButton": {
+    "title": "Device description",
+    "name": "Impulse Button",
+    "overview": "Device that sends a signal with value 1 and reverts to value 0 after one second.",
+    "table": [
+      {
+        "name": "ImpulseButton (OnOff)",
+        "description": "On = Variable for impulse signal.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "Indicator": {
+    "title": "Device description",
+    "name": "Indicator",
+    "overview": "Device with configurable icon that displays the boolean state of the sensor.",
+    "table": [
+      {
+        "name": "Indicator (OnOff)",
+        "description": "Indicator status variabe",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "LightDimmer": {
+    "title": "Device description",
+    "name": "LightDimmer",
+    "overview": "With this device a dimmer can be displayed. Via the switch it offers the possibility to switch the light on and off. Via the slider the brightness can be adjusted. The output field displays the current actual value from the dimmer. Via the event display an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "On (Switch)",
+        "description": "On = With On, the On command for the light can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off (Switch)",
+        "description": "Off = With Off the off-command for the light can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State (Switch)",
+        "description": "State = Light State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target Value Brightness (Slider)",
+        "description": "The slider sends the current target value for the brightness to the controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Actual Value Brightness (Output field)",
+        "description": "The output field returns the current brightness value from the Dimmer on the controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "Temperature": {
+    "title": "Device description",
+    "name": "Temperature",
+    "overview": "With this device a sensor which measures the temperature can be displayed. In the Output field the value of -100 - 1500 °C is displayed. An error can be output from the device via the event display.",
+    "table": [
+      {
+        "name": "Actual Value Temperature (Output field)",
+        "description": "The output field returns the actual Temperature from the Sensor on the controller.",
+        "allowedValues": "-100 to 1500 °C"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "VariableOutputField": {
+    "title": "Device description",
+    "name": "VariableOutputField",
+    "overview": "With this device it should be possible to display a number value, but add any Icon to the device itself and select the displayed unit.",
+    "table": [
+      {
+        "name": "Output field",
+        "description": "The output field shows a variable value which is sent by the controller.",
+        "allowedValues": "Min/Max from 64 Bit Variable"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "TimeDerivative": {
+    "title": "Device description",
+    "name": "Time Derivative",
+    "overview": "Devices uses source variable as total cumulative consumption and computes time derivative for specified interval.",
+    "table": [
+      {
+        "name": "Source variable",
+        "description": "Variable with total cumulative consumption.",
+        "allowedValues": "float"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "VariableInputField": {
+    "title": "Device description",
+    "name": "VariableOutputField",
+    "overview": "With this device it is possible to enter any number value and send it to the controller. The icon and the unit can be freely assigned and selected.",
+    "table": [
+      {
+        "name": "Input field",
+        "description": "With this input field a variable value can be sent to the control.",
+        "allowedValues": "Min/Max from 64 Bit Variable"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "VariableTextOutputField": {
+    "title": "Device description",
+    "name": "VariableTextOutputField",
+    "overview": "With this device it should be possible to display a Text, but add any Icon to the device itself and select the displayed unit. Ascii and UTF-8 is supported. Attention, the text is not stored historically, only the current value received directly is displayed.",
+    "table": [
+      {
+        "name": "Output field Text",
+        "description": "The Text output field shows a variable Text which is sent by the controller.",
+        "allowedValues": "ASCII and UTF-8 (Max 30 Characters)"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "VariableTextInputField": {
+    "title": "Device description",
+    "name": "VariableTextInputField",
+    "overview": "With this device it is possible to enter a Text and send it to the controller. The icon and the unit can be freely assigned and selected.  Ascii and UTF-8 is supported. Attention, the text is not stored historically, only the current value that was sent directly is displayed.",
+    "table": [
+      {
+        "name": "Input field Text",
+        "description": "With this Text input field a variable Text can be sent to the control.",
+        "allowedValues": "ASCII and UTF-8 (Max 30 Characters)"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "LightRGB": {
+    "title": "Device description",
+    "name": "LightRGB",
+    "overview": "This unit can be used to control an RGB light. It can be turned on and off with the switch. The RGB slider can be used to adjust the color of the lamp. The brightness can be adjusted with the slider. The output field shows the current actual value of the dimmer. The 3 output fields above the color slider show the current value of the colors. An error by the device can be indicated via the event display. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "On (Switch)",
+        "description": "On = With On, the On command for the light can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off (Switch)",
+        "description": "Off = With Off the off-command for the light can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State (Switch)",
+        "description": "State = Light State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target Value Brightness (Slider)",
+        "description": "The slider sends the current target value for the brightness to the controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Target Value Red, Green and Blue (Slider RGB)",
+        "description": "Red = Here the color value for red can be sent to the controller. <br> Green = Here the color value for green can be sent to the controller. <br> Blue = Here the color value for blue can be sent to the controller.",
+        "allowedValues": "0-255 <br> 0-255 <br> 0-255"
+      },
+      {
+        "name": "Actual Value Brightness (Output field 1)",
+        "description": "The output field returns the current brightness value from the RGB on the controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Actual Value Red Value (Output field 2)",
+        "description": "The output field returns the current color value of the color red from the RGB on the controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Actual Value Green Color (Output field 3)",
+        "description": "The output field returns the current color value of the color green from the RGB on the controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Actual Value Blue Color (Output field 4)",
+        "description": "The output field returns the current color value of the color blue from the RGB on the controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "LightPushButton": {
+    "title": "Device description",
+    "name": "LightPushButton",
+    "overview": "With this device a light can be switched on and off. The light remains switched on if i click the first time at the Push button. If i click a second one on the Push Button, the light will be switched off. Via the event display an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Toggle On-Off (Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. So the light can be switched on and off alternately via 1 signal.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "Toggle On-Off (State)",
+        "description": "State = Light State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "SocketSwitch": {
+    "title": "Device description",
+    "name": "SocketSwitch",
+    "overview": "With this device a socket can be switched on and off. Via the event display an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "On (Switch)",
+        "description": "On = With On, the On command for the socket can be sent. ",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off (Switch)",
+        "description": "Off = With Off the off-command for the socket can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State (Switch)",
+        "description": "State = Socket State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ControlBlinds": {
+    "title": "Device description",
+    "name": "ControlBlinds",
+    "overview": "With this device it is possible to control a blind. With the arrow keys the blind can be moved up or down at full speed. The current value of the slider shows the current position of the blind. By moving the slider you can change the desired target position and move the blind there according to the logic of the slider. Using the drop down it would be possible to set a desired turning position of the slats of the blind. The current position is displayed in the output field. Via the event display an error by the device can be indicated. In addition, the movement time can be indicated separately in seconds. It is also possible to control the basic position movement. The movement time of the slats from fully open to fully closed can be specified separately.",
+    "table": [
+      {
+        "name": "Up (Arrow up)",
+        "description": "Up = With Up, the Up command for the blinds can be sent.",
+        "allowedValues": "Up = 0-1"
+      },
+      {
+        "name": "State (Arrow up)",
+        "description": "State = Up State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Down (Arrow down)",
+        "description": "Down = With Down, the Down command for the blinds can be sent.",
+        "allowedValues": "Down = 0-1"
+      },
+      {
+        "name": "State (Arrow down)",
+        "description": "State = Down State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target Value Position (Slider)",
+        "description": "The slider sends the current target value for the blinds position to the device.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Target Value Slats Position (Drop Down)",
+        "description": "With the selection in the drop down different positions of the slats of the blind can be selected.",
+        "allowedValues": "0 = Fully Open <br> 1 = ThreeQuarterOpen <br> 2 = Half Open <br> 3 = Quarter Open <br> 4 = Close"
+      },
+      {
+        "name": "Actual Value Position (Output field)",
+        "description": "The output field returns the current blinds position on the controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Toggle Move to home position (Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the home position of the blinds can be approached.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State (Push Button)",
+        "description": "State = Home Position State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target value Ramp up time (Input Field 1)",
+        "description": "Input field for the Ramp up time",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Target value Departure time (Input Field 2)",
+        "description": "Input field for the Departure time",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Target value Slats Travel time (Input Field 3 )",
+        "description": "Input Field for the Slats Travel Time",
+        "allowedValues": "0-10 sek"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ControlAwning": {
+    "title": "Device description",
+    "name": "ControlAwning",
+    "overview": "With this device a awning can be controlled. Use the arrow keys to move the awning outwards or inwards at full speed. The actual value of the slider shows the current position of the awning. By operating the slider, the desired target position can be changed and the awning can be moved there according to the controller's logic. The current position is displayed in the output field. Via the event display an error can be indicated by the device. In addition, the movement time can be indicated separately in seconds. It is also possible to control the basic position movement.",
+    "table": [
+      {
+        "name": "Out (Arrow out)",
+        "description": "Out = With Out, the Out command for the awning can be sent.",
+        "allowedValues": "Out = 0-1"
+      },
+      {
+        "name": "State (Arrow out)",
+        "description": "State = Out State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "In (Arrow in)",
+        "description": "In = With In, the In command for the awning can be sent.",
+        "allowedValues": "In = 0-1"
+      },
+      {
+        "name": "State (Arrow in)",
+        "description": "State = In State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target Value Position (Slider)",
+        "description": "The slider sends the current target value for the awning position to the device.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Actual Value Position (Output field)",
+        "description": "The output field returns the current awning position on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Toggle Move to home position (Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the home position of the awning can be approached.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State (Push Button)",
+        "description": "State = Home Position State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target value Out time (Input Field 1)",
+        "description": "Input field for the Out time",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Target value In time (Input Field 2)",
+        "description": "Input field for the In time",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ControlShutter": {
+    "title": "Device description",
+    "name": "ControlShutter",
+    "overview": "With this device a roller shutter can be controlled.  The shutter can be moved upwards or downwards in full speed with the arrow keys. The actual value of the slider shows the current position of the roller shutter. By operating the slider, the desired target position can be changed and the roller shutter can be moved there according to the controller's logic. The current position is displayed in the output field. Via the event display an error can be indicated by the device. In addition, the movement time can be indicated separately in seconds. It is also possible to control the basic position movement.",
+    "table": [
+      {
+        "name": "Up (Arrow up)",
+        "description": "Up = With Up, the Up command for the shutter can be sent.",
+        "allowedValues": "Up = 0-1"
+      },
+      {
+        "name": "State (Arrow up)",
+        "description": "State = Up State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Down (Arrow down)",
+        "description": "Down = With Down, the Down command for the shutter can be sent.",
+        "allowedValues": "Down = 0-1"
+      },
+      {
+        "name": "State (Arrow down)",
+        "description": "State = Down State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target Value Position (Slider)",
+        "description": "The slider sends the current target value for the shutter position to the device.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Actual Value Position (Output field)",
+        "description": "The output field returns the current shutter position on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Toggle Move to home position (Push Button) ",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the home position of the shutter can be approached.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "Toggle Move to home position (State)",
+        "description": "State = Home Position State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target value Ramp up time (Input Field 1)",
+        "description": "Input field for the Ramp up time",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "Target value Departure time (Input Field 2)",
+        "description": "Input field for the Departure time",
+        "allowedValues": "0-600 sek"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ThermostatDigital": {
+    "title": "Device description",
+    "name": "VariableOutputField",
+    "overview": "With this device a digital thermostat can be implemented. The setpoint temperature can be adjusted via the Plus and Minus button. The Output field can be used to display the currently desired and adjusted setpoint value on the controller. Via the 2 switches it is possible to activate a reduction mode and switch from heating to cooling. The 4 Input fields for the times can be used to specify 1 separate heating or cooling times from which the thermostat should be active. This function must be activated via the 2 switch.  Via the event display an error can be indicated by the device. The red circle indicates whether heating is in progress. The blue circle indicates whether cooling is in progress. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "Command Plus (Plus)",
+        "description": "With the Plus button a signal can be sent to the control to increase the target temperature.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Command Minus (Minus)",
+        "description": "With the Minus Button a signal can be sent to the controller to reduce the target temperature.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Actual Value Target Temperature (Output field 1)",
+        "description": "The output field returns the current target temperature from the thermostat on the controller.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Target Value Phase 1 ON Hours (Input field 1)",
+        "description": "Input field for the activation hour of the 1 heating or cooling phase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Target Value Phase 1 OFF Hours (Input field 2)",
+        "description": "Input field for the switch-off hour of the 1 heating or cooling phase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Target Value Phase 1 ON Minutes (Input field 3)",
+        "description": "Input field for the activation minute of the 1 heating or cooling phase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Target Value Phase 1 OFF Minutes (Input field 4)",
+        "description": "Input field for the switch-off minute of the 1 heating or cooling phase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "On Lowering Mode (Switch 1)",
+        "description": "On = With On, the On command for the Lowering Mode can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Lowering Mode (Switch 1)",
+        "description": "Off = With Off the off-command for the Lowering Mode can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Lowering Mode (Switch 1)",
+        "description": "State = Lowering State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "On Change Heating Cooling (Switch 2)",
+        "description": "On = With On, the On command for the Heating or Cooling Mode can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Change Heating Cooling (Switch 2)",
+        "description": "Off = With Off the off-command for the Heating or Cooling Mode can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Change Heating Cooling (Switch 2)",
+        "description": "State = Heating Cooling State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "On Timecontrol (Switch 3)",
+        "description": "On = With On, the On command for the Timecontrol can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Timecontrol (Switch 3)",
+        "description": "Off = With Off the off-command for the Timecontrol can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Timecontrol (Switch 3)",
+        "description": "State = Timecontrol State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "HeatingActive (Show event)",
+        "description": "This control indicates whether the thermostat is currently in heating mode.",
+        "allowedValues": "251 = Red <br>All other Values = No Light"
+      },
+      {
+        "name": "CoolingActive (Show event)",
+        "description": "This control indicates whether the thermostat is currently in cooling mode.",
+        "allowedValues": "251 = Blue <br>All other Values = No Light"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ThermostatAnalog": {
+    "title": "Device description",
+    "name": "VariableOutputField",
+    "overview": "With this device an analog thermostat can be realized. The 2 Input fields can be used to enter the setpoint for \"\"normal temperature\"\" and for \"\"set-back temperature\"\".  Via the 2 switches it is possible to activate a reduction mode and switch from heating to cooling. The 4 Input fields for the times can be used to specify 1 separate heating or cooling times from which the thermostat should be active. This function must be activated with the 2 switch. Via the event display, an error can be output by the device. The red circle indicates whether heating is in progress. The blue circle indicates whether cooling is in progress. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "Target value Temperature (Input Field 1)",
+        "description": "Input field for the target value Temperature.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Target value Temperature Lowering Mode (Input Field 1)",
+        "description": "Input field for the target value Temperature when the lowering mode is active.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Target Value Phase 1 ON Hours (Input field 1)",
+        "description": "Input field for the activation hour of the 1 heating or cooling phase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Target Value Phase 1 OFF Hours (Input field 2)",
+        "description": "Input field for the switch-off hour of the 1 heating or cooling phase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Target Value Phase 1 ON Minutes (Input field 3)",
+        "description": "Input field for the activation minute of the 1 heating or cooling phase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Target Value Phase 1 OFF Minutes (Input field 4)",
+        "description": "Input field for the switch-off minute of the 1 heating or cooling phase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "On Lowering Mode (Switch 1)",
+        "description": "On = With On, the On command for the Lowering Mode can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Lowering Mode (Switch 1)",
+        "description": "Off = With Off the off-command for the Lowering Mode can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Lowering Mode (Switch 1)",
+        "description": "State = Lowering Mode State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "On Change Heating Cooling (Switch 2)",
+        "description": "On = With On, the On command for the Heating or Cooling Mode can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Change Heating Cooling (Switch 2)",
+        "description": "Off = With Off the off-command for the Heating or Cooling Mode can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Change Heating Cooling (Switch 2)",
+        "description": "State = Heating Cooling State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "On Timecontrol (Switch 3)",
+        "description": "On = With On, the On command for the Timecontrol can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Timecontrol (Switch 3)",
+        "description": "Off = With Off the off-command for the Timecontrol can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Timecontrol (Switch 3)",
+        "description": "State = Timecontrol State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "HeatingActive (Show event)",
+        "description": "This control indicates whether the thermostat is currently in heating mode.",
+        "allowedValues": "251 = Red <br>All other Values = No Light"
+      },
+      {
+        "name": "CoolingActive (Show event)",
+        "description": "This control indicates whether the thermostat is currently in cooling mode.",
+        "allowedValues": "251 = Blue <br>All other Values = No Light"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "AirHumiditySensor": {
+    "title": "Device description",
+    "name": "AirHumiditySensor",
+    "overview": "With this device a sensor which measures the air humidity can be visualized. In the Output field the value from 0-100% is displayed.  Via the event display, an error can be output by the device.",
+    "table": [
+      {
+        "name": "Actual Value humidity (Output field)",
+        "description": "The output field returns the actual humidity from the Sensor on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "BrightnessSensor": {
+    "title": "Device description",
+    "name": "BrightnessSensor",
+    "overview": "With this device a sensor which measures the brightness can be visualized. The Output field shows the value from 0-100 kLux.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Brightness (Output field)",
+        "description": "The output field returns the actual brightness from the Sensor on the controller.",
+        "allowedValues": "0-100 kLux"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "SensorCO2": {
+    "title": "Device description",
+    "name": "SensorCO2",
+    "overview": "With this device a sensor which measures the CO2 content in the air can be displayed. In the Output field the value of 0-5000 ppm will be displayed.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value CO2 (Output field)",
+        "description": "The output field returns the actual CO2 from the Sensor on the controller.",
+        "allowedValues": "0-5000 ppm"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "SensorLevel": {
+    "title": "Device description",
+    "name": "SensorLevel",
+    "overview": "With this device a sensor which measures e.g. the level in a container can be displayed. In the Output field is the value from 0-100 % displayed.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Level (Fill Level Display)",
+        "description": "The Fill Level display the actual Level from the Sensor on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "WeatherStation": {
+    "title": "Device description",
+    "name": "WeatherStation",
+    "overview": "With this device a weather station can be visualized with its most common measuring points. The brightness value of the directions east, south and west can be measured. The dusk and dawn value can be measured. In addition, the humidity and the wind speed can be recorded. Furthermore it is indicated whether there is rainfall at the moment or not. Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Brightness East (Output field 1)",
+        "description": "The output field returns the actual Brightness East from the Weather Station on the controller.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Actual Value Brightness South (Output field 2)",
+        "description": "The output field returns the actual Brightness South Value from the Weather Station on the controller.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Actual Value Brightness West (Output field 3)",
+        "description": "The output field returns the actual Brightness West Value from the Weather Station on the controller.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Actual Value Dusk (Output field 4)",
+        "description": "The output field returns the actual Dusk from the Weather Station on the controller.",
+        "allowedValues": "0-1000 Lux"
+      },
+      {
+        "name": "Actual Value Outdoor Humidity (Output Field 5)",
+        "description": "The output field returns the actual Outdoor Humidity  from the Weather Station on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Actual Value Windspeed (Output Field 6)",
+        "description": "The output field returns the actual Windspeed from the Weather Station on the controller.",
+        "allowedValues": "0-50 m/s"
+      },
+      {
+        "name": "Actual Value Rainfall (Output Field 7)",
+        "description": "The output field returns if the Weatherstation on the Controller detect Rainfall or not.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "HotWaterMeter": {
+    "title": "Device description",
+    "name": "HotWaterMeter",
+    "overview": "With this device a hot water meter can be displayed. This provides the 2 most common values, the meter reading in m³ and the actual flow rate in m³/h.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Counter (Output Field 1)",
+        "description": "The output field returns the actual Counter from the Hot Water Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable"
+      },
+      {
+        "name": "Actual Value Flow (Output field 2)",
+        "description": "The output field returns the actual Flow from the Hot Water Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ColdWaterMeter": {
+    "title": "Device description",
+    "name": "ColdWaterMeter",
+    "overview": "With this device a cold water meter can be displayed. This provides the 2 most common values, the meter reading in m³ and the actual flow rate in m³/h. Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Counter (Output Field 1)",
+        "description": "The output field returns the actual Counter from the Cold Water Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in m³"
+      },
+      {
+        "name": "Actual Value Flow (Output field 2)",
+        "description": "The output field returns the actual Flow from the Cold Water Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in m³/h"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "HeatingMeter": {
+    "title": "Device description",
+    "name": "HeatingMeter",
+    "overview": "With this device a heating meter can be visualized. This runs the 9 most common values. The current heat output in kW and the 3 meter readings in kWh. These are the meter readings T1 and T2 for heating and the resulting total meter reading for heating. The meter reading in m³ of the water consumption and the current flow rate in m³/h is also displayed. In addition, the flow and return flow temperatures are displayed in °C and their spread in K.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Power (Output Field 1)",
+        "description": "The output field returns the actual Power from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 32Bit Variable in kW"
+      },
+      {
+        "name": "Actual Value Counter Total (Output Field 2)",
+        "description": "The output field returns the actual Counter Total from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "Actual Value Counter Tarif 1 (Output Field 3)",
+        "description": "The output field returns the actual Counter Tarif 1 from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "Actual Value Counter Tarif 2 (Output Field 4)",
+        "description": "The output field returns the actual Counter Tarif 2 from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "Actual Value Counter Used Water (Output Field 5)",
+        "description": "The output field returns the actual Counter Used Water from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 32Bit Variable in m³"
+      },
+      {
+        "name": "Actual Value Flow (Output Field 6)",
+        "description": "The output field returns the actual Flow from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 32Bit Variable in m³/h"
+      },
+      {
+        "name": "Actual Value Forward Temperature (Output Field 7)",
+        "description": "The output field returns the actual Forward Temperature from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 32Bit Variable in °C"
+      },
+      {
+        "name": "Actual Value Return Temperature (Output Field 8)",
+        "description": "The output field returns the actual Return Temperature from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 32Bit Variable in °C"
+      },
+      {
+        "name": "Actual Value Temperature difference (Output Field 9)",
+        "description": "The output field returns the actual difference Temperature from the Heating Meter on the controller.",
+        "allowedValues": "0-Max of 32Bit Variable in k"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ElectricityMeter": {
+    "title": "Device description",
+    "name": "ElectricityMeter",
+    "overview": "With this device an electricity meter can be visualized. The most common 7 values can thus be displayed. For the meter reading reference T1 and T2 each in kWh and the resulting total meter reading reference. The same applies to the meter reading consumption. The current active power in kW is also displayed.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Power (Output Field 1)",
+        "description": "The output field returns the actual Power from the Electric Meter on the controller.",
+        "allowedValues": "0-Max of 32Bit Variable in kW"
+      },
+      {
+        "name": "Actual Value Counter Total Tarif 1 (Output Field 2)",
+        "description": "The output field returns the actual Counter Total Tarif 1 from the Electric Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "Actual Value Counter Total Tarif 2 (Output Field 3)",
+        "description": "The output field returns the actual Counter Total Tarif 2 from the Electric Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "Actual Value Counter Tarif 1 Consumption (Output Field 4)",
+        "description": "The output field returns the actual Counter Total Tarif 1 Consumption from the Electric Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "Actual Value Counter Tarif 1 Production (Output Field 5)",
+        "description": "The output field returns the actual Counter Total Tarif 1 Production from the Electric Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": " Actual Value Counter Tarif 2 Consumption (Output Field 6)",
+        "description": "The output field returns the actual Counter Total Tarif 2 Consumption from the Electric Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "Actual Value Counter Tarif 2 Production (Output Field 7)",
+        "description": "The output field returns the actual Counter Total Tarif 2 Production from the Electric Meter on the controller.",
+        "allowedValues": "0-Max of 64Bit Variable in kWh"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "MotionSensor": {
+    "title": "Device description",
+    "name": "MotionSensor",
+    "overview": "With this device a motion detector can be implemented. The Input field can be used to set the time period for which the motion detector should remain switched on after a person has been detected. Via the switch, the motion detector can be manually set to a permanent state. This can be permanent off or permanent on. The push button can be used to send an impulse to the motion detector to turn it on for the set time.  Via the event display, an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "Target Value Switch-On Time (1 Input field)",
+        "description": "Input field for the Target Value Switch-On Time",
+        "allowedValues": "0-1200 sec"
+      },
+      {
+        "name": "On Permanent On (1 Switch)",
+        "description": "On = With On, the On command for Permanent On can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Permanent On (1 Switch)",
+        "description": "Off = With Off the off command for Permanent On can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Permanent (On1 Switch)",
+        "description": "State = Permanent On State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Toggle On-Off Impulse (1 Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch on the light can be send to the controller.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State Impulse (1 Push Button)",
+        "description": "State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "Battery": {
+    "title": "Device description",
+    "name": "Battery",
+    "overview": "With this device a battery can be displayed with its most important performance specifications. The battery symbol actively displays the SoC from 0-100%. Via the 4 Output fields the battery voltage, the battery temperature, the battery power and the SoH of the battery are displayed.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual value SOC (1 Battery)",
+        "description": "The Battery display the actual SOC Value from the Battery on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Actual Value Voltage (Output Field 1)",
+        "description": "The output field returns the actual Voltage from the Battery on the controller.",
+        "allowedValues": "0-1000 V"
+      },
+      {
+        "name": "Actual Value Temperature (Output Field 2)",
+        "description": "The output field returns the actual Temperature from the Battery on the controller.",
+        "allowedValues": "-30 to 120 °C"
+      },
+      {
+        "name": "Actual Value Power (Output Field 3)",
+        "description": "The output field returns the actual Power from the Battery on the controller.",
+        "allowedValues": "-1000 to 1000 kW"
+      },
+      {
+        "name": "Actual Value SOH (Output Field 4)",
+        "description": "The output field returns the actual SOH from the Battery on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "PVSystem": {
+    "title": "Device description",
+    "name": "PVSystem",
+    "overview": "With this device a PV system can be displayed. The Output field displays the effective power of the active PV system.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Power (Output Field 1)",
+        "description": "The Output Field display the actual Power from the PV System on the controller.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "HouseConsumption": {
+    "title": "Device description",
+    "name": "HouseConsumption",
+    "overview": "With this device the consumption of a house can be displayed. The Output field displays the active effective power.  Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Power (Output Field 1)",
+        "description": "The Output Field display the actual Power from the House Consumption on the controller.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "Generator": {
+    "title": "Device description",
+    "name": "Generator",
+    "overview": "With this device the power of a generator can be displayed. The active effective power is displayed via the Output field. The generator can be started manually via the switch if needed. The status at the switch than shows whether it is turned on or off. With the push button the generator can be reset if necessary in case of an error.  Via the event display, an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and then the \"Off\" command.",
+    "table": [
+      {
+        "name": "Actual Value Power (Output Field 1)",
+        "description": "The Output Field display the actual Power from the Generator on the controller.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "On Manual On (1 Switch)",
+        "description": "On = With On, the On command for Manual On can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Manual On (1 Switch)",
+        "description": "Off = With Off the off-command Manual On can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Manual On (1 Switch)",
+        "description": "State = Manual On State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Toggle On-Off Reset (1 Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to Rest the Error on the Generator can be send to the controller.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State Reset (1 Push Button)",
+        "description": "State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "MainsConnection": {
+    "title": "Device description",
+    "name": "MainsConnection",
+    "overview": "This device can be used to display the power of a mains connection. The effective power is shown in kW in the Output field.   Via the event display, an error can be indicated by the device.",
+    "table": [
+      {
+        "name": "Actual Value Power (Output Field 1)",
+        "description": "The Output Field display the actual Power from the Mains connection on the controller.",
+        "allowedValues": "-5000 to 5000 kW"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "ElectricChargingStation": {
+    "title": "Device description",
+    "name": "ElectricChargingStation",
+    "overview": "With this device a charging station can be realized. In the Output fields, the effective power of the charging station can be displayed and the charging time that has elapsed. In the Input field, the minimum power in kW can be entered, which should always be available in the charging station. This can make sense, for example, if the charging station is operated via an EMS on the controller. With a switch the charging station can be set into a manual mode and with the slider you can select which power should be available. With the 2 switch the mode for the minimum power can be activated. The small green circle indicates whether the vehicle is successfully connected to the charging station. Via the event display, an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "1 Output fields (Actual Value Power)",
+        "description": "The Output Field display the actual Power from the Charging Station on the controller.",
+        "allowedValues": "0- 1000 kW"
+      },
+      {
+        "name": "2 Output fields (Actual Value loading Time)",
+        "description": "The Output Field display the actual Loading Time from the Charging Station on the controller.",
+        "allowedValues": "0-2000 min"
+      },
+      {
+        "name": "1 Input field (Target Value Min Charge Power)",
+        "description": "Input field for the Target Value Min Charge Power from the Charging Station.",
+        "allowedValues": "0-1000KW"
+      },
+      {
+        "name": "1 Switch (On Mode Min Charge Power, Off Min Charge Power, State Min Charge Power)",
+        "description": "On = With On, the On command for Min Charge Power Mode can be sent. <br> Off = With Off the off-command Min Charge Power Mode can be sent. <br> State = Min Charge Power Mode State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On = 0-1 <br> Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "2 Switch (On Manual On, Off Manual On, State Manual On)",
+        "description": "On = With On, the On command for Manual On can be sent. <br> Off = With Off the off-command Manual On can be sent. <br> State = Manual On State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On = 0-1 <br> Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Slider (Target Value Manual Power)",
+        "description": "The slider sends the target value for the Manual Power to the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      },
+      {
+        "name": "1 Show events (CarConnected)",
+        "description": "This control shows if the charging station is connected to the vehicle.",
+        "allowedValues": "251 = Green <br> Al other Values = No Light"
+      },
+      {
+        "name": "3 Output field (Actual Value Manual Power)",
+        "description": "The Output Field display the actual Manual Power from the Charging Station on the controller.",
+        "allowedValues": "0-100%"
+      }
+    ]
+  },
+  "ElectronicBoiler": {
+    "title": "Device description",
+    "name": "ElectronicBoiler",
+    "overview": "This device can be used to implement an electrical insert in a boiler. The active power of the insert is displayed via the Output field. Via the 4 Input fields for time you have the possibility to execute certain programs on the control. The insert can be switched on manually via the switch and the power can be set via the slider. Via the event display, an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "1 Output fields (Actual Value Power)",
+        "description": "The Output Field display the actual Power from the Electric Boiler on the controller.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "1 Input field (Actual Value Heating phase ON Hours)",
+        "description": "Input field for the activation hour of the  heating phase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "2 Input field (Actual Value Heating phase OFF Hours)",
+        "description": "Input field for the switch-off hour of the  heating phase.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "3 Input field (Actual Value Heating phase ON Minutes)",
+        "description": "Input field for the activation minute of the heating phase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "4 Input field (Actual Value Heating phase OFF Minutes)",
+        "description": "Input field for the switch-off minute of the  heating phase.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "1 Switch (On Manual On, Off Manual On, State Manual On)",
+        "description": "On = With On, the On command for Manual On can be sent. <br> Off = With Off the off-command Manual On can be sent. <br> State = Manual On State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On = 0-1 <br> Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Slider (Target Value Manual Power)",
+        "description": "The slider sends the target value for the Manual Power to the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "2 Output field (Actual Value Manual Power)",
+        "description": "The Output Field display the actual Manual Power from the Electric Boiler on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "2 Switch (On Time Function, Off Time Function, State Time Function)",
+        "description": "On = With On, the On command for the Time Function can be sent. <br> Off = With Off the off-command for the Time Function can be sent. <br> State = Time Function State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On = 0-1 <br> Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "VentilatorSwitch": {
+    "title": "Device description",
+    "name": "VentilatorSwitch",
+    "overview": "With this device a fan, e.g. bathroom fan, can be turned on and off. An error can be displayed by the device via the event display. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "On (Switch)",
+        "description": "On = With On, the On command for the Ventilator can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off (Switch)",
+        "description": "Off = With Off the off-command for the Ventilator can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State (Switch)",
+        "description": "State = Ventilator State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "MusicSystem": {
+    "title": "Device description",
+    "name": "MusicSystem",
+    "overview": "This device can be used to realize the most common signals to control a music system. The volume level can be adjusted via plus and minus. With play, stop and pause the music can be controlled accordingly. The song selection can be adjusted via forward and backward. With the switch the music system can be turned on or off. Via the event display, an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "Toggle Volume Plus (1 Plus)",
+        "description": "With the Plus button a signal can be sent to the control to increase the volume.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Volume Minus (1 Minus)",
+        "description": "With the Minus Button a signal can be sent to the controller to reduce the volume.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Play (1 Play)",
+        "description": "With the Play Button a signal can be sent to the controller to Play the music.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Stop (1 Stop)",
+        "description": "With the Stop Button a signal can be sent to the controller to Stop the music.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Pause (1 Pause)",
+        "description": "With the Pause Button a signal can be sent to the controller to Break the music.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Forward (1 Forward)",
+        "description": "The Forward button can be used to send a signal to the controller to advance the music.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Reverse (1 Reverse)",
+        "description": "The Reverse button can be used to send a signal to the controller to switch the music back.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "On Music System (1 Switch)",
+        "description": "On = With On, the On command for the Music System can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Music System (1 Switch)",
+        "description": "Off = With Off the off-command for the Music System can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Music System (1 Switch)",
+        "description": "State = Music System State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "TV": {
+    "title": "Device description",
+    "name": "TV",
+    "overview": "This device can be used to realize the most common signals to control a TV. The volume level can be adjusted via plus and minus. Via forward and backward the channel selection can be adjusted. With the switch the TV can be turned on or off. Via the event display, an error can be indicated by the device. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "Toggle Volume Plus (1 Plus)",
+        "description": "With the Plus button a signal can be sent to the control to increase the volume.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Toggle Volume Minus (1 Minus)",
+        "description": "With the Minus Button a signal can be sent to the controller to reduce the volume.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Forward (1 Forward) ",
+        "description": "The Forward button can be used to send a signal to the controller to switch a TV channel.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Toggle Reverse (1 Reverse)",
+        "description": "The Reverse button can be used to send a signal to the controller to switch back a TV channel.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "On TV (1 Switch)",
+        "description": "On = With On, the On command for the TV System can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off TV (1 Switch)",
+        "description": "Off = With Off the off-command for the TV System can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State TV (1 Switch)",
+        "description": "State = Tv State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "MotorWithoutVFD": {
+    "title": "Device description",
+    "name": "MotorWithoutVFD",
+    "overview": "This device can be used to control a motor which is not speed controlled. The upper 3 push buttons can be used to switch between the modes Auto, Manual and Inactive. The 4 push-buttons can be used to reset the motor in the event of a malfunction. The Output field can be used to display the current power consumption of the motor The arrows can be used to select the direction of rotation in manual mode. The current direction of rotation is also displayed. The event display can be used to indicate an error from the device.",
+    "table": [
+      {
+        "name": "1 Push Button (Toggle Auto Mode, State Auto Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Auto Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "2 Push Button (Toggle Manual Mode, State Manual Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Manual Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "3 Push Button (Toggle Inactive Mode, State Inactive Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Inactive Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "4 Push Button (Toggle Reset, State Reset)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to Rest the Error on the Motor can be send to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction left (Left,State)",
+        "description": "Direction Left = With Direction Left, the Left command for the Motor can be sent. State = Left State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Left = 0-1 State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction right (Right,State)",
+        "description": "Direction Right = With Direction Right, the Right command for the Motor can be sent. State = Right State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Right = 0-1 State = 0-1"
+      },
+      {
+        "name": "1 Output field (Actual Value Current)",
+        "description": "The Output Field display the actual Current from the Motor on the controller.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "PumpWithoutVFD": {
+    "title": "Device description",
+    "name": "PumpWithoutVFD",
+    "overview": "This device can be used to control a pump which is not speed controlled. The upper 3 push buttons can be used to switch between the modes Auto, Manual and Inactive. The 4 push-buttons can be used to reset the pump in the event of a malfunction. The Output field can be used to display the current power consumption of the pump. The arrows can be used to select the direction of rotation in manual mode. The current direction of rotation is also displayed. The event display can be used to indicate an error from the device.",
+    "table": [
+      {
+        "name": "1 Push Button (Toggle Auto Mode, State Auto Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Auto Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "2 Push Button (Toggle Manual Mode, State Manual Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Manual Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "3 Push Button (Toggle Inactive Mode, State Inactive Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Inactive Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "4 Push Button (Toggle Reset, State Reset)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to Rest the Error on the Pump can be send to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction left (Left,State)",
+        "description": "Direction Left = With Direction Left, the Left command for the Pump can be sent. State = Left State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Left = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction right (Right,State)",
+        "description": "Direction Right = With Direction Right, the Right command for the Pump can be sent. State = Right State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Right = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Output field (Actual Value Current)",
+        "description": "The Output Field display the actual Current from the Pump on the controller.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "MotorWithVFD": {
+    "title": "Device description",
+    "name": "MotorWithVFD",
+    "overview": "This device can be used to realize the control for a motor which is speed controlled. The upper 3 buttons can be used to switch between the modes auto, manual and inactive. Via the 4 push buttons the drive can be reset in case of a malfunction. The Output field can be used to display the current power consumption of the motor. The arrows can be used to select the direction of the rotation in manual mode. The current direction of rotation is also displayed. Additionally, the slider can be used to set the speed in manual mode. The output field shows the current speed in %. The current speed can also be displayed in the slider and an error can be displayed in the event display.",
+    "table": [
+      {
+        "name": "1 Push Button (Toggle Auto Mode, State Auto Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Auto Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.\"",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "2 Push Button (Toggle Manual Mode, State Manual Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Manual Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "3 Push Button (Toggle Inactive Mode, State Inactive Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Inactive Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "4 Push Button (Toggle Reset, State Reset)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to Rest the Error on the Motor can be send to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction left (Left,State)",
+        "description": "Direction Left = With Direction Left, the Left command for the Motor can be sent. State = Left State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Left = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction right (Right,State)",
+        "description": "Direction Right = With Direction Right, the Right command for the Motor can be sent. State = Right State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Right = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Output field (Actual Value Current)",
+        "description": "The Output Field display the actual Current from the Motor on the controller.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "1 Slider (Target Value Manual Speed)",
+        "description": "The slider sends the target value for the Manual Speed to the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "2 Output field (Actual Value Speed)",
+        "description": "The Output Field display the actual Speed from the Motor on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "PumpWithVFD": {
+    "title": "Device description",
+    "name": "PumpWithVFD",
+    "overview": "This device can be used to realize the control for a pump which is speed controlled. The upper 3 buttons can be used to switch between the modes auto, manual and inactive. Via the 4 push buttons the drive can be reset in case of a malfunction. The Output field can be used to display the current power consumption of the motor. The arrows can be used to select the direction of the rotation in manual mode. The current direction of rotation is also displayed. Additionally, the slider can be used to set the speed in manual mode. The output field shows the current speed in %. The current speed can also be displayed in the slider and an error can be displayed in the event display.",
+    "table": [
+      {
+        "name": "1 Push Button (Toggle Auto Mode, State Auto Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Auto Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "2 Push Button (Toggle Manual Mode, State Manual Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Manual Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "3 Push Button (Toggle Inactive Mode, State Inactive Mode active)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the motor in Inactive Mode to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "4 Push Button (Toggle Reset, State Reset)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to Rest the Error on the Pump can be send to the controller. State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "On-Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction left (Left,State)",
+        "description": "Direction Left = With Direction Left, the Left command for the Pump can be sent. State = Left State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Left = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Arrow direction right (Right,State)",
+        "description": "Direction Right = With Direction Right, the Right command for the Pump can be sent. State = Right State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "Direction Right = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "1 Output field (Actual Value Current)",
+        "description": "The Output Field display the actual Current from the Pump on the controller.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "1 Slider (Target Value Manual Speed)",
+        "description": "The slider sends the target value for the Manual Speed to the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "2 Output field (Actual Value Speed)",
+        "description": "The Output Field display the actual Speed from the Pump on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "MixingValve": {
+    "title": "Device description",
+    "name": "MixingValve",
+    "overview": "With this device the control for a mixing valve can be realized. The upper 3 buttons can be used to switch between the modes auto, manual and inactive. With the 4 push buttons the mixing valve can be reset in case of an error. With the slider the position of the mixing valve can be selected in manual mode. Additionally the slider shows the actual position of the mixing valve. The output field shows the current position of the valve. The Event Viewer can be used to display an error from the unit.",
+    "table": [
+      {
+        "name": "Toggle Auto Mode (1 Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the mixing valve in Auto Mode to the controller.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State Auto Mode active (1 Push Button)",
+        "description": "State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Toggle Manual Mode (2 Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the mixing valve in Manual Mode to the controller.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State Manual Mode active (2 Push Button)",
+        "description": "State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Toggle Inactive Mode (3 Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the mixing valve in Inactive Mode to the controller.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State Inactive Mode active (3 Push Button)",
+        "description": "State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Toggle Reset (4 Push Button)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to switch the mixing valve in Inactive Mode to the controller.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State Reset (4 Push Button)",
+        "description": "State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target Value Manual Speed (1 Slider)",
+        "description": "The slider sends the target value for the Manual Position to the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Actual Value Speed (Output field)",
+        "description": "The Output Field display the actual Position from the mixing valve on the controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "Ventilation": {
+    "title": "Device description",
+    "name": "Ventilation",
+    "overview": "This device can be used to control a ventilation system. With the switch it is possible to change whether the ventilation should run in auto mode or in manual mode. In manual mode, the Input field can be used to set the power at which the ventilation should run. The 2 Output fields display the speeds for the supply air and exhaust air valve door. The 2 green dots represent the change of the supply or exhaust air filter.  The red event display can be used to indicate an error from the device. With the Reset button the error can be reset. NOTE FOR SWITCH : If within 5 seconds the appropriate status does not return to the command that was sent, the switch automatically sends the \"On\" command once and than the \"Off\" command.",
+    "table": [
+      {
+        "name": "On Manual (1 Switch)",
+        "description": "On = With On, the On command for Manual On can be sent.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Off Manual (1 Switch)",
+        "description": "Off = With Off the off-command for the Manual On can be sent.",
+        "allowedValues": "Off = 0-1"
+      },
+      {
+        "name": "State Manual (1 Switch)",
+        "description": "State = Manual On State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "Target Value Speed (1 Input field)",
+        "description": "Input field for the Target Value for the Speed.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Actual Value Supply Air Speed (1 Output field)",
+        "description": "The Output Field display the actual Supply Air Speed from the Ventilation on the controller.",
+        "allowedValues": "0-3000 rpm"
+      },
+      {
+        "name": "Actual Value Exhaust Air Speed (2 Output field)",
+        "description": "The Output Field display the actual Exhaust Air Speed from the Ventilation on the controller.",
+        "allowedValues": "0-3000 rpm"
+      },
+      {
+        "name": "Change Supply Filter (1 Show event)",
+        "description": "This control indicates if the Supply filter needs to be changed.",
+        "allowedValues": "251 = Green <br> All other Values = No Light"
+      },
+      {
+        "name": "Change Exhaust Filter (2 Show event)",
+        "description": "This control indicates if the Exhaust filter needs to be changed.",
+        "allowedValues": "251 = Green <br> All other Values = No Light"
+      },
+      {
+        "name": "Toggle Reset (1 Push Buttons)",
+        "description": "On-Off = The Push Button generates the following signal. When pressing, a 1 signal is sent. Only when released, the 0 is sent. By sending the signal the On-Off Impulse to Rest the Error on the Ventilation can be send to the controller.",
+        "allowedValues": "On-Off = 0-1"
+      },
+      {
+        "name": "State Reset (1 Push Buttons)",
+        "description": "State = Toggle On-Off State serves as feedback from the terminal device and returns the current status.",
+        "allowedValues": "State = 0-1"
+      },
+      {
+        "name": "ErrorWarningState (ShowEvent)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "Gauge": {
+    "title": "Device description",
+    "name": "Gauge",
+    "overview": "With this Gauge it is possible to display 1 live data directly. There is again the possibility to leave the scaling in manually. The unit is also be adjustable again. This Gauge use only the Live Data from Mqtt.",
+    "table": [
+      {
+        "name": "Actual_Value 1",
+        "description": "Here 1 variable from can be mapped.",
+        "allowedValues": "Min and Max from 64 Bit Variable"
+      },
+      {
+        "name": "Scalling",
+        "description": "You can use the automatic scaling or you can manually enter a min and max value.",
+        "allowedValues": "Manual or Automatic"
+      },
+      {
+        "name": "Min Max Value (Only Visible if the scalling for this Variable is Manual)",
+        "description": "Min and Max Value if you choose the Scalling in Manual Mode.",
+        "allowedValues": "Min and Max from 64 Bit Variable"
+      }
+    ]
+  },
+  "DropDownOutputFieldWithVariable": {
+    "title": "Device description",
+    "name": "DropDownOutputFieldWithVariable",
+    "overview": "This Drop down output field can be used to output texts in connection with a number. When creating the device, numbers can be added and the corresponding texts can be assigned. If the device receives the respective number from the controller, the corresponding text is displayed. This device is especially suitable for the data type ENUM on the side of the control. With the Drop Down field only receiving and displaying can be done with this Device, nothing can be sent. An icon can be freely assigned to the device when it is created.",
+    "table": [
+      {
+        "name": "Drop Down (Actual Value)",
+        "description": "This Drop Down Output Field can show variable Text which is related to a number in the background.",
+        "allowedValues": "Min -32768 , Max 32767"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, 2 = Error"
+      }
+    ]
+  },
+  "DropDownInputFieldWithVariable": {
+    "title": "Device description",
+    "name": "DropDownInputFieldWithVariable",
+    "overview": "This Drop Down input field can be used to input texts in connection with a number. When creating the device, numbers can be added and the corresponding texts can be assigned. If you now select a text in the device, the respective number is sent to the controller. This device is especially suitable for the data type ENUM on the side of the control.  An icon can be freely assigned to the device when it is created. ",
+    "table": [
+      {
+        "name": "Drop Down (Target Value)",
+        "description": "With this Drop Down Input Field different texts can be selected which send a number to the control in the background.",
+        "allowedValues": "Min -32768 , Max 32767"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, 2 = Error"
+      }
+    ]
+  },
+  "TSGFrischwasser": {
+    "title": "Device description",
+    "name": "TSG Fresh Water",
+    "overview": "This device can be used to control and visualise a fresh water system from TSG.",
+    "table": [
+      {
+        "name": "Offset Redox",
+        "description": "This value can be used to specify the offset of the ORP probe to correct the output value.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Min Value Redox",
+        "description": "This value can be used to specify the offset of the ORP probe to correct the output value.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Max Value Redox",
+        "description": "This value can be used to specify the maximum value for the redox probe at which an alarm is generated and regulated to if no pulses come from the water meter for a certain time but the maximum value has not yet been reached.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Allways On",
+        "description": "With this value, the pump can be switched to continuous mode. This means that if the Max value has not yet been reached or the water meter delivers pulses, the pump delivers a continuous signal instead of pulses, i.e. it is on as long as pulses are coming from the water meter or the Max value has not yet been reached.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Pulse Duration",
+        "description": "This value can be used to specify the pulse length of the pump.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Break Time",
+        "description": "With this value, the breake time between the pulses of the pump can be set.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Allways On Time",
+        "description": "This value can be used to specify the allways-on time, when the pump is operated in continuous on mode. The pump than continues to run for the time after the last pulse was received.",
+        "allowedValues": "0 – 25000 in ms"
+      },
+      {
+        "name": "Hour On",
+        "description": "This value can be used to specify the hours from when the washing system is in switch-on mode.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute On",
+        "description": "This value can be used to specify the minute from which the washing system is in switch-on mode.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Hour Off",
+        "description": "This value can be used to specify the hours from when the washing system is in switch-off mode.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute Off",
+        "description": "This value can be used to specify the minute from which the washing system is in switch-off mode.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Time to go Max Value",
+        "description": "With this value it is possible to set when the pump should regulate to the max value of the probe after the last impulse of the water meter if this has not been reached. In seconds",
+        "allowedValues": "0 - 60"
+      },
+      {
+        "name": "Max Water Flow",
+        "description": "This value can be used to set the maximum amount of fresh water that is allowed to flow when the washing system is in switch-off mode.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Max Chemistry Flow",
+        "description": "This value can be used to set the maximum amount of chemical that is allowed to flow when the washing system is in switch-off mode.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Min Chemistry Flow",
+        "description": "This value can be used to set how much minimum chemical must flow in 24 hours.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Reset",
+        "description": "With this value, some alarms of the function can be reset. Not all alarms can be reset manually",
+        "allowedValues": "0 – 1"
+      },
+      {
+        "name": "Reset State",
+        "description": "This value returns the current reset status.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Error Warning State",
+        "description": "Here you can specify a variable that indicates a warning or an error directly on the unit. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning 2 = Error"
+      },
+      {
+        "name": "State Float Switch",
+        "description": "This value can be used to display the status of the float switch.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Reed Contact",
+        "description": "This value can be used to display the status of the reed contact in the chemical container.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Allways On",
+        "description": "This value provides the current congestion of the pump's continuous on mode.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Value Redox",
+        "description": "This value provides the current value of the redox probe.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Actual Flow Water",
+        "description": "This value provides the current flow rate of the water meter.",
+        "allowedValues": "0 – Max of 64 Bit Variable in l/min"
+      },
+      {
+        "name": "Actual Flow Chemistry",
+        "description": "This value provides the current flow rate of the chemical meter.",
+        "allowedValues": "0 – Max of 64Bit Variable in l/min"
+      },
+      {
+        "name": "Counter Water",
+        "description": "This value provides the current meter reading of the water meter.",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Counter Chemistry",
+        "description": "This value provides the current counter reading of the chemistry counter",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Alarm Message",
+        "description": "This value shows the current alarm message.",
+        "allowedValues": "0 = No alarm <br> 1 = Too much fresh water consumption <br> 2 = Too much chemical consumption <br> 3 = Excessive consumption of chemicals and fresh water <br> 4 = Chemical consumption too low <br> 5 = Min-Wert der Redox-Sonde erreicht <br> 6 = Max value of the redox probe reached <br> 7 = Float switch has tripped <br> 8 = Reed Contact chemical container has triggered"
+      },
+      {
+        "name": "Error Message",
+        "description": "This value shows the current error message.",
+        "allowedValues": "0 = No errors <br> 1 = KL1512 Configuration error <br> 2 = Redox sensor AI error <br> 3 = System time error <br> 4 = Error on-off switching time"
+      }
+    ]
+  },
+  "TSGBrauchwasser": {
+    "title": "Device description",
+    "name": "TSG Service water",
+    "overview": "This device can be used to control and visualise a domestic hot water system from TSG.",
+    "table": [
+      {
+        "name": "Offset Redox",
+        "description": "This value can be used to specify the offset of the ORP probe to correct the output value.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Min Value Redox",
+        "description": "This value can be used to specify the min value for the ORP probe at which an alarm is generated.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Max Value Redox",
+        "description": "This value can be used to specify the maximum value for the redox probe at which an alarm is generated and regulated to if no pulses come from the water meter for a certain time but the maximum value has not yet been reached.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Allways On",
+        "description": "With this value, the pump can be switched to continuous mode. This means that if the Max value has not yet been reached or the water meter delivers pulses, the pump delivers a continuous signal instead of pulses, i.e. it is on as long as pulses are coming from the water meter or the Max value has not yet been reached.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Pulse Duration",
+        "description": "This value can be used to specify the pulse length of the pump.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Break Time",
+        "description": "With this value, the pause time between the pulses of the pump can be set.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Allways On Time",
+        "description": "This value can be used to specify the run-on time when the pump is operated in continuous on mode. The pump than continues to run for the time after the last pulse was received.",
+        "allowedValues": "0 – 25000 in ms"
+      },
+      {
+        "name": "Hour On",
+        "description": "This value can be used to specify the hours from when the washing system is in switch-on mode.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute On",
+        "description": "This value can be used to specify the minute from which the washing system is in switch-on mode.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Hour Off",
+        "description": "This value can be used to specify the hours from when the washing system is in switch-off mode.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute Off",
+        "description": "This value can be used to specify the minute from which the washing system is in switch-off mode.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Max Chemistry Flow",
+        "description": "This value can be used to set the maximum amount of chemical that is allowed to flow when the washing system is in switch-off mode.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Min Chemistry Flow",
+        "description": "This value can be used to set how much minimum chemical must flow in 24 hours.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Reset",
+        "description": "With this value, some alarms of the function can be reset. Not all alarms can be reset manually",
+        "allowedValues": "0 – 1"
+      },
+      {
+        "name": "Reset State",
+        "description": "This value returns the current reset status.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Error Warning State",
+        "description": "Here you can specify a variable that indicates a warning or an error directly on the unit. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warnung 2 = Error"
+      },
+      {
+        "name": "State Float Switch",
+        "description": "This value can be used to display the status of the float switch.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Reed Contact",
+        "description": "This value can be used to display the status of the reed contact in the chemical container.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Allways On",
+        "description": "This value provides the current congestion of the pump's continuous on mode.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Value Redox",
+        "description": "This value provides the current value of the redox probe.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Actual Flow Water",
+        "description": "This value provides the current flow rate of the water meter.",
+        "allowedValues": "0 – Max of 64 Bit Variable in l/min"
+      },
+      {
+        "name": "Actual Flow Chmistry",
+        "description": "This value provides the current flow rate of the chemical meter.",
+        "allowedValues": "0 – Max of 64Bit Variable in l/min"
+      },
+      {
+        "name": "Counter Chemistry",
+        "description": "This value provides the current counter reading of the chemistry counter",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Alarm Message",
+        "description": "This value shows the current alarm message.",
+        "allowedValues": "0 = No alarm <br> 1 = Too much fresh water consumption <br> 2 = Too much chemical consumption <br> 3 = Too much chemical and fresh water consumption <br> 4 = Chemical consumption too low <br> 5 = Min value of the redox probe reached <br> 6 = Max value of the redox probe reached <br> 7 = Float switch has tripped <br> 8 = Reed Contact chemical container has triggered"
+      },
+      {
+        "name": "Error Message",
+        "description": "This value shows the current error message.",
+        "allowedValues": "0 = No errors <br> 1 = KL1512 Configuration error <br> 2 = Redox sensor AI error <br> 3 = System time error <br> 4 = Error on-off switching time"
+      }
+    ]
+  },
+  "EnergyView": {
+    "title": "Device description",
+    "name": "EnergyViewPreview",
+    "overview": "This device represents an energy overview of all common large producers and consumers in a building. In the main view you can find each device maximum 1 time. If there are more than one of the same device, it will be displayed in the main view. The power value is than the sum of all power values of the individual devices. For the SOC of the battery, the average is displayed if there are several battery systems. To see each device individually, you can click on the respective device in the main view. This opens a 2 window with all devices of the respective type. The power lines in the graph are animated to show the direction in which the energies are flowing. Depending on the selection and number of devices, the Energy View display is compiled differently.",
+    "table": [
+      {
+        "name": "Output field 0 - 10 (PV Production)",
+        "description": "These output fields can be used to display the PV power of each PV system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Output field 0 - 10 (Generator)",
+        "description": "These output fields can be used to display the Generator power of each Generator system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Output field 0 - 10 (Grid)",
+        "description": "These output fields can be used to display the Grid power of each Grid system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-5000KW +5000KW"
+      },
+      {
+        "name": "Output field 0 - 10 (Battery Power)",
+        "description": "These output fields can be used to display the Battery power of each Battery system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Output field 0 - 10 (Battery SOC)",
+        "description": "These output fields can be used to display the Battery SOC of each Battery system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Output field 0 - 10 (House Consumption)",
+        "description": "These output fields can be used to display the House conumption of each House system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Output field 0 - 10 (EV-Charging station)",
+        "description": "These output fields can be used to display the EV-Charger power of each EV-Charger system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Output field 0 - 10 (Electric boiler)",
+        "description": "These output fields can be used to display the Electric boiler power of each Electric boiler system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "- Output field 0 - 10 (Heating Pump)",
+        "description": "These output fields can be used to display the Heating pump electric power of each Heating pump system. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "- Output field 0 - 10 (Other Big consumer)",
+        "description": "These output fields can be used to display the power of each other big consumer. It is possible to add between 0 and 10 fields.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Show event (ErrorWarningState)",
+        "description": "Here you can specify a variable to indicate a warning or error directly on the device. The warning is indicated by orange flashing, an error by red flashing.",
+        "allowedValues": "0 = OK, 1 = Warning, 2 = Error"
+      }
+    ]
+  },
+  "TSGLadestationNotAus": {
+    "title": "Device description",
+    "name": "TSGLadestationNotAusPreview",
+    "overview": "This device can be used to implement emergency stop monitoring for charging stations from TSG.",
+    "table": [
+      {
+        "name": "Emergency Off State",
+        "description": "This value shows the current status of the emergency stop circuit.",
+        "allowedValues": "0 = NotAus Kreis ist aktiv; 1 = NotAus Kreis hat ausgelöst"
+      },
+      {
+        "name": "Reset Button",
+        "description": "The emergency stop circuit can be reset with this value.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Reset Button State",
+        "description": "This value returns the current reset status.",
+        "allowedValues": "0 - 1"
+      }
+    ]
+  },
+  "TSGModulLadestation": {
+    "title": "Device description",
+    "name": "TSGModulLadestation",
+    "overview": "",
+    "table": [
+      {
+        "name": "State Charging Station",
+        "description": "Operating state of the charger. Green = Available; Orange = Car connected; Blue = Charging",
+        "allowedValues": "1 = Free, 2 = Car Connected, 3 = Car charging"
+      },
+      {
+        "name": "Actual Power",
+        "description": "Current Charging Power in kW",
+        "allowedValues": "number values"
+      },
+      {
+        "name": "Charged Energy of the Session",
+        "description": "Charged energy in current session",
+        "allowedValues": "number values"
+      },
+      {
+        "name": "Loading Time of the Session",
+        "description": "Time from the beginning of the charge",
+        "allowedValues": "number values"
+      },
+      {
+        "name": "State of Charge",
+        "description": "State of Charge in percentage",
+        "allowedValues": "number values"
+      },
+      {
+        "name": "Total Energy",
+        "description": "Total delivered energy of all charging sessions",
+        "allowedValues": "number values"
+      }
+    ]
+  }
+}

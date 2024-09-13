@@ -1,0 +1,496 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM" Id="{3dc4cc04-aac0-4135-8866-9b92abf24d27}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+	fbEM1Counter	: FB_EnergyCounter;
+	fbEM2			: FB_EM_Beckhoff_KL3403;
+	fbEM2Counter	: FB_EnergyCounter;
+	fbEM3			: FB_EM_Beckhoff_KL3403;
+	fbEM3Counter	: FB_EnergyCounter;
+	fbEM4			: FB_EM_Beckhoff_KL3403;
+	fbEM4Counter	: FB_EnergyCounter;
+	fbEM5			: FB_EM_Beckhoff_KL3403;		// only EIOPL020004		Main supply
+													// only EIOPL020013		extra measurement
+	fbEM5Counter	: FB_EnergyCounter;
+	fbEM6			: FB_EM_Beckhoff_KL3403;		// only EIOPL020004		Crane
+													// only EIOPL020013		extra measurement
+	fbEM6Counter	: FB_EnergyCounter;
+	fbEM7			: FB_EM_Beckhoff_KL3403;		// only EIOPL020013		extra measurement
+	fbEM7Counter	: FB_EnergyCounter;
+		
+	lrPowerEM1		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM2		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM3		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM4		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM5		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM6		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM7		: LREAL;							//{#lynus.ag#()}
+	lr_InputVoltage_L1N		: LREAL;					//{#lynus.ag#()}
+	lr_InputVoltage_L2N		: LREAL;					//{#lynus.ag#()}
+	lr_InputVoltage_L3N		: LREAL;					//{#lynus.ag#()}
+	lr_InputVoltage_L1L2	: LREAL;					//{#lynus.ag#()}
+	lr_InputVoltage_L2L3	: LREAL;					//{#lynus.ag#()}
+	lr_InputVoltage_L3L1	: LREAL;					//{#lynus.ag#()}
+	lr_Power_EM1_L1	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM1_L2	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM1_L3	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM2_L1	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM2_L2	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM2_L3	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM3_L1	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM3_L2	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM3_L3	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM4_L1	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM4_L2	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM4_L3	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM5_L1	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM5_L2	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM5_L3	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM6_L1	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM6_L2	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM6_L3	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM7_L1	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM7_L2	: LREAL;							//{#lynus.ag#()}
+	lr_Power_EM7_L3	: LREAL;							//{#lynus.ag#()}
+	lr_ReactivePower_EM1_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ApparentPower_EM1_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ReactivePower_EM2_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ApparentPower_EM2_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ReactivePower_EM3_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ApparentPower_EM3_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ReactivePower_EM4_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ApparentPower_EM4_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ReactivePower_EM5_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ApparentPower_EM5_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ReactivePower_EM6_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ApparentPower_EM6_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ReactivePower_EM7_Total	: LREAL;				//{#lynus.ag#()}
+	lr_ApparentPower_EM7_Total	: LREAL;				//{#lynus.ag#()}
+	lr_Frequency_EM1	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_EM2	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_EM3	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_EM4	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_EM5	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_EM6	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_EM7	: LREAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM1_L1: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM1_L2: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM1_L3: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM2_L1: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM2_L2: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM2_L3: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM3_L1: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM3_L2: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM3_L3: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM4_L1: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM4_L2: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM4_L3: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM5_L1: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM5_L2: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM5_L3: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM6_L1: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM6_L2: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM6_L3: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM7_L1: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM7_L2: REAL;						//{#lynus.ag#()}
+	r_PowerFactor_EM7_L3: REAL;						//{#lynus.ag#()}
+	
+	
+END_VAR
+VAR_INPUT
+	uiCurrentTransformerRatioL1	:UINT;
+	uiCurrentTransformerRatioL2	:UINT;
+	uiCurrentTransformerRatioL3	:UINT;	
+END_VAR
+VAR PERSISTENT
+	lrCounterEM1	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM2	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM3	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM4	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM5	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM6	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM7	: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+
+
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= uiCurrentTransformerRatioL1, 
+	uiCurrentTransformerRatioL2:= uiCurrentTransformerRatioL2, 
+	uiCurrentTransformerRatioL3:= uiCurrentTransformerRatioL3, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM1 := fbEM1.stDataEMPower.lrPowerTotal;	
+lr_InputVoltage_L1N := fbEM1.stDataEMPower.lrVoltageL1N;
+lr_InputVoltage_L2N := fbEM1.stDataEMPower.lrVoltageL2N;
+lr_InputVoltage_L3N := fbEM1.stDataEMPower.lrVoltageL3N;
+lr_InputVoltage_L1L2 := fbEM1.stDataEMPower.lrVoltageL1L2;
+lr_InputVoltage_L2L3 := fbEM1.stDataEMPower.lrVoltageL2L3;
+lr_InputVoltage_L3L1 := fbEM1.stDataEMPower.lrVoltageL3L1;
+
+fbEM1Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM1, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM1Counter.lrTotalCounterEnergy_Consumption > lrCounterEM1 THEN  	
+	lrCounterEM1 := fbEM1Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+// Output1, 3x400V 32A, CEE32
+
+fbEM2(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 35, 
+	uiCurrentTransformerRatioL2:= 35, 
+	uiCurrentTransformerRatioL3:= 35, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM2 := fbEM2.stDataEMPower.lrPowerTotal;	
+
+fbEM2Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM2, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM2Counter.lrTotalCounterEnergy_Consumption > lrCounterEM2 THEN  	
+	lrCounterEM2 := fbEM2Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// Output2, 3x400V 32A, CEE32
+
+fbEM3(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 35, 
+	uiCurrentTransformerRatioL2:= 35, 
+	uiCurrentTransformerRatioL3:= 35, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM3 := fbEM3.stDataEMPower.lrPowerTotal;	
+
+fbEM3Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM3, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM3Counter.lrTotalCounterEnergy_Consumption > lrCounterEM3 THEN  	
+	lrCounterEM3 := fbEM3Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// Output3, 3x400V 16A, CEE16
+
+fbEM4(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 35, 
+	uiCurrentTransformerRatioL2:= 35, 
+	uiCurrentTransformerRatioL3:= 35, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM4 := fbEM4.stDataEMPower.lrPowerTotal;	
+
+fbEM4Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM4, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM4Counter.lrTotalCounterEnergy_Consumption > lrCounterEM4 THEN  	
+	lrCounterEM4 := fbEM4Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// only EIOPL02004
+
+fbEM5(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+lrPowerEM5 := fbEM5.stDataEMPower.lrPowerTotal;	
+	
+fbEM5Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM5, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM5Counter.lrTotalCounterEnergy_Consumption > lrCounterEM5 THEN  	
+	lrCounterEM5 := fbEM5Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbEM6(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+lrPowerEM6 := fbEM6.stDataEMPower.lrPowerTotal;	
+
+fbEM6Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM6, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM6Counter.lrTotalCounterEnergy_Consumption > lrCounterEM6 THEN  	
+	lrCounterEM6 := fbEM6Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbEM7(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+lrPowerEM7 := fbEM7.stDataEMPower.lrPowerTotal;	
+
+fbEM6Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM7, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM7Counter.lrTotalCounterEnergy_Consumption > lrCounterEM7 THEN  	
+	lrCounterEM7 := fbEM7Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+// additinal data sent to cloud
+lr_Power_EM1_L1 			:=	fbEM1.stDataEMPowerRealTime.lrPowerL1;
+lr_Power_EM1_L2 			:=	fbEM1.stDataEMPowerRealTime.lrPowerL2;
+lr_Power_EM1_L3 			:=	fbEM1.stDataEMPowerRealTime.lrPowerL3;
+lr_ReactivePower_EM1_Total	:= 	fbEM1.stDataEMPowerRealTime.lrReactivePowerTotal;
+lr_ApparentPower_EM1_Total	:= 	fbEM1.stDataEMPowerRealTime.lrApparentPowerTotal;
+lr_Frequency_EM1			:= 	fbEM1.stDataEMPowerRealTime.lrFrequency;
+r_PowerFactor_EM1_L1		:=	fbEM1.fbKL3403.stDataL1.rPowerfactor;
+r_PowerFactor_EM1_L2		:=	fbEM1.fbKL3403.stDataL2.rPowerfactor;
+r_PowerFactor_EM1_L3		:=	fbEM1.fbKL3403.stDataL3.rPowerfactor;
+
+lr_Power_EM2_L1 			:=	fbEM2.stDataEMPowerRealTime.lrPowerL1;
+lr_Power_EM2_L2 			:=	fbEM2.stDataEMPowerRealTime.lrPowerL2;
+lr_Power_EM2_L3 			:=	fbEM2.stDataEMPowerRealTime.lrPowerL3;
+lr_ReactivePower_EM2_Total	:= 	fbEM2.stDataEMPowerRealTime.lrReactivePowerTotal;
+lr_ApparentPower_EM2_Total	:= 	fbEM2.stDataEMPowerRealTime.lrApparentPowerTotal;
+lr_Frequency_EM2			:= 	fbEM2.stDataEMPowerRealTime.lrFrequency;
+r_PowerFactor_EM2_L1		:=	fbEM2.fbKL3403.stDataL1.rPowerfactor;
+r_PowerFactor_EM2_L2		:=	fbEM2.fbKL3403.stDataL2.rPowerfactor;
+r_PowerFactor_EM2_L3		:=	fbEM2.fbKL3403.stDataL3.rPowerfactor;
+
+lr_Power_EM3_L1 			:=	fbEM3.stDataEMPowerRealTime.lrPowerL1;
+lr_Power_EM3_L2 			:=	fbEM3.stDataEMPowerRealTime.lrPowerL2;
+lr_Power_EM3_L3 			:=	fbEM3.stDataEMPowerRealTime.lrPowerL3;
+lr_ReactivePower_EM3_Total	:= 	fbEM3.stDataEMPowerRealTime.lrReactivePowerTotal;
+lr_ApparentPower_EM3_Total	:= 	fbEM3.stDataEMPowerRealTime.lrApparentPowerTotal;
+lr_Frequency_EM3			:= 	fbEM3.stDataEMPowerRealTime.lrFrequency;
+r_PowerFactor_EM3_L1		:=	fbEM3.fbKL3403.stDataL1.rPowerfactor;
+r_PowerFactor_EM3_L2		:=	fbEM3.fbKL3403.stDataL2.rPowerfactor;
+r_PowerFactor_EM3_L3		:=	fbEM3.fbKL3403.stDataL3.rPowerfactor;
+
+lr_Power_EM4_L1 			:=	fbEM4.stDataEMPowerRealTime.lrPowerL1;
+lr_Power_EM4_L2 			:=	fbEM4.stDataEMPowerRealTime.lrPowerL2;
+lr_Power_EM4_L3 			:=	fbEM4.stDataEMPowerRealTime.lrPowerL3;
+lr_ReactivePower_EM4_Total	:= 	fbEM4.stDataEMPowerRealTime.lrReactivePowerTotal;
+lr_ApparentPower_EM4_Total	:= 	fbEM4.stDataEMPowerRealTime.lrApparentPowerTotal;
+lr_Frequency_EM4			:= 	fbEM4.stDataEMPowerRealTime.lrFrequency;
+r_PowerFactor_EM4_L1		:=	fbEM4.fbKL3403.stDataL1.rPowerfactor;
+r_PowerFactor_EM4_L2		:=	fbEM4.fbKL3403.stDataL2.rPowerfactor;
+r_PowerFactor_EM4_L3		:=	fbEM4.fbKL3403.stDataL3.rPowerfactor;
+
+lr_Power_EM5_L1 			:=	fbEM5.stDataEMPowerRealTime.lrPowerL1;
+lr_Power_EM5_L2 			:=	fbEM5.stDataEMPowerRealTime.lrPowerL2;
+lr_Power_EM5_L3 			:=	fbEM5.stDataEMPowerRealTime.lrPowerL3;
+lr_ReactivePower_EM5_Total	:= 	fbEM5.stDataEMPowerRealTime.lrReactivePowerTotal;
+lr_ApparentPower_EM5_Total	:= 	fbEM5.stDataEMPowerRealTime.lrApparentPowerTotal;
+lr_Frequency_EM5			:= 	fbEM5.stDataEMPowerRealTime.lrFrequency;
+r_PowerFactor_EM5_L1		:=	fbEM5.fbKL3403.stDataL1.rPowerfactor;
+r_PowerFactor_EM5_L2		:=	fbEM5.fbKL3403.stDataL2.rPowerfactor;
+r_PowerFactor_EM5_L3		:=	fbEM5.fbKL3403.stDataL3.rPowerfactor;
+
+lr_Power_EM6_L1 			:=	fbEM6.stDataEMPowerRealTime.lrPowerL1;
+lr_Power_EM6_L2 			:=	fbEM6.stDataEMPowerRealTime.lrPowerL2;
+lr_Power_EM6_L3 			:=	fbEM6.stDataEMPowerRealTime.lrPowerL3;
+lr_ReactivePower_EM6_Total	:= 	fbEM6.stDataEMPowerRealTime.lrReactivePowerTotal;
+lr_ApparentPower_EM6_Total	:= 	fbEM6.stDataEMPowerRealTime.lrApparentPowerTotal;
+lr_Frequency_EM6			:= 	fbEM6.stDataEMPowerRealTime.lrFrequency;
+r_PowerFactor_EM6_L1		:=	fbEM6.fbKL3403.stDataL1.rPowerfactor;
+r_PowerFactor_EM6_L2		:=	fbEM6.fbKL3403.stDataL2.rPowerfactor;
+r_PowerFactor_EM6_L3		:=	fbEM6.fbKL3403.stDataL3.rPowerfactor;
+
+lr_Power_EM7_L1 			:=	fbEM7.stDataEMPowerRealTime.lrPowerL1;
+lr_Power_EM7_L2 			:=	fbEM7.stDataEMPowerRealTime.lrPowerL2;
+lr_Power_EM7_L3 			:=	fbEM7.stDataEMPowerRealTime.lrPowerL3;
+lr_ReactivePower_EM7_Total	:= 	fbEM7.stDataEMPowerRealTime.lrReactivePowerTotal;
+lr_ApparentPower_EM7_Total	:= 	fbEM7.stDataEMPowerRealTime.lrApparentPowerTotal;
+lr_Frequency_EM7			:= 	fbEM7.stDataEMPowerRealTime.lrFrequency;
+r_PowerFactor_EM7_L1		:=	fbEM7.fbKL3403.stDataL1.rPowerfactor;
+r_PowerFactor_EM7_L2		:=	fbEM7.fbKL3403.stDataL2.rPowerfactor;
+r_PowerFactor_EM7_L3		:=	fbEM7.fbKL3403.stDataL3.rPowerfactor;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="42" Count="0" />
+      <LineId Id="358" Count="1" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="15" Count="4" />
+      <LineId Id="458" Count="1" />
+      <LineId Id="22" Count="5" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="265" Count="5" />
+      <LineId Id="44" Count="12" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="71" Count="30" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="103" Count="8" />
+      <LineId Id="326" Count="1" />
+      <LineId Id="114" Count="21" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="137" Count="1" />
+      <LineId Id="202" Count="6" />
+      <LineId Id="328" Count="1" />
+      <LineId Id="211" Count="21" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="496" Count="1" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="499" Count="13" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="545" Count="0" />
+      <LineId Id="528" Count="11" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="515" Count="12" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="548" Count="11" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="971" Count="28" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="653" Count="5" />
+      <LineId Id="862" Count="2" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="660" Count="4" />
+      <LineId Id="659" Count="0" />
+      <LineId Id="858" Count="2" />
+      <LineId Id="857" Count="0" />
+      <LineId Id="666" Count="4" />
+      <LineId Id="665" Count="0" />
+      <LineId Id="854" Count="2" />
+      <LineId Id="853" Count="0" />
+      <LineId Id="672" Count="4" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="850" Count="2" />
+      <LineId Id="849" Count="0" />
+      <LineId Id="680" Count="4" />
+      <LineId Id="678" Count="0" />
+      <LineId Id="721" Count="2" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="686" Count="4" />
+      <LineId Id="685" Count="0" />
+      <LineId Id="846" Count="2" />
+      <LineId Id="1007" Count="9" />
+      <LineId Id="677" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

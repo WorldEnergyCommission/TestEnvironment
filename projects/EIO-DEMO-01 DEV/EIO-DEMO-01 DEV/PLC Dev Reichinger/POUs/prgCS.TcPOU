@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{3784cb62-0c46-4790-b9e7-939ab6fb1943}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	bEnabledCS				: BOOL;								//{#lynus.ag#()}
+	byPrioCS				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS				: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS				: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS				: REAL;									//{#lynus.ag#()}
+	lrCounterCS				: LREAL;								//{#lynus.ag#()}
+	bIsEnabledCS			: BOOL;									//{#lynus.ag#()}
+	byStateMinPowerCS		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS			: REAL;									//{#lynus.ag#()}
+
+	bCarConnected			: BOOL;									//{#lynus.ag#()}
+	rChrgTime				: REAL;									//{#lynus.ag#()}
+	lrPowerCS				: LREAL;								//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[ prgCS.bEnabledCS 			:= prg_ADS.struct_received.bEnabledCS  ;
+ prgCS.byPrioCS 			:= prg_ADS.struct_received.byPrioCS  ;
+ prgCS.bySOC_E_CS 			:= prg_ADS.struct_received.bySOC_E_CS  ;
+ prgCS.bySOC_D_CS 			:= prg_ADS.struct_received.bySOC_D_CS  ;
+ prgCS.byMinPowerCS 		:= prg_ADS.struct_received.byMinPowerCS  ;
+ prgCS.rMaxPowerCS 			:= prg_ADS.struct_received.rMaxPowerCS  ;
+ prgCS.lrCounterCS 			:= prg_ADS.struct_received.lrCounterCS  ;
+ prgCS.bIsEnabledCS 		:= prg_ADS.struct_received.bIsEnabledCS  ;
+ prgCS.byStateMinPowerCS 	:= prg_ADS.struct_received.byStateMinPowerCS  ;
+ prgCS.rTargetPowerCS 		:= prg_ADS.struct_received.rTargetPowerCS  ;
+ prgCS.lrPowerCS			:= prg_ADS.struct_received.lrPowerCS		;
+ prgCS.bCarConnected 		:= prg_ADS.struct_received.bCarConnected	;
+ prgCS.rChrgTime 			:= prg_ADS.struct_received.rChrgTime	;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="33" Count="7" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

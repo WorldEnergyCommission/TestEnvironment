@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPV" Id="{28504d1a-b8d1-40da-92cd-df7f0a8ec2dd}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	FB_PV1:FB_TCPModbusRequest_PV;	
+	fbPVCounter		: FB_EnergyCounter;
+	lrPowerPV		: LREAL;					//{#lynus.ag#()}
+	byErrorWarningPV	: BYTE;					//{#lynus.ag#()}
+	udintLiveCount		: INT;					//{#lynus.ag#()}
+	w_Address			: WORD:=30000;
+	nQuantity			: WORD :=100;
+	str_ip				:STRING(30):='192.168.10.150';
+	mEnable_Auto: BOOL:=TRUE;
+	ton_delay: Ton;
+	byte_10: BYTE;							//{#lynus.ag#()}
+	byte_11: BYTE;							//{#lynus.ag#()}
+	byte_12: BYTE;							//{#lynus.ag#()}
+	byte_13: BYTE;							//{#lynus.ag#()}
+	int_Count: INT:=149;
+	int_count_right: INT;
+	int_SuccessCounterOld: INT;
+	ton_LiveCountEqual: Ton;
+	time_EqualDelay: TIME:=T#2M;
+END_VAR
+VAR PERSISTENT
+	lrCounterPV		: LREAL;					//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FB_PV1	(	b_Enable:= TRUE, 
+			str_IPAdress:= str_ip, 
+			lreal_RealPower_kW=> lrPowerPV);
+
+fbPVCounter(	byActiveTariff := 1,	
+				lrPowerInput := 0-lrPowerPV,
+				lrTotalCounterEnergy_Production => lrCounterPV);
+	
+byte_10 := FB_PV1.byteReceiveString[10];
+byte_11 := FB_PV1.byteReceiveString[11];
+byte_12 := FB_PV1.byteReceiveString[12];
+byte_13 := FB_PV1.byteReceiveString[13];
+
+(*
+
+suchen nach IP geht nicht optimal, wegen den vielen Fehler / nicht antworten vom SmartDongle
+
+IF FB_PV1.int_SuccessCounter = int_SuccessCounterOld THEN
+	ton_LiveCountEqual.IN := TRUE;
+ELSE
+	ton_LiveCountEqual.IN := FALSE;
+	int_SuccessCounterOld := FB_PV1.int_SuccessCounter; 
+END_IF
+
+
+IF ton_LiveCountEqual.Q THEN
+	ton_LIveCountEqual.IN := FALSE;
+	int_Count := int_count+1;
+	IF int_Count >254 THEN int_count :=1; END_IF
+ 	str_ip := concat('192.168.10.',INT_TO_STRING(int_count));
+END_IF
+IF lrPowerPV <>0 AND  int_count_right =0 THEN
+	int_count_right := int_Count;
+END_IF
+ton_LiveCountEqual(PT:=time_EqualDelay);
+*)
+(*
+fbPV1(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.44.45', 
+	sint_ID_Iverter1:=1,
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+	
+lrPowerPV := fbPV1.stDataEMPower_PV[1].lrPowerTotal;
+lrCounterPV := fbPV1.stDataEMPower_PV[1].lrPowerProduction;
+*)
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="244" Count="8" />
+      <LineId Id="279" Count="2" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="319" Count="1" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="311" Count="1" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="315" Count="1" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="29" Count="3" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="218" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

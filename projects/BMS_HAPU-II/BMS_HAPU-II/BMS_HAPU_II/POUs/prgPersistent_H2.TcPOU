@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPersistent_H2" Id="{ccd67b8a-d866-4216-a145-3575a5a9eafe}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPersistent_H2
+VAR
+	fbUSV		: FB_WritePersistentData_CX81xx;
+	fb_Reboot		: NT_reboot;
+	m_Reboot		: BOOL:=FALSE;
+	
+	
+	FB_IOF_DeviceReset	: IOF_DeviceReset;
+    DEVICEID  : UDINT;
+    RESET     : BOOL;
+	ton_Delay_ResetKBus: Ton;
+	uinit_KbusState: UINT;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbUSV(
+	eSaveModeData:= eUSVSaveMode.eSaveWhenPowerfail, 
+	bLoadPersistentDataOk=> , 
+	bPowerFailDetect=> , 
+	bError=> , 
+	bySaveProcess=> , 
+	dwStorageLast24h=> , 
+	udiErrorCode=> );
+	
+	
+fb_Reboot(	netid := '',
+			delay := 2,
+			start := m_Reboot);
+	
+IF prgGrid_H2.fbKBusState.uiKBusState_OUT <> 0 AND NOT FB_IOF_DeviceReset.BUSY THEN
+	ton_Delay_ResetKBus.IN := TRUE;
+ELSE
+	ton_Delay_ResetKBus.IN := FALSE;
+END_IF
+ton_Delay_ResetKBus( PT := T#30S);
+
+uinit_KbusState := prgGrid_H2.fbKBusState.uiKBusState_OUT;
+
+FB_IOF_DeviceReset(
+	NETID:= '', 
+	DEVICEID:= 2, 		// ID 2 is the first terminal
+	RESET:= ton_Delay_ResetKBus.Q, 
+	TMOUT:= T#5S, 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgPersistent_H2">
+      <LineId Id="3" Count="6" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="19" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

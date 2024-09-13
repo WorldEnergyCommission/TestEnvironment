@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_EL3443_DPM_Total" Id="{571be34f-6a33-4e07-9e90-abd947c618f3}">
+    <Declaration><![CDATA[(*This enum is equivalent to the selectors from the documentation " Confirmation of variable output values 1 - 4"*)
+{attribute 'qualified_only'}
+TYPE E_EL3443_DPM_Total :
+(
+    nTotal_OFFSET := 1024,           // Offset for total values. The offset is added to the base selector
+    
+    In_RMS := 8,                     // [A]  (Real Selector: 1032 (= 1024 + 8))  Calculated RMS value of the neutral current
+    Power_Factor := 23,              // [-]  (Real Selector: 1047 (= 1024 + 23))  Total power factor over all phases
+    Ptot := 26,                      // [W]  (Real Selector: 1050 (= 1024 + 26))  Total active power
+    Ptotavg := 27,                   // [W]  (Real Selector: 1051 (= 1024 + 27))  Average total active power during the last interval
+    Ptotmin := 28,                   // [W]  (Real Selector: 1052 (= 1024 + 28))  Minimum total active power in the last interval
+    Ptotmax := 29,                   // [W]  (Real Selector: 1053 (= 1024 + 29))  Maximum total active power in the last interval
+    Stot := 32,                      // [VA]  (Real Selector: 1056 (= 1024 + 32))  Total apparent power
+    Stotavg := 33,                   // [VA]  (Real Selector: 1057 (= 1024 + 33))  Average total apparent power during the last interval
+    Stotmin := 34,                   // [VA]  (Real Selector: 1058 (= 1024 + 34))  Minimum total apparent power in the last interval
+    Stotmax := 35,                   // [VA]  (Real Selector: 1059 (= 1024 + 35))  Maximum total apparent power in the last interval
+    Qtot := 38,                      // [Var]  (Real Selector: 1062 (= 1024 + 38))  Total reactive power
+    Qtotavg := 39,                   // [Var]  (Real Selector: 1063 (= 1024 + 39))  Average total reactive power during the last interval
+    Qtotmin := 40,                   // [Var]  (Real Selector: 1064 (= 1024 + 40))  Minimum total reactive power in the last interval
+    Qtotmax := 41,                   // [Var]  (Real Selector: 1065 (= 1024 + 41))  Maximum total reactive power in the last interval
+    Eptot := 45,                     // [mWh]  (ULINT Selector: 1069 (= 1024 + 45))  Balanced total active energy
+    EPtot_pos := 46,                 // [mWh]  (ULINT Selector: 1070 (= 1024 + 46))  Related total active energy
+    EPtot_neg := 47,                 // [mWh]  (ULINT Selector: 1071 (= 1024 + 47))  Input total active energy
+    Eptot_interval := 48,            // [mWh]  (ULINT Selector: 1072 (= 1024 + 48))  Balanced total active energy in last interval
+    EPtot_pos_interval := 49,        // [mWh]  (ULINT Selector: 1073 (= 1024 + 49))  Total active energy related in the last interval
+    EPtot_neg_interval := 50,        // [mWh]  (ULINT Selector: 1074 (= 1024 + 50))  Input total active energy the last interval
+    EStot := 51,                     // [mWh]  (ULINT Selector: 1075 (= 1024 + 51))  Total apparent energy
+    EStot_pos := 52,                 // [mWh]  (ULINT Selector: 1076 (= 1024 + 52))  Total apparent energy
+    EStot_neg := 53,                 // [mWh]  (ULINT Selector: 1077 (= 1024 + 53))  Total apparent energy
+    EStot_interval := 54,            // [mWh]  (ULINT Selector: 1078 (= 1024 + 54))  Total apparent energy in the last interval
+    EStot_pos_interval := 55,        // [mWh]  (ULINT Selector: 1079 (= 1024 + 55))  Total apparent energy in the last interval
+    EStot_neg_interval := 56,        // [mWh]  (ULINT Selector: 1080 (= 1024 + 56))  Total apparent energy in the last interval
+    EQtot := 57,                     // [mWh]  (ULINT Selector: 1081 (= 1024 + 57))  Total reactive energy
+    EQtot_pos := 58,                 // [mWh]  (ULINT Selector: 1082 (= 1024 + 58))  Total reactive energy
+    EQtot_neg := 59,                 // [mWh]  (ULINT Selector: 1083 (= 1024 + 59))  Total reactive energy
+    EQtot_interval := 60,            // [mWh]  (ULINT Selector: 1084 (= 1024 + 60))  Total reactive energy in the last interval
+    EQtot_pos_interval := 61,        // [mWh]  (ULINT Selector: 1085 (= 1024 + 61))  Total reactive energy in the last interval
+    EQtot_neg_interval := 62,        // [mWh]  (ULINT Selector: 1086 (= 1024 + 62))  Total reactive energy in the last interval
+    PhiL1L2 := 70,                   // [°]  (Real Selector: 1094 (= 1024 + 70))  Phase shift angle between phase L1 and L2
+    PhiL1L3 := 71,                   // [°]  (Real Selector: 1095 (= 1024 + 71))  Phase shift angle between phase L1 and L3
+    Unbalance := 72,                 // [-]  (Real Selector: 1096 (= 1024 + 72))  Ratio between negative and positive voltage system
+    PQF := 80,                       // [-]  (Real Selector: 1104 (= 1024 + 80))  Power quality factor
+    PQF_Avg := 81,                   // [-]  (Real Selector: 1105 (= 1024 + 81))  Average value of the power quality factor during the last interval
+    PQF_MIN := 82,                   // [-]  (Real Selector: 1106 (= 1024 + 82))  Minimum power quality factor in the last interval
+    PQF_MAX := 83                    // [-]  (Real Selector: 1107 (= 1024 + 83))  Maximum power quality factor in the last interval
+)UINT;      
+END_TYPE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

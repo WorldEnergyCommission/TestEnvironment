@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgHouse" Id="{e4486aa7-2c91-41a7-95b7-526712acc3f7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHouse
+VAR
+	fbHouse					: FB_HouseC_Power_Virtual;
+	fbHouse2				: FB_HouseC_Power_Virtual_v2;
+	lrPowerHouse			: LREAL;	//{#lynus.ag#()}
+	lrPowerHouse2			: LREAL;
+	bStateEnabelHouse		: BOOL;		//{#lynus.ag#()}
+	lrPowerHouseReal		: LREAL;	//{#lynus.ag#()}
+	lrPowerHouseReal2		: LREAL;
+	bStateEnableRaceStable	: BOOL;		//{#lynus.ag#()}
+	lrPowerRaceStable		: LREAL;	//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bEnableHouse		: BOOL;		//{#lynus.ag#()}
+	bEnableHouse2		: BOOL;
+	bEnableRaceStable	: BOOL;		//{#lynus.ag#()}
+	lrCounterHouse		: LREAL;	//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Updated : M.Schwarzmann
+//Date : 29.04.2022
+//Version : 1.0.0.1
+
+//changes
+//1.0.0.1 : added lrPowerHouseReal Variable, which subtracts the received Power of Electricity Meter from the calculated virtual House Power; added EMS Part for Power Consumption Race Stable
+
+// -- TestBegin
+fbHouse2(bEnable:= bEnableHouse2, diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, stDataHouseC=> , diNrOfHouseC_OUT=> );
+	lrPowerHouse2 := fbHouse2.stDataHouseC.lrPower;
+	
+IF (lrPowerHouse2 - prgHoneywell.dwElectricMeterPower) >= 0 THEN
+	lrPowerHouseReal2 := lrPowerHouse2 - prgHoneywell.dwElectricMeterPower;
+ELSE
+	lrPowerHouseReal2 := 0;
+END_IF
+
+// -- TestEnd
+
+fbHouse(bEnable:= bEnableHouse, diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, stDataHouseC=> , diNrOfHouseC_OUT=> );
+	lrPowerHouse := fbHouse.stDataHouseC.lrPower;
+		bStateEnabelHouse := fbHouse.stDataHouseC.bEnabled;
+
+IF (lrPowerHouse - prgHoneywell.dwElectricMeterPower) >= 0 THEN
+	lrPowerHouseReal := lrPowerHouse - prgHoneywell.dwElectricMeterPower;
+ELSE
+	lrPowerHouseReal := 0;
+END_IF
+
+IF fbHouse.stDataHouseC.lrTotalCounterEnergy_Consumption > lrCounterHouse THEN
+	lrCounterHouse := fbHouse.stDataHouseC.lrTotalCounterEnergy_Consumption;
+END_IF
+
+//EMS Part for Power Consumption Race Stable
+
+IF bEnableRaceStable THEN
+    bStateEnableRaceStable := TRUE;
+    lrPowerRaceStable := prgHoneywell.dwElectricMeterPower;
+ELSE
+	bStateEnableRaceStable := FALSE;
+	lrPowerRaceStable := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgHouse">
+      <LineId Id="68" Count="5" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="119" Count="1" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="125" Count="3" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="84" Count="2" />
+      <LineId Id="88" Count="1" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="92" Count="3" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="101" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

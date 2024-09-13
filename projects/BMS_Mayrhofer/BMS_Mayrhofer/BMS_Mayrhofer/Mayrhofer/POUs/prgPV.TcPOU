@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPV" Id="{3940a3f5-dd31-4276-b197-0a9b05eb909c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV					: FB_Symo_PV_Inverter_Float_1_DM_1_Inverter;
+	fbPV2					: FB_Symo_PV_Inverter_Float_1_DM_30_Inverter;
+//	fbPVInt					: FB_PV_Power;
+	fbPVCounter				: FB_EnergyCounter;
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV		: BYTE;					//{#lynus.ag#()}
+	
+	// extend or reduce amount of PV Inverters
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_3				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_4				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_5				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_6				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_7				: LREAL;				//{#lynus.ag#()}
+	FB_TestMB		:FB_ModBus_100Registers_FC3_inclID;
+
+END_VAR
+VAR PERSISTENT
+	lrCounterPV				: LREAL;				//{#lynus.ag#()}
+	str_IP_PV1					: STRING(15):= '10.0.0.101';
+	str_IP_PV2					: STRING(15):= '10.0.0.102';
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// extend or reduce amount of PV Inverters
+fbPV2.arrUnitID_Inverter[1] := 1;
+fbPV2.arrUnitID_Inverter[2] := 2;
+fbPV2.arrUnitID_Inverter[3] := 3;
+fbPV2.arrUnitID_Inverter[4] := 4;
+fbPV2.arrUnitID_Inverter[5] := 5;
+fbPV2.arrUnitID_Inverter[6] := 6;
+
+fbPV(
+	bEnable:= TRUE, 
+	sIPAdress:= str_IP_PV1, // '10.0.0.101', 
+	byUnitID_Inverter:= 1 , 
+	stDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+	
+fbPV2(
+	bEnable:= TRUE, 
+	sIPAdress:= str_IP_PV2, //'10.0.0.102', 			// modify IP Adress
+	arrUnitID_Inverter:= , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+// extend or reduce amount of PV Inverters
+lrPowerPV_1 := fbPV.stDataEMPower_PV.lrPowerTotal;
+lrPowerPV_2 := fbPV2.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_3 := fbPV2.arrDataSymo10[2].lrPowerAcInverter;
+lrPowerPV_4 := fbPV2.arrDataSymo10[3].lrPowerAcInverter;
+lrPowerPV_5 := fbPV2.arrDataSymo10[4].lrPowerAcInverter;
+lrPowerPV_6 := fbPV2.arrDataSymo10[5].lrPowerAcInverter;
+lrPowerPV_7 := fbPV2.arrDataSymo10[6].lrPowerAcInverter;
+	
+(*
+was macht dieser Baustein eigentlich??
+fbPVInt(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPV.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+	byErrorWarningPV := fbPVInt.stDataPv.byErrorWarning;
+
+	*)
+	
+lrPowerPV := lrPowerPV_1 + lrPowerPV_2 + lrPowerPV_3 + lrPowerPV_4 + lrPowerPV_5 + lrPowerPV_6 + lrPowerPV_7 ;
+
+// EnergyCounter
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+FB_TestMB(
+	m_Enable:= , 
+	str_IPAdress:= , 
+	w_Adress:= , 
+	usint_Quantity:= , 
+	usint_ID:= , 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="54" Count="0" />
+      <LineId Id="3" Count="3" />
+      <LineId Id="96" Count="1" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="233" Count="7" />
+      <LineId Id="10" Count="8" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="20" Count="3" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="29" Count="4" />
+      <LineId Id="227" Count="1" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="57" Count="13" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="193" Count="7" />
+      <LineId Id="140" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

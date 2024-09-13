@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_BOOL" Id="{cdffff38-0715-482f-b69b-5e93e95f4395}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_CV_WORD_TO_BOOL
+VAR_INPUT
+	{attribute 'hide'}
+	wInputValue			: WORD;								//Input value that is converted into the output value
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	arrOutputValue		: ARRAY[0..15] OF BOOL;				//Converted output value
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//WORD TO BOOL
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+arrOutputValue[0] := wInputValue.0;
+arrOutputValue[1] := wInputValue.1;
+arrOutputValue[2] := wInputValue.2;
+arrOutputValue[3] := wInputValue.3;
+arrOutputValue[4] := wInputValue.4;
+arrOutputValue[5] := wInputValue.5;
+arrOutputValue[6] := wInputValue.6;
+arrOutputValue[7] := wInputValue.7;
+arrOutputValue[8] := wInputValue.8;
+arrOutputValue[9] := wInputValue.9;
+arrOutputValue[10] := wInputValue.10;
+arrOutputValue[11] := wInputValue.11;
+arrOutputValue[12] := wInputValue.12;
+arrOutputValue[13] := wInputValue.13;
+arrOutputValue[14] := wInputValue.14;
+arrOutputValue[15] := wInputValue.15;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_BOOL">
+      <LineId Id="48" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="36" Count="2" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="14" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

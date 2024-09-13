@@ -1,0 +1,518 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_EHE_Linear_AO" Id="{f3cd0b8b-769c-473a-ade4-3e1b257a5a34}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EHE_Linear_AO
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;																							//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bPowerDataInvers						: BOOL;																							//With True its possible to invert all received power data from the electric meter
+	bNoLinear								: BOOL;																							//Output Power from the device is not linear. Use the Values from the Table Of Interpolation Points.
+	diNrOfEMS_IN							: DINT;																							//Number of EMS what control this Device.
+	diNrOfEM_IN_EHE							: DINT;																							//Number of the electric meter for incoming power data. (Power Data for this Device)
+	diNrOfTempS_IN							: DINT;																							//Number of the Temperature Sensor for incoming temperature data. (Temperature for the Service wather buffer)
+	stSetupEHE								: ST_Setup_EHE := (uiTargetTempOn := 35, uiTargetTempOff := 50, uiTargetTempMax := 62);			//{#lynus.ag#()} //Setup electric heating element
+	arrTableOfInterpolationPoints			: ARRAY[1..10] OF REAL;																			//Table Of Interpolation Points. Corresponds to the different power values in the non-linear curve of the device. The last value must correspond to the maximum power.
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataEHE								: ST_EHE_Output;																				//{#lynus.ag#()} //Electric heating element output data
+	diNrOfEHE_OUT							: DINT;																							//Active Number from the Electric heating element for using on other functions
+	rTargetPowerForExtFunc					: REAL;																							//Target Power from 0% to +100% to use on a external Function
+END_VAR
+VAR
+	{attribute 'conditionalshow'}
+	fbEHE									: FB_ElectricHeatingElement;																	//Function block for electric heating element
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;																			//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	fbInterpolation							: FB_Lin_Interpolation;																			//Function for interpolation
+	fbDIExternalLock						: FB_XL1XXX_DI;																					//Digital Input from external loock signal
+	fbAOEHE									: FB_XL4XXX_AO;																					//Analog Output to swtich on and off and controll the EHE
+	{attribute 'hide'}
+	timDissableFunctions					: TON;																							//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;																							//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	timGetTime								: TON;																							//Timer to activate the function tho read out the windows system time
+	{attribute 'hide'}
+	fbGetSystemTime							: NT_GetTime;																					//Function to read out the windows system time on the local plc
+	{attribute 'hide'}
+	arrPD									: ARRAY[1..42] OF FB_PersistentData_Number;														//Function to save persistent data
+	{attribute 'hide'} 
+	byLPTargetPowerTo0						: BYTE;																							//Loop to set the target power from the ems and the max power from the settings for arr[2] to arr[10] to 0 because its only a onOff EHE
+	{attribute 'hide'}
+	byLPGVLSetMaxPower						: BYTE;																							//Loop to send the max power from the EHE to the GVL
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;																							//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData							: INT;																							//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diNumberOfActiveBatterys				: DINT;																							//Number of active batterys
+	{attribute 'hide'}
+	diNumberOfBatteryInverterInEPO			: DINT;																							//Number of battery inverters that work in Emergency Power operation 
+	{attribute 'hide'}
+	diCounterForGVL							: DINT;																							//Counter to clean old data on GVL
+	{attribute 'hide'}
+	diLPForGVL								: DINT;																							//Loop to clean old data on GVL
+	{attribute 'hide'}
+	dwSumSOC								: DWORD;																						//Sum of the SOC from all batterys
+	{attribute 'hide'}
+	lrGridPower								: LREAL;																						//Grid power in kW
+	{attribute 'hide'}
+	lrSizeGridConnection					: LREAL;																						//Size of the complete grid connection
+	{attribute 'hide'}
+	liLPBatteryData							: LINT;																							//Loop to check some data from batterys
+	{attribute 'hide'}
+	liLPInEPO								: LINT;																							//Loop to check if 1 or more battery inverters build a island grid	
+	{attribute 'hide'}
+	liLPGridData							: LINT;																							//Loop to check some grid data																				
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	diNrOfEMS_IN_CP							: DINT;																							//Number of EMS what control this Device to compare with the original
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 19.05.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to switch on and off a electric heating element
+//The output signal to switch on and off is a analog output signal. (0-10V or 4-20mA)
+//With this function block its possible to control the EHE with a target power value over the analog signal. The output signal is linear
+//With the Nr from the Electric Meter its possible to send the data fromt the electric meter directly to the EHE function to display it
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+	diNrOfEM_IN_EHE := LIMIT(0,diNrOfEM_IN_EHE,Constants_Energy.diMaxNumberOfElectricMeters);
+		diNrOfTempS_IN := LIMIT(0,diNrOfTempS_IN,Constants_Sensors.diMaxNumberOfTemperatureSensors);
+			
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+IF NOT bPowerDataInvers THEN
+	fbEHE.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT1_Production * 1000;
+	fbEHE.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT2_Production * 1000;
+	fbEHE.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT1_Consumption * 1000;
+	fbEHE.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT1_Consumption * 1000;
+	fbEHE.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrTotalCounterEnergy_Production * 1000;
+	fbEHE.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrTotalCounterEnergy_Consumption * 1000;
+		fbEHE.lrPowerEHE := (Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrPower * 1000) * - 1;
+ELSE
+	fbEHE.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT1_Consumption * 1000;
+	fbEHE.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT2_Consumption * 1000;
+	fbEHE.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT1_Production * 1000;
+	fbEHE.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrCounterEnergyT2_Production * 1000;
+	fbEHE.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrTotalCounterEnergy_Consumption * 1000;
+	fbEHE.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrTotalCounterEnergy_Production * 1000;
+		fbEHE.lrPowerEHE := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_EHE].lrPower * 1000;
+END_IF
+
+(*-------------------------------------------------------------Calcualte the number of EHE---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfEHE, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricHeatingElements, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEHE_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfEHE := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfEHE := diNrOfEHE_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Get the local windows system time for this plc---------------------------------------------------------------*)
+timGetTime(IN:= bEnable AND NOT timGetTime.Q, PT:= T#30S, Q=> , ET=> );
+
+fbGetSystemTime(
+	NETID:= , 
+	START:= timGetTime.Q AND NOT fbGetSystemTime.BUSY, 
+	TMOUT:= , 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> , 
+	TIMESTR=> );	
+
+fbEHE.stSystemTime.wHour := fbGetSystemTime.TIMESTR.wHour;
+	fbEHE.stSystemTime.wMinute := fbGetSystemTime.TIMESTR.wMinute;
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+	
+(*------------------------------------------------------------------Error----------------------------------------------------------------------------*)	
+
+IF timDissableFunctions.Q THEN fbEHE.bWarning := TRUE; fbEHE.iWarningCode := 0; ELSE fbEHE.bWarning := FALSE; END_IF 
+	IF (Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfEHE > Constants_Energy.diMaxNumberOfElectricHeatingElements) OR 
+		(Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN].byErrorWarning = 2) OR
+			fbGetSystemTime.ERR THEN 
+				fbEHE.bError := TRUE; 
+	ELSE 
+				fbEHE.bError := FALSE; 
+	END_IF
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfEHE > Constants_Energy.diMaxNumberOfElectricHeatingElements THEN fbEHE.iErrorCode := 1;
+ELSIF fbGetSystemTime.ERR THEN fbEHE.iErrorCode := 3;
+ELSIF Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN].byErrorWarning = 2 THEN fbEHE.iErrorCode := 2;
+END_IF 
+
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+	
+//Calcualte the total SOC if we have more then 1 battery in our system
+diNumberOfActiveBatterys := 0;
+	dwSumSOC := 0;
+		FOR liLPBatteryData := 1 TO Constants_Energy.diMaxNumberOfBatterys BY 1 DO
+			IF Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].bEnabled THEN diNumberOfActiveBatterys := diNumberOfActiveBatterys + 1; END_IF
+				dwSumSOC := dwSumSOC + Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].dwSOC;
+		END_FOR
+	
+IF diNumberOfActiveBatterys > 0 THEN
+	fbEHE.dwBatterySOC := DINT_TO_DWORD(DWORD_TO_DINT(dwSumSOC) / diNumberOfActiveBatterys);
+ELSE
+	fbEHE.dwBatterySOC := 100;	//When we have no battery in the ems system
+END_IF
+
+//Check if one or more Batterysystems or batteryinverter make island mode
+diNumberOfBatteryInverterInEPO := 0;
+	FOR liLPInEPO := 1 TO Constants_Energy.diMaxNumberOfBatteryInverters BY 1 DO
+		IF Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,liLPInEPO].bWorkOnIslandMode THEN fbEHE.bEPOIsActive := TRUE; diNumberOfBatteryInverterInEPO := diNumberOfBatteryInverterInEPO + 1; END_IF
+	END_FOR 
+		IF diNumberOfBatteryInverterInEPO <= 0 THEN fbEHE.bEPOIsActive := FALSE; END_IF
+
+//Check the max. power of the grid connection and the sum of grid power
+lrSizeGridConnection := 0;
+	lrGridPower := 0;
+		FOR liLPGridData := 1 TO Constants_Energy.diMaxNumberOfGridConnections BY 1 DO
+			lrSizeGridConnection := lrSizeGridConnection + Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,liLPGridData].rSizeGridConn;
+				lrGridPower := lrGridPower + Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,liLPGridData].lrPower;
+		END_FOR		
+		
+//Set the target power from the EMS to the EHE Function
+fbEHE.arrTargetPower[1] := Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].arrTargetPowerEMS[1];
+
+FOR byLPTargetPowerTo0 := 2 TO 10 BY 1 DO
+	fbEHE.arrTargetPower[byLPTargetPowerTo0] := 0;
+END_FOR
+	stSetupEHE.rMaxPower2 := 0;
+		stSetupEHE.rMaxPower3 := 0;
+			stSetupEHE.rMaxPower4 := 0;
+				stSetupEHE.rMaxPower5 := 0;
+					stSetupEHE.rMaxPower6 := 0;
+						stSetupEHE.rMaxPower7 := 0;
+							stSetupEHE.rMaxPower8 := 0;
+								stSetupEHE.rMaxPower9 := 0;
+									stSetupEHE.rMaxPower10 := 0;
+
+//Digital input for external lock signal
+fbDIExternalLock(bInvers:= FALSE, bSignal=> );
+
+//Functionblock EHE
+fbEHE(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q,
+	bError:= , 
+	bIsStepSwitched:= FALSE, 
+	bEPOIsActive:= , 
+	bExternalLock:= fbDIExternalLock.bSignal, 
+	bWriteWithDelay:= TRUE,
+	bTimeDissableFunctions:= timDissableFunctions.Q,
+	iErrorCode:= , 
+	iWarningCode:= ,
+	diNumberOfEHE:= diNrOfEHE_OUT, 
+	dwBatterySOC:= , 
+	lrSizeGridConnection:= lrSizeGridConnection,
+	lrGridPower:= lrGridPower,
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrPowerEHE:= , 
+	arrTargetPower:= , 
+	rTemperatureInBoiler:= Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN].rTemperature, 
+	tTimDelayOutput:= T#5S, 
+	stSystemTime:= , 
+	stSetupEHE:= stSetupEHE, 
+	stDataEHEOut=> , 
+	stDataEHEOutDelay=> stDataEHE);
+	
+(*-------------------------------------------------------------------------Output----------------------------------------------------------------------*)
+
+IF bNoLinear THEN 
+	fbInterpolation.rXInputValue := (stSetupEHE.rMaxPower1 * fbEHE.stDataEHEOut.rTargetPower) / 100; 
+		fbInterpolation.arrYIntermediateValues[1] := 10;
+			fbInterpolation.arrYIntermediateValues[2] := 20;
+				fbInterpolation.arrYIntermediateValues[3] := 30;
+					fbInterpolation.arrYIntermediateValues[4] := 40;
+						fbInterpolation.arrYIntermediateValues[5] := 50;
+	fbInterpolation.arrYIntermediateValues[6] := 60;
+		fbInterpolation.arrYIntermediateValues[7] := 70;
+			fbInterpolation.arrYIntermediateValues[8] := 80;
+				fbInterpolation.arrYIntermediateValues[9] := 90;
+					fbInterpolation.arrYIntermediateValues[10] := 100;
+	fbInterpolation(rXInputValue:=, arrXIntermediateValues:= arrTableOfInterpolationPoints, arrYIntermediateValues:=, rYOutputValue=> );
+END_IF
+
+IF bNoLinear THEN 
+	fbAOEHE.rSignal := fbInterpolation.rYOutputValue;
+	//Target Power, to use this on a external Function
+	rTargetPowerForExtFunc := fbInterpolation.rYOutputValue;
+ELSE
+	fbAOEHE.rSignal := fbEHE.stDataEHEOut.rTargetPower;
+	//Target Power, to use this on a external Function
+	rTargetPowerForExtFunc := fbEHE.stDataEHEOut.rTargetPower;
+END_IF
+
+fbAOEHE(
+	rYMinTerminalValue:= 0, 
+	rXMinInputSignal:= 0, 
+	rYMaxTerminalValue:= 32767, 
+	rXMaxInputSignal:= 100, 
+	rSignal:= , 
+	usiState=> );
+
+(*-----------------------------------------------------------Handle data to Global structure for the electric heating element-----------------------------------------------------------------*)
+
+//Delte al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN iStateGVLData := 10; END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO 
+			Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].bIsStepSwitched := FALSE;
+					Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].bIsControllable := FALSE;
+						Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].byPriority := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].byErrorWarning := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].byNumberOfSteps := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].lrPower := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].lrPowerConsumption := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].lrPowerProduction := 0;
+												FOR byLPGVLSetMaxPower := 1 TO 10 BY 1 DO
+													Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].arrMaxPower[byLPGVLSetMaxPower] := 0;
+												END_FOR 
+													//Set also the target value from ems back here to 0 and not in EMS function because EMS is in Standy when we have a online change (Problem when we delete a ems function and make a online change)
+													FOR byLPGVLSetMaxPower := 1 TO 10 BY 1 DO
+														Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diLPForGVL,diCounterForGVL].arrTargetPowerEMS[byLPGVLSetMaxPower] := 0;	
+													END_FOR
+		END_FOR
+			diCounterForGVL := diCounterForGVL + 1;
+				diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricHeatingElements);
+					//Back to the init step
+					IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricHeatingElements THEN iStateGVLData := 0; END_IF
+
+	10://Clear old Data on GVL 	
+		Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].bIsStepSwitched := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].bIsControllable := FALSE;
+					Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].byPriority := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].byErrorWarning := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].byNumberOfSteps := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].lrPower := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].lrPowerConsumption := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].lrPowerProduction := 0;
+											FOR byLPGVLSetMaxPower := 1 TO 10 BY 1 DO
+												Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN_CP,diNrOfEHE_OUT].arrMaxPower[byLPGVLSetMaxPower] := 0;
+											END_FOR 
+												
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+			//Back to the init step
+			iStateGVLData := 0;
+
+END_CASE 	 
+
+IF diNrOfEHE_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].bEnabled := fbEHE.stDataEHEOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].bIsStepSwitched := fbEHE.stDataEHEOut.bIsStepSwitched;
+			Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].bIsControllable := TRUE;
+				Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].byPriority := fbEHE.stDataEHEOut.byPriority;
+					Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].byErrorWarning := fbEHE.stDataEHEOut.byErrorWarning;
+						Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].byNumberOfSteps := fbEHE.stDataEHEOut.byNumberOfSteps;
+							Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].lrPower := fbEHE.stDataEHEOut.lrPower;
+								Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].lrPowerConsumption := fbEHE.stDataEHEOut.lrPowerConsumption;
+									Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].lrPowerProduction := fbEHE.stDataEHEOut.lrPowerProduction;
+										Lynus_Standards.GVL_Energy.stDataElectricHeatingElements[diNrOfEMS_IN,diNrOfEHE_OUT].arrMaxPower := fbEHE.stDataEHEOut.arrMaxPower;
+END_IF			
+		
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_EHE), bEventBasedActive=> );
+arrPD[5](lrValue:= DINT_TO_LREAL(diNrOfTempS_IN), bEventBasedActive=> );
+arrPD[6](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower1), bEventBasedActive=> );
+arrPD[7](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower2), bEventBasedActive=> );
+arrPD[8](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower3), bEventBasedActive=> );
+arrPD[9](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower4), bEventBasedActive=> );
+arrPD[10](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower5), bEventBasedActive=> );
+arrPD[11](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower6), bEventBasedActive=> );
+arrPD[12](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower7), bEventBasedActive=> );
+arrPD[13](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower8), bEventBasedActive=> );
+arrPD[14](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower9), bEventBasedActive=> );
+arrPD[15](lrValue:= REAL_TO_LREAL(stSetupEHE.rMaxPower10), bEventBasedActive=> );
+arrPD[16](lrValue:= BOOL_TO_LREAL(stSetupEHE.bDisableLegionellaPr), bEventBasedActive=> );
+arrPD[17](lrValue:= BOOL_TO_LREAL(stSetupEHE.bManualyOn), bEventBasedActive=> );
+arrPD[18](lrValue:= BOOL_TO_LREAL(stSetupEHE.bOnEmergPowerOff), bEventBasedActive=> );
+arrPD[19](lrValue:= BOOL_TO_LREAL(stSetupEHE.bTimeEnabled), bEventBasedActive=> );
+arrPD[20](lrValue:= BYTE_TO_LREAL(stSetupEHE.byDisableSOC), bEventBasedActive=> );
+arrPD[21](lrValue:= BYTE_TO_LREAL(stSetupEHE.byEnableSOC), bEventBasedActive=> );
+arrPD[22](lrValue:= BYTE_TO_LREAL(stSetupEHE.byHourOff), bEventBasedActive=> );
+arrPD[23](lrValue:= BYTE_TO_LREAL(stSetupEHE.byHourOn), bEventBasedActive=> );
+arrPD[24](lrValue:= BYTE_TO_LREAL(stSetupEHE.byManualyTargetPower), bEventBasedActive=> );
+arrPD[25](lrValue:= BYTE_TO_LREAL(stSetupEHE.byMinutesOff), bEventBasedActive=> );
+arrPD[26](lrValue:= BYTE_TO_LREAL(stSetupEHE.byMinutesOn), bEventBasedActive=> );
+arrPD[27](lrValue:= BYTE_TO_LREAL(stSetupEHE.byPriority), bEventBasedActive=> );
+arrPD[28](lrValue:= UINT_TO_LREAL(stSetupEHE.uiTargetTempMax), bEventBasedActive=> );
+arrPD[29](lrValue:= UINT_TO_LREAL(stSetupEHE.uiTargetTempOff), bEventBasedActive=> );
+arrPD[30](lrValue:= UINT_TO_LREAL(stSetupEHE.uiTargetTempOn), bEventBasedActive=> );
+arrPD[31](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );
+arrPD[32](lrValue:= BOOL_TO_LREAL(bNoLinear), bEventBasedActive=> );
+arrPD[33](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[1]), bEventBasedActive=> );
+arrPD[34](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[2]), bEventBasedActive=> );
+arrPD[35](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[3]), bEventBasedActive=> );
+arrPD[36](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[4]), bEventBasedActive=> );
+arrPD[37](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[5]), bEventBasedActive=> );
+arrPD[38](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[6]), bEventBasedActive=> );
+arrPD[39](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[7]), bEventBasedActive=> );
+arrPD[40](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[8]), bEventBasedActive=> );
+arrPD[41](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[9]), bEventBasedActive=> );
+arrPD[42](lrValue:= REAL_TO_LREAL(arrTableOfInterpolationPoints[10]), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EHE_Linear_AO">
+      <LineId Id="1121" Count="2" />
+      <LineId Id="1119" Count="1" />
+      <LineId Id="1131" Count="2" />
+      <LineId Id="935" Count="0" />
+      <LineId Id="1124" Count="0" />
+      <LineId Id="1713" Count="1" />
+      <LineId Id="1125" Count="0" />
+      <LineId Id="1129" Count="1" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="1134" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="1245" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="1135" Count="17" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="1153" Count="0" />
+      <LineId Id="1155" Count="1" />
+      <LineId Id="1625" Count="18" />
+      <LineId Id="1154" Count="0" />
+      <LineId Id="1269" Count="0" />
+      <LineId Id="1271" Count="9" />
+      <LineId Id="1173" Count="0" />
+      <LineId Id="1441" Count="2" />
+      <LineId Id="1823" Count="0" />
+      <LineId Id="1825" Count="1" />
+      <LineId Id="1892" Count="4" />
+      <LineId Id="1824" Count="0" />
+      <LineId Id="1270" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="1832" Count="0" />
+      <LineId Id="1179" Count="0" />
+      <LineId Id="1175" Count="0" />
+      <LineId Id="1247" Count="0" />
+      <LineId Id="1294" Count="0" />
+      <LineId Id="1249" Count="3" />
+      <LineId Id="1644" Count="0" />
+      <LineId Id="1646" Count="2" />
+      <LineId Id="1176" Count="0" />
+      <LineId Id="1649" Count="0" />
+      <LineId Id="1174" Count="0" />
+      <LineId Id="1177" Count="0" />
+      <LineId Id="1180" Count="11" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="1195" Count="4" />
+      <LineId Id="952" Count="0" />
+      <LineId Id="2024" Count="0" />
+      <LineId Id="2026" Count="5" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="2025" Count="0" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="1200" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="1754" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="1755" Count="8" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="1202" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="1281" Count="0" />
+      <LineId Id="1222" Count="0" />
+      <LineId Id="1652" Count="6" />
+      <LineId Id="2020" Count="0" />
+      <LineId Id="1659" Count="1" />
+      <LineId Id="2021" Count="0" />
+      <LineId Id="1661" Count="0" />
+      <LineId Id="2022" Count="1" />
+      <LineId Id="1662" Count="12" />
+      <LineId Id="1651" Count="0" />
+      <LineId Id="161" Count="1" />
+      <LineId Id="1490" Count="0" />
+      <LineId Id="2102" Count="16" />
+      <LineId Id="2242" Count="1" />
+      <LineId Id="2119" Count="1" />
+      <LineId Id="2240" Count="1" />
+      <LineId Id="2121" Count="7" />
+      <LineId Id="1284" Count="0" />
+      <LineId Id="1288" Count="0" />
+      <LineId Id="1298" Count="0" />
+      <LineId Id="1300" Count="25" />
+      <LineId Id="1363" Count="1" />
+      <LineId Id="1366" Count="0" />
+      <LineId Id="1365" Count="0" />
+      <LineId Id="1326" Count="0" />
+      <LineId Id="1367" Count="0" />
+      <LineId Id="1327" Count="0" />
+      <LineId Id="1368" Count="0" />
+      <LineId Id="1328" Count="6" />
+      <LineId Id="1372" Count="3" />
+      <LineId Id="1387" Count="0" />
+      <LineId Id="1377" Count="6" />
+      <LineId Id="1370" Count="0" />
+      <LineId Id="1388" Count="0" />
+      <LineId Id="1345" Count="5" />
+      <LineId Id="1392" Count="8" />
+      <LineId Id="1389" Count="0" />
+      <LineId Id="1299" Count="0" />
+      <LineId Id="1547" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="1405" Count="0" />
+      <LineId Id="2129" Count="40" />
+      <LineId Id="1440" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="ST_Setup_EMS" Id="{523ed81b-4b4f-40e6-b6f1-8ba393c52471}">
+    <Declaration><![CDATA[TYPE ST_Setup_EMS :
+STRUCT
+	bAllowChrgFromGrid							: BOOL;								//{#lynus.ag#()} //Allowed the charging from battery from grid in the mode load management and peak load capping when the SOC is under byResChrgfromGridToBatt 
+	bEnableMainFuseFunction						: BOOL;								//Enable the Main Fuse Function on Load management or Peak Shavign Mode
+	//Setup for electric charging system
+	rSizeMainFuseCS								: REAL;								//{#lynus.ag#()} //Indicates the size of the main fuse of the charging stations in kW
+	//EMS and Battery settings
+	byReserveSOCEPO								: BYTE;								//{#lynus.ag#()} //Reserve SOC in battery for emergency power operation
+	byResChrgfromGridToBatt						: BYTE;								//{#lynus.ag#()} //Reserve in battery charged from grid when grid measured < grid max size and below this value (only active in peak load capping and load management mode).
+	byMaxDepthOfDischrgEPO						: BYTE; 							//{#lynus.ag#()} //If emergency power is active, the maximum discharge depth of the batteries can be set here until the inverter switches off. (Not work with all Inverters)
+	byPrioMinChrgBattSOCInEPO					: BYTE;								//{#lynus.ag#()} //If emergency power is active battery inverter which builds up the stand-alone grid first charge up to this % value, only then allocate power according to priorities. (Not work with al inverters)
+	uiUpdateTime								: UINT;								//{#lynus.ag#()} //Update Time when EMS calculate new Emergy surplus or energy consumption and controll then the consumers
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

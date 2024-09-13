@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Setup_EHE" Id="{93657b03-c496-4b01-9c1e-dbad39a90dfe}">
+    <Declaration><![CDATA[TYPE ST_Setup_EHE :
+STRUCT
+	bOnEmergPowerOff				: BOOL;			//When emergency power is active then user can choose if the device is on or switch automatic off
+	bTimeEnabled					: BOOL;			//{#lynus.ag#()} //Heating element enabled only between the specified time if the temperature falls below the on temperature.
+	bDisableLegionellaPr			: BOOL;			//Here the legionella protection can be deactivated. This is useful if the boiler has legionella protection by itself.
+	bManualyOn						: BOOL;			//Switch the device manualy on
+	byManualyTargetPower			: BYTE;			//% of the max Power in kW when the Device is manually on
+	byPriority						: BYTE; 		//{#lynus.ag#()} //Priority of the device if controlled via the EMS block = 1 2 3 (If 0 then this device does not exist for the EMS block)
+	byEnableSOC						: BYTE; 		//{#lynus.ag#()} //Enable the device when the battery SOC is greater than equal this value
+	byDisableSOC					: BYTE; 		//{#lynus.ag#()} //Disable the device when the battery SOC is smaler than equal this value
+	byHourOn						: BYTE;			//{#lynus.ag#()} //Hour from which the heating element can switch on
+	byMinutesOn						: BYTE;			//{#lynus.ag#()} //Minutes from which the heating element can switch on
+	byHourOff						: BYTE;			//{#lynus.ag#()} //Hour from which the heating element can switch off
+	byMinutesOff					: BYTE;			//{#lynus.ag#()} //Minutes from which the heating element can switch off
+	uiTargetTempOn					: UINT;			//{#lynus.ag#()} //Below this temperature value, the heating element is switched on in normal mode.
+	uiTargetTempOff					: UINT; 		//{#lynus.ag#()} //When the temperature reaches this value in normal operation, the heating element switches off.
+	uiTargetTempMax					: UINT;			//{#lynus.ag#()} //Temperature setpoint that is approached in the event of excess power.(Overheating)
+	rMaxPower1						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (1 Step) (If the Deice is not step switched or only On Off then enter only here the max power 1 time)
+	rMaxPower2						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (2 Step)
+	rMaxPower3						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (3 Step)
+	rMaxPower4						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (4 Step)
+	rMaxPower5						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (5 Step)
+	rMaxPower6						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (6 Step)
+	rMaxPower7						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (7 Step)
+	rMaxPower8						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (8 Step)
+	rMaxPower9						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (9 Step)
+	rMaxPower10						: REAL;			//{#lynus.ag#()} //Maximum power of the load in kW (10 Step)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

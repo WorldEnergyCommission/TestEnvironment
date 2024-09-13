@@ -1,0 +1,274 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Measurement_EL3403_v1" Id="{5c89fa0b-3a34-4a95-9152-7234d1ca9e31}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Measurement_EL3403_v1
+VAR_INPUT
+	bEnable							: BOOL;											//Enable the function
+ 	bInvers_CH1						: BOOL;											//Invert the Output data from Channel 1 
+	bInvers_CH2						: BOOL;											//Invert the Output data from Channel 2 
+	bInvers_CH3						: BOOL;											//Invert the Output data from Channel 3
+	uiCurrentTransformerRatio		: UINT;											//Current Transformer Ratio  
+END_VAR
+VAR_OUTPUT
+	stDataEMPower					: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) 
+	stDataEMCounter					: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) 
+	stDataEMPowerRealTime			: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime)
+	stDataEMCounterRealTime			: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) 
+	diNrOfEM_OUT					: DINT;											//Active Number from the Electric Meter for using on other functions
+
+END_VAR
+VAR
+	structEL3403_IO 				: MDP5001_340_A2C4619A;
+										
+	timDissableFunctions			: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL			: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	timSetCounterValues				: TON;											//Timer to set the counter values from the KL3403 Function to the EM Function
+	real_Multiplier_CH1: REAL;
+	real_Multiplier_CH2: REAL;
+	real_Multiplier_CH3: REAL;
+	fbEM							: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter					: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbNumberDevice					: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	iStateGVLData					: INT;											//State machine to handle the data on the GVL
+
+	
+
+	real_CT_sec1: REAL;
+	real_f1_Hz: REAL;
+	real_f2_Hz: REAL;
+	real_f3_Hz: REAL;
+	lreal_S_VA_L1: LREAL;
+	lreal_S_VA_L2: LREAL;
+	lreal_S_VA_L3: LREAL;
+	lreal_Q_var_L1: LREAL;
+	lreal_Q_var_L2: LREAL;
+	lreal_Q_var_L3: LREAL;
+	lreal_E1_kWh: LREAL;
+	lreal_E2_kWh: LREAL;
+	lreal_E3_kWh: LREAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner
+//Company : EfficientIO
+//Date : 06.05.2024
+//Version : 1.0.0.0
+
+
+//With this function is possible to read out all Information from a EL3443
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*-------------------------------------------------------------Calcualte the number of EM---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := diNrOfEM_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+IF timResetConnectionOnGVL.Q THEN 
+	Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; 
+END_IF
+IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN 
+	timDissableFunctions.IN := TRUE; 
+ELSE 
+	timDissableFunctions.IN := FALSE; 
+END_IF  
+timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+// limit inputs
+uiCurrentTransformerRatio	 := LIMIT (1,uiCurrentTransformerRatio,10000);
+
+//Invert the Output data, because it is possible that the current transformers have been mounted in different mounting positions.
+IF NOT bInvers_CH1 THEN
+	real_Multiplier_CH1 := 1;
+ELSE
+	real_Multiplier_CH1 := -1;
+END_IF
+IF NOT bInvers_CH2 THEN
+	real_Multiplier_CH2 := 1;
+ELSE
+	real_Multiplier_CH2 := -1;
+END_IF
+IF NOT bInvers_CH3 THEN
+	real_Multiplier_CH3 := 1;
+ELSE
+	real_Multiplier_CH3 := -1;
+END_IF
+
+
+//Function
+fbEM(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= FALSE, 
+	bWriteWithDelay:= TRUE, 
+	bPowerDataInvers:= FALSE,
+	bReadOutDataDone:= timSetCounterValues.Q,
+	iTimeReadOutInterval:= 0, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= fbEnergyCounter.lrTotalCounterEnergy_Consumption,
+	lrTotalCounterEnergy_Production:= fbEnergyCounter.lrTotalCounterEnergy_Production, 
+	lrCounterEnergyT1_Consumption:= fbEnergyCounter.lrCounterEnergyT1_Consumption,
+	lrCounterEnergyT2_Consumption:= fbEnergyCounter.lrCounterEnergyT2_Consumption,
+	lrCounterEnergyT1_Production:= fbEnergyCounter.lrCounterEnergyT1_Production, 
+	lrCounterEnergyT2_Production:= fbEnergyCounter.lrCounterEnergyT2_Production, 
+	lrCurrentL1:=  DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Current)/1000000 * uiCurrentTransformerRatio,
+	lrVoltageL1N:= DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Voltage)/10000,
+	lrVoltageL1L2:= fbEM.lrVoltageL1N * 1.73, 
+	lrPowerL1:=  DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Active_power)/100 * uiCurrentTransformerRatio * real_Multiplier_CH1, 
+	lrCurrentL2:=  DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Current)/1000000 * uiCurrentTransformerRatio,
+	lrVoltageL2N:= DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Voltage)/10000,
+	lrVoltageL2L3:= fbEM.lrVoltageL2N * 1.73,
+	lrPowerL2:= DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Active_power)/100 * uiCurrentTransformerRatio * real_Multiplier_CH2,
+	lrCurrentL3:=  DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Current)/1000000 * uiCurrentTransformerRatio,
+	lrVoltageL3N:= DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Voltage)/10000,
+	lrVoltageL3L1:= fbEM.lrVoltageL3N * 1.73,
+	lrPowerL3:= DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Active_power)/100 * uiCurrentTransformerRatio * real_Multiplier_CH3,
+	lrPowerTotal:= fbEM.lrPowerL1+fbEM.lrPowerL2+fbEM.lrPowerL3,
+ 	lrFrequency:= (real_f1_Hz + real_f2_Hz + real_f3_Hz)/3 , 
+ 	lrApparentPowerTotal:= (lreal_S_VA_L1 + lreal_S_VA_L2 + lreal_S_VA_L3),
+	lrReactivePowerTotal:= (lreal_Q_var_L1 +lreal_Q_var_L2 + lreal_Q_var_L3), 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> stDataEMPowerRealTime, 
+	stDataEMOutPowerDelay=> stDataEMPower, 
+	stDataEMOutCounter=> stDataEMCounterRealTime,
+	stDataEMOutCounterDelay=> stDataEMCounter,
+	bReadOutMeter=> );
+(*----------------------------------------------------------------------------------------Energy Counter Function----------------------------------------------------------------------------------------------*)
+
+fbEnergyCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= (fbEM.lrPowerTotal) / 1000, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+
+(*
+IF (fbEM.lrPowerL1 * fbEM.lrPowerL1 + lreal_Q_var_L1 * lreal_Q_var_L1) <> 0 THEN 
+	lreal_S_VA_L1:=SQRT(fbEM.lrPowerL1 * fbEM.lrPowerL1 + lreal_Q_var_L1 * lreal_Q_var_L1);
+END_IF
+IF (fbEM.lrPowerL2 * fbEM.lrPowerL2 + lreal_Q_var_L2 * lreal_Q_var_L2) <> 0 THEN 
+	lreal_S_VA_L2:=SQRT(fbEM.lrPowerL2 * fbEM.lrPowerL2 + lreal_Q_var_L2 * lreal_Q_var_L2);
+END_IF
+IF (fbEM.lrPowerL3 * fbEM.lrPowerL3 + lreal_Q_var_L3 * lreal_Q_var_L3) <> 0 THEN 
+	lreal_S_VA_L3:=SQRT(fbEM.lrPowerL3 * fbEM.lrPowerL3 + lreal_Q_var_L3 * lreal_Q_var_L3);
+END_IF
+*)
+
+CASE  structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Index OF
+	0: (* S *)
+		lreal_S_VA_L1 :=DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Variant_value)/100 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_1_Index := 1;
+	1: (* Q *)
+		lreal_Q_var_L1 :=DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Variant_value)/100 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_1_Index := 2;
+	2: (* E *)
+		lreal_E1_kWh := DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Variant_value )/1000000 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_1_Index := 4;
+	4: (* f *)
+		real_f1_Hz:=DINT_TO_REAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_1_Variant_value )/10;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_1_Index := 0;
+ELSE
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_1_Index := 0;
+END_CASE
+		
+CASE structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Index OF
+	0: (* S *)
+		lreal_S_VA_L2 :=DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Variant_value)/100 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_2_Index := 1;
+	1: (* Q *)
+		lreal_Q_var_L2 :=DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Variant_value)/100 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_2_Index := 2;
+	2: (* E *)
+		lreal_E2_kWh := DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Variant_value )/1000000 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_2_Index := 4;
+	4: (* f *)
+		real_f2_Hz:=DINT_TO_REAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_2_Variant_value )/10;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_2_Index := 0;
+ELSE
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_2_Index := 0;
+END_CASE
+
+CASE  structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Index OF
+	0: (* S *)
+		lreal_S_VA_L3 :=DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Variant_value)/100 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_3_Index := 1;
+	1: (* Q *)
+		lreal_Q_var_L3 :=DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Variant_value)/100 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_3_Index := 2;
+	2: (* E *)
+		lreal_E3_kWh := DINT_TO_LREAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Variant_value )/1000000 * uiCurrentTransformerRatio;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_3_Index := 4;
+	4: (* f *)
+		real_f3_Hz:=DINT_TO_REAL(structEL3403_IO.MDP5001_340_Input.MDP5001_340_PM_Inputs_Channel_3_Variant_value )/10;
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_3_Index := 0;
+ELSE
+		structEL3403_IO.MDP5001_340_Output.MDP5001_340_PM_Outputs_Channel_3_Index := 0;
+END_CASE
+
+
+IF IsFinite(F_LREAL(fbEnergyCounter.lrTotalCounterEnergy_Production)) THEN stDataEMCounter.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT(fbEnergyCounter.lrTotalCounterEnergy_Production * 100)) / 100; END_IF
+IF IsFinite(F_LREAL(fbEnergyCounter.lrTotalCounterEnergy_Consumption)) THEN stDataEMCounter.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT(fbEnergyCounter.lrTotalCounterEnergy_Consumption * 100)) / 100; END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Measurement_EL3403_v1">
+      <LineId Id="150" Count="11" />
+      <LineId Id="359" Count="20" />
+      <LineId Id="164" Count="18" />
+      <LineId Id="195" Count="15" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="217" Count="30" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="251" Count="17" />
+      <LineId Id="162" Count="1" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="281" Count="2" />
+      <LineId Id="285" Count="2" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="437" Count="2" />
+      <LineId Id="59" Count="11" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="441" Count="14" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="459" Count="14" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="383" Count="3" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="112" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

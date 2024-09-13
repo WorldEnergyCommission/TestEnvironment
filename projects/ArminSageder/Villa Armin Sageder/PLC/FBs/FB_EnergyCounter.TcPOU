@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_EnergyCounter" Id="{145d79ba-cd99-481c-bf43-0716c48a49b7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EnergyCounter
+VAR_INPUT
+	byActiveTariff						: BYTE;						//Active Tariff
+	lrPowerInput						: LREAL;					//Input Power in kW
+END_VAR
+VAR_OUTPUT PERSISTENT
+	lrTotalCounterEnergy_Consumption	: LREAL;					//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production		: LREAL;					//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption		: LREAL;					//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption		: LREAL;					//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production		: LREAL;					//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production		: LREAL;					//Total counter for energy Tariff 2 production with unit kWh
+END_VAR
+VAR
+	TaskInfo							: GETCURTASKINDEX;			//Function to get the Task Index
+	byWorkMode							: BYTE;						//Work Mode for calculation (1 = Production, 2 = Consumption)
+	udiCycleTime						: UDINT;					//Cycle Time
+	lrCyclesForSecond					: LREAL;					//Needed cycles for 1 Second
+	uiCounterConsumption				: UINT;						//Counter for Cycles in Consumption Mode
+	uiSecondsConsumption				: UINT;						//Elapses Seconds for Consumption
+	rHourConsumption					: REAL;						//Elapsed Hours for Consumption
+	uiCounterProduction					: UINT;						//Counter for Cycles in Production Mode
+	uiSecondsProduction					: UINT;						//Elapses Seconds for Production
+	rHourProduction						: REAL;						//Elapsed Hours for Production
+	lrkW_Consumption_CP					: LREAL;					//Power to compare in Consumption Mode
+	lrkW_Production_CP					: LREAL;					//Powet to compare in Production Mode
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 16.11.2021
+//Version : 1.0.0.0
+
+//This function block can be used to count different Energy Counter
+//Positive Values mens comsumption
+//Negative Values means production 
+
+(*--------------------------------------------------------------------------Limits-----------------------------------------------------------------------------------*)
+
+byActiveTariff := LIMIT(1,byActiveTariff,2);
+
+(*---------------------------------------------------------------------------Logic-----------------------------------------------------------------------------------*)
+
+//Get Task Index
+TaskInfo(index=> );
+	//Cycle Time in ms
+	IF TwinCAT_SystemInfoVarList._TaskInfo[TaskInfo.index].CycleTime <> 0 THEN
+		udiCycleTime := TwinCAT_SystemInfoVarList._TaskInfo[TaskInfo.index].CycleTime / 10000;
+	END_IF
+
+//Cycles for 1 Second
+IF udiCycleTime > 0 THEN 
+	lrCyclesForSecond := (1 / UDINT_TO_LREAL(udiCycleTime)) * 1000; 
+END_IF
+
+IF lrCyclesForSecond <> 0 THEN
+
+	uiCounterConsumption := uiCounterConsumption + 1;
+		uiCounterProduction := uiCounterProduction + 1;
+	
+	//Calculate the Time	
+	IF uiCounterProduction >= lrCyclesForSecond THEN uiSecondsProduction := uiSecondsProduction + 1; uiCounterProduction := 0; END_IF
+		rHourProduction := UINT_TO_REAL(uiSecondsProduction) / 3600;
+	IF uiCounterConsumption >= lrCyclesForSecond THEN uiSecondsConsumption := uiSecondsConsumption + 1; uiCounterConsumption := 0; END_IF
+		rHourConsumption := UINT_TO_REAL(uiSecondsConsumption) / 3600;
+	
+	//Production
+	IF lrkW_Production_CP <> lrPowerInput THEN
+		IF byWorkMode = 1 THEN 
+			//Production Tariff 1
+			IF byActiveTariff = 1 THEN 
+				lrCounterEnergyT1_Production := lrCounterEnergyT1_Production + ((lrkW_Production_CP * - 1) * rHourProduction); 
+					lrkW_Production_CP := lrPowerInput;
+			END_IF
+			//Production Tariff 2
+			IF byActiveTariff = 2 THEN 
+				lrCounterEnergyT2_Production := lrCounterEnergyT2_Production + ((lrkW_Production_CP * - 1) * rHourProduction); 
+					lrkW_Production_CP := lrPowerInput;
+			END_IF
+		ELSE
+			lrkW_Production_CP := 0;
+		END_IF
+				rHourProduction := 0; uiSecondsProduction := 0;  uiCounterProduction := 0;	
+	END_IF
+	
+	//Consumption
+	IF lrkW_Consumption_CP <> lrPowerInput THEN
+		IF byWorkMode = 2 THEN  
+			//Consumption Tariff 1
+			IF byActiveTariff = 1 THEN 
+				lrCounterEnergyT1_Consumption := lrCounterEnergyT1_Consumption + (lrkW_Consumption_CP * rHourConsumption); 
+					lrkW_Consumption_CP := lrPowerInput;
+			END_IF
+			//Consumption Tariff 2
+			IF byActiveTariff = 2 THEN 
+				lrCounterEnergyT2_Consumption := lrCounterEnergyT2_Consumption + (lrkW_Consumption_CP * rHourConsumption); 
+					lrkW_Consumption_CP := lrPowerInput;
+			END_IF
+		ELSE
+			lrkW_Consumption_CP := 0;
+		END_IF
+				rHourConsumption := 0; uiSecondsConsumption := 0;  uiCounterConsumption := 0;	
+	END_IF
+
+END_IF
+
+//Total Consumption and Production
+lrTotalCounterEnergy_Consumption := lrCounterEnergyT1_Consumption + lrCounterEnergyT2_Consumption;
+	lrTotalCounterEnergy_Production := lrCounterEnergyT1_Production + lrCounterEnergyT2_Production;
+
+//Switch between the Work modes
+IF lrPowerInput <= 0 THEN byWorkMode := 1; ELSE byWorkMode := 2; END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EnergyCounter">
+      <LineId Id="25" Count="4" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="59" Count="10" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="70" Count="4" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="75" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="105" Count="3" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="79" Count="5" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="85" Count="1" />
+      <LineId Id="109" Count="1" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="113" Count="2" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="89" Count="5" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="117" Count="4" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="98" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,978 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HP_CTA_Optiplus3_Modular" Id="{3a8fb3b0-48a8-40d2-bcde-d25de3b2fe00}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_HP_CTA_Optiplus3_Modular
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;												//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bPowerDataInvers						: BOOL;												//With True its possible to invert all received power data from the electric meter
+	byUnitID								: BYTE;												//Unit ID fromt the Soltop M-Tec Modbus Server(0 to 255)
+	diNrOfEMS_IN							: DINT;												//Number of EMS what control this Device.
+	diNrOfEM_IN_HP							: DINT;												//Number of the electric meter for incoming power data. (Power Data for this Device)
+	sIPAdress								: STRING(15);										//IP Adress from the oltop M-Tec Modbus Server
+	stSetupHP								: ST_Setup_HP;										//{#lynus.ag#()} //Setup heating pump
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataHP								: ST_HP_Output;										//{#lynus.ag#()} //Output Data Heating pump
+	stDataTempS								: ST_Temperature_Output;							//Temperature output data
+	diNrOfHP_OUT							: DINT;												//Active Number from the heating pump for using on other functions		
+	diNrOfTempS_OUT_ServiceWaterTop			: DINT;												//Active Number from the Temperature Sensor for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbHP									: FB_HeatingPump;									//Function block for heating pump
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;								//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	fbNumberDevice_Temp						: FB_NumberOfDevice;								//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	fbConvertWordToDword					: FB_CV_WORD_TO_DWORD;								//Convert function
+	{attribute 'hide'}
+	fbConvertDwordToWord					: FB_CV_DWORD_TO_WORD;								//Convert function
+	{attribute 'hide'}
+	fbTempS									: FB_TempSensor_M50_P200;							//Function for Temperature Sensor
+	fbDIExternalLock						: FB_XL1XXX_DI;										//Digital Input from external loock signal
+	{attribute 'hide'}
+	timDissableFunctions					: TON;												//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;												//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	timGetTime								: TON;												//Timer to activate the function tho read out the windows system time
+	{attribute 'hide'}
+	timDelay								: TON;												//Timer for Delay between Requests
+	{attribute 'hide'}
+	timTimeout								: TON;												//Timer for Timeout
+	{attribute 'hide'}
+	FNReset									: F_TRIG;											//Internal negative edge
+	{attribute 'hide'}
+	FPEnable								: R_TRIG;											//Internal positive Edge
+	{attribute 'hide'}
+	FNTimDissable							: F_TRIG;											//Internal negative Edge
+	{attribute 'hide'}
+	FPError_FC_4							: R_TRIG;											//Internal positive Edge
+	{attribute 'hide'}
+	FPError_FC_16							: R_TRIG;											//Internal positive Edge
+	{attribute 'hide'}
+	fbGetSystemTime							: NT_GetTime;										//Function to read out the windows system time on the local plc
+	{attribute 'hide'}
+	arrPD									: ARRAY[1..21] OF FB_PersistentData_Number;			//Function to save persistent data
+	{attribute 'hide'}
+	fbPDString								: FB_PersistentData_String;							//Function to save persistent string data
+	{attribute 'hide'}
+	fbMBRead_FC4							: FB_MBReadInputRegs ;								//Modbus Read Function (FC4)
+	{attribute 'hide'}
+	fbMBWrite_FC16							: FB_MBWriteRegs ;									//Modbus Write Function (FC16)
+	{attribute 'hide'}
+	stFloat									: ST_UN_FLOAT_CONVERT_DWORD_REAL;					//Convert the Float Raw Value
+	{attribute 'hide'}
+	arrCounterForGVL						: ARRAY[1..2] OF DINT;								//Counter to clean old data on GVL
+	{attribute 'hide'}
+	arrBuffer_FC4							: ARRAY[1..16] OF WORD;								//Buffer with Data from FC4
+	{attribute 'hide'}
+	arrBuffer_FC16							: ARRAY[1..8] OF WORD;								//Buffer with Data from FC16
+	{attribute 'hide'}
+	arrAlarmList							: ARRAY[1..6] OF DINT;								//Array with the Alarm List from the Heating pump
+	{attribute 'hide'}
+	arrHPState								: ARRAY[1..2] OF REAL;								//Heating pump actual State to say that the pump is running or not
+	{attribute 'hide'}
+	bGroupErrorHP							: BOOL;												//Group Error from the Heating Pump
+	{attribute 'hide'}
+	bHPIsRunning							: BOOL;												//Feedback from the HP if its running or not
+	{attribute 'hide'}
+	bErrorTempSensorBoilerServiceWaterTop	: BOOL;												//Error for the Temp Senor top in the service water boiler
+	{attribute 'hide'}
+	bMBTCPError								: BOOL;												//Modbus TCP Error
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;												//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData							: INT;												//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	iStateModbusRead						: INT;												//State variable for Statemachine
+	{attribute 'hide'}
+	iStateModbusWrite						: INT;												//State variable for Statemachine
+	{attribute 'hide'}
+	iStateModbusError						: INT;												//State variable for Statemachine
+	{attribute 'hide'}
+	iStateModbus_CP							: INT;												//Compare State variable
+	{attribute 'hide'}
+	rTB4									: REAL;												//Temp. Sensor Top in the Heating Boiler
+	{attribute 'hide'}
+	rTB41									: REAL;												//Temp. Sensor Below in the Heating Boiler
+	{attribute 'hide'}
+	diNumberOfActiveBatterys				: DINT;												//Number of active batterys
+	{attribute 'hide'}
+	diNumberOfBatteryInverterInEPO			: DINT;												//Number of battery inverters that work in Emergency Power operation 
+	{attribute 'hide'}
+	diLPForGVL								: DINT;												//Loop to clean old data on GVL
+	{attribute 'hide'}	
+	dwSumSOC								: DWORD;											//Sum of the SOC from all batterys
+	{attribute 'hide'}
+	rNewPowerToHP							: REAL;												//New surplus power fpr the HP in W
+	{attribute 'hide'}
+	lrGridPower								: LREAL;											//Grid power in kW
+	{attribute 'hide'}
+	lrSizeGridConnection					: LREAL;											//Size of the complete grid connection
+	{attribute 'hide'}
+	liLPBatteryData							: LINT;												//Loop to check some data from batterys
+	{attribute 'hide'}
+	liLPInEPO								: LINT;												//Loop to check if 1 or more battery inverters build a island grid	
+	{attribute 'hide'}
+	liLPGridData							: LINT;												//Loop to check some grid data
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	diNrOfEMS_IN_CP							: DINT;												//Number of EMS what control this Device to compare with the original
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 15.02.2022
+//Version : 1.0.0.0
+
+//With this function block its possible to control a Heating pump from the Factory CTA
+//The communication is over Modbus TCP.
+//The Device on the Soltop side is called Optiplus 3.
+//The excess power can be transferred to this pump linearly as it is modulating. The power can be transferred in watts.
+//Versions that are supported : V1.10.1
+//This Heating pump can by control with a surplus on PV Power in Watt. This power can send directly to the Heating Pump and the Heating pump uses it where it is needed or it can be consumed.
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+	diNrOfEM_IN_HP := LIMIT(0,diNrOfEM_IN_HP,Constants_Energy.diMaxNumberOfElectricMeters);
+			
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+IF NOT bPowerDataInvers THEN
+	fbHP.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT1_Production * 1000;
+	fbHP.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT2_Production * 1000;
+	fbHP.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT1_Consumption * 1000;
+	fbHP.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT1_Consumption * 1000;
+	fbHP.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrTotalCounterEnergy_Production * 1000;
+	fbHP.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrTotalCounterEnergy_Consumption * 1000;
+		fbHP.lrElPowerHP := (Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrPower * 1000) * - 1;
+ELSE
+	fbHP.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT1_Consumption * 1000;
+	fbHP.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT2_Consumption * 1000;
+	fbHP.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT1_Production * 1000;
+	fbHP.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrCounterEnergyT2_Production * 1000;
+	fbHP.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrTotalCounterEnergy_Consumption * 1000;
+	fbHP.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrTotalCounterEnergy_Production * 1000;
+		fbHP.lrElPowerHP := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HP].lrPower * 1000;
+END_IF
+
+(*-------------------------------------------------------------Calcualte the number of HP and Temperature---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHP, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfHeatingPumps, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfHP_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHP := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHP := diNrOfHP_OUT;	
+		iStateGVLData := 1; 
+END_IF
+	
+fbNumberDevice_Temp(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors, 
+	diMaxNumberOfDevices:= Constants_Sensors.diMaxNumberOfTemperatureSensors, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfTempS_OUT_ServiceWaterTop, 
+	diNumberOfTotalDevices=> );	
+
+//Write new Numer on GVL
+IF fbNumberDevice_Temp.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice_Temp.bOnlineChange THEN 
+	Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors := diNrOfTempS_OUT_ServiceWaterTop;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Get the local windows system time for this plc---------------------------------------------------------------*)
+timGetTime(IN:= bEnable AND NOT timGetTime.Q, PT:= T#30S, Q=> , ET=> );
+
+fbGetSystemTime(
+	NETID:= , 
+	START:= timGetTime.Q AND NOT fbGetSystemTime.BUSY, 
+	TMOUT:= , 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> , 
+	TIMESTR=> );	
+
+fbHP.stSystemTime.wHour := fbGetSystemTime.TIMESTR.wHour;
+	fbHP.stSystemTime.wMinute := fbGetSystemTime.TIMESTR.wMinute;	
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );		
+	
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+
+//Calcualte the total SOC if we have more then 1 battery in our system
+diNumberOfActiveBatterys := 0;
+	dwSumSOC := 0;
+		FOR liLPBatteryData := 1 TO Constants_Energy.diMaxNumberOfBatterys BY 1 DO
+			IF Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].bEnabled THEN diNumberOfActiveBatterys := diNumberOfActiveBatterys + 1; END_IF
+				dwSumSOC := dwSumSOC + Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].dwSOC;
+		END_FOR
+	
+IF diNumberOfActiveBatterys > 0 THEN
+	fbHP.dwBatterySOC := DINT_TO_DWORD(DWORD_TO_DINT(dwSumSOC) / diNumberOfActiveBatterys);
+ELSE
+	fbHP.dwBatterySOC := 100;	//When we have no battery in the ems system
+END_IF
+
+//Check if one or more Batterysystems or batteryinverter make island mode
+diNumberOfBatteryInverterInEPO := 0;
+	FOR liLPInEPO := 1 TO Constants_Energy.diMaxNumberOfBatteryInverters BY 1 DO
+		IF Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,liLPInEPO].bWorkOnIslandMode THEN fbHP.bEPOIsActive := TRUE; diNumberOfBatteryInverterInEPO := diNumberOfBatteryInverterInEPO + 1; END_IF
+	END_FOR 
+		IF diNumberOfBatteryInverterInEPO <= 0 THEN fbHP.bEPOIsActive := FALSE; END_IF
+
+//Check the max. power of the grid connection and the sum of grid power
+lrSizeGridConnection := 0;
+	lrGridPower := 0;
+		FOR liLPGridData := 1 TO Constants_Energy.diMaxNumberOfGridConnections BY 1 DO
+			lrSizeGridConnection := lrSizeGridConnection + Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,liLPGridData].rSizeGridConn;
+				lrGridPower := lrGridPower + Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,liLPGridData].lrPower;
+		END_FOR		
+
+//Set the target power from the EMS to the HP Function
+fbHP.arrTargetPower[1] := Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].arrTargetPowerEMS[1];
+
+	stSetupHP.rMaxPower2 := 0;
+		fbHP.arrTargetPower[2] := 0;
+		
+//Digital input for external lock signal
+fbDIExternalLock(bInvers:= FALSE, bSignal=> );
+
+(*------------------------------------------------------------------------------------------State Machine Read---------------------------------------------------------------------------------------------*)
+
+//Start the Statemachine
+FPEnable(CLK:= bEnable, Q=> );
+	FNTimDissable(CLK:= timDissableFunctions.Q, Q=> );
+		IF (FPEnable.Q AND iStateModbusRead = 0 AND iStateModbusRead = 0 AND iStateModbusError = 0) OR
+			(bEnable AND FNTimDissable.Q AND iStateModbusRead = 0 AND iStateModbusRead = 0 AND iStateModbusError = 0) THEN 
+				iStateModbusRead := 1; 
+		END_IF
+			IF NOT bEnable THEN iStateModbusRead := 0; iStateModbusWrite := 0; iStateModbusError := 0; END_IF
+
+//Timer for delay
+timDelay(IN:= , PT:= T#250MS, Q=> , ET=> );	
+
+//Timer for Timeout in Statemachine
+IF (iStateModbusRead > 0 AND iStateModbusRead <= 4 AND iStateModbusRead = iStateModbus_CP) OR
+		(iStateModbusWrite > 0 AND iStateModbusWrite <= 2 AND iStateModbusWrite = iStateModbus_CP) THEN
+			timTimeout.IN := TRUE;
+ELSE	
+			timTimeout.IN := FALSE;
+END_IF 
+	IF iStateModbusRead = 0 AND iStateModbusWrite = 0 THEN timTimeout.IN := FALSE; END_IF
+		timTimeout(IN:= , PT:= T#20S, Q=> , ET=> );
+	
+CASE iStateModbusRead OF
+	
+	0://Init
+		iStateModbus_CP := 0;
+			timDelay.IN := FALSE;
+			
+		fbMBWrite_FC16.bExecute := FALSE;
+			fbMBRead_FC4.bExecute := FALSE;
+				bHPIsRunning := FALSE;
+					rTB4 := 0;
+						rTB41 := 0;	
+							arrAlarmList[1] := 0; arrAlarmList[2] := 0; arrAlarmList[3] := 0; arrAlarmList[4] := 0; arrAlarmList[5] := 0; arrAlarmList[6] := 0;
+								arrHPState[1] := 0; arrHPState[2] := 0;
+					
+	1://Temperature Values from the Heating Pump
+	 iStateModbus_CP := iStateModbusRead;
+		
+		//Reset Write
+		fbMBWrite_FC16.bExecute := FALSE;
+			
+		//Start Read
+		fbMBRead_FC4.nQuantity := 16;
+			fbMBRead_FC4.nMBAddr := 2002;
+				fbMBRead_FC4.bExecute := TRUE;
+			
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//Flow Temp
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[1], wInputValue_2:= arrBuffer_FC4[2], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					fbHP.rFlowTemp := stFloat.rValueFloat;
+			//Return Temperatur
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[3], wInputValue_2:= arrBuffer_FC4[4], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					fbHP.rReturnTemp := stFloat.rValueFloat;
+			//Flow Temperature Energy Source
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[5], wInputValue_2:= arrBuffer_FC4[6], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					fbHP.rFlowTempEnergySource := stFloat.rValueFloat;
+			//Return Temperature Energy Source
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[7], wInputValue_2:= arrBuffer_FC4[8], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					fbHP.rReturnTempEnergySource := stFloat.rValueFloat;
+			//Boiler Top Temperature for Service Water
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[9], wInputValue_2:= arrBuffer_FC4[10], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					fbHP.rBoilerTempServiceWater := stFloat.rValueFloat;
+						fbTempS.rRawTempIn := fbHP.rBoilerTempServiceWater;	
+			//Boiler Top and Below Temperature for the Heating Boiler
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[13], wInputValue_2:= arrBuffer_FC4[14], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					rTB4 := stFloat.rValueFloat;
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[15], wInputValue_2:= arrBuffer_FC4[16], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					rTB41 := stFloat.rValueFloat;
+ 						fbHP.rBoilerTempHeatingSys := (rTB4 + rTB41) / 2;	
+			//Go to Next Step
+			fbMBRead_FC4.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 2;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+	2://Group Error and Error from the Top Temperatursensor in the Service Water Boiler
+		iStateModbus_CP := iStateModbusRead;
+			
+		//Start Read
+		fbMBRead_FC4.nQuantity := 13;
+			fbMBRead_FC4.nMBAddr := 2210;
+				fbMBRead_FC4.bExecute := TRUE;
+			
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//Group Error
+			IF arrBuffer_FC4[1] <> 0 THEN bGroupErrorHP := TRUE; ELSE bGroupErrorHP := FALSE; END_IF
+			//Alarm index to check if the Temperatursensor in the service water Boiler is ok
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[2], wInputValue_2:= arrBuffer_FC4[3], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				arrAlarmList[1] := DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue);
+					fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[4], wInputValue_2:= arrBuffer_FC4[5], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+						arrAlarmList[2] := DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue);
+							fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[6], wInputValue_2:= arrBuffer_FC4[7], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+								arrAlarmList[3] := DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue);
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[8], wInputValue_2:= arrBuffer_FC4[9], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				arrAlarmList[4] := DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue);						
+					fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[10], wInputValue_2:= arrBuffer_FC4[11], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+						arrAlarmList[5] := DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue);				
+							fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[12], wInputValue_2:= arrBuffer_FC4[13], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+								arrAlarmList[6] := DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue);
+			IF fbHP.rBoilerTempServiceWater < -90 OR arrAlarmList[1] = 127 OR arrAlarmList[2] = 127 OR arrAlarmList[3] = 127 OR
+				arrAlarmList[4] = 127 OR arrAlarmList[5] = 127 OR arrAlarmList[6] = 127 THEN
+					bErrorTempSensorBoilerServiceWaterTop := TRUE;
+			ELSE
+					bErrorTempSensorBoilerServiceWaterTop := FALSE;	
+			END_IF
+			//Go to Next Step
+			fbMBRead_FC4.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 3;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+
+	3://Heatin Pump "Is running" State
+		iStateModbus_CP := iStateModbusRead;
+
+		//Start Read
+		fbMBRead_FC4.nQuantity := 4;
+			fbMBRead_FC4.nMBAddr := 2030;
+				fbMBRead_FC4.bExecute := TRUE;
+			
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//Feedback running
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[1], wInputValue_2:= arrBuffer_FC4[2], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+				stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					arrHPState[1] := stFloat.rValueFloat;
+						fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[3], wInputValue_2:= arrBuffer_FC4[4], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );	
+							stFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+								arrHPState[2] := stFloat.rValueFloat;
+			IF arrHPState[1] <> 0 AND arrHPState[2] <> 0 THEN bHPIsRunning := TRUE; ELSE bHPIsRunning := FALSE; END_IF
+			//Go to Next Step
+			fbMBRead_FC4.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 4;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+
+	4://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+		
+		iStateModbusWrite := 1;
+			iStateModbusRead := - 1;
+				
+		//Timeout
+		IF timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF	
+		
+END_CASE		
+
+(*------------------------------------------------------------------Error and Reset----------------------------------------------------------------------------*)	
+
+IF timDissableFunctions.Q THEN fbHP.bWarning := TRUE; fbHP.iWarningCode := 0; ELSE fbHP.bWarning := FALSE; END_IF 	
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHP > Constants_Energy.diMaxNumberOfHeatingPumps OR bGroupErrorHP OR fbGetSystemTime.ERR OR bMBTCPError THEN fbHP.bError := TRUE; ELSE fbHP.bError := FALSE; END_IF 
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHP > Constants_Energy.diMaxNumberOfHeatingPumps THEN fbHP.iErrorCode := 1;
+ELSIF fbGetSystemTime.ERR THEN fbHP.iErrorCode := 2; 
+ELSIF bGroupErrorHP THEN fbHP.iErrorCode := 0;
+ELSIF bMBTCPError THEN fbHP.iErrorCode := 3;
+END_IF
+
+FNReset(CLK:= fbHP.stDataHPOut.bSReset, Q=> );
+		
+//Functionblock HP
+fbHP(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q,  
+	bError:= , 
+	bWarning:= , 
+	bIsStepSwitched:= FALSE, 
+	bEPOIsActive:= , 
+	bExternalLock:= fbDIExternalLock.bSignal, 
+	bReset:= FNReset.Q, 
+	bExternalOnCommand:= Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].bExternalOnCommand, 
+	bWriteWithDelay:= TRUE,
+	bHPIsRunning:= bHPIsRunning,
+	iErrorCode:= , 
+	iWarningCode:= , 
+	dwBatterySOC:= , 
+	diNumberOfHP:= diNrOfHP_OUT, 
+	rBoilerTempHeatingSys:= , 
+	rBoilerTempServiceWater:= , 
+	rFlowTemp:= , 
+	rReturnTemp:= , 
+	rFlowTempEnergySource:= , 
+	rReturnTempEnergySource:= , 
+	lrSizeGridConnection:= lrSizeGridConnection, 
+	lrGridPower:= lrGridPower, 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrCounterThermalEnergy_Heating:= 0, 
+	lrCounterThermalEnergy_Water:= 0, 
+	lrElPowerHP:= , 
+	arrTargetPower:= , 
+	tOnDelayExternalOn:= T#2M, 
+	tOffDelayExternalOn:= T#2H, 
+	tMinOnTime:= T#1H,
+	tTimDelayOutput:= T#5S, 
+	stSystemTime:= , 
+	stSetupHP:= stSetupHP, 
+	stDataHPOut=> , 
+	stDataHPOutDelay=> stDataHP, 
+	arrPercentValuesSteps=> );
+
+(*-------------------------------------------------------------------------Prepear the Output power----------------------------------------------------------------------*)	
+
+rNewPowerToHP := (stSetupHP.rMaxPower1 * fbHP.stDataHPOut.rTargetPower) / 100; 
+	rNewPowerToHP := rNewPowerToHP * 1000;
+		rNewPowerToHP := LIMIT(0,rNewPowerToHP,100000);	
+
+(*------------------------------------------------------------------Error and Reset Temperature----------------------------------------------------------------------------*)	
+
+IF timDissableFunctions.Q THEN fbTempS.bWarning := TRUE; fbTempS.iWarningCode := 0; ELSE fbTempS.bWarning := FALSE; END_IF   
+	IF Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors > Constants_Sensors.diMaxNumberOfTemperatureSensors THEN fbTempS.bErrorGeneral := TRUE; fbTempS.iErrorCode := 0; ELSE fbTempS.bErrorGeneral := FALSE; END_IF
+		IF bErrorTempSensorBoilerServiceWaterTop OR bMBTCPError THEN fbTempS.usiState.6 := TRUE; ELSE fbTempS.usiState := 0; END_IF
+	
+//Function Block Temp Sensor Top from the Service Water	
+fbTempS(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bUseFilter:= TRUE, 
+	bErrorConfig:= FALSE, 
+	bErrorGeneral:= , 
+	bWriteWithDelay:= TRUE, 
+	usiState:= , 
+	iDelayFilter:= 50, 
+	iMaxValuesFilter:= 20, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	rTemperatureOffset:= 0, 
+	rRawTempIn:= , 
+	tTimDelayOutput:= T#5S, 
+	stDataTempOut=> , 
+	stDataTempOutDelay=> stDataTempS);
+
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusWrite OF
+	
+	1://Start with first Register
+		iStateModbus_CP := iStateModbusWrite;
+		
+		fbMBWrite_FC16.nQuantity := 1;
+			fbMBWrite_FC16.nMBAddr := 990;
+				fbMBWrite_FC16.bExecute := TRUE;
+		//Send Value for the Communication handler
+		arrBuffer_FC16[1] := 600;
+		
+		IF fbMBWrite_FC16.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		//Wait for Delay and then next step
+		IF NOT fbMBWrite_FC16.bBusy AND NOT fbMBWrite_FC16.bError AND timDelay.Q THEN
+			fbMBWrite_FC16.bExecute := FALSE;
+				timDelay.IN := FALSE;
+					bMBTCPError := FALSE; 
+			//Go to Next Step
+			iStateModbusWrite := 2;
+		END_IF
+				
+		//Error or Timout
+		IF FPError_FC_16.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+	2://Next write Register
+		iStateModbus_CP := iStateModbusWrite;
+		
+		fbMBWrite_FC16.nQuantity := 8;
+			fbMBWrite_FC16.nMBAddr := 1200;
+				fbMBWrite_FC16.bExecute := TRUE;
+		//Enable PV Management
+		arrBuffer_FC16[1] := 1; arrBuffer_FC16[2] := 0;
+		//Enable Surplus Mode
+		stFloat.rValueFloat := 1;
+			fbConvertDwordToWord(dwInputValue:= stFloat.dwRawValue, eByteOrderForConvert:= eByteOrder.eLittleEndian, wOutputValue_1 => arrBuffer_FC16[3], wOutputValue_2 => arrBuffer_FC16[4]);	
+		//Surplus in Watt
+		stFloat.rValueFloat := rNewPowerToHP;
+			fbConvertDwordToWord(dwInputValue:= stFloat.dwRawValue, eByteOrderForConvert:= eByteOrder.eLittleEndian, wOutputValue_1 => arrBuffer_FC16[5], wOutputValue_2 => arrBuffer_FC16[6]);
+		//New Setpoint for Service Water Boiler when PV Management is active
+		stFloat.rValueFloat := 62;
+			fbConvertDwordToWord(dwInputValue:= stFloat.dwRawValue, eByteOrderForConvert:= eByteOrder.eLittleEndian, wOutputValue_1 => arrBuffer_FC16[5], wOutputValue_2 => arrBuffer_FC16[6]);
+		
+		IF fbMBWrite_FC16.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		//Wait for Delay and then next step
+		IF NOT fbMBWrite_FC16.bBusy AND NOT fbMBWrite_FC16.bError AND timDelay.Q THEN
+			fbMBWrite_FC16.bExecute := FALSE;
+				timDelay.IN := FALSE;
+					bMBTCPError := FALSE; 
+						//Restart from new with the Read out part
+						iStateModbusRead := 1;
+							iStateModbusWrite := 0;
+		END_IF
+				
+		//Error or Timout
+		IF FPError_FC_16.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF	
+
+END_CASE
+
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+			timDelay.IN := FALSE;
+				fbMBRead_FC4.bExecute := FALSE;	
+					fbMBWrite_FC16.bExecute := FALSE;
+						bMBTCPError := TRUE;	
+							//Restart from new with the Read out part after an Error
+							iStateModbusRead := 1;	
+								iStateModbusError := 0;
+									iStateModbusWrite := 0;
+END_CASE
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC4(sIPAddr:= sIPAdress, nUnitID := byUnitID, nTCPPort:= 502, cbLength:= SIZEOF(arrBuffer_FC4), pDestAddr:= ADR(arrBuffer_FC4), tTimeout:= T#10S );
+	FPError_FC_4(CLK:= fbMBRead_FC4.bError, Q=> );	
+	
+fbMBWrite_FC16(sIPAddr:= sIPAdress, nTCPPort:= 502, cbLength:= SIZEOF(arrBuffer_FC16), pSrcAddr:= ADR(arrBuffer_FC16), nUnitID := byUnitID, tTimeout:= T#10S );
+	FPError_FC_16(CLK:= fbMBWrite_FC16.bError, Q=> );
+
+(*-----------------------------------------------------------Handle data to Global structure for the heating pump and Temperature Sensor-----------------------------------------------------------------*)
+
+//Delte al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN iStateGVLData := 10; END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			arrCounterForGVL[1] := 1; arrCounterForGVL[2] := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND (fbNumberDevice.bNumberIsCalculatet OR fbNumberDevice_Temp.bNumberIsCalculatet) THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet AND NOT fbNumberDevice_Temp.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO
+			Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].arrMaxPower[1] := 0;
+					Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].arrMaxPower[2] := 0;
+						Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].bIsControllable := FALSE;
+							Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].bIsStepSwitched := FALSE;
+								Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].byErrorWarning := 0;
+									Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].byNumberOfSteps := 0;
+										Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].byPriority := 0;
+											Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].lrElPower := 0;
+												Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].lrElPowerConsumption := 0;
+													Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].lrElPowerProduction := 0;
+														Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].rBoilerTempHeatingSys := 0;
+															Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].rBoilerTempServiceWater := 0;
+																Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].rFlowTemp := 0;
+																	Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].rFlowTempEnergySource := 0;
+																		Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].rReturnTemp := 0;
+																			Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].rReturnTempEnergySource := 0;
+																				//Set also the target value from ems back here to 0 and not in EMS function because EMS is in Standy when we have a online change (Problem when we delete a ems function and make a online change)
+																				Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].arrTargetPowerEMS[1] := 0;
+																					Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].arrTargetPowerEMS[2] := 0;
+																						Lynus_Standards.GVL_Energy.stDataHeatingPumps[diLPForGVL,arrCounterForGVL[1]].bExternalOnCommand := FALSE;	
+		END_FOR
+			Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[arrCounterForGVL[2]].bEnabled := FALSE;
+				Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[arrCounterForGVL[2]].byErrorWarning := 0;
+					Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[arrCounterForGVL[2]].rTemperature := 0;
+
+			//Heating Pumpe		
+			arrCounterForGVL[1] := arrCounterForGVL[1] + 1;
+				arrCounterForGVL[1] := LIMIT(0,arrCounterForGVL[1],Constants_Energy.diMaxNumberOfHeatingPumps);
+			//Temperatur Sensor
+			arrCounterForGVL[2] := arrCounterForGVL[2] + 1;
+				arrCounterForGVL[2] := LIMIT(0,arrCounterForGVL[2],Constants_Sensors.diMaxNumberOfTemperatureSensors);
+					//Back to the init step
+					IF arrCounterForGVL[1] >= Constants_Energy.diMaxNumberOfHeatingPumps AND arrCounterForGVL[2] >= Constants_Sensors.diMaxNumberOfTemperatureSensors THEN iStateGVLData := 0; END_IF
+
+	10://Clear old Data on GVL 	
+		Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].arrMaxPower[1] := 0;
+				Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].arrMaxPower[2] := 0;
+					Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].bIsControllable := FALSE;
+						Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].bIsStepSwitched := FALSE;
+							Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].byErrorWarning := 0;
+								Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].byNumberOfSteps := 0;
+									Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].byPriority := 0;
+										Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].lrElPower := 0;
+											Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].lrElPowerConsumption := 0;
+												Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].lrElPowerProduction := 0;
+													Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].rBoilerTempHeatingSys := 0;
+														Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].rBoilerTempServiceWater := 0;
+															Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].rFlowTemp := 0;
+																Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].rFlowTempEnergySource := 0;
+																	Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].rReturnTemp := 0;
+																		Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN_CP,diNrOfHP_OUT].rReturnTempEnergySource := 0;										
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+			//Back to the init step
+			iStateGVLData := 0;
+
+END_CASE 	 
+
+IF diNrOfHP_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].bEnabled := fbHP.stDataHPOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].arrMaxPower[1] := fbHP.stDataHPOut.arrMaxPower[1];
+			Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].arrMaxPower[2] := fbHP.stDataHPOut.arrMaxPower[2];
+				Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].bIsControllable := TRUE;
+					Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].bIsStepSwitched := fbHP.stDataHPOut.bIsStepSwitched;
+						Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].byErrorWarning := fbHP.stDataHPOut.byErrorWarning;
+							Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].byNumberOfSteps := fbHP.stDataHPOut.byNumberOfSteps;
+								Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].byPriority := fbHP.stDataHPOut.byPriority;
+									Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].lrElPower := fbHP.stDataHPOut.lrElPower;
+										Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].lrElPowerConsumption := fbHP.stDataHPOut.lrElPowerConsumption;
+											Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].lrElPowerProduction := fbHP.stDataHPOut.lrElPowerProduction;
+												Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].rBoilerTempHeatingSys := fbHP.stDataHPOut.rBoilerTempHeatingSys;
+													Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].rBoilerTempServiceWater := fbHP.stDataHPOut.rBoilerTempServiceWater;
+														Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].rFlowTemp := fbHP.stDataHPOut.rFlowTemp;
+															Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].rFlowTempEnergySource := fbHP.stDataHPOut.rFlowTempEnergySource;
+																Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].rReturnTemp := fbHP.stDataHPOut.rReturnTemp;
+																	Lynus_Standards.GVL_Energy.stDataHeatingPumps[diNrOfEMS_IN,diNrOfHP_OUT].rReturnTempEnergySource := fbHP.stDataHPOut.rReturnTempEnergySource;	
+END_IF
+
+IF diNrOfTempS_OUT_ServiceWaterTop > 0 AND fbNumberDevice_Temp.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT_ServiceWaterTop].bEnabled := fbTempS.stDataTempOut.bEnabled;
+		Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT_ServiceWaterTop].byErrorWarning := fbTempS.stDataTempOut.byErrorWarning;
+			Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT_ServiceWaterTop].rTemperature := fbTempS.stDataTempOut.rTemperature;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_HP), bEventBasedActive=> );
+arrPD[5](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );
+arrPD[6](lrValue:= REAL_TO_LREAL(stSetupHP.rMaxPower1), bEventBasedActive=> );
+arrPD[7](lrValue:= REAL_TO_LREAL(stSetupHP.rMaxPower2), bEventBasedActive=> );
+arrPD[8](lrValue:= BOOL_TO_LREAL(stSetupHP.bManualyOn), bEventBasedActive=> );
+arrPD[9](lrValue:= BOOL_TO_LREAL(stSetupHP.bOnEmergPowerOff), bEventBasedActive=> );
+arrPD[10](lrValue:= BOOL_TO_LREAL(stSetupHP.bOnEmergPowerOff), bEventBasedActive=> );
+arrPD[11](lrValue:= BOOL_TO_LREAL(stSetupHP.bTimeEnabled), bEventBasedActive=> );
+arrPD[12](lrValue:= BYTE_TO_LREAL(stSetupHP.byDisableSOC), bEventBasedActive=> );
+arrPD[13](lrValue:= BYTE_TO_LREAL(stSetupHP.byEnableSOC), bEventBasedActive=> );
+arrPD[14](lrValue:= BYTE_TO_LREAL(stSetupHP.byHourOff), bEventBasedActive=> );
+arrPD[15](lrValue:= BYTE_TO_LREAL(stSetupHP.byHourOn), bEventBasedActive=> );
+arrPD[16](lrValue:= BYTE_TO_LREAL(stSetupHP.byManualyTargetPower), bEventBasedActive=> );
+arrPD[17](lrValue:= BYTE_TO_LREAL(stSetupHP.byMinutesOff), bEventBasedActive=> );
+arrPD[18](lrValue:= BYTE_TO_LREAL(stSetupHP.byMinutesOn), bEventBasedActive=> );
+arrPD[19](lrValue:= BYTE_TO_LREAL(stSetupHP.byPriority), bEventBasedActive=> );
+arrPD[20](lrValue:= BYTE_TO_LREAL(stSetupHP.byTimeEnabledTargetPower), bEventBasedActive=> );
+arrPD[21](lrValue:= BYTE_TO_LREAL(byUnitID), bEventBasedActive=> );
+fbPDString(sText:= sIPAdress, bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HP_CTA_Optiplus3_Modular">
+      <LineId Id="1382" Count="2" />
+      <LineId Id="1380" Count="1" />
+      <LineId Id="834" Count="0" />
+      <LineId Id="2465" Count="1" />
+      <LineId Id="3077" Count="0" />
+      <LineId Id="1391" Count="0" />
+      <LineId Id="3791" Count="0" />
+      <LineId Id="1385" Count="0" />
+      <LineId Id="1980" Count="1" />
+      <LineId Id="1386" Count="0" />
+      <LineId Id="836" Count="0" />
+      <LineId Id="1413" Count="3" />
+      <LineId Id="843" Count="0" />
+      <LineId Id="1417" Count="17" />
+      <LineId Id="870" Count="0" />
+      <LineId Id="1435" Count="0" />
+      <LineId Id="1437" Count="1" />
+      <LineId Id="2846" Count="39" />
+      <LineId Id="1436" Count="0" />
+      <LineId Id="1452" Count="0" />
+      <LineId Id="1454" Count="12" />
+      <LineId Id="871" Count="0" />
+      <LineId Id="2088" Count="0" />
+      <LineId Id="2090" Count="1" />
+      <LineId Id="3440" Count="4" />
+      <LineId Id="1467" Count="0" />
+      <LineId Id="2089" Count="0" />
+      <LineId Id="1472" Count="0" />
+      <LineId Id="1469" Count="0" />
+      <LineId Id="1473" Count="11" />
+      <LineId Id="886" Count="1" />
+      <LineId Id="1489" Count="4" />
+      <LineId Id="895" Count="0" />
+      <LineId Id="1542" Count="0" />
+      <LineId Id="896" Count="0" />
+      <LineId Id="1547" Count="4" />
+      <LineId Id="1544" Count="0" />
+      <LineId Id="2652" Count="0" />
+      <LineId Id="2654" Count="3" />
+      <LineId Id="2653" Count="0" />
+      <LineId Id="1543" Count="0" />
+      <LineId Id="1500" Count="0" />
+      <LineId Id="919" Count="0" />
+      <LineId Id="2238" Count="0" />
+      <LineId Id="2245" Count="0" />
+      <LineId Id="2247" Count="3" />
+      <LineId Id="2252" Count="1" />
+      <LineId Id="2255" Count="1" />
+      <LineId Id="2277" Count="0" />
+      <LineId Id="2258" Count="11" />
+      <LineId Id="2246" Count="0" />
+      <LineId Id="2239" Count="0" />
+      <LineId Id="2282" Count="0" />
+      <LineId Id="2285" Count="0" />
+      <LineId Id="2287" Count="4" />
+      <LineId Id="3671" Count="0" />
+      <LineId Id="3330" Count="0" />
+      <LineId Id="3731" Count="1" />
+      <LineId Id="3744" Count="0" />
+      <LineId Id="3783" Count="0" />
+      <LineId Id="3681" Count="0" />
+      <LineId Id="2301" Count="0" />
+      <LineId Id="3683" Count="13" />
+      <LineId Id="3759" Count="0" />
+      <LineId Id="3767" Count="2" />
+      <LineId Id="3775" Count="0" />
+      <LineId Id="3770" Count="1" />
+      <LineId Id="3762" Count="0" />
+      <LineId Id="3776" Count="0" />
+      <LineId Id="3778" Count="1" />
+      <LineId Id="3777" Count="0" />
+      <LineId Id="3763" Count="0" />
+      <LineId Id="3773" Count="1" />
+      <LineId Id="3765" Count="0" />
+      <LineId Id="3772" Count="0" />
+      <LineId Id="3719" Count="0" />
+      <LineId Id="3718" Count="0" />
+      <LineId Id="3720" Count="0" />
+      <LineId Id="3713" Count="1" />
+      <LineId Id="3722" Count="2" />
+      <LineId Id="3735" Count="1" />
+      <LineId Id="3734" Count="0" />
+      <LineId Id="3733" Count="0" />
+      <LineId Id="3715" Count="0" />
+      <LineId Id="3703" Count="7" />
+      <LineId Id="3682" Count="0" />
+      <LineId Id="3679" Count="0" />
+      <LineId Id="2302" Count="1" />
+      <LineId Id="2308" Count="0" />
+      <LineId Id="2310" Count="1" />
+      <LineId Id="2471" Count="0" />
+      <LineId Id="2313" Count="5" />
+      <LineId Id="2464" Count="0" />
+      <LineId Id="2752" Count="0" />
+      <LineId Id="3327" Count="0" />
+      <LineId Id="3739" Count="1" />
+      <LineId Id="3745" Count="1" />
+      <LineId Id="3741" Count="0" />
+      <LineId Id="3748" Count="0" />
+      <LineId Id="3747" Count="0" />
+      <LineId Id="3750" Count="0" />
+      <LineId Id="3749" Count="0" />
+      <LineId Id="3752" Count="0" />
+      <LineId Id="3751" Count="0" />
+      <LineId Id="3755" Count="0" />
+      <LineId Id="3678" Count="0" />
+      <LineId Id="3737" Count="0" />
+      <LineId Id="3756" Count="2" />
+      <LineId Id="3738" Count="0" />
+      <LineId Id="2360" Count="8" />
+      <LineId Id="2309" Count="0" />
+      <LineId Id="2300" Count="0" />
+      <LineId Id="2299" Count="0" />
+      <LineId Id="2808" Count="0" />
+      <LineId Id="2812" Count="9" />
+      <LineId Id="2843" Count="0" />
+      <LineId Id="3784" Count="1" />
+      <LineId Id="2824" Count="0" />
+      <LineId Id="3789" Count="1" />
+      <LineId Id="3788" Count="0" />
+      <LineId Id="3786" Count="0" />
+      <LineId Id="2825" Count="8" />
+      <LineId Id="2806" Count="0" />
+      <LineId Id="3020" Count="0" />
+      <LineId Id="3022" Count="2" />
+      <LineId Id="3038" Count="0" />
+      <LineId Id="3040" Count="0" />
+      <LineId Id="3034" Count="3" />
+      <LineId Id="2286" Count="0" />
+      <LineId Id="3021" Count="0" />
+      <LineId Id="2284" Count="0" />
+      <LineId Id="2371" Count="0" />
+      <LineId Id="2373" Count="1" />
+      <LineId Id="2377" Count="5" />
+      <LineId Id="2410" Count="0" />
+      <LineId Id="2383" Count="1" />
+      <LineId Id="2372" Count="0" />
+      <LineId Id="2283" Count="0" />
+      <LineId Id="920" Count="0" />
+      <LineId Id="1897" Count="9" />
+      <LineId Id="3331" Count="0" />
+      <LineId Id="1907" Count="21" />
+      <LineId Id="1937" Count="1" />
+      <LineId Id="1931" Count="5" />
+      <LineId Id="1895" Count="0" />
+      <LineId Id="2658" Count="0" />
+      <LineId Id="2385" Count="0" />
+      <LineId Id="2666" Count="0" />
+      <LineId Id="2661" Count="0" />
+      <LineId Id="3018" Count="1" />
+      <LineId Id="2886" Count="0" />
+      <LineId Id="2888" Count="21" />
+      <LineId Id="2887" Count="0" />
+      <LineId Id="2660" Count="0" />
+      <LineId Id="2386" Count="0" />
+      <LineId Id="3218" Count="0" />
+      <LineId Id="951" Count="0" />
+      <LineId Id="2389" Count="0" />
+      <LineId Id="2392" Count="0" />
+      <LineId Id="2411" Count="1" />
+      <LineId Id="3794" Count="0" />
+      <LineId Id="2414" Count="1" />
+      <LineId Id="2417" Count="0" />
+      <LineId Id="2436" Count="0" />
+      <LineId Id="2750" Count="0" />
+      <LineId Id="2437" Count="6" />
+      <LineId Id="3208" Count="0" />
+      <LineId Id="2447" Count="5" />
+      <LineId Id="2413" Count="0" />
+      <LineId Id="3183" Count="0" />
+      <LineId Id="3185" Count="2" />
+      <LineId Id="3795" Count="1" />
+      <LineId Id="3188" Count="0" />
+      <LineId Id="3190" Count="0" />
+      <LineId Id="3216" Count="0" />
+      <LineId Id="3215" Count="0" />
+      <LineId Id="3806" Count="0" />
+      <LineId Id="3808" Count="0" />
+      <LineId Id="3803" Count="0" />
+      <LineId Id="3801" Count="0" />
+      <LineId Id="3811" Count="0" />
+      <LineId Id="3800" Count="0" />
+      <LineId Id="3802" Count="0" />
+      <LineId Id="3812" Count="0" />
+      <LineId Id="3797" Count="0" />
+      <LineId Id="3192" Count="0" />
+      <LineId Id="3194" Count="13" />
+      <LineId Id="3184" Count="0" />
+      <LineId Id="2391" Count="0" />
+      <LineId Id="2390" Count="0" />
+      <LineId Id="2393" Count="0" />
+      <LineId Id="2395" Count="13" />
+      <LineId Id="2394" Count="0" />
+      <LineId Id="2454" Count="0" />
+      <LineId Id="2456" Count="0" />
+      <LineId Id="2459" Count="0" />
+      <LineId Id="3669" Count="0" />
+      <LineId Id="2460" Count="0" />
+      <LineId Id="3668" Count="0" />
+      <LineId Id="2461" Count="0" />
+      <LineId Id="2455" Count="0" />
+      <LineId Id="2387" Count="0" />
+      <LineId Id="2910" Count="101" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="1729" Count="0" />
+      <LineId Id="1799" Count="6" />
+      <LineId Id="2023" Count="0" />
+      <LineId Id="1807" Count="13" />
+      <LineId Id="3014" Count="0" />
+      <LineId Id="3017" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

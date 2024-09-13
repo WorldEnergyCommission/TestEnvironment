@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgEM" Id="{2236ebff-7b63-48c1-9095-28c82275707d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbEM				: FB_PhoenixContact_EM_EEM_EM375;
+	lrEMPowerTotal		: LREAL;
+END_VAR
+VAR PERSISTENT
+	bEnableEM			: BOOL;
+	lrEMCounterProd		: LREAL;
+	lrEMCounterCons		: LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbEM(
+	bEnable:=bEnableEM,
+	byUnitID:=255,
+	sIPAdress:='172.16.1.151',
+	diNrOfEM_OUT=>,
+	stDataEMPowerRealTime=>,
+	stDataEMCounterRealTime=>);
+
+lrEMPowerTotal := fbEM.stDataEMPowerRealTime.lrPowerTotal;
+	lrEMCounterProd := fbEM.stDataEMCounterRealTime.lrTotalCounterEnergy_Production;
+		lrEMCounterCons := fbEM.stDataEMCounterRealTime.lrTotalCounterEnergy_Consumption;]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="2" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="19" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

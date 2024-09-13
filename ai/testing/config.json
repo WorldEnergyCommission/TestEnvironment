@@ -1,0 +1,40 @@
+{
+  "mode": "deploy",
+  "default": {
+    "control_type": "HEATING",
+    "work_hours_start_time": "8:00",
+    "work_hours_end_time": "18:00",
+    "heating_high_setpoint": 23.0,
+    "heating_low_setpoint": 20.0,
+    "working_on_saturdays": false,
+    "smoothing_function_name": "MEAN",
+    "smoothing_function_sigma": 1,
+    "smoothing_function_mode": "nearest",
+    "smoothing_function_return_index": "MIDDLE",
+    "window_size_in_minutes": 31,
+    "window_offset": "PRESENT",
+    "tz": "Europe/Vienna",
+    "country": "AT",
+    "timesteps_per_hour": 60,
+    "building_file": "5zone_unitary_heat_only",
+    "weather_file": "const"
+  },
+  "analyse": {
+    "trials": 1,
+    "hours_per_trial": 120,
+    "reset_after_trial": false,
+    "optimize": false
+  },
+  "evaluate": {
+    "trials": 300,
+    "hours_per_trial": 120,
+    "reset_after_trial": true,
+    "optimize": true
+  },
+  "deploy": {
+    "trials": 14,
+    "hours_per_trial": 12,
+    "reset_after_trial": false,
+    "optimize": true
+  }
+}

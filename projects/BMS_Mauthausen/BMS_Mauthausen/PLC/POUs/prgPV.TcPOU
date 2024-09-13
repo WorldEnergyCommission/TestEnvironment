@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{ae7d2570-60b2-47cc-af1f-731ca08638e7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+		// extend or reduce amount of PV Inverters
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+	uint_setPoint_onetenth: UINT;						//{#lynus.ag#()}
+
+	m_shared: BOOL;
+END_VAR
+VAR PERSISTENT
+	lrCounterPV_1				: LREAL;				//{#lynus.ag#()}
+	lrCounterPV_2				: LREAL;				//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF m_shared THEN
+	prgPV_shared();
+	lrPowerPV 				:= prgPV_shared.lrPowerPV;
+	lrPowerPV_1 			:= prgPV_shared.lrPowerPV_1;
+	lrPowerPV_2 			:= prgPV_shared.lrPowerPV_2;
+	uint_setPoint_onetenth 	:= prgPV_shared.uint_setPoint_onetenth;
+	lrCounterPV_1			:= prgPV_shared.lrCounterPV_1;
+	lrCounterPV_2			:= prgPV_shared.lrCounterPV_2;
+ELSE
+	prgPV_separate();
+	lrPowerPV 				:= prgPV_separate.lrPowerPV;
+	lrPowerPV_1 			:= prgPV_separate.lrPowerPV_1;
+	lrPowerPV_2 			:= prgPV_separate.lrPowerPV_2;
+	uint_setPoint_onetenth 	:= prgPV_separate.uint_setPoint_onetenth;
+	lrCounterPV_1			:= prgPV_separate.lrCounterPV_1;
+	lrCounterPV_2			:= prgPV_separate.lrCounterPV_2;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="467" Count="0" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="513" Count="2" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="518" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="519" Count="5" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="509" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

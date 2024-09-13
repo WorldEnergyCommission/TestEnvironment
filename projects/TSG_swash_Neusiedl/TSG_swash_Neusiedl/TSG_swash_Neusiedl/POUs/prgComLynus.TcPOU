@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgComLynus" Id="{64c3386a-a78c-459d-aa5f-2c9876969cae}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComLynus
+VAR
+	fbCom			: FB_MqttCommunicator_V2;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	strAuthKey:= 'TSG88376368072' , 
+	sUserName:= 'a242cb33-7d00-431c-a780-261995d86f3c', 
+	sUserPassword:= '68bc2b87-a9ad-4107-814c-33cbf7ba0678' , 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk,  
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+(*
+fbCom(
+	bConnect:= TRUE, 
+	sUserName:= 'a242cb33-7d00-431c-a780-261995d86f3c', 
+	sUserPassword:= '68bc2b87-a9ad-4107-814c-33cbf7ba0678', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+*)]]></ST>
+    </Implementation>
+    <LineIds Name="prgComLynus">
+      <LineId Id="22" Count="5" />
+      <LineId Id="29" Count="3" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="8" Count="8" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="35" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

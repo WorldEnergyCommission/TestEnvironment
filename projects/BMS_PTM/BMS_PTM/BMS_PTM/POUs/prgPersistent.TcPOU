@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPersistent" Id="{ccd67b8a-d866-4216-a145-3575a5a9eafe}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPersistent
+VAR
+	fbUSV		: FB_WritePersistentData_CX81xx;
+	
+	fb_Reboot		: NT_reboot;
+	m_Reboot		: BOOL:=FALSE;
+	Int_LiveCount_1min	:INT; 							//{#lynus.ag#()}
+	ton_LiveCount	:TON;	
+	int_liveCount		:INT;				//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbUSV(
+	eSaveModeData:= eUSVSaveMode.eSaveWhenPowerfail, 
+	bLoadPersistentDataOk=> , 
+	bPowerFailDetect=> , 
+	bError=> , 
+	bySaveProcess=> , 
+	dwStorageLast24h=> , 
+	udiErrorCode=> );
+	
+	
+fb_Reboot(	netid := '',
+			delay := 2,
+			start := m_Reboot);
+
+// 1 min live count
+ton_LiveCount(PT:=T#1M);
+IF ton_LiveCount.Q THEN
+	Int_LiveCount_1min := Int_LiveCount_1min + 1;
+	ton_LiveCount.IN := FALSE;
+ELSE
+	ton_LiveCount.IN := TRUE;
+END_IF
+// livecount
+int_liveCount := int_liveCount+1;]]></ST>
+    </Implementation>
+    <LineIds Name="prgPersistent">
+      <LineId Id="3" Count="6" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="16" Count="4" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="63" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Shelly_3EM_not_tested" Id="{d57c30b1-4be1-4d1c-b1ee-e812b6f08702}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_3EM_not_tested
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME;		//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+END_VAR
+
+VAR_IN_OUT
+END_VAR
+
+VAR_OUTPUT
+	bValidResult		: BOOL;							//Valid Result received from Server
+    bBusy				: BOOL;							//Function is Busy
+    bError				: BOOL;							//Error sucess
+	bDone				: BOOL;							//True after the decoding from the received Json File
+	bConnected			: BOOL;							//Connection to the Server
+	lrtotalpower		: LREAL;						//Received Value
+	lrpowerL1			: LREAL;
+	lrcurrentL1			: LREAL;
+	lrvoltageL1			: LREAL;
+	lrenergyL1			: LREAL;
+	lrpowerL2			: LREAL;
+	lrcurrentL2			: LREAL;
+	lrvoltageL2			: LREAL;
+	lrenergyL2			: LREAL;
+	lrpowerL3			: LREAL;
+	lrcurrentL3			: LREAL;
+	lrvoltageL3			: LREAL;
+	lrenergyL3			: LREAL;
+	hrErrorCode       	: HRESULT;						//Error Result from Http Client
+END_VAR
+
+VAR
+	fbClient			: FB_IotHttpClient;
+	fbHttpGet			: FB_Shelly_3EM_Helper;
+	timStartRequest		: TON;							//Timer to Start the Request
+	FPStartRequest		: R_TRIG;						//Internal positive Edge
+	FPDone				: R_TRIG;						//Internal positive Edge
+	FNStart				: F_TRIG;						//Internal negative Edge
+	y: INT;
+	mtest: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := T#30S;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := TRUE;
+	fbClient.tConnectionTimeout := T#30S;
+	fbClient.stTLS.bNoServerCertCheck := TRUE;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+timStartRequest(IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, PT:= tDelayRequest, Q=> , ET=> );
+
+IF ((timStartRequest.Q AND NOT bBusy AND fbClient.bConnected) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured AND fbClient.bConnected)) THEN 
+	y:=y+1;
+	fbHttpGet.bSend := TRUE; 
+END_IF
+
+				
+//Http Get Function
+fbHttpGet(
+	lrtotalpower => lrtotalpower, 
+	lrpowerL1 => lrpowerL1,
+	lrcurrentL1 => lrcurrentL1,
+	lrvoltageL1 => lrvoltageL1,
+	lrenergyL1 => lrenergyL1,
+	lrpowerL2 => lrpowerL2,
+	lrcurrentL2 => lrcurrentL2,
+	lrvoltageL2 => lrvoltageL2,
+	lrenergyL2 => lrenergyL2,
+	lrpowerL3 => lrpowerL3,
+	lrcurrentL3 => lrcurrentL3,
+	lrvoltageL3 => lrvoltageL3,
+	lrenergyL3 => lrenergyL3,
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> ,
+	sContentStatus=> ,
+	sContentM0=> ,
+	sContentM1=> ,
+	sContentM2=> );
+
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+(*
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q THEN fbClient.Disconnect(); END_IF
+*)
+IF mtest THEN
+	fbClient.Disconnect();
+	mtest:=FALSE;
+ELSE
+	fbClient.Execute();	
+END_IF
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN 
+	bError := TRUE; 
+ELSE 
+	bError := FALSE; 
+END_IF	
+
+hrErrorCode := fbClient.hrErrorCode;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_3EM_not_tested">
+      <LineId Id="49" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="320" Count="6" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="60" Count="3" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="65" Count="29" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="95" Count="3" />
+      <LineId Id="226" Count="1" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="101" Count="2" />
+      <LineId Id="370" Count="4" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

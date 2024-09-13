@@ -1,0 +1,1365 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_VarInfo" Id="{f8bedbea-a467-4b5f-8fea-1b4292e3bb13}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_VarInfo
+VAR_INPUT
+	bReadInfo						: BOOL;																									//Manually start to read the information of plc variables with a rising edge
+	eTMCFile						: eSelectTMCFile;																						//Option to select the TMC file if Structs, Functionblocks or Enums are in using in the plc Code to push in the Cloud
+	eSavePositionTMCFile			: eSavePositionOnPLC;																					//Choose the Saveposition from the TMC File
+END_VAR
+VAR_OUTPUT
+	udiCounterFoundVariables		: UDINT;																								//Counter of found variables on the plc with the comment for cloud service
+	bError							: BOOL;																									//Error flag
+	bBusy							: BOOL;																									//Busy flag
+	byProgress						: BYTE;																									//Progress from the function in 0-100%
+	udiErrorCodeOut					: UDINT;																								//Error ID, it is a internal Beckhoff Error		
+	eErrorVarInfo_Out				: eErrorVarInfo;																						//Enum with Error from the Var Info function	
+	sVarWithError					: STRING(255);																							//Variable with Error												
+END_VAR
+VAR
+	fbNedID							: FB_GetLocalAmsNetId := (bExecute := TRUE);															//Functionblock to detect the AMSNetId form the local plc
+	fbADSRead						: ADSREAD;																								//Functionblock AMSREAD
+	fbADSInfoSubItem				: ADSRDWRT;																								//Function to read the Infos from the SubItems
+	fbTaskIndex						: GETCURTASKINDEX;																						//Task Index
+	fbADSErrorCodes					: FB_VarInfo_ErrorCodes;																				//Function Block for ADS Error Codes
+	fbParseDocument					: FB_ParsDocument;																						//Function to parse the TMC File from Information
+	stSymbolUploadInfo				: ST_Symbol_Upload_Info;																				//Infos about the numbers and size of the variables
+	stADSSymbolUpload				: ST_Symbol_Upload_Raw; 																				//Infos from the plc variable
+	stADSVarInfo					: ST_Var_Info;																							//Var info
+	stDataSubItems					: ST_Symbol_Info_SubItem;																				//Data with Infos from the SubItems
+	FPError							: R_TRIG;																								//Internal rising edge 
+	FPErrorADSInfoSubItem			: R_TRIG;																								//Internal rising edge 
+	FPErrorParse					: R_TRIG;																								//Internal rising edge
+	FPRead							: R_TRIG;																								//Internal rising edge 
+	FPBusy							: R_TRIG;																								//Internal rising edge 
+	FPTimoutTime					: R_TRIG;																								//Internal rising edge
+	FNBusy							: F_TRIG;																								//Internal falling edge 
+	timTimout						: TON;																									//Timer for Timeout
+	eTMCFile_Int					: eSelectTMCFile;																						//Internal Enum to compare with the Input Enum to detected a change of the value 
+	eSavePositionTMCFile_Int		: eSavePositionOnPLC;																					//Internal Enum to compare with the Input Enum to detected a change of the value
+	bBusyInt						: BOOL;																									//Internal Busy flag
+	bErrorIntern					: BOOL;																									//Intern error flag
+	bNoStandardDatatypeDetected		: BOOL;																									//True if it is not a standart datatype
+	bFirstCykle						: BOOL;																									//True if plc cycle begin
+	bStringDetected					: BOOL;																									//True if the symbol is a string
+	bSymbolInTMCFileFound			: BOOL;																									//Is true if in TMC File Symbols are found
+	bNewStart						: BOOL;																									//Start new Scanning Session
+	bDataTypeIsStandart				: BOOL;																									//True if the Symbol is a Standart Type
+	bLastCycle						: BOOL;																									//True when the function check the last symbol in Subitems
+	byLPClearArraySubItemInfo		: BYTE;																									//Loop tp clear the Info from the Subitems
+	byCounterWaitInStep				: BYTE;																									//Counter to wait in each step of statemaschine
+	byCounterNumberFuctionInfo		: BYTE;																									//Counter with fuction Info
+	byCounterNumberFuctionReadWrite	: BYTE;																									//Counter with fuction read write
+	byCounterSendReceiveFunction	: BYTE;																									//Counter with fuction send/receive
+	byCounterWriteDataToGV			: BYTE;																									//Counter to Write Global Data
+	byArrayInProgress				: BYTE;																									//Array in progress where the values are written in 
+	byProgressClearVarInterface		: BYTE;																									//Progress to clear Var Interface
+	byProgressParseDocument			: BYTE;																									//Progress Parse TMC File
+	byProgressSubItems				: BYTE;																									//Progress SubItems
+	byProgressCopyArray				: BYTE;																									//Progress Copy Array
+	byLPFindPoints					: BYTE;																									//Loop to find points in Symbol Name (Step 23)
+	byPointsFound					: BYTE;																									//Points found in the Full Symbol name to ckeck big datatypes (Step 23)
+	uiSizeArray						: UINT;																									//Array Size 
+	uiValueLower					: UINT;																									//Lower value from array size
+	uiValueHigher					: UINT;																									//Higher value from array size
+	uiPort							: UINT;																									//Port from TC3
+	uiStateRead						: UINT;																									//Variable from the statemschine
+	uiStateRead_CP					: UINT;																									//Comparison variable
+	uiStateCheckComment				: UINT;																									//Variable from statemaschine to check comment
+	uiStateCheckEnum				: UINT;																									//State maschine to check if the symbol is a enum
+	uiStateVarToGVInterface			: UINT;																									//State maschine to write var on globale interface 
+	uiCounterCheckSymbolsTMCFile	: UINT;																									//Counter for checked Symbols in TMC File
+	uiLPClearOutputArray			: UINT;																									//Loop to clear the Output Array
+	udiLengthTo_0					: UDINT;																								//Variable that includes the index from start to the next 0 in the array of the variable infos
+	udiFactortLP					: UDINT;																								//Factor that was detected for next atart of information in the array of the variable infos
+	udiLPSearch_0					: UDINT;																								//Loop for search next 0 in the array of the variable infos
+	udiCounterClearOutputArray		: UDINT;																								//Counter for clear Output Array befor new read session
+	udiCounterWriteDataToGV			: UDINT;																								//Counter to Write default in Global Data
+	udiErrorIntern					: UDINT;																								//Intern error Code
+	udiCounterOnlineChange			: UDINT;																								//Counter Online Change
+	udiCycleTime					: UDINT;																								//Cycle Time
+	udiCounterSymbol				: UDINT;																								//Counter from 0 to max symbols on plc
+	udiCounterRestSymbol			: UDINT;																								//Rest of not used symbols for next position in array
+	udiNumbersForArray				: UDINT;																								//Number of Symbols per array
+	udiCounterFillSymbolArray		: UDINT;																								//Counter to fill the values in the right position in array
+	udiLPFillSymbolsInArray			: UDINT;																								//Loop to fill the values in array
+	udiCounterCheckNoStandartType	: UDINT;																								//Counter to check in the inforamtion for no standart data types
+	udiNumberOfNoStandartDataType	: UDINT;																								//Numbers from no standart data types in the informations
+	udiCounterCopyArrayToFinalArray	: UDINT;																								//Counter to Copy the Arrays
+	udiCounterFoundVariablesInt		: UDINT;																								//Internal Counter of found variables on the plc with the comment for cloud service
+	rWaitInStep						: REAL;																									//Wait Value, to wait in one step about the state maschine
+	uliSizeOfString					: ULINT;																								//Size of the String
+	sFullSymbolNameToCkeck			: STRING(48);																							//Full Symbol name to check points for big data type (Step 23)
+	sCommentInfos					: STRING(255);																							//Comment Infos
+	arrADSInfoSubItem				: ARRAY[1..12] OF BYTE;																					//Array wit Infos from the SubItems
+	arrFirstCounterToCheckSubItems	: ARRAY[1..4] OF UDINT;																					//Counter to copy Content from Array to a other Array
+	arrSecondCounterToCheckSubItems	: ARRAY[1..2] OF UDINT;																					//Counter to copy Content from Array to a other Array
+	arrSymbols						: ARRAY[0..Lynus_Standards.Constants_Communicator.udiArraySizeSymbols] OF BYTE;							//Raw information from plc variable
+	arrFind							: ARRAY[1..4] OF INT;																					//Array for find symbols
+	arrVarInfos						: ARRAY[1..Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls] OF ST_Var_Info_EX;			//Infos from each plc variable
+	arrAllVarInfosForGV				: ARRAY[1..Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls] OF ST_Var_Info_EX_All;		//Infos from each plc variable after adding all the Subitems 
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Updated : M.Schwarzmann, EfficientIO
+//Date : 08.06.2022
+//Version : 2.0.0.1
+
+//Function how can read the infos of all standart plc variables and arrays in the local plc
+//Al standart variables they are signed by //{#lynus.ag#()} are stored for read and write
+//Strings are limited at 30 characters
+//Arrays are limited at a size of 1, because belonging in the cloud is difficult
+//2-3 dimensional array at this version not working
+//If its a ADS Error or a internal Error the fuction produce an error
+//If you want to work with Structs, Enums or FB the TMC File fromt the plc project is needed. 
+//Use this Path for the TMC File = C:\TwinCAT\3.1\Config\TMC\ for Win7 or higher or Hard Disk\TwinCAT\3.1\Config\TMC\ for Win CE
+//Every Struct or FB can have a other 1 Subitem. More is not allowed. 
+//With structures, however, it depends on whether they are called in an FB or directly in the program.
+//FB calls in Structs is not allowed.
+//Arrays from FB's, Structs or Enums are not allowed.
+//Every Symbol in a Big Data Type (FB or Struct) is 1 Symbol in the Array List for the GVL.
+//Every Big Data Symbol can have max 50 Subitems
+//At the last every Big Data Symbol can have max 50 Subitems with all Subitems that are included
+
+//Read TC3 Port
+uiPort := TwinCAT_SystemInfoVarList._AppInfo.AdsPort;
+
+//Read AMS Net ID from the local plc
+fbNedID();
+	IF (NOT fbNedID.bBusy) AND NOT fbNedID.bError THEN fbNedID.bExecute := FALSE; END_IF
+
+//TaskIndex
+fbTaskIndex(index=> );
+	udiCycleTime := TwinCAT_SystemInfoVarList._TaskInfo[fbTaskIndex.index].CycleTime / 10000;
+	
+//Wait in Step min 2 x Cycle Time for ADS Response
+rWaitInStep := STRING_TO_REAL(LREAL_TO_FMTSTR((UDINT_TO_LREAL(udiCycleTime) / 10) * 2,0,FALSE)); 
+	rWaitInStep := LIMIT(2,rWaitInStep,20);
+
+//Timer for timeout
+FPTimoutTime(CLK:= uiStateRead = 1, Q=> );
+	IF FPTimoutTime.Q THEN timTimout.PT := (T#25S * (udiCycleTime + (Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls / 100))) / 4; END_IF
+		timTimout(IN:= uiStateRead <> uiStateRead_CP AND TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt = udiCounterOnlineChange, PT:= , Q=> , ET=> );
+			IF uiStateRead = 100 OR uiStateRead = 0 THEN timTimout.PT := T#5S; END_IF
+				IF uiStateRead > 100 THEN timTimout.PT := T#30S; END_IF 
+
+//Dont change the Enums if the Function is running
+IF uiStateRead = 0 THEN eTMCFile_Int := eTMCFile; eSavePositionTMCFile_Int := eSavePositionTMCFile; END_IF			
+			
+//Start State Maschine
+FPRead(CLK:= bReadInfo, Q=> );
+	IF TwinCAT_SystemInfoVarList._TaskInfo[fbTaskIndex.index].FirstCycle THEN bFirstCykle := TRUE; END_IF
+	
+IF (NOT fbNedID.bExecute AND uiStateRead = 0 AND NOT fbADSRead.BUSY AND FPRead.Q) OR
+	(NOT fbNedID.bExecute AND udiCounterOnlineChange <> TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt AND uiStateRead = 2 AND NOT fbADSRead.BUSY) OR 
+		(NOT fbNedID.bExecute AND udiCounterOnlineChange <> TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt AND uiStateRead = 0 AND NOT fbADSRead.BUSY) OR 
+			(NOT fbNedID.bExecute AND udiCounterOnlineChange <> TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt AND uiStateRead = 110 AND NOT fbADSRead.BUSY) OR 
+				(NOT fbNedID.bExecute AND udiCounterOnlineChange <> TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt AND uiStateRead = 111 AND NOT fbADSRead.BUSY) OR 
+					(NOT fbNedID.bExecute AND udiCounterOnlineChange <> TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt AND uiStateRead = 112 AND NOT fbADSRead.BUSY) OR 
+						(NOT fbNedID.bExecute AND bFirstCykle) THEN 
+							uiStateRead := 0;
+								bNewStart := TRUE;
+END_IF
+	
+IF uiStateRead = 0 AND bNewStart THEN udiCounterOnlineChange := TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt; bFirstCykle := FALSE; END_IF	
+
+//State Maschine 
+
+CASE uiStateRead OF
+	
+	0: //Init and set default Values
+		bBusy := FALSE;
+			bBusyInt := FALSE;
+		
+		fbADSRead.READ := FALSE; byCounterWaitInStep := 0; udiLengthTo_0 := 0; udiFactortLP := 0; fbADSInfoSubItem.WRTRD := FALSE;					
+			arrFind[1] := 0; arrFind[2] := 0; arrFind[3] := 0; arrFind[4] := 0; uiStateCheckComment := 0; udiCounterSymbol := 0; byProgressClearVarInterface := 0; byProgressCopyArray := 0; udiCounterCopyArrayToFinalArray := 0; 
+				sCommentInfos := '';
+					uiSizeArray := 0; uiValueHigher := 0; uiValueLower := 0; uliSizeOfString := 0; udiCounterCheckNoStandartType := 0; bNoStandardDatatypeDetected := FALSE; bStringDetected := FALSE;
+						fbParseDocument.bRead := FALSE; bSymbolInTMCFileFound := FALSE; bDataTypeIsStandart := FALSE; bLastCycle := FALSE; uiCounterCheckSymbolsTMCFile := 0; udiCounterClearOutputArray := 0; uiStateCheckEnum := 0;
+							byProgressSubItems := 0; byProgressParseDocument := 0; uiStateRead_CP := 0; arrFirstCounterToCheckSubItems[1] := 0; arrFirstCounterToCheckSubItems[2] := 0; arrFirstCounterToCheckSubItems[3] := 0;
+								arrFirstCounterToCheckSubItems[4] := 0; arrSecondCounterToCheckSubItems[1] := 0; arrSecondCounterToCheckSubItems[2] := 0; stDataSubItems.udiSubItemGroup := 0; stDataSubItems.udiSubItemOffset := 0; stDataSubItems.udiSubItemSize := 0;
+									sFullSymbolNameToCkeck := ''; byPointsFound := 0;								
+																							
+		IF fbParseDocument.bBusy THEN fbParseDocument.bStop := TRUE; END_IF
+																						
+		IF bNewStart THEN
+			byCounterNumberFuctionInfo := 0;
+				byCounterNumberFuctionReadWrite := 0; 
+					byCounterSendReceiveFunction := 0;
+						byProgress := 0;	
+							uiStateRead := 1000;
+								bNewStart := FALSE;	
+		END_IF
+	
+	1: //Read the length of the Variable declaration and set Default und Arrays
+		bBusy := TRUE;
+			bBusyInt := TRUE;
+				Lynus_Standards.GVL_Communicator.bInfoAlVariablesOK := FALSE;
+					byCounterNumberFuctionInfo := 0;
+						byCounterNumberFuctionReadWrite := 0;
+							byCounterSendReceiveFunction := 0;
+								udiNumberOfNoStandartDataType := 0;
+	
+		//Clear Arrays
+		IF udiCounterClearOutputArray < udiCounterFoundVariablesInt THEN udiCounterClearOutputArray := udiCounterClearOutputArray + 1; END_IF
+			udiCounterClearOutputArray := LIMIT(1,udiCounterClearOutputArray,Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);					
+							
+		IF udiCounterClearOutputArray <= udiCounterFoundVariablesInt THEN  
+			arrVarInfos[udiCounterClearOutputArray].sSymbolName := '';
+				arrVarInfos[udiCounterClearOutputArray].sSymbolType := '';
+					arrVarInfos[udiCounterClearOutputArray].udiGroup := 0;
+						arrVarInfos[udiCounterClearOutputArray].udiOffset := 0;
+							arrVarInfos[udiCounterClearOutputArray].udiFlags := 0;
+								arrVarInfos[udiCounterClearOutputArray].udiSize := 0;
+									arrVarInfos[udiCounterClearOutputArray].uiSizeArray := 0;
+										arrVarInfos[udiCounterClearOutputArray].uiTypeLength := 0;	
+											arrVarInfos[udiCounterClearOutputArray].sFullSymbolName := '';
+												arrVarInfos[udiCounterClearOutputArray].sProjectName := '';
+													arrVarInfos[udiCounterClearOutputArray].sSymbolUnit := '';
+														arrVarInfos[udiCounterClearOutputArray].sAdsDataType := '';
+															arrVarInfos[udiCounterClearOutputArray].bNoStandardDatatypeDetected := FALSE;	
+																FOR uiLPClearOutputArray := 1 TO Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems BY 1 DO
+																	arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].bIsEnum := FALSE;
+																		arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].sSubItemName := '';
+																			arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].sSubItemType := '';
+																				arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].udiSubItemGroup := 0;
+																					arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].udiSubItemOffset := 0;	
+																						arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].udiSubItemSize := 0;
+																							arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].uiSizeArray := 0;	
+																								arrVarInfos[udiCounterClearOutputArray].arrInfoSubItems[uiLPClearOutputArray].sSubItemUnit := '';	
+																END_FOR 
+			arrAllVarInfosForGV[udiCounterClearOutputArray].sFullSymbolName := '';
+				arrAllVarInfosForGV[udiCounterClearOutputArray].sSymbolType := '';	
+					arrAllVarInfosForGV[udiCounterClearOutputArray].sSymbolUnit := '';
+						arrAllVarInfosForGV[udiCounterClearOutputArray].udiGroup := 0;
+							arrAllVarInfosForGV[udiCounterClearOutputArray].udiOffset := 0;	
+								arrAllVarInfosForGV[udiCounterClearOutputArray].udiSize := 0;
+									arrAllVarInfosForGV[udiCounterClearOutputArray].uiSizeArray := 0;	
+		END_IF
+		
+		FOR byLPClearArraySubItemInfo := 1 TO 12 BY 1 DO
+			arrADSInfoSubItem[byLPClearArraySubItemInfo] := 0;
+		END_FOR   
+		
+		//Progress to 1 % when deletign the content of the array
+		IF udiCounterClearOutputArray < udiCounterFoundVariablesInt THEN byProgress := 1; END_IF 
+		
+		IF udiCounterClearOutputArray >= udiCounterFoundVariablesInt THEN 
+		
+		bErrorIntern := FALSE;
+			udiErrorIntern := 0;
+				sVarWithError := '';
+					udiCounterFoundVariables := 0; 
+						udiCounterFoundVariablesInt := 0;
+		
+		fbADSRead.IDXGRP := ADSIGRP_SYM_UPLOADINFO;
+			fbADSRead.IDXOFFS := 0;
+				fbADSRead.LEN:= SIZEOF(stSymbolUploadInfo);
+					fbADSRead.DESTADDR:= ADR(stSymbolUploadInfo); 
+						fbADSRead.READ := TRUE;
+		
+		IF NOT fbADSRead.BUSY AND NOT fbADSRead.ERR AND byCounterWaitInStep >= rWaitInStep AND stSymbolUploadInfo.udiSymbols > 0 AND uiStateVarToGVInterface = 0 THEN 
+			uiStateRead := 2; byCounterWaitInStep := 0; fbADSRead.READ := FALSE; udiCounterSymbol := 1;
+		END_IF
+			IF timTimout.Q OR FPError.Q OR (byCounterWaitInStep >= rWaitInStep AND stSymbolUploadInfo.udiSymbols <= 0) THEN 
+				uiStateRead := 200;
+					//Array Error
+					IF NOT FPError.Q THEN udiErrorIntern := 1; END_IF	
+					//Timout Error
+					IF timTimout.Q THEN udiErrorIntern := 2; END_IF		
+			END_IF		
+				
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+		
+		END_IF	
+		
+	2: //Read Information about the PLC Variables
+		fbADSRead.IDXGRP := ADSIGRP_SYM_UPLOAD;
+			fbADSRead.IDXOFFS := udiCounterSymbol;
+				fbADSRead.LEN:= SIZEOF(arrSymbols);
+					fbADSRead.DESTADDR:= ADR(arrSymbols); 
+						fbADSRead.READ := TRUE;
+			
+		IF NOT fbADSRead.BUSY AND NOT fbADSRead.ERR AND byCounterWaitInStep >= rWaitInStep THEN uiStateRead := 3; byCounterWaitInStep := 0; fbADSRead.READ := FALSE; END_IF
+			IF FPError.Q OR timTimout.Q THEN uiStateRead := 200; END_IF	
+				//Timout Error	
+				IF timTimout.Q THEN udiErrorIntern := 2; END_IF		
+					
+			IF uiStateRead = 2 THEN byCounterWaitInStep := byCounterWaitInStep + 1; END_IF
+				
+	3: //Symbol Upload
+		MEMCPY(ADR(stADSSymbolUpload),ADR(arrSymbols),SIZEOF(stADSSymbolUpload));
+			stADSVarInfo.udiGroup := stADSSymbolUpload.udiGroup;
+				stADSVarInfo.udiOffset := stADSSymbolUpload.udiOffset;
+					stADSVarInfo.udiSize := stADSSymbolUpload.udiSize;
+						stADSVarInfo.udiFlags := stADSSymbolUpload.udiFlags; 
+							stADSVarInfo.uiTypeLength := stADSSymbolUpload.uiTypeLength; 
+								uiStateRead := 4;
+									udiLengthTo_0 := 0;
+			//Timout Error					
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF		
+		
+	4: //Variable Name and ADS data type
+		stADSVarInfo.sAdsDataType := '';
+		
+		IF stADSSymbolUpload.udiAdsDataType = 33 THEN stADSVarInfo.sAdsDataType := 'ADST_BIT'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 16 THEN stADSVarInfo.sAdsDataType := 'ADST_INT8'; END_IF 
+		IF stADSSymbolUpload.udiAdsDataType = 2 THEN stADSVarInfo.sAdsDataType := 'ADST_INT16'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 3 THEN stADSVarInfo.sAdsDataType := 'ADST_INT32'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 20 THEN stADSVarInfo.sAdsDataType := 'ADST_INT64'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 17 THEN stADSVarInfo.sAdsDataType := 'ADST_UINT8'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 18 THEN stADSVarInfo.sAdsDataType := 'ADST_UINT16'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 19 THEN stADSVarInfo.sAdsDataType := 'ADST_UINT32'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 21 THEN stADSVarInfo.sAdsDataType := 'ADST_UINT64'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 4 THEN stADSVarInfo.sAdsDataType := 'ADST_REAL32'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 5 THEN stADSVarInfo.sAdsDataType := 'ADST_REAL64'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 32 THEN stADSVarInfo.sAdsDataType := 'ADST_REAL80'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 65 THEN stADSVarInfo.sAdsDataType := 'ADST_BIGTYPE'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 30 THEN stADSVarInfo.sAdsDataType := 'ADST_STRING'; END_IF
+		IF stADSSymbolUpload.udiAdsDataType = 0 THEN stADSVarInfo.sAdsDataType := 'ADST_VOID'; END_IF
+		
+		stADSVarInfo.sSymbolName := '';
+			IF (stADSSymbolUpload.uiNameLength + 30) <= Lynus_Standards.Constants_Communicator.udiArraySizeSymbols THEN  		 
+				FOR udiLPSearch_0 := 30 TO (stADSSymbolUpload.uiNameLength + 30) BY 1 DO
+					stADSVarInfo.sSymbolName := CONCAT(stADSVarInfo.sSymbolName,F_ToCHR(arrSymbols[udiLPSearch_0]));
+						IF arrSymbols[udiLPSearch_0] = 0 THEN udiLengthTo_0 := udiLPSearch_0 - 30; EXIT; END_IF  
+				END_FOR 
+			END_IF			
+				
+				IF udiLengthTo_0 <> 0 AND udiLengthTo_0 <= 255 THEN udiFactortLP := (udiLengthTo_0 + 31); udiLengthTo_0 := 0; uiStateRead := 5; END_IF 
+					//Timout Error or comment description error
+					IF timTimout.Q OR udiLengthTo_0 > 255 THEN 
+						IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; ELSE uiStateRead := 200; udiErrorIntern := 4; END_IF
+					END_IF
+	
+	5: //Symbole Type
+		stADSVarInfo.sSymbolType := '';
+			IF udiFactortLP < Lynus_Standards.Constants_Communicator.udiArraySizeSymbols THEN
+				FOR udiLPSearch_0 := udiFactortLP TO Lynus_Standards.Constants_Communicator.udiArraySizeSymbols BY 1 DO
+					stADSVarInfo.sSymbolType := CONCAT(stADSVarInfo.sSymbolType,F_ToCHR(arrSymbols[udiLPSearch_0]));
+						IF arrSymbols[udiLPSearch_0] = 0 THEN udiLengthTo_0 := udiLPSearch_0 - udiFactortLP; EXIT; END_IF 
+				END_FOR
+			END_IF
+				
+		//Check for mor than 1 Info function ore more than 1 read write function or mor than 1 send/receive function
+		IF FIND(stADSVarInfo.sSymbolType,'TSG_Communicator.FB_VarInfo') = 1 THEN byCounterNumberFuctionInfo := byCounterNumberFuctionInfo + 1; END_IF
+			IF FIND(stADSVarInfo.sSymbolType,'TSG_Communicator.FB_ReadWrite') = 1 THEN byCounterNumberFuctionReadWrite := byCounterNumberFuctionReadWrite + 1; END_IF
+				IF FIND(stADSVarInfo.sSymbolType,'TSG_Communicator.FB_MqttCommunicator') = 1 THEN byCounterSendReceiveFunction := byCounterSendReceiveFunction + 1; END_IF	
+			
+				IF udiLengthTo_0 <> 0 AND udiLengthTo_0 <= 255 AND udiFactortLP < Lynus_Standards.Constants_Communicator.udiArraySizeSymbols AND byCounterNumberFuctionInfo <= 1 AND byCounterNumberFuctionReadWrite <= 10 AND byCounterSendReceiveFunction <= 1 THEN 
+					udiFactortLP := udiFactortLP + udiLengthTo_0 + 1; 
+						udiLengthTo_0 := 0; 
+							uiStateRead := 6; 
+				END_IF 
+					IF udiFactortLP >= Lynus_Standards.Constants_Communicator.udiArraySizeSymbols OR timTimout.Q OR udiLengthTo_0 > 255 OR byCounterNumberFuctionInfo > 1 OR byCounterNumberFuctionReadWrite > 10 OR byCounterSendReceiveFunction > 1 THEN
+							uiStateRead := 200;
+								//Comment lenght Error or timout Error
+								IF timTimout.Q THEN udiErrorIntern := 2; END_IF 
+								IF udiFactortLP >= Lynus_Standards.Constants_Communicator.udiArraySizeSymbols THEN udiErrorIntern := 3; END_IF 
+								IF udiLengthTo_0 > 255 THEN udiErrorIntern := 3; END_IF
+								IF byCounterNumberFuctionReadWrite > 10 THEN udiErrorIntern := 7; END_IF 
+								IF byCounterNumberFuctionInfo > 1 THEN udiErrorIntern := 8; END_IF 
+								IF byCounterSendReceiveFunction > 1 THEN udiErrorIntern := 9; END_IF
+					END_IF
+					
+	6: //Symbol Comment
+		stADSVarInfo.sSymbolComment := '';
+			IF udiFactortLP < Lynus_Standards.Constants_Communicator.udiArraySizeSymbols THEN
+				FOR udiLPSearch_0 := udiFactortLP TO Lynus_Standards.Constants_Communicator.udiArraySizeSymbols BY 1 DO
+					stADSVarInfo.sSymbolComment := CONCAT(stADSVarInfo.sSymbolComment,F_ToCHR(arrSymbols[udiLPSearch_0]));
+						IF arrSymbols[udiLPSearch_0] = 0 THEN udiLengthTo_0 := udiLPSearch_0 - udiFactortLP; EXIT; END_IF 
+				END_FOR
+			END_IF
+				
+				IF udiLengthTo_0 <= 255 AND udiFactortLP < Lynus_Standards.Constants_Communicator.udiArraySizeSymbols THEN udiFactortLP := 0; udiLengthTo_0 := 0; uiStateRead := 7; END_IF 
+					IF udiFactortLP >= Lynus_Standards.Constants_Communicator.udiArraySizeSymbols OR timTimout.Q OR udiLengthTo_0 > 255 THEN 
+						uiStateRead := 200;
+							//Comment lenght Error or timout Error
+							IF timTimout.Q THEN udiErrorIntern := 2; END_IF 
+							IF udiFactortLP >= Lynus_Standards.Constants_Communicator.udiArraySizeSymbols THEN udiErrorIntern := 3; END_IF 
+							IF udiLengthTo_0 > 255 THEN udiErrorIntern := 3; END_IF 
+					END_IF
+	
+	7: //Look it is a variable with the right start information for Lynus
+		IF MID(stADSVarInfo.sSymbolComment,14,1) = '{#lynus.ag#()}' THEN 
+			IF FIND(stADSVarInfo.sSymbolType,'FB_VarInfo') = 0 AND FIND(stADSVarInfo.sSymbolType,'FB_ReadWrite') = 0 AND FIND(stADSVarInfo.sSymbolType,'FB_MqttCommiunicator') = 0 THEN 
+				uiStateRead := 8; 
+			ELSE
+				uiStateRead := 200;
+					udiErrorIntern := 5;
+			END_IF 
+		ELSE
+			uiStateRead := 100; 
+		END_IF	
+			//Timout Error		
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+
+	8://If it is a array, check the array size and check is standart datatype or not
+		//Check Array Size
+		IF FIND(stADSVarInfo.sSymbolType,'ARRAY') = 1 THEN 
+			//detect array size
+			arrFind[1] := FIND(stADSVarInfo.sSymbolType,'[');
+				uiValueLower := STRING_TO_UINT(MID(stADSVarInfo.sSymbolType,1,arrFind[1] + 1));
+					arrFind[2] := FIND(stADSVarInfo.sSymbolType,']');
+			IF arrFind[1] = 7 AND arrFind[2] = 12 THEN
+				uiValueHigher := STRING_TO_UINT(MID(stADSVarInfo.sSymbolType,1,arrFind[2] - 1));
+			ELSIF arrFind[1] = 7 AND arrFind[2] = 13 THEN
+				uiValueHigher := STRING_TO_UINT(MID(stADSVarInfo.sSymbolType,2,arrFind[2] - 2));
+			ELSIF arrFind[1] = 7 AND arrFind[2] = 14 THEN
+				uiValueHigher := STRING_TO_UINT(MID(stADSVarInfo.sSymbolType,3,arrFind[2] - 3));
+			END_IF	
+				uiSizeArray := (uiValueHigher - uiValueLower) + 1;
+					//Check for 2 or 3 dimensional array
+					IF FIND(stADSVarInfo.sSymbolType,',') <> 0 THEN uiSizeArray := Lynus_Standards.Constants_Communicator.bySizeOfValueArray + 1; END_IF
+		END_IF
+			//Check Datatype
+			IF FIND(stADSVarInfo.sSymbolType,'BOOL') = 0 AND FIND(stADSVarInfo.sSymbolType,'BYTE') = 0 AND FIND(stADSVarInfo.sSymbolType,'WORD') = 0 AND FIND(stADSVarInfo.sSymbolType,'DWORD') = 0 AND FIND(stADSVarInfo.sSymbolType,'SINT') = 0 AND
+				FIND(stADSVarInfo.sSymbolType,'USINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'INT') = 0 AND FIND(stADSVarInfo.sSymbolType,'UINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'DINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'UDINT') = 0 AND
+					FIND(stADSVarInfo.sSymbolType,'LINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'ULINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'LWORD') = 0 AND FIND(stADSVarInfo.sSymbolType,'REAL') = 0 AND FIND(stADSVarInfo.sSymbolType,'LREAL') = 0 AND
+						FIND(stADSVarInfo.sSymbolType,'STRING(30)') = 0 AND FIND(stADSVarInfo.sSymbolType,'TIME') = 0 AND FIND(stADSVarInfo.sSymbolType,'TIME_OF_DAY') = 0 AND FIND(stADSVarInfo.sSymbolType,'DATE') = 0 AND FIND(stADSVarInfo.sSymbolType,'DATE_AND_TIME') = 0 AND
+			FIND(stADSVarInfo.sSymbolType,'OF BOOL') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF BYTE') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF WORD') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF DWORD') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF SINT') = 0 AND
+				FIND(stADSVarInfo.sSymbolType,'OF USINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF INT') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF UINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF DINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF UDINT') = 0 AND
+					FIND(stADSVarInfo.sSymbolType,'OF LINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF ULINT') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF LWORD') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF REAL') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF LREAL') = 0 AND
+						FIND(stADSVarInfo.sSymbolType,'OF STRING(30)') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF TIME') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF TIME_OF_DAY') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF DATE') = 0 AND FIND(stADSVarInfo.sSymbolType,'OF DATE_AND_TIME') = 0 THEN
+				bNoStandardDatatypeDetected := TRUE;
+			ELSE
+				bNoStandardDatatypeDetected := FALSE;
+			END_IF	         	   	   				
+				//Ckeck String Size
+				IF FIND(stADSVarInfo.sSymbolType,'STRING(') <> 0 OR FIND(stADSVarInfo.sSymbolType,'OF STRING(') <> 0 THEN uliSizeOfString := STRING_TO_ULINT(MID(stADSVarInfo.sSymbolType,FIND(stADSVarInfo.sSymbolType,')') - FIND(stADSVarInfo.sSymbolType,'(') - 1,FIND(stADSVarInfo.sSymbolType,'(') + 1)); bStringDetected := TRUE; END_IF 
+
+				IF (uiSizeArray <= Lynus_Standards.Constants_Communicator.bySizeOfValueArray AND NOT bStringDetected) OR (uiSizeArray <= Lynus_Standards.Constants_Communicator.bySizeOfValueArray AND bStringDetected AND uliSizeOfString = 30) THEN 
+					stADSVarInfo.uiSizeArray := uiSizeArray; uiSizeArray := 0; uiValueHigher := 0; uiValueLower := 0; arrFind[1] := 0; arrFind[2] := 0; uiStateRead := 20; uliSizeOfString := 0; bStringDetected := FALSE;
+				END_IF 
+					IF ((uiSizeArray > Lynus_Standards.Constants_Communicator.bySizeOfValueArray OR uliSizeOfString > 30 OR uliSizeOfString < 30) AND uiStateRead = 8) OR timTimout.Q THEN 
+						uiStateRead := 200;
+							//Comment lenght Error or timout Error
+							IF timTimout.Q THEN udiErrorIntern := 2; END_IF 
+							IF uiSizeArray > Lynus_Standards.Constants_Communicator.bySizeOfValueArray OR uliSizeOfString > 30 OR uliSizeOfString < 30 THEN udiErrorIntern := 5; END_IF
+					END_IF
+			
+	20: //Check the comment for right content
+			
+		CASE uiStateCheckComment OF
+					
+			0: //Ckeck if the commetn is longer then 14 characters
+				IF LEN(stADSVarInfo.sSymbolComment) > 14 THEN uiStateCheckComment := 1; ELSE uiStateCheckComment := 50; END_IF 
+				
+			1: //After we have mor description after the {#lynus.ag#()} we need 1 space and then 2 //  
+				IF MID(stADSVarInfo.sSymbolComment,3,15) = ' //' THEN uiStateCheckComment := 50; ELSE uiStateCheckComment := 100; END_IF 	
+				
+			50: //If commment is done go to next step	
+				IF udiCounterFoundVariablesInt < Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN 
+					uiStateRead := 21; 
+						uiStateCheckComment := 0;
+				ELSE
+					uiStateRead := 200;
+						//Array Size Error
+						udiErrorIntern := 1;
+							uiStateCheckComment := 0;
+				END_IF
+			
+			100: //Comment is wrong
+				uiStateCheckComment := 0;
+					uiStateRead := 200;
+						//Comment description error
+						udiErrorIntern := 4;
+					
+		END_CASE
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+			
+	21: //Prepear symbol name (cut prg name)
+		sCommentInfos := stADSVarInfo.sSymbolName; 
+			arrFind[1] := FIND(sCommentInfos,'.');
+				sCommentInfos := DELETE(sCommentInfos,arrFind[1],1);	
+		
+		//Cut the a pice in the symbol type when we found a . in there. (When we use Structs or FB from a library)
+		IF FIND(stADSVarInfo.sSymbolType,'.') <> 0 AND FIND(stADSVarInfo.sSymbolType,'ARRAY') = 0 THEN 
+			stADSVarInfo.sSymbolType := DELETE(stADSVarInfo.sSymbolType,FIND(stADSVarInfo.sSymbolType,'.'),1);			
+		END_IF		
+				
+		//Comment lenght Error or timout Error or symbol name to long							
+		IF timTimout.Q OR arrFind[1] = 0 OR LEN(stADSVarInfo.sSymbolName) > 48 THEN 
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+			IF arrFind[1] = 0 THEN uiStateRead := 200; udiErrorIntern := 4; END_IF 
+			IF LEN(stADSVarInfo.sSymbolName) > 48 THEN uiStateRead := 200; udiErrorIntern := 6; END_IF 
+		ELSE
+			uiStateRead := 22;   
+		END_IF
+	
+	22:	//Write the data in output array
+		arrFind[1] := 0;
+			udiCounterFoundVariables := udiCounterFoundVariables + 1;
+				udiCounterFoundVariablesInt := udiCounterFoundVariablesInt + 1;
+
+		arrVarInfos[udiCounterFoundVariablesInt].sFullSymbolName := stADSVarInfo.sSymbolName; 
+			arrVarInfos[udiCounterFoundVariablesInt].sSymbolName := sCommentInfos;
+				arrVarInfos[udiCounterFoundVariablesInt].udiGroup := stADSVarInfo.udiGroup;
+					arrVarInfos[udiCounterFoundVariablesInt].udiOffset := stADSVarInfo.udiOffset;
+						arrVarInfos[udiCounterFoundVariablesInt].udiSize := stADSVarInfo.udiSize;
+							arrVarInfos[udiCounterFoundVariablesInt].uiTypeLength := stADSVarInfo.uiTypeLength; 
+								arrVarInfos[udiCounterFoundVariablesInt].udiFlags := stADSVarInfo.udiFlags; 	
+									arrVarInfos[udiCounterFoundVariablesInt].sAdsDataType := stADSVarInfo.sAdsDataType;
+										arrVarInfos[udiCounterFoundVariablesInt].sSymbolType := stADSVarInfo.sSymbolType;
+											IF FIND(stADSVarInfo.sSymbolType,'ARRAY') <> 0 AND bNoStandardDatatypeDetected THEN 
+												arrVarInfos[udiCounterFoundVariablesInt].sSymbolType := 'No Standart Datatype for this Array';
+													uiStateRead := 200;
+														udiErrorIntern := 12;
+											END_IF
+												arrVarInfos[udiCounterFoundVariablesInt].sSymbolUnit :=  ''; //Not in Use at the moment	
+													arrVarInfos[udiCounterFoundVariablesInt].sProjectName := TwinCAT_SystemInfoVarList._AppInfo.ProjectName;	
+														arrVarInfos[udiCounterFoundVariablesInt].uiSizeArray := stADSVarInfo.uiSizeArray;
+															arrVarInfos[udiCounterFoundVariablesInt].bNoStandardDatatypeDetected := bNoStandardDatatypeDetected;	
+									
+		//Timeout Error							
+		IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; ELSE IF uiStateRead = 22 THEN uiStateRead := 23; sFullSymbolNameToCkeck := arrVarInfos[udiCounterFoundVariablesInt].sFullSymbolName; byPointsFound := 0; END_IF END_IF
+			
+	23: //Safety check for variables from big datatypes that we don't have double
+		FOR byLPFindPoints := 0 TO 1 BY 1 DO 
+			IF FIND(sFullSymbolNameToCkeck,'.') <> 0 THEN
+				sFullSymbolNameToCkeck := DELETE(sFullSymbolNameToCkeck,FIND(sFullSymbolNameToCkeck,'.'),1);	
+					byPointsFound := byPointsFound + 1;
+			END_IF	
+		END_FOR
+		//1 point, al ok
+		IF byPointsFound <= 1 THEN uiStateRead := 100; END_IF
+		
+		//More then 1 point delete it because cames after when we parse the tmc file
+		IF byPointsFound > 1 THEN 
+			arrVarInfos[udiCounterFoundVariablesInt].sFullSymbolName := ''; 
+				arrVarInfos[udiCounterFoundVariablesInt].sSymbolName := '';
+					arrVarInfos[udiCounterFoundVariablesInt].udiGroup := 0;
+						arrVarInfos[udiCounterFoundVariablesInt].udiOffset := 0;
+							arrVarInfos[udiCounterFoundVariablesInt].udiSize := 0;
+								arrVarInfos[udiCounterFoundVariablesInt].uiTypeLength := 0; 
+									arrVarInfos[udiCounterFoundVariablesInt].udiFlags := 0; 	
+										arrVarInfos[udiCounterFoundVariablesInt].sAdsDataType := '';
+											arrVarInfos[udiCounterFoundVariablesInt].sSymbolType := '';	
+												arrVarInfos[udiCounterFoundVariablesInt].sSymbolUnit :=  ''; 	
+													arrVarInfos[udiCounterFoundVariablesInt].sProjectName := '';	
+														arrVarInfos[udiCounterFoundVariablesInt].uiSizeArray := 0;
+															arrVarInfos[udiCounterFoundVariablesInt].bNoStandardDatatypeDetected := FALSE;
+			udiCounterFoundVariables := udiCounterFoundVariables - 1;
+				udiCounterFoundVariablesInt := udiCounterFoundVariablesInt - 1;
+					uiStateRead := 100;
+		END_IF
+		
+	100: //IF the udiCounterSymbol < stSymbolUploadInfo.udiSymbols then repeat Step 2 to Step 50  
+		udiFactortLP := 0; udiLengthTo_0 := 0;
+			IF udiCounterSymbol < stSymbolUploadInfo.udiSymbols THEN uiStateRead := 2; udiCounterSymbol := udiCounterSymbol + 1; uiStateRead_CP := uiStateRead; END_IF
+				IF udiCounterSymbol >= stSymbolUploadInfo.udiSymbols AND uiStateRead = 100 THEN 
+					uiStateRead := 101; 
+				END_IF   	
+			
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+		
+	101://Check if in the found symbols are structs, Functionblocks or Enums and no tmc File is selected
+		fbParseDocument.bStop := FALSE;
+		
+		udiCounterCheckNoStandartType := udiCounterCheckNoStandartType + 1;
+			udiCounterCheckNoStandartType := LIMIT(1,udiCounterCheckNoStandartType,Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);
+		
+		IF arrVarInfos[udiCounterCheckNoStandartType].bNoStandardDatatypeDetected THEN udiNumberOfNoStandartDataType := udiNumberOfNoStandartDataType + 1; END_IF 		
+			
+		//Error
+		IF arrVarInfos[udiCounterCheckNoStandartType].bNoStandardDatatypeDetected AND eTMCFile_Int = eSelectTMCFile.eDontUseTMCFile THEN uiStateRead := 200; udiErrorIntern := 11; END_IF
+			IF byCounterNumberFuctionReadWrite = 0 OR byCounterSendReceiveFunction = 0 THEN
+				uiStateRead := 200;
+					IF byCounterNumberFuctionReadWrite = 0 THEN udiErrorIntern := 19; END_IF
+					IF byCounterSendReceiveFunction = 0 THEN udiErrorIntern := 18; END_IF	
+			END_IF
+				IF udiCounterFoundVariablesInt = 0 THEN uiStateRead := 200; udiErrorIntern := 20; END_IF 
+			
+		IF udiCounterCheckNoStandartType >= udiCounterFoundVariablesInt AND uiStateRead = 101 AND eTMCFile_Int = eSelectTMCFile.eUseTMCFile AND udiNumberOfNoStandartDataType > 0 THEN 
+			uiStateRead := 111; 
+				udiCounterCheckNoStandartType := 0;
+					byProgressCopyArray := 100;
+		END_IF
+			//Done, no non-standard types found
+			IF udiCounterCheckNoStandartType >= udiCounterFoundVariablesInt AND uiStateRead = 101 AND udiNumberOfNoStandartDataType = 0 THEN 
+				IF byCounterNumberFuctionReadWrite > udiCounterFoundVariablesInt THEN 
+					uiStateRead := 200; 
+						udiErrorIntern := 10;
+				ELSE
+					uiStateRead := 102; uiStateRead_CP := uiStateRead; 
+				END_IF
+			END_IF
+			
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+		
+	102://Copy Array to final Array if we have only standart Datatypes
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;	
+		
+		udiCounterCopyArrayToFinalArray := udiCounterCopyArrayToFinalArray + 1;
+			udiCounterCopyArrayToFinalArray := LIMIT(1,udiCounterCopyArrayToFinalArray,Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);	
+		
+		arrAllVarInfosForGV[udiCounterCopyArrayToFinalArray].sFullSymbolName := arrVarInfos[udiCounterCopyArrayToFinalArray].sFullSymbolName;
+			arrAllVarInfosForGV[udiCounterCopyArrayToFinalArray].sSymbolType := arrVarInfos[udiCounterCopyArrayToFinalArray].sSymbolType;
+				arrAllVarInfosForGV[udiCounterCopyArrayToFinalArray].sSymbolUnit := arrVarInfos[udiCounterCopyArrayToFinalArray].sSymbolUnit;
+					arrAllVarInfosForGV[udiCounterCopyArrayToFinalArray].udiGroup := arrVarInfos[udiCounterCopyArrayToFinalArray].udiGroup;
+						arrAllVarInfosForGV[udiCounterCopyArrayToFinalArray].udiOffset := arrVarInfos[udiCounterCopyArrayToFinalArray].udiOffset;
+							arrAllVarInfosForGV[udiCounterCopyArrayToFinalArray].udiSize := arrVarInfos[udiCounterCopyArrayToFinalArray].udiSize;
+								arrAllVarInfosForGV[udiCounterCopyArrayToFinalArray].uiSizeArray := arrVarInfos[udiCounterCopyArrayToFinalArray].uiSizeArray;
+			
+		//Progress
+		byProgressCopyArray := REAL_TO_BYTE(F_Scalvalue(x:= UDINT_TO_REAL(udiCounterCopyArrayToFinalArray), x1:= 0, y1:= 0, x2:= UDINT_TO_REAL(udiCounterFoundVariablesInt), y2:= 100));						
+								
+		//Copy Progress Done						
+		IF udiCounterCopyArrayToFinalArray >= udiCounterFoundVariablesInt THEN 						
+			bReadInfo := FALSE;
+				uiStateRead := 0;
+		END_IF
+	
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+	
+	111://Start with parsing from the tmc file
+		fbParseDocument.bRead := TRUE;  
+			uiStateRead_CP := uiStateRead;
+		
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+			byCounterWaitInStep := LIMIT(0,byCounterWaitInStep,2);	
+		
+		IF NOT fbParseDocument.bError AND NOT fbParseDocument.bBusy AND fbParseDocument.bDone AND byCounterWaitInStep >= 2 THEN 
+			uiStateRead := 112; 
+				fbParseDocument.bRead := FALSE; 
+					byCounterWaitInStep := 0;	
+		END_IF
+		
+		byProgressParseDocument := fbParseDocument.byProgress;	
+		
+			IF FPErrorParse.Q THEN uiStateRead := 200; END_IF
+		
+	112://Check if al needed Symbols are found in the TMC file (FROM HERE NEED A PROGRESS TO LAST STEP)
+		IF bSymbolInTMCFileFound THEN bSymbolInTMCFileFound := FALSE; END_IF
+		
+		udiCounterCheckNoStandartType := LIMIT(1,udiCounterCheckNoStandartType,Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);
+		
+		uiCounterCheckSymbolsTMCFile := uiCounterCheckSymbolsTMCFile + 1;
+			uiCounterCheckSymbolsTMCFile := LIMIT(1,uiCounterCheckSymbolsTMCFile,Lynus_Standards.Constants_Communicator.uiArraySizeOfSubItems);
+	
+			IF arrVarInfos[udiCounterCheckNoStandartType].bNoStandardDatatypeDetected THEN
+				//Symbol Found
+				IF arrVarInfos[udiCounterCheckNoStandartType].sSymbolType = fbParseDocument.arrContentOfDocument[uiCounterCheckSymbolsTMCFile].sSymbolName THEN
+					 IF udiCounterCheckNoStandartType < udiCounterFoundVariablesInt THEN udiCounterCheckNoStandartType := udiCounterCheckNoStandartType + 1; ELSE uiStateRead := 113; udiCounterCheckNoStandartType := 0; uiStateRead_CP := uiStateRead; END_IF
+						uiCounterCheckSymbolsTMCFile := 0;
+							bSymbolInTMCFileFound := TRUE;
+				END_IF
+					//Symbol not found
+					IF NOT bSymbolInTMCFileFound AND uiCounterCheckSymbolsTMCFile >= fbParseDocument.uiFoundItems THEN
+						uiStateRead := 200; udiErrorIntern := 13;
+					END_IF
+			ELSE
+				//Next Symbol if is a stnadart Datatype
+				IF udiCounterCheckNoStandartType < udiCounterFoundVariablesInt THEN 
+					udiCounterCheckNoStandartType := udiCounterCheckNoStandartType + 1; 
+						uiCounterCheckSymbolsTMCFile := 0;
+				ELSE
+					//Go to next step if al is done
+					uiStateRead := 113;
+						udiCounterCheckNoStandartType := 0;
+							uiStateRead_CP := uiStateRead;
+				END_IF   
+			END_IF 	
+			
+		//Progress for SubItems
+		IF uiStateRead = 113 THEN byProgressSubItems := byProgressSubItems + 10; END_IF 
+			
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+			
+	113://Check for Enum to change the data type to INT and adjust the correct unit
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+		
+		CASE uiStateCheckEnum OF
+				
+			0://Init
+				arrFirstCounterToCheckSubItems[1] := arrFirstCounterToCheckSubItems[1] + 1;
+					arrFirstCounterToCheckSubItems[1] := LIMIT(1,arrFirstCounterToCheckSubItems[1],Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);
+						
+				IF arrFirstCounterToCheckSubItems[1] <= udiCounterFoundVariablesInt AND arrVarInfos[arrFirstCounterToCheckSubItems[1]].bNoStandardDatatypeDetected AND arrVarInfos[arrFirstCounterToCheckSubItems[1]].sAdsDataType = 'ADST_INT16' THEN 
+					uiStateCheckEnum := 1; 
+				END_IF
+					IF arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt AND uiStateCheckEnum = 0 THEN 
+						uiStateRead := 114; uiStateRead_CP := uiStateRead; 
+							arrFirstCounterToCheckSubItems[1] := 0; arrFirstCounterToCheckSubItems[2] := 0;	
+					END_IF
+					  
+							
+			1://Check each symbol
+				arrFirstCounterToCheckSubItems[2] := arrFirstCounterToCheckSubItems[2] + 1;
+					arrFirstCounterToCheckSubItems[2] := LIMIT(1,arrFirstCounterToCheckSubItems[2],Lynus_Standards.Constants_Communicator.uiArraySizeOfSubItems);
+						
+				IF fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].sSymbolName = arrVarInfos[arrFirstCounterToCheckSubItems[1]].sSymbolType THEN
+					arrVarInfos[arrFirstCounterToCheckSubItems[1]].sSymbolUnit := fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemUnit[1];
+						arrVarInfos[arrFirstCounterToCheckSubItems[1]].sSymbolType := 'INT';
+							arrVarInfos[arrFirstCounterToCheckSubItems[1]].bNoStandardDatatypeDetected := FALSE;	
+								uiStateCheckEnum := 0; arrFirstCounterToCheckSubItems[2] := 0; 
+				END_IF
+					
+		END_CASE
+		
+		//Progress for SubItems
+		IF uiStateRead = 114 THEN byProgressSubItems := byProgressSubItems + 10; END_IF
+		
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF	
+			
+	114://Ckeck if is a not a Standart Data Type and go to next step
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+		
+		arrFirstCounterToCheckSubItems[1] := arrFirstCounterToCheckSubItems[1] + 1;
+			arrFirstCounterToCheckSubItems[1] := LIMIT(1,arrFirstCounterToCheckSubItems[1],Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);	
+	
+		IF arrVarInfos[arrFirstCounterToCheckSubItems[1]].bNoStandardDatatypeDetected THEN
+			uiStateRead := 115;
+				uiStateRead_CP := uiStateRead;
+		END_IF		  		
+		
+			//IF all Found Variables are checked and are standart Datatypes go to step 150
+			IF arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt AND uiStateRead = 114 THEN 
+				uiStateRead := 150; uiStateRead_CP := uiStateRead;
+					arrFirstCounterToCheckSubItems[1] := 0; arrFirstCounterToCheckSubItems[2] := 0; arrFirstCounterToCheckSubItems[3] := 0; arrFirstCounterToCheckSubItems[4] := 0;
+			END_IF 
+		
+		//Progress for SubItems
+		IF uiStateRead = 150 THEN byProgressSubItems := byProgressSubItems + 40; END_IF
+			
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+		
+	115://Search the first Symbol Type of Subitems in the Content from the Parse Function
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+		
+		arrFirstCounterToCheckSubItems[2] := arrFirstCounterToCheckSubItems[2] + 1;
+			arrFirstCounterToCheckSubItems[2] := LIMIT(1,arrFirstCounterToCheckSubItems[2],Lynus_Standards.Constants_Communicator.uiArraySizeOfSubItems);
+		
+		IF arrVarInfos[arrFirstCounterToCheckSubItems[1]].sSymbolType = fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].sSymbolName THEN
+			uiStateRead := 116;
+				uiStateRead_CP := uiStateRead;
+					arrFind[1] := 0; arrFind[2] := 0;
+						uiValueLower := 0; uiValueHigher := 0; uiSizeArray := 0;	
+		END_IF  
+	
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+		
+	116://Check the Data type and the array Size from the first Sub Item if it is one
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+		
+		arrFirstCounterToCheckSubItems[3] := arrFirstCounterToCheckSubItems[3] + 1;
+			arrFirstCounterToCheckSubItems[3] := LIMIT(1,arrFirstCounterToCheckSubItems[3],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);
+	
+		//Standart Data Type
+		IF fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'BOOL' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'BYTE' OR
+			fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'WORD' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'DWORD' OR
+				fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'SINT' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'USINT' OR
+			fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'INT' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'UINT' OR
+				fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'DINT' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'UDINT' OR
+			fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'LINT' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'ULINT' OR
+				fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'LWORD' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'REAL' OR
+			fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'LREAL' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'STRING(30)' OR
+				fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'TIME' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'TIME_OF_DAY' OR
+			fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'DATE' OR fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = 'DATE_AND_TIME' THEN
+				arrFirstCounterToCheckSubItems[4] := arrFirstCounterToCheckSubItems[4] + 1;
+					bDataTypeIsStandart := TRUE;
+						//Check the max numbers of subitems per symbol
+						IF arrFirstCounterToCheckSubItems[4] > Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiStateRead := 200; udiErrorIntern := 15; END_IF 
+							arrFirstCounterToCheckSubItems[4] := LIMIT(1,arrFirstCounterToCheckSubItems[4],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);
+								IF uiStateRead = 116 THEN
+									arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemType := fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]];
+										arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemUnit := fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemUnit[arrFirstCounterToCheckSubItems[3]];
+											//Ckeck the lengh from the symbol name after concat 	
+											IF LEN(CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]])) <= 48 THEN
+												arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemName := CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]]);	
+											ELSE
+												uiStateRead := 200;
+												 udiErrorIntern := 14;	
+											END_IF
+							END_IF  
+		END_IF
+		
+		//If is a Array check here the Array Size
+		IF uiStateRead = 116 THEN
+			IF FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'ARRAY') = 1 THEN 
+				//detect array size
+				arrFind[1] := FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'[');
+					uiValueLower := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],1,arrFind[1] + 1));
+						arrFind[2] := FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],']');
+				IF arrFind[1] = 7 AND arrFind[2] = 12 THEN
+					uiValueHigher := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],1,arrFind[2] - 1));
+				ELSIF arrFind[1] = 7 AND arrFind[2] = 13 THEN
+					uiValueHigher := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],2,arrFind[2] - 2));
+				ELSIF arrFind[1] = 7 AND arrFind[2] = 14 THEN
+					uiValueHigher := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],3,arrFind[2] - 3));
+				END_IF	
+					uiSizeArray := (uiValueHigher - uiValueLower) + 1;
+						//Check for 2 or 3 dimensional array
+						IF FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],',') <> 0 THEN uiSizeArray := Lynus_Standards.Constants_Communicator.bySizeOfValueArray + 1; END_IF
+							IF uiSizeArray > Lynus_Standards.Constants_Communicator.bySizeOfValueArray THEN uiStateRead := 200; udiErrorIntern := 5; END_IF  	
+			END_IF
+		END_IF
+			IF uiStateRead = 116 THEN
+				IF FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF BOOL') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF BYTE') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF WORD') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF DWORD')<> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF SINT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF USINT') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF INT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF UINT') <> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF DINT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF UDINT') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF LINT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF ULINT') <> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF LWORD') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF REAL') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF LREAL') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF STRING(30)') <> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF TIME') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF TIME_OF_DAY') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF DATE') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]],'OF DATE_AND_TIME') <> 0 THEN
+						arrFirstCounterToCheckSubItems[4] := arrFirstCounterToCheckSubItems[4] + 1;
+							bDataTypeIsStandart := TRUE;
+								//Check the max numbers of subitems per symbol
+								IF arrFirstCounterToCheckSubItems[4] > Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiStateRead := 200; udiErrorIntern := 15; END_IF 
+									arrFirstCounterToCheckSubItems[4] := LIMIT(1,arrFirstCounterToCheckSubItems[4],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);
+										IF uiStateRead = 116 THEN
+											arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemType := fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]];
+												arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemUnit := fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemUnit[arrFirstCounterToCheckSubItems[3]];
+														arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].uiSizeArray := uiSizeArray;	
+														//Ckeck the lengh from the symbol name after concat 	
+														IF LEN(CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]])) <= 48 THEN
+															arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemName := CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]]);	
+														ELSE
+															uiStateRead := 200;
+															 udiErrorIntern := 14;	
+														END_IF
+									END_IF
+				END_IF	
+			END_IF 
+		
+		//Go to second Subitem if it is one to check the content
+		IF NOT bDataTypeIsStandart AND fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] <> '' AND NOT bLastCycle THEN 
+			uiStateRead := 117; 
+				uiStateRead_CP := uiStateRead;
+					IF arrFirstCounterToCheckSubItems[3] >= Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems THEN bLastCycle := TRUE; END_IF
+		END_IF	
+			
+		bDataTypeIsStandart := FALSE;
+		
+		//If all SubItems are checked go to step 150
+		IF ((fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = '' OR arrFirstCounterToCheckSubItems[3] >= Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems) 
+				AND uiStateRead = 116 AND arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt) THEN
+			uiStateRead := 150;
+				uiStateRead_CP := uiStateRead;
+		END_IF
+		
+		//Back to Step 114 if not al Symbols are worked of
+		IF ((fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] = '' OR arrFirstCounterToCheckSubItems[3] >= Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems) 
+				AND uiStateRead = 116 AND arrFirstCounterToCheckSubItems[1] < udiCounterFoundVariablesInt) THEN
+			uiStateRead := 114;
+				uiStateRead_CP := uiStateRead;
+					arrFirstCounterToCheckSubItems[2] := 0;
+						arrFirstCounterToCheckSubItems[3] := 0;
+							arrFirstCounterToCheckSubItems[4] := 0;	
+		END_IF
+		
+		//Reset counter if go to step 150	   
+		IF uiStateRead = 150 THEN arrFirstCounterToCheckSubItems[1] := 0; arrFirstCounterToCheckSubItems[2] := 0; arrFirstCounterToCheckSubItems[3] := 0; arrFirstCounterToCheckSubItems[4] := 0; END_IF
+
+		//Progress for SubItems
+		IF uiStateRead = 150 THEN byProgressSubItems := byProgressSubItems + 40; END_IF
+		
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+		
+	117://Search the second Symbol Type of Subitems in the Content from the Parse Function
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+		
+		arrSecondCounterToCheckSubItems[1] := arrSecondCounterToCheckSubItems[1] + 1;
+			arrSecondCounterToCheckSubItems[1] := LIMIT(1,arrSecondCounterToCheckSubItems[1],Lynus_Standards.Constants_Communicator.uiArraySizeOfSubItems);
+		
+		IF fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].sSymbolName = fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemSymbolType[arrFirstCounterToCheckSubItems[3]] THEN
+			uiStateRead := 118;
+				uiStateRead_CP := uiStateRead;
+					arrFind[1] := 0; arrFind[2] := 0;
+						uiValueLower := 0; uiValueHigher := 0; uiSizeArray := 0;	
+		END_IF	  	
+			
+		  //Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+		
+	118://Ckeck the second Subitem and his content (Check also it is a ENUM, than convert Symbol Typ in INT)
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+		
+		arrSecondCounterToCheckSubItems[2] := arrSecondCounterToCheckSubItems[2] + 1;
+			arrSecondCounterToCheckSubItems[2] := LIMIT(1,arrSecondCounterToCheckSubItems[2],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);	
+			
+		//ENUM
+		IF fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].eSymbolType = eSymbolTypeFromDocument.eIsEnum THEN
+			arrFirstCounterToCheckSubItems[4] := arrFirstCounterToCheckSubItems[4] + 1;
+				//Check the max numbers of subitems per symbol
+				IF arrFirstCounterToCheckSubItems[4] > Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiStateRead := 200; udiErrorIntern := 15; END_IF 
+					arrFirstCounterToCheckSubItems[4] := LIMIT(1,arrFirstCounterToCheckSubItems[4],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);
+						IF uiStateRead = 118 THEN
+							arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemType := 'INT';
+								arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].bIsEnum := TRUE;	
+									arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemUnit := fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemUnit[arrSecondCounterToCheckSubItems[2]];
+										//Ckeck the lengh from the symbol name after concat 	
+										IF LEN(CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]])) <= 48 THEN
+											arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemName := CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]]);
+										ELSE
+											uiStateRead := 200;
+												udiErrorIntern := 14;	
+										END_IF
+				END_IF  	
+		END_IF 
+	
+		//Standart Data Type
+		IF fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'BOOL' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'BYTE' OR
+			fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'WORD' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'DWORD' OR
+				fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'SINT' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'USINT' OR
+			fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'INT' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'UINT' OR
+				fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'DINT' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'UDINT' OR
+			fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'LINT' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'ULINT' OR
+				fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'LWORD' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'REAL' OR
+			fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'LREAL' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'STRING(30)' OR
+				fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'TIME' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'TIME_OF_DAY' OR
+			fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'DATE' OR fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = 'DATE_AND_TIME' THEN
+				arrFirstCounterToCheckSubItems[4] := arrFirstCounterToCheckSubItems[4] + 1;
+					//Check the max numbers of subitems per symbol
+					IF arrFirstCounterToCheckSubItems[4] > Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiStateRead := 200; udiErrorIntern := 15; END_IF 
+						arrFirstCounterToCheckSubItems[4] := LIMIT(1,arrFirstCounterToCheckSubItems[4],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);
+							IF uiStateRead = 118 THEN
+								arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemType := fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]];
+									arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemUnit := fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemUnit[arrSecondCounterToCheckSubItems[2]];	
+										//Ckeck the lengh from the symbol name after concat 	
+										IF LEN(CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),CONCAT(CONCAT(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]],'.'),fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemName[arrSecondCounterToCheckSubItems[2]]))) <= 48 THEN
+											arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemName := CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),CONCAT(CONCAT(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]],'.'),fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemName[arrSecondCounterToCheckSubItems[2]]));	
+										ELSE
+											uiStateRead := 200;
+												udiErrorIntern := 14;	
+										END_IF
+						END_IF  
+		END_IF
+	
+		//If is a Array check here the Array Size
+		IF uiStateRead = 118 THEN
+			IF FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'ARRAY') = 1 THEN 
+				//detect array size
+				arrFind[1] := FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'[');
+					uiValueLower := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],1,arrFind[1] + 1));
+						arrFind[2] := FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],']');
+				IF arrFind[1] = 7 AND arrFind[2] = 12 THEN
+					uiValueHigher := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],1,arrFind[2] - 1));
+				ELSIF arrFind[1] = 7 AND arrFind[2] = 13 THEN
+					uiValueHigher := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],2,arrFind[2] - 2));
+				ELSIF arrFind[1] = 7 AND arrFind[2] = 14 THEN
+					uiValueHigher := STRING_TO_UINT(MID(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],3,arrFind[2] - 3));
+				END_IF	
+					uiSizeArray := (uiValueHigher - uiValueLower) + 1;
+						//Check for 2 or 3 dimensional array
+						IF FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],',') <> 0 THEN uiSizeArray := Lynus_Standards.Constants_Communicator.bySizeOfValueArray + 1; END_IF
+							IF uiSizeArray > Lynus_Standards.Constants_Communicator.bySizeOfValueArray THEN uiStateRead := 200; udiErrorIntern := 5; END_IF  	
+			END_IF
+		END_IF
+			IF uiStateRead = 118 THEN
+				IF FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF BOOL') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF BYTE') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF WORD') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF DWORD')<> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF SINT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF USINT') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF INT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF UINT') <> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF DINT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF UDINT') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF LINT') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF ULINT') <> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF LWORD') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF REAL') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF LREAL') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF STRING(30)') <> 0 OR
+						FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF TIME') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF TIME_OF_DAY') <> 0 OR
+					FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF DATE') <> 0 OR FIND(fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]],'OF DATE_AND_TIME') <> 0 THEN
+						arrFirstCounterToCheckSubItems[4] := arrFirstCounterToCheckSubItems[4] + 1;
+							//Check the max numbers of subitems per symbol 
+							IF arrFirstCounterToCheckSubItems[4] > Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiStateRead := 200; udiErrorIntern := 15; END_IF 
+								arrFirstCounterToCheckSubItems[4] := LIMIT(1,arrFirstCounterToCheckSubItems[4],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);
+									IF uiStateRead = 118 THEN
+										arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemType := fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]];
+											arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemUnit := fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemUnit[arrSecondCounterToCheckSubItems[2]];
+												arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].uiSizeArray := uiSizeArray;	
+													//Ckeck the lengh from the symbol name after concat 	
+													IF LEN(CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),CONCAT(CONCAT(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]],'.'),fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemName[arrSecondCounterToCheckSubItems[2]]))) <= 48 THEN
+														arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].sSubItemName := CONCAT(CONCAT(arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName,'.'),CONCAT(CONCAT(fbParseDocument.arrContentOfDocument[arrFirstCounterToCheckSubItems[2]].arrSubItemName[arrFirstCounterToCheckSubItems[3]],'.'),fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemName[arrSecondCounterToCheckSubItems[2]]));	
+													ELSE
+														uiStateRead := 200;
+															udiErrorIntern := 14;	
+													END_IF
+								END_IF
+				END_IF	
+			END_IF 
+		
+		//Back to Step 116 if all content of the second subitem is done
+		IF (fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemSymbolType[arrSecondCounterToCheckSubItems[2]] = '' AND fbParseDocument.arrContentOfDocument[arrSecondCounterToCheckSubItems[1]].arrSubItemTextEnum[arrSecondCounterToCheckSubItems[2]] = '' AND uiStateRead = 118) OR
+			(arrSecondCounterToCheckSubItems[2] >= Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems AND uiStateRead = 118) OR arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[4]].bIsEnum THEN
+				uiStateRead := 116;
+					uiStateRead_CP := uiStateRead;
+						arrSecondCounterToCheckSubItems[1] := 0;
+							arrSecondCounterToCheckSubItems[2] := 0;
+		END_IF 
+	   
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+		
+	150://Copy the content with Standart Datatypes in the new Array arrAllVarInfosForGV and Count the new numbers ob symbols
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+
+		arrFirstCounterToCheckSubItems[1] := arrFirstCounterToCheckSubItems[1] + 1;
+			arrFirstCounterToCheckSubItems[1] := LIMIT(1,arrFirstCounterToCheckSubItems[1],Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);	
+	
+		IF NOT arrVarInfos[arrFirstCounterToCheckSubItems[1]].bNoStandardDatatypeDetected AND arrFirstCounterToCheckSubItems[1] <= udiCounterFoundVariablesInt THEN
+			arrFirstCounterToCheckSubItems[2] := arrFirstCounterToCheckSubItems[2] + 1;
+				IF arrFirstCounterToCheckSubItems[2] > Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN uiStateRead := 200; udiErrorIntern := 16; END_IF  
+					arrFirstCounterToCheckSubItems[2] := LIMIT(1,arrFirstCounterToCheckSubItems[2],Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);	
+			//Copy the content from old array to final array befor copy finaly on the GV 
+			arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].sFullSymbolName := arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName;
+				arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].sSymbolType := arrVarInfos[arrFirstCounterToCheckSubItems[1]].sSymbolType;
+					arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].sSymbolUnit := arrVarInfos[arrFirstCounterToCheckSubItems[1]].sSymbolUnit;
+						arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].udiGroup := arrVarInfos[arrFirstCounterToCheckSubItems[1]].udiGroup;
+							arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].udiOffset := arrVarInfos[arrFirstCounterToCheckSubItems[1]].udiOffset;
+								arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].udiSize := arrVarInfos[arrFirstCounterToCheckSubItems[1]].udiSize;
+									arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].uiSizeArray := arrVarInfos[arrFirstCounterToCheckSubItems[1]].uiSizeArray;	
+		END_IF
+			//No standart Datatype detected, check the Subitems and copy an next step in the new array
+			IF arrVarInfos[arrFirstCounterToCheckSubItems[1]].bNoStandardDatatypeDetected AND arrFirstCounterToCheckSubItems[1] <= udiCounterFoundVariablesInt AND uiStateRead = 150 THEN
+				uiStateRead := 151;
+					uiStateRead_CP := uiStateRead;
+						arrFirstCounterToCheckSubItems[3] := 0;
+			END_IF  
+				//Go to next step, al Symbols done
+				IF arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt AND uiStateRead = 150 THEN
+					uiStateRead := 152; uiStateRead_CP := uiStateRead;
+						udiCounterFoundVariables := arrFirstCounterToCheckSubItems[2];
+							udiCounterFoundVariablesInt := arrFirstCounterToCheckSubItems[2];
+								arrFirstCounterToCheckSubItems[1] := 0;
+									byCounterWaitInStep := 0;
+				END_IF 
+		
+		//Progress for SubItems
+		IF uiStateRead = 152 THEN byProgressSubItems := byProgressSubItems + 20; END_IF
+				
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+				
+	151://Copy the SubItems from No Standart Datatypes in the new Array arrAllVarInfosForGV and Count the new numbers ob symbols	
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+
+		arrFirstCounterToCheckSubItems[3] := arrFirstCounterToCheckSubItems[3] + 1;
+			arrFirstCounterToCheckSubItems[3] := LIMIT(1,arrFirstCounterToCheckSubItems[3],Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems);	
+
+		//Copy the content from old array to final array befor copy finaly on the GV 
+		IF arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[3]].sSubItemName <> '' THEN 
+			arrFirstCounterToCheckSubItems[2] := arrFirstCounterToCheckSubItems[2] + 1;
+				IF arrFirstCounterToCheckSubItems[2] > Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN uiStateRead := 200; udiErrorIntern := 16; END_IF  
+					arrFirstCounterToCheckSubItems[2] := LIMIT(1,arrFirstCounterToCheckSubItems[2],Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);
+			arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].sFullSymbolName := arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[3]].sSubItemName;
+				arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].sSymbolType := arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[3]].sSubItemType;
+					arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].sSymbolUnit := ''; //Not in use at the moment
+						arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[2]].uiSizeArray := arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[3]].uiSizeArray;
+		END_IF
+			
+		//Back to Step 150 for next Symbol
+		IF (arrFirstCounterToCheckSubItems[1] < udiCounterFoundVariablesInt AND arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[3]].sSubItemName = '' AND uiStateRead = 151) OR
+			(arrFirstCounterToCheckSubItems[1] < udiCounterFoundVariablesInt AND arrFirstCounterToCheckSubItems[3] >= Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems AND uiStateRead = 151) THEN 
+				uiStateRead := 150; uiStateRead_CP := uiStateRead; 
+		END_IF 
+			
+		//Go to next Step, al Symbols done
+		IF (arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt AND arrVarInfos[arrFirstCounterToCheckSubItems[1]].arrInfoSubItems[arrFirstCounterToCheckSubItems[3]].sSubItemName = '' AND uiStateRead = 151) OR
+			(arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt AND arrFirstCounterToCheckSubItems[3] >= Lynus_Standards.Constants_Communicator.uiArraySizeOfMarkedSubItems AND uiStateRead = 151) THEN 
+				uiStateRead := 152; uiStateRead_CP := uiStateRead;
+					udiCounterFoundVariables := arrFirstCounterToCheckSubItems[2];
+						udiCounterFoundVariablesInt := arrFirstCounterToCheckSubItems[2];
+							arrFirstCounterToCheckSubItems[1] := 0;
+								byCounterWaitInStep := 0;	 
+		END_IF
+			
+		//Progress for SubItems
+		IF uiStateRead = 152 THEN byProgressSubItems := byProgressSubItems + 20; END_IF
+	
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+			
+	152://Read the Index, Offset, and Size from all the Subitems	
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+
+		IF NOT fbADSInfoSubItem.WRTRD THEN
+			arrFirstCounterToCheckSubItems[1] := arrFirstCounterToCheckSubItems[1] + 1;
+				arrFirstCounterToCheckSubItems[1] := LIMIT(1,arrFirstCounterToCheckSubItems[1],Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);	
+					IF arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].udiGroup = 0 OR arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].udiOffset = 0 THEN  
+						fbADSInfoSubItem.WRITELEN := SIZEOF(arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].sFullSymbolName);
+							fbADSInfoSubItem.SRCADDR := ADR(arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].sFullSymbolName);
+								fbADSInfoSubItem.WRTRD := TRUE;
+					END_IF
+		END_IF
+
+		IF fbADSInfoSubItem.WRTRD THEN byCounterWaitInStep := byCounterWaitInStep + 1; END_IF
+		
+		//Last Variable has Offset and Group <> 0 then go to last step
+		IF NOT fbADSInfoSubItem.WRTRD AND arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt THEN
+			uiStateRead := 154; uiStateRead_CP := uiStateRead; 
+		END_IF
+			//Go to next step to copy the Index, Offset and Size from Variable
+			IF NOT fbADSInfoSubItem.BUSY AND byCounterWaitInStep >= rWaitInStep AND NOT fbADSInfoSubItem.ERR AND uiStateRead = 152 THEN
+					uiStateRead := 153; uiStateRead_CP := uiStateRead; 
+						fbADSInfoSubItem.WRTRD := FALSE;
+							byCounterWaitInStep := 0; 
+			END_IF 	
+		
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF
+			IF FPErrorADSInfoSubItem.Q THEN uiStateRead := 200; udiErrorIntern := 17; END_IF
+		
+	153://Write the Index, Offset, and Size from all the Subitems	
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+		
+		MEMCPY(ADR(stDataSubItems),ADR(arrADSInfoSubItem),SIZEOF(stDataSubItems));
+		
+		//Add the Data to Array
+		arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].udiGroup := stDataSubItems.udiSubItemGroup;
+			arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].udiOffset := stDataSubItems.udiSubItemOffset;
+				arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].udiSize := stDataSubItems.udiSubItemSize;
+		
+		//Go Back to step 152 for next Symbol
+		IF arrFirstCounterToCheckSubItems[1] < udiCounterFoundVariablesInt THEN uiStateRead := 152; uiStateRead_CP := uiStateRead; END_IF    
+		
+		//All done, go to step 0		
+		IF arrFirstCounterToCheckSubItems[1] >= udiCounterFoundVariablesInt THEN uiStateRead := 154; uiStateRead_CP := uiStateRead; END_IF
+			
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF				
+	
+	154://Check Number of Readd Write Function and Number of found Variabels after checking all SubItems
+		//Timout Timer Restart
+		uiStateRead_CP := 65535;
+
+		IF byCounterNumberFuctionReadWrite <= udiCounterFoundVariablesInt THEN
+			uiStateRead := 0; uiStateRead_CP := uiStateRead;
+				bReadInfo := FALSE; byProgressSubItems := 100;		
+		END_IF
+		
+			//Timeout Error
+			IF timTimout.Q THEN uiStateRead := 200; udiErrorIntern := 2; END_IF		
+			IF byCounterNumberFuctionReadWrite > udiCounterFoundVariablesInt THEN uiStateRead := 200; udiErrorIntern := 10; END_IF 
+			
+	200: //ERROR
+		fbADSRead.READ := FALSE; fbADSInfoSubItem.WRTRD := FALSE; byCounterWaitInStep := 0; bErrorIntern := TRUE;
+			uiStateRead_CP := 0; bReadInfo := FALSE; fbParseDocument.bRead := FALSE; 
+				IF fbParseDocument.bBusy THEN fbParseDocument.bStop := TRUE; END_IF
+						
+		IF udiErrorIntern = 3 OR udiErrorIntern = 4 OR udiErrorIntern = 6 OR udiErrorIntern = 12 THEN sVarWithError := stADSVarInfo.sSymbolName; END_IF
+			IF udiErrorIntern = 5 AND uiSizeArray <= Lynus_Standards.Constants_Communicator.bySizeOfValueArray THEN sVarWithError := stADSVarInfo.sSymbolName; END_IF  
+				IF udiErrorIntern = 13 THEN sVarWithError := arrVarInfos[udiCounterCheckNoStandartType].sFullSymbolName; END_IF
+					IF udiErrorIntern = 14 OR udiErrorIntern = 15 THEN sVarWithError := arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName; END_IF  
+						IF udiErrorIntern = 5 AND uiSizeArray > Lynus_Standards.Constants_Communicator.bySizeOfValueArray THEN sVarWithError := arrVarInfos[arrFirstCounterToCheckSubItems[1]].sFullSymbolName; END_IF  
+							IF udiErrorIntern = 17 THEN sVarWithError := arrAllVarInfosForGV[arrFirstCounterToCheckSubItems[1]].sFullSymbolName; END_IF 
+								IF fbParseDocument.bError AND fbParseDocument.sSymbolNameWithError <> '' THEN sVarWithError := fbParseDocument.sSymbolNameWithError; END_IF   				
+	
+		uiStateRead := 300;
+		
+	300: //Wait Step for new Read Session
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+			
+		IF byCounterWaitInStep > 10 THEN uiStateRead := 0; END_IF
+			
+END_CASE
+
+fbADSRead(
+	NETID:= fbNedID.AddrString, 
+	PORT:= uiPort, 
+	IDXGRP:= , 
+	IDXOFFS:= , 
+	LEN:= , 
+	DESTADDR:= , 
+	READ:= , 
+	TMOUT:= T#5S, 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> );
+	
+FPError(CLK:= fbADSRead.ERR, Q=> );
+
+fbADSInfoSubItem(
+	NETID:= fbNedID.AddrString, 
+	PORT:= uiPort, 
+	IDXGRP:= ADSIGRP_SYM_INFOBYNAME, 
+	IDXOFFS:= 0, 
+	WRITELEN:= , 
+	READLEN:= SIZEOF(arrADSInfoSubItem), 
+	SRCADDR:= , 
+	DESTADDR:= ADR(arrADSInfoSubItem), 
+	WRTRD:= , 
+	TMOUT:= T#5S, 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> );
+	
+FPErrorADSInfoSubItem(CLK:= fbADSInfoSubItem.ERR, Q=> );	
+	
+//Function Block to Parse the TMC File for Structs, Functionblocks and Enums
+
+IF eSavePositionTMCFile_Int = eSavePositionOnPLC.ePostionC THEN fbParseDocument.eSavePositionTMCFile := eSavePositionFile.ePostionC; END_IF
+IF eSavePositionTMCFile_Int = eSavePositionOnPLC.ePostionHardDisk THEN fbParseDocument.eSavePositionTMCFile := eSavePositionFile.ePostionHardDisk; END_IF
+
+fbParseDocument(
+	bRead:= , 
+	bStop:= ,
+	eSavePositionTMCFile:= , 
+	arrContentOfDocument=> , 
+	uiFoundItems=> , 
+	bError=> , 
+	udiErrorCode=> , 
+	bBusy=> , 
+	bDone=> , 
+	byProgress=> , 
+	sSymbolNameWithError=> );
+
+FPErrorParse(CLK:= fbParseDocument.bError, Q=> );	
+	
+//Error Codes	
+
+IF bErrorIntern AND NOT fbParseDocument.bError THEN fbADSErrorCodes.udiErrorCodesIntern := udiErrorIntern; END_IF
+IF fbParseDocument.bError THEN fbADSErrorCodes.udiErrorCodesIntern := fbParseDocument.udiErrorCode; END_IF 
+	
+fbADSErrorCodes(
+	bErrorADS:= fbADSRead.ERR, 
+	bErrorIntern:= bErrorIntern, 
+	udiErrorCodeADS:= fbADSRead.ERRID, 
+	udiErrorCodesIntern:= , 
+	udiErrorCodeADS_Out=> udiErrorCodeOut, 
+	bError=> bError, 
+	eErrorVarInfo_Out=> eErrorVarInfo_Out);
+	
+//Data to global interface for ads read/write and send/receive function
+Lynus_Standards.GVL_Communicator.bBusyInfoAlVariables := bBusyInt;
+	Lynus_Standards.GVL_Communicator.bErrorInfoAlVariables := bError;
+		
+FPBusy(CLK:= bBusyInt, Q=> );
+	FNBusy(CLK:= bBusyInt, Q=> );		
+
+IF FPBusy.Q OR FNBusy.Q THEN uiStateVarToGVInterface := 0; END_IF
+
+CASE uiStateVarToGVInterface OF
+
+	0://Init
+		byArrayInProgress := 0; udiCounterRestSymbol := 0; udiNumbersForArray := 0; udiCounterFillSymbolArray := 0;
+		
+			IF FPBusy.Q THEN uiStateVarToGVInterface := 1; byCounterWriteDataToGV := 1; udiCounterWriteDataToGV := 1; END_IF 
+			IF FNBusy.Q AND NOT bError AND uiStateRead <> 1000 THEN uiStateVarToGVInterface := 2; END_IF 
+
+	1://Clear the interface with counters to protect performance on small plc 
+		udiCounterWriteDataToGV := udiCounterWriteDataToGV + 1;		
+			IF udiCounterWriteDataToGV > Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN byCounterWriteDataToGV := byCounterWriteDataToGV + 1; udiCounterWriteDataToGV := 1; END_IF 
+				byCounterWriteDataToGV := LIMIT(1,byCounterWriteDataToGV,10);
+					udiCounterWriteDataToGV := LIMIT(1,udiCounterWriteDataToGV,Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);
+	
+			Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byCounterWriteDataToGV,udiCounterWriteDataToGV].sSymbolUnit := arrAllVarInfosForGV[udiCounterWriteDataToGV].sSymbolUnit;
+				Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byCounterWriteDataToGV,udiCounterWriteDataToGV].sFullSymbolName := arrAllVarInfosForGV[udiCounterWriteDataToGV].sFullSymbolName;
+					Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byCounterWriteDataToGV,udiCounterWriteDataToGV].sSymbolType := arrAllVarInfosForGV[udiCounterWriteDataToGV].sSymbolType;
+						Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byCounterWriteDataToGV,udiCounterWriteDataToGV].udiGroup := arrAllVarInfosForGV[udiCounterWriteDataToGV].udiGroup;	
+							Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byCounterWriteDataToGV,udiCounterWriteDataToGV].udiOffset := arrAllVarInfosForGV[udiCounterWriteDataToGV].udiOffset;
+								Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byCounterWriteDataToGV,udiCounterWriteDataToGV].udiSize := arrAllVarInfosForGV[udiCounterWriteDataToGV].udiSize;
+									Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byCounterWriteDataToGV,udiCounterWriteDataToGV].uiSizeArray := arrAllVarInfosForGV[udiCounterWriteDataToGV].uiSizeArray;	
+	
+			Lynus_Standards.GVL_Communicator.arrCounterVariableInArray[byCounterWriteDataToGV] := 0;
+				Lynus_Standards.GVL_Communicator.arrReadWriteArrayNumber[byCounterWriteDataToGV] := 0;	
+					Lynus_Standards.GVL_Communicator.arrReadWriteArrayNumberInUse[byCounterWriteDataToGV] := FALSE;
+			
+		Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction := 0;
+		
+		byProgressClearVarInterface := REAL_TO_BYTE(F_Scalvalue(x:= BYTE_TO_REAL(byCounterWriteDataToGV), x1:= 0, y1:= 0, x2:= 10, y2:= 100));
+		
+			IF byCounterWriteDataToGV >= 10 AND udiCounterWriteDataToGV >= Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN uiStateVarToGVInterface := 0; byCounterWriteDataToGV := 0; udiCounterWriteDataToGV := 0; END_IF
+		
+	2://Check the sum of symbols 
+		IF byCounterNumberFuctionReadWrite > 0 THEN
+			udiNumbersForArray := TO_UDINT(udiCounterFoundVariablesInt / byCounterNumberFuctionReadWrite);
+		END_IF
+			udiCounterRestSymbol := udiCounterFoundVariablesInt;
+				Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction := byCounterNumberFuctionReadWrite;
+					IF byCounterNumberFuctionReadWrite > 0 THEN uiStateVarToGVInterface := 3; ELSE uiStateVarToGVInterface := 0; END_IF
+		
+	3://Distribute on the numbers of read write		
+		IF udiCounterRestSymbol = 0 THEN uiStateVarToGVInterface := 0; Lynus_Standards.GVL_Communicator.bInfoAlVariablesOK := TRUE; END_IF  
+		IF udiCounterRestSymbol < udiNumbersForArray AND byArrayInProgress < 10 AND udiCounterRestSymbol > 0 THEN uiStateVarToGVInterface := 5; END_IF 
+		IF udiCounterRestSymbol >= udiNumbersForArray AND byArrayInProgress < 10 AND byArrayInProgress = (byCounterNumberFuctionReadWrite - 1) THEN uiStateVarToGVInterface := 5; END_IF
+		IF udiCounterRestSymbol >= udiNumbersForArray AND byArrayInProgress < 10 AND uiStateVarToGVInterface = 3 THEN uiStateVarToGVInterface := 4; udiCounterRestSymbol := udiCounterRestSymbol - udiNumbersForArray; END_IF
+
+	4://Write Values in right array 	 	
+		byArrayInProgress := byArrayInProgress + 1;
+			byArrayInProgress := LIMIT(1,byArrayInProgress,10);
+		
+		IF udiNumbersForArray <= Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN 
+			FOR udiLPFillSymbolsInArray := 1 TO udiNumbersForArray BY 1 DO
+				udiCounterFillSymbolArray := udiCounterFillSymbolArray + 1;
+					udiCounterFillSymbolArray := LIMIT(1,udiCounterFillSymbolArray,Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);
+						Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].sSymbolUnit := arrAllVarInfosForGV[udiCounterFillSymbolArray].sSymbolUnit;
+							Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].sFullSymbolName := arrAllVarInfosForGV[udiCounterFillSymbolArray].sFullSymbolName;
+								Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].sSymbolType := arrAllVarInfosForGV[udiCounterFillSymbolArray].sSymbolType;
+									Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].udiGroup := arrAllVarInfosForGV[udiCounterFillSymbolArray].udiGroup;
+										Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].udiOffset := arrAllVarInfosForGV[udiCounterFillSymbolArray].udiOffset;
+											Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].udiSize := arrAllVarInfosForGV[udiCounterFillSymbolArray].udiSize;
+												Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].uiSizeArray := arrAllVarInfosForGV[udiCounterFillSymbolArray].uiSizeArray;
+			END_FOR
+		END_IF	
+		
+			Lynus_Standards.GVL_Communicator.arrReadWriteArrayNumber[byArrayInProgress] := byArrayInProgress;	
+				Lynus_Standards.GVL_Communicator.arrCounterVariableInArray[byArrayInProgress] := udiNumbersForArray;	
+					uiStateVarToGVInterface := 3;
+					
+	5://Write last Values in last right array
+		byArrayInProgress := byArrayInProgress + 1;
+			byArrayInProgress := LIMIT(1,byArrayInProgress,10);
+				
+		IF udiCounterRestSymbol <= Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN 
+			FOR udiLPFillSymbolsInArray := 1 TO udiCounterRestSymbol BY 1 DO
+				udiCounterFillSymbolArray := udiCounterFillSymbolArray + 1;
+					udiCounterFillSymbolArray := LIMIT(1,udiCounterFillSymbolArray,Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls);
+						Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].sSymbolUnit := arrAllVarInfosForGV[udiCounterFillSymbolArray].sSymbolUnit;
+							Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].sFullSymbolName := arrAllVarInfosForGV[udiCounterFillSymbolArray].sFullSymbolName;
+								Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].sSymbolType := arrAllVarInfosForGV[udiCounterFillSymbolArray].sSymbolType;
+									Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].udiGroup := arrAllVarInfosForGV[udiCounterFillSymbolArray].udiGroup;
+										Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].udiOffset := arrAllVarInfosForGV[udiCounterFillSymbolArray].udiOffset;
+											Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].udiSize := arrAllVarInfosForGV[udiCounterFillSymbolArray].udiSize;
+												Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byArrayInProgress,udiLPFillSymbolsInArray].uiSizeArray := arrAllVarInfosForGV[udiCounterFillSymbolArray].uiSizeArray;
+			END_FOR
+		END_IF		
+				
+			Lynus_Standards.GVL_Communicator.arrReadWriteArrayNumber[byArrayInProgress] := byArrayInProgress;	
+				Lynus_Standards.GVL_Communicator.arrCounterVariableInArray[byArrayInProgress] := udiCounterRestSymbol;	
+					Lynus_Standards.GVL_Communicator.bInfoAlVariablesOK := TRUE;
+						uiStateVarToGVInterface := 0;
+				
+END_CASE  	
+
+IF uiStateRead = 1000 THEN uiStateRead := 1; END_IF
+
+//Progress
+IF eTMCFile_Int = eSelectTMCFile.eDontUseTMCFile THEN 
+	IF bBusyInt THEN byProgress := (REAL_TO_BYTE(F_Scalvalue(x:= UDINT_TO_REAL(udiCounterSymbol), x1:= 0, y1:= 0, x2:= UDINT_TO_REAL(stSymbolUploadInfo.udiSymbols), y2:= 100)) + byProgressClearVarInterface + byProgressCopyArray) / 3; END_IF 	
+ELSE
+	IF bBusyInt THEN byProgress := (REAL_TO_BYTE(F_Scalvalue(x:= UDINT_TO_REAL(udiCounterSymbol), x1:= 0, y1:= 0, x2:= UDINT_TO_REAL(stSymbolUploadInfo.udiSymbols), y2:= 100)) + byProgressClearVarInterface + byProgressParseDocument + byProgressSubItems + byProgressCopyArray) / 5; END_IF 
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VarInfo">
+      <LineId Id="3" Count="1" />
+      <LineId Id="1352" Count="0" />
+      <LineId Id="1351" Count="0" />
+      <LineId Id="6" Count="1246" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

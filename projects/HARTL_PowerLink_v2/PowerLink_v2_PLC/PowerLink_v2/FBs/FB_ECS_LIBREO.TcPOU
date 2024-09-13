@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ECS_LIBREO" Id="{0a5fbbc5-92b5-4def-a7e1-a632c61cebb4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ECS_LIBREO
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME := T#1S;		//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+END_VAR
+
+VAR_IN_OUT
+END_VAR
+
+VAR_OUTPUT
+	bValidResult				: BOOL;															//Valid Result received from Server
+    bBusy						: BOOL;															//Function is Busy
+    bError						: BOOL;															//Error sucess
+	bDone						: BOOL;															//True after the decoding from the received Json File
+	bConnected					: BOOL;															//Connection to the Server
+	hrErrorCode       			: HRESULT;														//Error Result from Http Client
+	
+	bCarConnected				: BOOL;
+	bCarCharging				: BOOL;
+	lrTotalPower				: LREAL;
+	uiChrgCurr					: UINT;
+	uiExtChrgCurr				: UINT;
+END_VAR
+
+VAR
+	fbClient					: FB_IotHttpClient;
+	fbHttpGet					: FB_ECS_LIBREO_Helper;
+	timStartRequest				: TON;															//Timer to Start the Request
+	FPStartRequest				: R_TRIG;														//Internal positive Edge
+	FPDone						: R_TRIG;														//Internal positive Edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := tDelayRequest;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := TRUE;
+	fbClient.tConnectionTimeout := T#2S;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+	timStartRequest(IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, PT:= tDelayRequest, Q=> , ET=> );
+		IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured)) THEN fbHttpGet.bSend := TRUE; END_IF
+
+				
+//Http Get Function
+fbHttpGet(
+	bCarConnected => bCarConnected, 
+	bCarCharging => bCarCharging,
+	lrTotalPower => lrTotalPower,
+	uiChrgCurr => uiChrgCurr,
+	uiExtChrgCurr => uiExtChrgCurr,
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> ,
+	sContent=> );
+
+lrTotalPower := LIMIT( 0, lrTotalPower, lrTotalPower) / 1000;
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+fbClient.Execute();
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbClient.hrErrorCode;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ECS_LIBREO">
+      <LineId Id="68" Count="21" />
+      <LineId Id="296" Count="2" />
+      <LineId Id="100" Count="3" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="112" Count="4" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="122" Count="5" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

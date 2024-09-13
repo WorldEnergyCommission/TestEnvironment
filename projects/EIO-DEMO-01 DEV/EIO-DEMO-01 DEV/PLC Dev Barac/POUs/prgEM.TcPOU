@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM" Id="{0bfc9e84-22bf-40b3-80f0-f466cc7710d4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	
+
+	lrPower_Grid		: LREAL;						//{#lynus.ag#()}
+	lrPower_House		: LREAL;						//{#lynus.ag#()}
+	rSizeGridConn		: REAL;							//{#lynus.ag#()}
+	bEnableHouse		: BOOL;					//{#lynus.ag#()}
+	bHouseEnabled		: BOOL;;					//{#lynus.ag#()}
+	lrVoltage_Grid_L1N	: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L2N	: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L3N	: LREAL;						//{#lynus.ag#()}
+	lrPower_Grid_L1		: LREAL;						//{#lynus.ag#()}
+	lrPower_Grid_L2		: LREAL;						//{#lynus.ag#()}
+	lrPower_Grid_L3		: LREAL;						//{#lynus.ag#()}
+	lrCurrent_Grid_L1	: LREAL;						//{#lynus.ag#()}
+	lrCurrent_Grid_L2	: LREAL;						//{#lynus.ag#()}
+	lrCurrent_Grid_L3	: LREAL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[prgEM.lrPower_Grid			:=	prg_ADS.struct_received.lrPower_Grid			;
+prgEM.rSizeGridConn			:=	prg_ADS.struct_received.rSizeGridConn			;
+prgEM.lrPower_House			:=	prg_ADS.struct_received.lrPower_House			;
+prgEM.bEnableHouse			:=	prg_ADS.struct_received.bEnableHouse			;
+prgEM.bHouseEnabled			:=	prg_ADS.struct_received.bHouseEnabled			;
+prgEM.lrPower_Grid_L1		:= 	prg_ADS.struct_received.lrPower_Grid_L1			;
+prgEM.lrPower_Grid_L2		:= 	prg_ADS.struct_received.lrPower_Grid_L2			;
+prgEM.lrPower_Grid_L3		:= 	prg_ADS.struct_received.lrPower_Grid_L3			;
+prgEM.lrCurrent_Grid_L1		:= 	prg_ADS.struct_received.lrCurrent_Grid_L1			;
+prgEM.lrCurrent_Grid_L2		:= 	prg_ADS.struct_received.lrCurrent_Grid_L2			;
+prgEM.lrCurrent_Grid_L3		:= 	prg_ADS.struct_received.lrCurrent_Grid_L3			;
+prgEM.lrVoltage_Grid_L1N	:= 	prg_ADS.struct_received.lrVoltage_Grid_L1N;
+prgEM.lrVoltage_Grid_L2N	:= 	prg_ADS.struct_received.lrVoltage_Grid_L2N;
+prgEM.lrVoltage_Grid_L3N	:= 	prg_ADS.struct_received.lrVoltage_Grid_L3N;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="6" Count="1" />
+      <LineId Id="20" Count="2" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

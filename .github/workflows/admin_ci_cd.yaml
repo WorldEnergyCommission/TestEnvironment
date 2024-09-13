@@ -1,0 +1,75 @@
+name: admin_ci_cd
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "admin/**"
+      - "api/**"
+  pull_request:
+    types: [review_requested, ready_for_review]
+    branches:
+      - main
+    paths:
+      - "admin/**"
+      - "api/**"
+  workflow_dispatch:
+    inputs:
+      cluster:
+        description: "kubernetes cluster to deploy to"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - all
+          - efficientio
+          - tsg
+          - dev
+          - peneder
+          - be
+          - bms
+          - effectas
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: admin
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          python3 scripts/build_and_push.py --registry "${{ env.REGISTRY }}" --user "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --repository "${{ github.repository }}" --image "${{ env.IMAGE_NAME }}" --sha "${{ github.sha }}" --context_path "." --dockerfile_path "${{ env.IMAGE_NAME }}/Dockerfile"
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - id: string
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ github.event.inputs.cluster }}
+      - uses: efficientIO/keepass-to-environment@v1.2
+        with:
+          keepass-file-path: "keepass/secrets.kdbx"
+          keepass-master-password: ${{ secrets.KEEPASS_MASTER_PASSWORD }}
+          keepass-group-filter: "cloud"
+      - name: Deploy
+        run: |
+          python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "${{ env.IMAGE_NAME }}/deployment.yaml" --replace_tag --sha "${{ github.sha }}" --resource_name "admin-console" --namespace_name "lynus" --restart_mode "rolling" --apply_only_on_changes
+      - name: Success notification
+        uses: ./.github/actions/teams_notification_success
+        if: success()
+        with:
+          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
+      - name: Failure notification
+        uses: ./.github/actions/teams_notification_failure
+        if: failure()
+        with:
+          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}

@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_SPOpt_Monitoring_extTime" Id="{32916510-4a28-4d97-8107-a18453b94b00}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_SPOpt_Monitoring_extTime
+VAR_INPUT PERSISTENT
+	bEnable							: BOOL;									//{#lynus.ag#()} //Enable or dissable thsi function
+	bDissableHB						: BOOL;									//If this is True, then the Output HB is also dissabled when we have a Error or the Ready Flag from the Backend Service is not OK. If its False the HB is only dissalbed when the Function is not Enables or the HB from the Backend Service is missing
+	tChangeHBIn						: TIME := T#70S;						//Delay bettwen the changes from the HB at the Input HB Variable
+	tChangeHBOut					: TIME := T#30S;						//Delay bettwen the changes from the HB at the Output HB Variable
+END_VAR
+VAR_INPUT
+	rHeartbeat						: REAL;									//{#lynus.ag#()} //Heartbeat from the Service. NOT OVERRIDE
+	rErrorWarning					: REAL;									//{#lynus.ag#()} //Error or Warning from the Service. NOT OVERRIDE
+	rSPOptReady						: REAL;									//{#lynus.ag#()} //Setpoint Optimization Service Ready. NOT OVERRIDE
+END_VAR
+VAR_OUTPUT
+	bError							: BOOL;									//Error from this Fuction
+	bReadyOut						: BOOL;									//Show if the Service is Read or not
+	bDissableExtHB					: BOOL;									//If someone use a external HB with this Flag he can see if the HB, ready or Error Flag from the Backend is set
+	bSEnable						: BOOL;									//{#lynus.ag#()} //Enable State of hte function
+	rHeartbeatOut					: REAL;									//Heartbeat for the external Service
+	diNrOfSPOpt_OUT					: DINT;									//Active Number from Setpoint Optimizer for using on other functions
+END_VAR
+VAR
+	rHBInput_CP						: REAL;									//Variable to compare input HB Variable to set or reset the timer
+	fbNumberDevice					: FB_NumberOfDevice;					//Function block to calcualte the number of the Device
+	timDissableFunctions			: TON;									//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL			: TON;									//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	timHBInput						: TON;									//Timer to check the Input HB
+	timHBOutput						: TON;									//Timer to set the Output HB
+	timReady						: TON;									//Timer to dissable the Ready Flag
+	timErrorWarning					: TON;									//Timmer do detect a Error or a Warning
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 03.12.2021
+//Version : 1.0.0.0
+
+//This is a Function for using with the Setpoin Optimizer on our Backen System.
+//So we have the possibility to send the Ready Flag and the HB to the external system we are communicating with in the right intervals.  
+//Error evaluation also takes place in this function. Thus, in the event of an error or other event, the Ready flag, the HB or even both can be deactivated and the external system can switch back to classic control. 
+
+
+(*-------------------------------------------------------------------------------Limits----------------------------------------------------------------------------------------------*)
+
+rHeartbeat := LIMIT(0,rHeartbeat,1);
+	rErrorWarning := LIMIT(0,rErrorWarning,2);
+		rSPOptReady := LIMIT(0,rSPOptReady,1);
+			tChangeHBIn := LIMIT(T#1S,tChangeHBIn,T#1H); // increased this max-Limit due to issues at Cloud-SPO
+				tChangeHBOut := LIMIT(T#1S,tChangeHBOut,T#600S);	
+	
+(*-------------------------------------------------------------Calcualte the number of SP Opttimizer---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfSetPointOpt, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfSPOpt_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt := diNrOfSPOpt_OUT;
+END_IF			
+			
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable EMS Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend or no HB from the Service then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the EMS is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions OR rHBInput_CP = rHeartbeat THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------Error----------------------------------------------------------------------------*)	
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt > Constants_Energy.diMaxNumberOfSetPointOpt THEN bError := TRUE; ELSE bError := FALSE; END_IF 
+			
+(*-----------------------------------------------------------------------------------------------------Logic--------------------------------------------------------------------------------------------------------------*)
+
+bSEnable := bEnable;
+
+//Input HB
+timHBInput(IN:= , PT:= tChangeHBIn, Q=> , ET=> );
+	IF rHeartbeat <> rHBInput_CP THEN
+		timHBInput.IN := FALSE; rHBInput_CP := rHeartbeat;
+	ELSE
+		timHBInput.IN := TRUE;
+	END_IF
+
+//Ready
+IF rSPOptReady = 0 THEN timReady.IN := TRUE; ELSE timReady.IN := FALSE; END_IF
+	timReady(IN:= , PT:= tChangeHBIn * 2, Q=> , ET=> ); 	
+	
+//Error and Warning
+IF rErrorWarning <> 0 THEN timErrorWarning.IN := TRUE; ELSE timErrorWarning.IN := FALSE; END_IF
+	timErrorWarning(IN:= , PT:= tChangeHBIn * 2, Q=> , ET=> );
+	
+//Set HB Output and Ready Flag
+IF rSPOptReady <> 0 AND NOT timReady.Q AND bEnable AND NOT timDissableFunctions.Q AND NOT timErrorWarning.Q THEN bReadyOut := TRUE; END_IF
+	IF timReady.Q OR timErrorWarning.Q THEN bReadyOut := FALSE; END_IF
+
+IF (NOT timHBInput.Q AND bDissableHB AND bReadyOut AND NOT timErrorWarning.Q AND NOT timHBOutput.Q AND bEnable AND NOT timDissableFunctions.Q) OR
+	(NOT timHBInput.Q AND NOT bDissableHB AND NOT timHBOutput.Q AND bEnable AND NOT timDissableFunctions.Q) THEN
+		timHBOutput.IN := TRUE;
+ELSE
+		timHBOutput.IN := FALSE;
+END_IF
+	timHBOutput(IN:= , PT:= tChangeHBOut, Q=> , ET=> );
+		IF timHBOutput.Q THEN rHeartbeatOut := rHeartbeatOut + 1; END_IF
+ 			IF rHeartbeatOut > 1 THEN rHeartbeatOut := 0; END_IF
+
+//External HB Flag
+IF timHBInput.Q OR (timReady.Q AND bDissableHB) OR (timErrorWarning.Q AND bDissableHB) THEN
+	bDissableExtHB := TRUE;
+ELSE
+	bDissableExtHB := FALSE;
+END_IF   
+	
+//Not Enabled
+IF NOT bEnable OR timDissableFunctions.Q OR bError THEN
+	bReadyOut := FALSE;
+		bDissableExtHB := TRUE;
+			rHeartbeatOut := 0;	
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SPOpt_Monitoring_extTime">
+      <LineId Id="19" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="33" Count="1" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="211" Count="19" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="48" Count="6" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="237" Count="1" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="140" Count="1" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="68" Count="3" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="99" Count="1" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="171" Count="6" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="92" Count="1" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="59" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

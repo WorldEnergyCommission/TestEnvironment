@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgTemperature" Id="{32a15ab6-22ee-4507-9b12-3008b812f0ce}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgTemperature
+VAR
+// Kanal 1
+	fb_Config_1			: FB_KL320xConfig;
+	stInData_1   		AT%I*		: ST_KL320xInData;
+	stOutData_1		  	AT%Q*		: ST_KL320xOutData;
+// Kanal 2
+	fb_Config_2			: FB_KL320xConfig;
+	stInData_2   		AT%I*		: ST_KL320xInData;
+	stOutData_2  		AT%Q*		: ST_KL320xOutData;
+	lrTemperature_Top		: LREAL;						//{#lynus.ag#()}
+	lrTemperature_Bottom	: LREAL;						//{#lynus.ag#()}
+// do für heizstäbe
+
+	bout_Boiler1_6kW		AT%Q*: BOOL;
+	bout_Boiler2_10kW		AT%Q*: BOOL;
+	b_Boiler_Heizstab6kW_ein		: BOOL;						//{#lynus.ag#()}
+	b_Boiler_Heizstab10kW_ein		: BOOL;						//{#lynus.ag#()}
+	lr_Power_Heating1_6kW			: LREAL;						//{#lynus.ag#()}
+	lr_Power_Heating2_10kW			: LREAL;						//{#lynus.ag#()}
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[bout_Boiler1_6kW 	:= 	b_Boiler_Heizstab6kW_ein;
+bout_Boiler2_10kW	:= 	b_Boiler_Heizstab10kW_ein;
+
+lr_Power_Heating1_6kw 	:= SEL(bout_Boiler1_6kW,0,6);
+lr_Power_Heating2_10kW 	:= SEL(bout_Boiler2_10kW,0,10);
+
+
+
+	
+fb_Config_1(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_1, 
+	stOutData:= stOutData_1);
+lrTemperature_Top := INT_TO_LREAL(fb_Config_1.iDataIn)/10;
+	
+fb_Config_2(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_2, 
+	stOutData:= stOutData_2);
+lrTemperature_Bottom := INT_TO_LREAL(fb_Config_2.iDataIn)/10;	
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgTemperature">
+      <LineId Id="15" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="16" Count="18" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="35" Count="19" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEMS" Id="{6f701af2-5d23-45b1-901b-ca5d2d305ed9}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR PERSISTENT
+	byMaxDepthOfDischrgEPO		: BYTE;							//{#lynus.ag#()}
+	byPrioMinChrgBattSOCInEPO	: BYTE;							//{#lynus.ag#()}
+	byResChrgfromGridToBatt		: BYTE;							//{#lynus.ag#()}
+	byReserveSOCEPO				: BYTE;							//{#lynus.ag#()}
+	uiUpdateTime				: UINT;							//{#lynus.ag#()}
+	bEnableEMS					: BOOL;							//{#lynus.ag#()}
+	bAllowChrgFromGrid			: BOOL;							//{#lynus.ag#()}
+	rMainFuseCSEMS				: REAL;							//{#lynus.ag#()}
+	iOperationModeEMS			: INT;							//{#lynus.ag#()}
+END_VAR
+VAR
+	fbEMS						: FB_EMS_T;
+	bIsEnableEMS				: BOOL;							//{#lynus.ag#()}
+	bStateAllowChrgFromGrid		: BOOL;							//{#lynus.ag#()}
+	bHPActivate					: BOOL;							//{#lynus.ag#()}
+	bControllingState			: BOOL;							//{#lynus.ag#()}
+	iMessageEMS					: INT;							//{#lynus.ag#()}
+	rHeartbeatEMS				: REAL;							//{#lynus.ag#()}
+	rErrorWarningEMS			: REAL;							//{#lynus.ag#()}
+	rReadyEMS					: REAL;							//{#lynus.ag#()}
+	rNewBatteryPowerEMS			: REAL;							//{#lynus.ag#()}
+	b_EnableBatteryChargingControl				: BOOL:=TRUE;																						//{#lynus.ag#()} //  
+	b_StartReleaseBatteryCharging				: BOOL:=TRUE;																						//{#lynus.ag#()} //  
+	b_StopReleaseBatteryCharging				: BOOL;																								//{#lynus.ag#()} //  
+	b_TimeBasedReleaseChargingBattery			: BOOL;																								//{#lynus.ag#()} //  
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbEMS.stSetupEMS.bAllowChrgFromGrid := bAllowChrgFromGrid;
+	fbEMS.stSetupEMS.byMaxDepthOfDischrgEPO := byMaxDepthOfDischrgEPO;
+		fbEMS.stSetupEMS.byPrioMinChrgBattSOCInEPO := byPrioMinChrgBattSOCInEPO;
+			fbEMS.stSetupEMS.byResChrgfromGridToBatt := byResChrgfromGridToBatt;
+				fbEMS.stSetupEMS.byReserveSOCEPO := byReserveSOCEPO;
+					fbEMS.stSetupEMS.rSizeMainFuseCS := rMainFuseCSEMS;
+						fbEMS.stSetupEMS.uiUpdateTime := uiUpdateTime;
+
+IF iOperationModeEMS = 0 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eAllOff;
+ELSIF iOperationModeEMS = 1 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eSelfConsumption;	
+ELSIF iOperationModeEMS = 2 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.ePeakLoadCapping;
+ELSIF iOperationModeEMS = 3 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eLoadManagement;			
+END_IF
+
+fbEMS(
+	bEnable						:= bEnableEMS, 
+	diNrOfEM_IN_ECS				:= , 
+	stSetupEMS					:= , 
+	eOperationMode				:= , 
+	eSpeedModeBackendController	:= E_SpeedModeBackendController_EMS.eSlow, 
+	eSpeedModeLocalController	:= E_SpeedModeLocalController_EMS.eSlow,
+	bControllingState			:= TRUE, // bControllingState, 
+	rHeartbeat					:= rHeartbeatEMS, 
+	rErrorWarning				:= rErrorWarningEMS, 
+	rEnergyOptReady				:= rReadyEMS, 
+	rNewBattPower				:= rNewBatteryPowerEMS, 
+	b_ZeroPowerRegulation		:=,
+	b_EnableBatteryChargingControl	:= FALSE, //b_EnableBatteryChargingControl,
+	b_StartReleaseBatteryCharging 	:=, // b_StartReleaseBatteryCharging,
+	b_StopReleaseBatteryCharging 	:= ,// b_StopReleaseBatteryCharging,
+	rMaxBattChargingPower			:= , // 100,	//500 kW = 100%, 
+	rPeakDetectionforCalculation 	:= 3,	// was original 3, caused issues that load management not caluculeted. see EMS line 313
+	
+	eMessageEMS				=> iMessageEMS, 
+	bStateEnable			=> bIsEnableEMS, 
+	bStateAllowChrgFromGrid	=> bStateAllowChrgFromGrid, 
+	bMissingPowerData		=> , 
+	bSurplusAvailable		=> , 
+	byProgress				=> , 
+	uiState_OUT				=> , 
+	diNrOfEMS_OUT			=> , 
+	arrMinPrioReached		=> , 
+	arrMaxPrioReached		=> ,
+	b_TimeBasedReleaseChargingBattery => b_TimeBasedReleaseChargingBattery);
+	
+IF prgBattery.mtest THEN
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[1,1].rTargetPowerEMS:=prgBattery.x;
+ END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="3" Count="20" />
+      <LineId Id="25" Count="4" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="30" Count="9" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="161" Count="1" />
+      <LineId Id="160" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

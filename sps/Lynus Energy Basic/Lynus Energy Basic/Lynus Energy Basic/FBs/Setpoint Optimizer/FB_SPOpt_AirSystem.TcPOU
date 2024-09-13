@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_SPOpt_AirSystem" Id="{ee4aae70-2091-486d-a919-819997dd886b}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_SPOpt_AirSystem
+VAR_INPUT PERSISTENT
+	bEnable							: BOOL;									//Enable or dissable thsi Function
+END_VAR
+VAR_INPUT
+	byStateSystemIn					: BYTE;									//Actual State from the System. 0 = off, 1 = on
+	rFlowAirTempIn					: REAL;									//Actual Flow Air Temperature
+	rReturnAirTempIn				: REAL;									//Actual Return Air Temperature
+	rInToOutAirTempIn				: REAL;									//Actual outdoor air flow temperature
+	rOutToInAirTempIn				: REAL;									//Actual indoor air flow temperature
+END_VAR
+VAR_OUTPUT
+	bError							: BOOL;									//Error from this Fuction
+	byStateSystemOut				: BYTE;									//{#lynus.ag#()} //State from the System. 0 = off, 1 = on	
+	rFlowAirTempOut					: REAL;									//{#lynus.ag#()} //Flow Air Temperature to send to the Backend Service.
+	rReturnAirTempOut				: REAL;									//{#lynus.ag#()} //Return Air Temperature to send to the Backend Service.
+	rInToOutAirTempOut				: REAL;									//{#lynus.ag#()} //Outdoor air flow temperature to send to the Backend Service.
+	rOutToInAirTempOut				: REAL;									//{#lynus.ag#()} //Indoor air flow temperature to send to the Backend Service.
+	diNrOfSPOpt_OUT					: DINT;									//Active Number from Setpoint Optimizer for using on other functions
+END_VAR
+VAR
+	fbNumberDevice					: FB_NumberOfDevice;					//Function block to calcualte the number of the Device
+	timDissableFunctions			: TON;									//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL			: TON;									//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 03.12.2021
+//Version : 1.0.0.0
+
+//This Function is a Help Function for the Setpoint Optimizer on our Backend System
+//Here we can read in the neccessary Values for a Air System from a external Service and can send then to the Backend System for optimizing
+//Its Helpfull if we work with the TMC File
+
+(*----------------------------------------------------------------------------------------Limits---------------------------------------------------------------------------------------------------------------*)
+
+byStateSystemIn := LIMIT(0,byStateSystemIn,1);
+	rFlowAirTempIn := LIMIT(-30,rFlowAirTempIn,150);
+		rReturnAirTempIn := LIMIT(-30,rReturnAirTempIn,150);
+			rInToOutAirTempIn := LIMIT(-30,rInToOutAirTempIn,150);
+				rOutToInAirTempIn := LIMIT(-30,rOutToInAirTempIn,150);
+
+(*-------------------------------------------------------------Calcualte the number of SP Opttimizer---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfSetPointOpt, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfSPOpt_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt := diNrOfSPOpt_OUT;
+END_IF				
+				
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable EMS Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend or no HB from the Service then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the EMS is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------Error----------------------------------------------------------------------------*)	
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt > Constants_Energy.diMaxNumberOfSetPointOpt THEN bError := TRUE; ELSE bError := FALSE; END_IF 			
+			
+(*-------------------------------------------------------------------------------------In to Out---------------------------------------------------------------------------------------*)
+
+byStateSystemOut := byStateSystemIn;
+	rFlowAirTempOut := rFlowAirTempIn;
+		rReturnAirTempOut := rReturnAirTempIn;	
+			rInToOutAirTempOut := rInToOutAirTempIn;
+				rOutToInAirTempOut := rOutToInAirTempIn;		
+
+IF NOT bEnable OR timDissableFunctions.Q OR Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfSetPointOpt > Constants_Energy.diMaxNumberOfSetPointOpt THEN
+	byStateSystemOut := 0;	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SPOpt_AirSystem">
+      <LineId Id="19" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="72" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="75" Count="2" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="107" Count="19" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="39" Count="6" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="46" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-prometheus
+  namespace: lynus
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-prometheus
+  namespace: lynus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval:     15s
+      evaluation_interval: 15s
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets: ['localhost:9090']
+      - job_name: mosquitto
+        static_configs:
+          - targets: ['mosquitto:9234']
+      - job_name: api
+        static_configs:
+          - targets: ['api:80']
+      - job_name: postgres
+        static_configs:
+          - targets: ['postgres:9187']
+      - job_name: mqtt_proxy
+        static_configs:
+          - targets: ['proxy:80']
+      - job_name: rule
+        static_configs:
+          - targets: ['rule:80']
+      - job_name: mpc
+        static_configs:
+          - targets: ['mpc:80']
+      - job_name: minio
+        metrics_path: /minio/v2/metrics/cluster
+        static_configs:
+          - targets: ['minio:9000']
+      - job_name: redis
+        static_configs:
+          - targets: ['redis:9121']
+      - job_name: recorder
+        static_configs:
+          - targets: ['recorder:8000']
+      - job_name: smartmeter
+        static_configs:
+          - targets: ['smartmeter:8000']
+      - job_name: controller
+        static_configs:
+          - targets: ['controller:8000']
+      - job_name: eventwatcher
+        static_configs:
+          - targets: ['eventwatcher:8000']
+      - job_name: 'node-exporter'
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_endpoints_name]
+          regex: 'node-exporter'
+          action: keep
+      - job_name: empa
+        static_configs:
+          - targets: ['empa:80']
+      - job_name: connectivity
+        static_configs:
+          - targets: ['connectivity:80']
+      - job_name: loki
+        static_configs:
+          - targets: ['loki:3100']
+      - job_name: rabbit-mq
+        static_configs:
+          - targets: ['rabbit-mq:15692']
+      - job_name: keda
+        static_configs:
+          - targets: ['keda-operator.keda:8080']
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: lynus
+spec:
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      initContainers:
+        - name: change-ownership
+          image: busybox:1.36.1
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args: ["chown -Rc 65534:65534 /data"]
+          volumeMounts:
+            - mountPath: /data
+              name: data
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.47.2
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          args:
+            [
+              "--config.file=/etc/prometheus/prometheus.yml",
+              "--storage.tsdb.path=/prometheus",
+              "--web.console.libraries=/usr/share/prometheus/console_libraries",
+              "--web.console.templates=/usr/share/prometheus/consoles",
+              "--storage.tsdb.retention.size=9GB",
+              "--storage.tsdb.retention.time=30d",
+            ]
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - mountPath: /etc/prometheus/
+              name: config
+            - mountPath: /prometheus
+              name: data
+      nodeSelector:
+        nodetype: large
+      volumes:
+        - name: config
+          configMap:
+            name: config-prometheus
+        - name: data
+          persistentVolumeClaim:
+            claimName: data-prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: lynus
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: ClusterIP

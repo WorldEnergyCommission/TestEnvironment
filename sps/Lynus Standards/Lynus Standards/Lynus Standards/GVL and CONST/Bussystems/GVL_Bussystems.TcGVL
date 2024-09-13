@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <GVL Name="GVL_Bussystems" Id="{98dfe8a6-3d57-4c86-bbcd-54d4c941c1f7}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'conditionalshow'}
+VAR_GLOBAL		
+	//Global Data from the RTU Masters
+	{attribute 'hide'}
+	stDataOfMBRTUMasterKL6xxx						: ARRAY[0..Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx]	OF ST_MBRTUMaster_KL6xxx_GVL;
+	{attribute 'hide'}
+	diNumberOfMBRTUMasters							: DINT;	//Number of RTU Masters on this plc project	
+	//Global Data from the MBus Masters
+	{attribute 'hide'}
+	stDataOfMBusMasterKL6781						: ARRAY[0..Constants_Bussystems.diMaxNumberOfMBusMasterKL6781]	OF ST_MBusMaster_KL6781_GVL;
+	{attribute 'hide'}
+	diNumberOfMBusMasters							: DINT;	//Number of MBus Masters on this plc project
+	//Global Data from the KNX Masters
+	{attribute 'hide'}
+	stDataOfKNXMasterKL6301							: ARRAY[0..Constants_Bussystems.diMaxNumberOfKNXMasterKL6301]	OF EIB_REC;
+	{attribute 'hide'}
+	diNumberOfKNXMasters							: DINT;	//Number of KNX Masters on this plc project
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

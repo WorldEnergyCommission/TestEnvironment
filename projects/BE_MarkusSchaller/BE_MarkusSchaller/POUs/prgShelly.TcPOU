@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgShelly" Id="{e90e7c44-6162-4188-9c32-fe7ec7ad0d25}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgShelly
+VAR
+fbShelly4PM					: FB_Shelly_Pro4PM;
+fbShelly3EM					: FB_Shelly_3EM;
+// 4PM
+lrPowershelly4P1			: LREAL;	//{#lynus.ag#()}
+lrPowershelly4P1kW			: LREAL;	//{#lynus.ag#()}
+lrVoltageShelly4P1			: LREAL;	//{#lynus.ag#()}
+lrEnergyShelly4P1			: LREAL;	//{#lynus.ag#()}
+lrPowershelly4P2			: LREAL;	//{#lynus.ag#()}
+lrVoltageShelly4P2			: LREAL;	//{#lynus.ag#()}
+lrEnergyShelly4P2			: LREAL;	//{#lynus.ag#()}
+lrPowershelly4P3			: LREAL;	//{#lynus.ag#()}
+lrVoltageShelly4P3			: LREAL;	//{#lynus.ag#()}
+lrEnergyShelly4P3			: LREAL;	//{#lynus.ag#()}
+lrPowershelly4P4			: LREAL;	//{#lynus.ag#()}
+lrVoltageShelly4P4			: LREAL;	//{#lynus.ag#()}
+lrEnergyShelly4P4			: LREAL;	//{#lynus.ag#()}
+
+// Heizung Gesamt
+lrPowerHeatingTotal				: LREAL;	//{#lynus.ag#()}
+lrPowerHeatingTotalkW			: LREAL;	//{#lynus.ag#()}
+lrEnergyHeatingTotal			: LREAL;	//{#lynus.ag#()}
+lrPowerHeatingL1				: LREAL;	//{#lynus.ag#()}
+lrPowerHeatingL2				: LREAL;	//{#lynus.ag#()}
+lrPowerHeatingL3				: LREAL;	//{#lynus.ag#()}
+lrCurrentHeatingL1				: LREAL;	//{#lynus.ag#()}
+lrCurrentHeatingL2				: LREAL;	//{#lynus.ag#()}
+lrCurrentHeatingL3				: LREAL;	//{#lynus.ag#()}
+lrVoltageHeatingL1				: LREAL;	//{#lynus.ag#()}
+lrVoltageHeatingL2				: LREAL;	//{#lynus.ag#()}
+lrVoltageHeatingL3				: LREAL;	//{#lynus.ag#()}
+lrEnergyHeatingL1				: LREAL;	//{#lynus.ag#()}
+lrEnergyHeatingL2				: LREAL;	//{#lynus.ag#()}
+lrEnergyHeatingL3				: LREAL;	//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+// trigger command execution
+bEnableShelly4PM 		: BOOL;		//{#lynus.ag#()}
+bEnableShelly3EM	 	: BOOL;		//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Pool Pump
+fbShelly4PM(
+	bStart:= bEnableShelly4PM, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.178.73', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpowerP1=> lrPowershelly4P1, 
+	lrvoltageP1=> lrVoltageShelly4P1, 
+	lrenergyP1=> lrEnergyShelly4P1 );
+	
+	// re-calc to kW
+	lrPowershelly4P1kW := lrPowershelly4P1 / 1000;
+
+
+// Heating Overall (Heating Pump)
+fbShelly3EM(
+	bStart:= bEnableShelly3EM, 
+	tDelayRequest:= T#5S, 
+	sHostname:= '192.168.178.67', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> lrPowerHeatingTotal,
+	lrpowerL1=> lrPowerHeatingL1,
+	lrpowerL2=> lrPowerHeatingL2,
+	lrpowerL3=> lrPowerHeatingL3,
+	lrcurrentL1=> lrCurrentHeatingL1,
+	lrcurrentL2=> lrCurrentHeatingL2,
+	lrcurrentL3=> lrCurrentHeatingL3,
+	lrvoltageL1=> lrVoltageHeatingL1,
+	lrvoltageL2=> lrVoltageHeatingL2,
+	lrvoltageL3=> lrVoltageHeatingL3,
+	lrenergyL1=> lrEnergyHeatingL1,
+	lrenergyL2=> lrEnergyHeatingL2,
+	lrenergyL3=> lrEnergyHeatingL3 );
+	
+	// re-calc to kW
+	lrPowerHeatingTotalkW := lrPowerHeatingTotal / 1000;
+	// sum-up energy
+	lrEnergyHeatingTotal :=  lrEnergyHeatingL1 + lrEnergyHeatingL2 + lrEnergyHeatingL3;]]></ST>
+    </Implementation>
+    <LineIds Name="prgShelly">
+      <LineId Id="197" Count="0" />
+      <LineId Id="113" Count="8" />
+      <LineId Id="125" Count="2" />
+      <LineId Id="243" Count="3" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="134" Count="22" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

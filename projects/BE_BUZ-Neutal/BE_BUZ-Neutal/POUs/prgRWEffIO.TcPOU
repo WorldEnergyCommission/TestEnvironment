@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgRWEffIO" Id="{e02ece31-1458-43e7-af52-6c1ae3dbe117}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgRWEffIO
+VAR
+	fbRW1		: FB_ReadWrite_V2;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbRW1(
+	eUploadType:= eSelectDataUploadType.e_Change_Intervall5min, 
+	bBusy=> , 
+	bError=> , 
+	udiErrorCodeOut=> ,
+	eErrorReadWrite_Out=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgRWEffIO">
+      <LineId Id="10" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

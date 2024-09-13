@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Battery_GVL" Id="{49fe49c5-e879-4461-8128-6593a9ef0b61}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_Battery_GVL :
+STRUCT
+	//Data from the battery to the GVL to other functions.
+	{attribute 'hide'}
+	dwSOC								: DWORD;						//The actual Battery state of Charge
+	{attribute 'hide'}
+	dwSOH								: DWORD;						//The actual battery state of health
+	{attribute 'hide'}
+	rVoltage							: REAL;							//Battery Voltage with Unit V with max. 2 comas
+	{attribute 'hide'}
+	lrPower								: LREAL;						//Battery Power with unit kW
+	{attribute 'hide'}
+	lrPowerConsumption					: LREAL;						//Battery power consumption with unit kW (charging)
+	{attribute 'hide'}
+	lrPowerProduction					: LREAL;						//Battery power production with unit kW (discharging)
+	{attribute 'hide'}
+	lrCurrent							: LREAL;						//Battery current with unit A with max. 2 comas
+	{attribute 'hide'}
+	lrTemp								: LREAL;						//Battery temperarure with unit °C with max. 2 comas
+	{attribute 'hide'}
+	lrCapacity							: LREAL;						//Actual Battery capacity in kWh with max. 2 comas
+	{attribute 'hide'}
+	byErrorWarning						: BYTE;							//Show if the function has a Error or a Warning		
+	{attribute 'hide'}		
+	bEnabled							: BOOL;							//Battery enabled
+	{attribute 'hide'}
+	rMaxDcChargeCurrent					: REAL;							//Max. dc charge current battery with unit A 
+	{attribute 'hide'}
+	rMaxDcDischargeCurrent				: REAL;							//Max. dc discharge current battery with unit A
+	{attribute 'hide'}
+	rMaxChargeVoltage					: REAL;							//Max. charge voltage from the battery with unit V	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

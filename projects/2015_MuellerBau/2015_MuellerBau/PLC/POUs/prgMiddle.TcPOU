@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgMiddle" Id="{1ae37f63-3cea-4a0e-998c-c679029efd1a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMiddle
+VAR
+	i: INT;
+	int_LiveCount_5min:INT;								//{#lynus.ag#()}
+	ton_5min: Ton;
+	uint_State								AT%I* 	: UINT;		//{#lynus.ag#()}
+	mtest: BOOL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[i:= i+1;
+ton_5min( 	In := NOT ton_5min.Q,
+			PT := T#5M);
+IF ton_5min.Q THEN
+	int_LiveCount_5min := int_LiveCount_5min+1;
+END_IF
+
+prgHeatPump();
+prgRoomVentilaton();]]></ST>
+    </Implementation>
+    <LineIds Name="prgMiddle">
+      <LineId Id="5" Count="1" />
+      <LineId Id="11" Count="3" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

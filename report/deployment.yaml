@@ -1,0 +1,110 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: monthly-reports
+  namespace: lynus
+spec:
+  schedule: "0 0 2 * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: curlimages/curl:8.4.0
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "200m"
+              args:
+                - http://report/monthly
+              imagePullPolicy: Always
+          restartPolicy: OnFailure
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report
+  namespace: lynus
+  labels:
+    app: report
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: report
+  template:
+    metadata:
+      labels:
+        app: report
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: report
+          image: ghcr.io/efficientio/efficientio/report:TAG
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+          env:
+            - name: DB_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: DB_NAME
+              value: lynus
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: DB_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: API_ADDR
+              value: "http://api"
+            - name: DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: DOMAIN
+                  name: lynus-credentials
+            - name: STATIC_ASSETS
+              value: https://static.$(DOMAIN)/assets/
+      nodeSelector:
+        nodetype: large
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: report
+  namespace: lynus
+spec:
+  selector:
+    app: report
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP

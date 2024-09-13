@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prg_ADS" Id="{2adeaee7-100a-41cc-891a-0f6ee6212225}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prg_ADS
+VAR
+	ADS_1: FB_ADS_Read;
+	str_ADS_read: STRING(40);
+	byte_array : ARRAY[0..1023] OF BYTE;
+	struct_received	: struct_ADS_Barac;						
+	
+	int_liveCount		: INT;						//{#lynus.ag#()}
+	byte_old: BYTE;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+str_ADS_read := 'prgComEffIO.byte_array';
+
+ADS_1(
+	udintWriteLength:=  SIZEOF(byte_array), 
+	udintReadLength:= SIZEOF(byte_array), 
+	dwSourceAddr:= ADR(str_ADS_read), 
+	dwDestAddr:= ADR(byte_array), 
+	strNetID:= '5.100.32.116.1.1', 
+	timeReadDelay:= T#5S, 
+	mADSError=> , 
+	strADSErrorText=> );
+	
+// copy struct to byte array
+IF byte_array[1] <> byte_old AND NOT ADS_1.mADSError AND byte_array[1] <> 0 THEN
+	IF SIZEOF(struct_received) > SIZEOF(byte_array) THEN
+		memcpy(ADR(struct_received),ADR(byte_array),SIZEOF(byte_array));
+	ELSE
+		memcpy(ADR(struct_received),ADR(byte_array),SIZEOF(struct_received));
+	END_IF
+	byte_old := byte_array[1];
+END_IF
+	
+	
+int_liveCount := struct_received.int_liveCount;]]></ST>
+    </Implementation>
+    <LineIds Name="prg_ADS">
+      <LineId Id="18" Count="0" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="7" Count="7" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="29" Count="3" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="35" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

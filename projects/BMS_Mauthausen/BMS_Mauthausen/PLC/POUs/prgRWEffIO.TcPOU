@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgRWEffIO" Id="{02288258-8b1d-4dbd-8ad3-1a1bf94c5849}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgRWEffIO
+VAR
+	fbRW1		: FB_ReadWrite_V2;
+(*	fbRW2		: FB_ReadWrite_V2;
+	fbRW3		: FB_ReadWrite_V2;  *)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbRW1(	eUploadType := eSelectDataUploadType.e_Change_Intervall5min,
+		bBusy=> , 
+		bError=> , 
+		udiErrorCodeOut=> , 
+		eErrorReadWrite_Out=> );
+(*		
+fbRW2(	eUploadType:= eSelectDataUploadType.e_Change_noIntervall, 
+		bBusy=> , 
+		bError=> , 
+		udiErrorCodeOut=> , 
+		eErrorReadWrite_Out=> );
+		
+fbRW3(	eUploadType:=eSelectDataUploadType.e_Change_noIntervall, 
+		bBusy=> , 
+		bError=> , 
+		udiErrorCodeOut=> , 
+		eErrorReadWrite_Out=> );
+		
+		*)]]></ST>
+    </Implementation>
+    <LineIds Name="prgRWEffIO">
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="3" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="40" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

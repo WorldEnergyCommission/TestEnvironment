@@ -1,0 +1,439 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_EconSens3" Id="{894a577d-baef-42e3-821c-209298ea93e1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EconSens3
+VAR_INPUT PERSISTENT
+	m_Enable					: BOOL;						//Enable the Fuctionblock and his logic
+	str_IPAdress				: STRING(15);				//IP Adress of the meter
+END_VAR
+VAR_OUTPUT
+	real_RealPower_kW				: REAL;					// Real power in kW
+	real_RealPowerL1_kW				: REAL;					// Real power in kW
+	real_RealPowerL2_kW				: REAL;					// Real power in kW
+	real_RealPowerL3_kW				: REAL;					// Real power in kW
+	real_ReactivePower_kVAr			: REAL;					// Reactive power in kVAr
+	real_ReactivePowerL1_kVAr		: REAL;					// Reactive power in kVAr
+	real_ReactivePowerL2_kVAr		: REAL;					// Reactive power in kVAr
+	real_ReactivePowerL3_kVAr		: REAL;					// Reactive power in kVAr
+	real_ApparentPower_kVA			: REAL;					// Apparent power in kVA
+	real_ApparentPowerL1_kVA			: REAL;					// Apparent power in kVA
+	real_ApparentPowerL2_kVA			: REAL;					// Apparent power in kVA
+	real_ApparentPowerL3_kVA			: REAL;					// Apparent power in kVA
+	real_Frequency_Hz				: REAL;					// Frequency in Hz
+	real_VoltageL1N_V				: REAL;					//  Voltage L1-N in V 
+	real_VoltageL2N_V				: REAL;					//  Voltage L2-N in V 
+	real_VoltageL3N_V				: REAL;					//  Voltage L3-N in V 
+	real_VoltageL1L2_V				: REAL;					//  Voltage L1-L2 in V 
+	real_VoltageL2L3_V				: REAL;					//  Voltage L2-L3 in V 
+	real_VoltageL3L1_V				: REAL;					//  Voltage L3-L1 in V 
+	real_CurrentL1_A				: REAL;					//  Current L1 in A
+	real_CurrentL2_A				: REAL;					//  Current L2 in A
+	real_CurrentL3_A				: REAL;					//  Current L3 in A
+	real_EnergyTotal_Import_kWh		: REAL;					// Energy total in kWh
+	real_EnergyTotal_Export_kWh		: REAL;					// Energy total in kWh
+	real_Temperatur_C				: REAL;					//  Temperatur in °C
+	
+	m_PollSuccessful				: BOOL;					// Poll succesfull		
+	udint_Error_ID					: UDINT;				// ERR ID FB_MBReadRegs
+END_VAR
+VAR
+//	{attribute 'hide'}
+	w_Adress					: WORD;						//modbus adress
+//	{attribute 'hide'}
+	usint_Quantity				: USINT;					//Number of Words to get polled, max 100
+//	{attribute 'hide'}
+	fb_Convert_Data				: FB_Convert_Dword_Real;
+//	{attribute 'hide'}
+	e_ByteOrderConvert			: eByteOrder;						//Byte Format
+//	{attribute 'hide'}
+	timer_Delay					: TON;						//Timer for Delay between Requests
+//	{attribute 'hide'}
+	timer_DelayStart			: TON;						//Timer to start the state machine with Delay after enabling or after the system ist restartet
+//	{attribute 'hide'}
+	timer_TimeOut				: TON;						//Timer for Timeout MB Read
+//	{attribute 'hide'}
+	iStateModbusRead			: INT;						//State machine for read out Data over Modbus RTU
+//	{attribute 'hide'}
+	fbMBRead_FC3				: FB_MBReadRegs  ;		//Modbus Read Function (FC3)
+//	{attribute 'hide'}
+	ftrig_PEnable				: f_trig;					//Internal positive Edge
+//	{attribute 'hide'}
+	iStateModbusError			: INT;						//State machine for error out Data over Modbus TCP/IP	
+//	{attribute 'hide'}
+	FPError_FC_3				: R_TRIG;					//Internal positive Edge
+//	{attribute 'hide'}
+	arrBuffer_FC3				: ARRAY[0..100] OF WORD;		//Buffer with Data from FC3
+//	{attribute 'hide'}
+	arrBuffer_Received			: ARRAY[1..2,0..100] OF WORD;		//Total received Data
+//	{attribute 'hide'}
+	timer_Connection_ok			: TON;
+//	{attribute 'hide'}
+	int_Data_Received			: INT;
+//	{attribute 'hide'}
+	m_MBTCPError				: BOOL;
+//	{attribute 'hide'}
+	int_Data_Received_old		: INT;
+//	{attribute 'hide'}
+	timer_Connection_ok_TOF	: TOF;
+//	{attribute 'hide'}
+	m_Poll_ok: BOOL;
+//	{attribute 'hide'}
+	timer_Wait: Ton;
+//	{attribute 'hide'}
+	int_TimeoutError: INT;
+//	{attribute 'hide'}
+	int_FC4Error: INT;
+//	{attribute 'hide'}
+	i: INT;
+//	{attribute 'hide'}
+	x: INT;
+//	{attribute 'hide'}
+	time_wait: TIME:=T#1S;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// v0.1 by Stefan Lackner 20230729
+// untested
+// reads out EconSolution EconSens3 Multimeter
+
+
+(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+w_Adress := LIMIT(0,w_Adress,65000);
+usint_Quantity := LIMIT(1,usint_Quantity,100);
+	
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timer_Delay(IN:= , PT:= T#50MS, Q=> , ET=> );
+
+//Timeout Timer is dissabled when the Init Step is aktiv or the function is not enabled
+IF iStateModbusRead = 0 OR NOT m_Enable THEN 
+	timer_Timeout.IN := FALSE; 
+END_IF
+timer_Timeout(IN:= , PT:= T#1S, Q=> , ET=> );
+
+//Enable with Delay that not all sockets have to be created at the same time
+timer_DelayStart(IN:= m_Enable, PT:= T#1S, Q=> , ET=> );
+ftrig_PEnable(CLK:= timer_DelayStart.Q, Q=> );
+
+IF ftrig_PEnable.Q AND iStateModbusRead = 0 THEN 
+	iStateModbusRead := 1; 
+END_IF		
+		
+//Not Enabled
+IF NOT m_Enable THEN 
+	iStateModbusRead := 0; 
+	iStateModbusError := 0; 
+END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step 
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+		iStateModbusRead := iStateModbusRead+1;
+
+	1: // clean the array  Poll 1
+		FOR i:=0 TO 100 BY 1 DO
+			arrBuffer_FC3[i] := 0;
+		END_FOR
+		w_Adress := 17;
+		usint_Quantity := 94; 
+		iStateModbusRead := iStateModbusRead+1;
+		
+	2://read the required registers
+		//Start Read Poll 1
+		fbMBRead_FC3.nQuantity := usint_Quantity;
+		fbMBRead_FC3.nMBAddr := w_Adress;
+		fbMBRead_FC3.bExecute := TRUE;
+		fbMBRead_FC3.nUnitID := 1;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC3.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			
+			FOR i:=0 TO 100 BY 1 DO
+				arrBuffer_Received[1,i] := arrBuffer_FC3[i];
+			END_FOR
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC3.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := 30;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_3.Q THEN 
+			iStateModbusError := 300;
+			int_FC4Error := int_FC4Error+1;
+		ELSIF timer_Timeout.Q THEN  
+			timer_Timeout.IN := FALSE; 	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+	
+	
+	30: // convert data
+		e_ByteOrderConvert := 0;			// 		eBigEndian	:= 0,  eLittleEndian	:= 1
+		x:=0;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_VoltageL1L2_V);
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_VoltageL2L3_V);
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_VoltageL3L1_V);		
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_VoltageL1N_V);
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_VoltageL2N_V);
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_VoltageL3N_V);
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_CurrentL1_A);
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_CurrentL2_A);
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_CurrentL3_A);		
+		x:=x+2;
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_RealPowerL1_kW);
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_RealPowerL2_kW);		
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_RealPowerL3_kW);	
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_ReactivePowerL1_kVAr);	
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_ReactivePowerL2_kVAr);	
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_ReactivePowerL3_kVAr);
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_ApparentPowerL1_kVA);	
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_ApparentPowerL2_kVA);	
+		x:=x+2;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_ApparentPowerL3_kVA);		
+		real_RealPower_kW := real_RealPowerL1_kW +real_RealPowerL2_kW + real_RealPowerL3_kW;
+		real_ReactivePower_kVAr := real_ReactivePowerL1_kVAr + real_ReactivePowerL2_kVAr + real_ReactivePowerL3_kVAr;
+ 		real_ApparentPower_kVA := real_ApparentPowerL1_kVA + real_ApparentPowerL2_kVA + real_ApparentPowerL3_kVA;
+
+		x:=56;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_Temperatur_C);		
+		x:=58;		
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_Frequency_Hz);									
+	
+			
+		x:=60;	
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_EnergyTotal_Import_kWh);		
+		x:=68;	
+		fb_Convert_Data(	word_In_1:= arrBuffer_Received[1,x], 
+							word_In_2:= arrBuffer_Received[1,x+1], 
+							e_ByteOrderIn:= e_ByteOrderConvert, 
+							real_Output=> real_EnergyTotal_Export_kWh);		
+		
+		// go to next state
+		iStateModbusRead := iStateModbusRead+1;		
+		
+	31://Wait and go to start
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 1;
+			timer_Wait.IN :=FALSE;
+		END_IF	
+
+END_CASE
+
+(* wait timer*)
+
+timer_Wait(PT:=time_wait);
+
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+ 
+timer_Connection_ok			(In:=int_Data_Received<>int_Data_Received_old,PT:=T#10S);
+timer_Connection_ok_TOF		(In:=NOT(int_Data_Received<>int_Data_Received_old) AND int_Data_Received>3 ,PT:=T#20S);
+int_Data_Received_old:=int_Data_Received;
+m_PollSuccessful:=NOT timer_Connection_ok.Q AND timer_Connection_ok_TOF.Q ;
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(	sIPAddr:= str_IPAdress, 
+				nTCPPort:= 502,
+				cbLength:= SIZEOF(arrBuffer_FC3), 
+				pDestAddr:= ADR(arrBuffer_FC3), 
+				tTimeout:= T#10S,
+				nErrId => udint_Error_ID);
+
+FPError_FC_3(CLK:= fbMBRead_FC3.bError, Q=> );		
+
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		timer_Wait.IN :=TRUE;
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		m_MBTCPError := TRUE; 		
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+		
+				//Restart from new with the Read out part after an Error
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 0;	
+			iStateModbusError := 0;
+			timer_Wait.IN :=FALSE;
+			timer_Timeout.IN := FALSE;
+		END_IF		
+							
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EconSens3">
+      <LineId Id="814" Count="1" />
+      <LineId Id="2475" Count="0" />
+      <LineId Id="817" Count="2" />
+      <LineId Id="822" Count="40" />
+      <LineId Id="1116" Count="1" />
+      <LineId Id="863" Count="18" />
+      <LineId Id="1783" Count="2" />
+      <LineId Id="1782" Count="0" />
+      <LineId Id="884" Count="15" />
+      <LineId Id="1283" Count="0" />
+      <LineId Id="2277" Count="0" />
+      <LineId Id="2338" Count="0" />
+      <LineId Id="2629" Count="0" />
+      <LineId Id="2476" Count="0" />
+      <LineId Id="2506" Count="0" />
+      <LineId Id="2513" Count="0" />
+      <LineId Id="2515" Count="0" />
+      <LineId Id="2514" Count="0" />
+      <LineId Id="2518" Count="4" />
+      <LineId Id="2512" Count="0" />
+      <LineId Id="2524" Count="3" />
+      <LineId Id="2529" Count="3" />
+      <LineId Id="2511" Count="0" />
+      <LineId Id="2533" Count="3" />
+      <LineId Id="2504" Count="0" />
+      <LineId Id="2544" Count="3" />
+      <LineId Id="2538" Count="0" />
+      <LineId Id="2549" Count="3" />
+      <LineId Id="2539" Count="0" />
+      <LineId Id="2553" Count="3" />
+      <LineId Id="2537" Count="0" />
+      <LineId Id="2558" Count="3" />
+      <LineId Id="2557" Count="0" />
+      <LineId Id="2562" Count="0" />
+      <LineId Id="2819" Count="0" />
+      <LineId Id="2564" Count="1" />
+      <LineId Id="2348" Count="0" />
+      <LineId Id="2355" Count="0" />
+      <LineId Id="2566" Count="2" />
+      <LineId Id="2354" Count="0" />
+      <LineId Id="2571" Count="3" />
+      <LineId Id="2569" Count="0" />
+      <LineId Id="2912" Count="8" />
+      <LineId Id="2809" Count="0" />
+      <LineId Id="2923" Count="3" />
+      <LineId Id="2922" Count="0" />
+      <LineId Id="2929" Count="3" />
+      <LineId Id="2928" Count="0" />
+      <LineId Id="2933" Count="3" />
+      <LineId Id="2927" Count="0" />
+      <LineId Id="2938" Count="3" />
+      <LineId Id="2937" Count="0" />
+      <LineId Id="2946" Count="2" />
+      <LineId Id="2945" Count="0" />
+      <LineId Id="2921" Count="0" />
+      <LineId Id="2810" Count="2" />
+      <LineId Id="2726" Count="0" />
+      <LineId Id="2813" Count="0" />
+      <LineId Id="2595" Count="3" />
+      <LineId Id="2903" Count="0" />
+      <LineId Id="2944" Count="0" />
+      <LineId Id="2599" Count="3" />
+      <LineId Id="2366" Count="0" />
+      <LineId Id="2608" Count="0" />
+      <LineId Id="2616" Count="3" />
+      <LineId Id="2612" Count="0" />
+      <LineId Id="2376" Count="0" />
+      <LineId Id="2374" Count="0" />
+      <LineId Id="2373" Count="0" />
+      <LineId Id="2278" Count="7" />
+      <LineId Id="1071" Count="35" />
+      <LineId Id="2388" Count="0" />
+      <LineId Id="1107" Count="7" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

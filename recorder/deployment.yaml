@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recorder
+  namespace: lynus
+  labels:
+    app: recorder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recorder
+  template:
+    metadata:
+      labels:
+        app: recorder
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: recorder
+          image: ghcr.io/efficientio/efficientio/recorder:TAG
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+          env:
+            - name: DB_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: DB_NAME
+              value: lynus
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: DB_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: REDIS_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_ADDRESS
+                  name: lynus-credentials
+            - name: MQTT_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: MOSQUITTO_ADDRESS
+                  name: lynus-credentials
+      nodeSelector:
+        nodetype: large
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recorder
+  namespace: lynus
+spec:
+  selector:
+    app: recorder
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: metrics
+  type: ClusterIP

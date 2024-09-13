@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flyway-TAG
+  namespace: lynus
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: flyway
+          image: ghcr.io/efficientio/efficientio/flyway:TAG
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          env:
+            - name: POSTGRES_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: POSTGRES_SSLMODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: DATABASE_BASE_URL
+              value: "jdbc:postgresql://$(POSTGRES_ADDRESS):$(POSTGRES_PORT)/"
+            - name: DATABASE_NAMES
+              value: "lynus,kc"
+            - name: SCRIPTS_BASE_PATH
+              value: "/flyway/sql"
+            - name: FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+      restartPolicy: Never

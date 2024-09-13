@@ -1,0 +1,126 @@
+{
+  "HistoryAnomalyDetection": {
+    "title": "Rilevamento delle anomalie storiche",
+    "name": "Rilevamento delle anomalie storiche",
+    "overview": "Questo algoritmo si allena sui dati storici dei sensori, dopo l'addestramento i nuovi campioni vengono confrontati con i dati di allenamento e poi classificati con un Anomaly-score tra 0-100. Un punteggio di anomalia di 0 significa che i dati si comportano normalmente. Un valore di 100 indica un comportamento altamente anormale dei dati osservati. Di solito un punteggio superiore a 15 significa che è stata osservata un'anomalia, ma anche questo dipende fortemente dai dati del sensore.",
+    "table": [
+      {
+        "name": "Aggiungi variabile",
+        "description": "Aggiunge una variabile che deve essere monitorata dal rivelatore di anomalie Detector, max 10 variabili",
+        "allowedValues": ""
+      },
+      {
+        "name": "Unità",
+        "description": "Unità della variabile che sarà sarà visualizzata sul grafico [OPZIONALE]",
+        "allowedValues": ""
+      },
+      {
+        "name": "var",
+        "description": "Nome della variabile [FACOLTATIVO]",
+        "allowedValues": ""
+      },
+      {
+        "name": "agg",
+        "description": "Tipo di aggregazione della Variabile",
+        "allowedValues": ""
+      },
+      {
+        "name": "tipo",
+        "description": "Tipo di scala del grafico",
+        "allowedValues": "Manuale o automatico"
+      },
+      {
+        "name": "heartbeat",
+        "description": "Il rilevatore di anomalie genera un battito cardiaco. Il valorecambia ogni 60 secondi tra 0 e 1, questo indica che il servizio è ancora attivo.",
+        "allowedValues": "32 Bit Valore"
+      },
+      {
+        "name": "erroreAttenzione",
+        "description": "Stato di errore/avvertimento dal Rilevatore di anomalie",
+        "allowedValues": "0 = OK\n1 = Attenzione\n2 = Errore"
+      },
+      {
+        "name": "mpcReady",
+        "description": "Questa variabile indica se il rilevatore di anomalie è pronto o no.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "anomalia Punteggio",
+        "description": "Mappatura in uscita del punteggio di anomalia dei rivelatori, viene scritto ogni minuto",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Soglia",
+        "description": "La soglia alla quale i punti di dati i punti sono marcati come anomalie,buono predefinito = 15",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Data di inizio",
+        "description": "Data di inizio dei dati storici",
+        "allowedValues": ""
+      },
+      {
+        "name": "Data di fine",
+        "description": "Data finale dei dati storici",
+        "allowedValues": ""
+      }
+    ]
+  },
+  "StreamAnomalyDetection": {
+    "title": "Rilevamento delle anomalie in tempo reale",
+    "name": "Rilevamento delle anomalie in tempo reale",
+    "overview": "Questo algoritmo si allena utilizzando i dati storici dei sensori, dopo l'addestramento i nuovi dati vengono confrontati con i dati di addestramento e poi valutati con un punteggio di anomalia tra 0-100. Un punteggio di anomalia di 0 significa che i dati si comportano normalmente. Un punteggio di 100 significa un comportamento gravemente anomalo dei dati osservati. Normalmente un valore superiore a 15 significa che è stata osservata un'anomalia, questo dipende fortemente dai dati del sensore.",
+    "table": [
+      {
+        "name": "Aggiungi variabile",
+        "description": "Unità della variabile che sarà sarà visualizzata sul grafico [OPZIONALE]",
+        "allowedValues": ""
+      },
+      {
+        "name": "Unità",
+        "description": "Unità della variabile che sarà sarà visualizzata sul grafico [OPZIONALE]",
+        "allowedValues": ""
+      },
+      {
+        "name": "var",
+        "description": "Nome della variabile [FACOLTATIVO]",
+        "allowedValues": ""
+      },
+      {
+        "name": "agg",
+        "description": "Tipo di aggregazione della Variabile",
+        "allowedValues": ""
+      },
+      {
+        "name": "tipo",
+        "description": "Tipo di scala del grafico",
+        "allowedValues": "Manuale o automatico"
+      },
+      {
+        "name": "heartbeat",
+        "description": "Il anomaly detector genera un heartbeat. Il valorecambia ogni 60 secondi tra 0 e 1, questo indica che il servizio è ancora attivo.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "erroreAttenzione",
+        "description": "Stato di errore/avvertimento dal anomaly detector",
+        "allowedValues": "0 = OK\n1 = Attenzione\n2 = Errore"
+      },
+      {
+        "name": "mpcReady",
+        "description": "Questa variabile indica se il anomaly detector è pronto.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "anomalia Punteggio",
+        "description": "Mappatura di uscita dell'algoritmo, il modello scrive un valore alla variabile specificata ogni minuto",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Soglia",
+        "description": "La soglia alla quale i punti di dati i punti sono marcati come anomalie,buono predefinito = 15",
+        "allowedValues": "0-100"
+      }
+    ]
+  }
+}

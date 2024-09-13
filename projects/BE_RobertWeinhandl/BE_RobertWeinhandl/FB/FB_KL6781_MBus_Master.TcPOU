@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_KL6781_MBus_Master" Id="{2653ae96-fcd0-410a-886b-5491427a0f25}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_KL6781_MBus_Master
+VAR_INPUT PERSISTENT
+	eBaudrateMBus							: E_MBus_Baudrate;				//With this Baudrate the Functionsblocks for the Counters are reading out
+END_VAR
+VAR_OUTPUT
+	bBusy									: BOOL;							//Function is Busy
+	bReady									: BOOL;							//Function is Ready
+	byErrorWarning							: BYTE;							//Error Warning State
+	diNrOfMBusMasterLine_OUT				: DINT;							//Active Number from the MBus Master Function for using on other functions
+	eMessageMBusMaster						: E_Message_MBusMaster;			//Message from the MBus Master Function
+END_VAR
+VAR
+
+	fbMbusMaster							: FB_MBUSKL6781;				//MBus Master for KL6781
+	fbNumberDevice							: FB_NumberOfDevice;			//Function block to calcualte the number of the Device
+	fbMBusMessage							: FB_MBusMaster_Messages;		//MBus Messages
+	fbPD									: FB_PersistentData_Number;		//FB Persistent Data
+	timDissableFunctions					: TON;							//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL					: TON;							//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	stMBusKL6781ComIn        	AT%I*	 	: ST_KL6781inData22B;			//Input Structure for the KL6781 to map on the KL6781 Terminal
+	stMBusKL6781ComOut        	AT%Q*		: ST_KL6781outData22B;			//Output Structure for the KL6781 to map on the KL6781 Terminal
+	byWaitInStep							: BYTE;							//Wait in Step before start to clean data on PLC
+	iStateGVLData							: INT;							//State machine to handle the data on the GVL
+	diCounterForGVL							: DINT;							//Counter to clean old data on GVL
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 23.07.2021
+//Version : 1.0.0.0
+
+//With this function block we can communicate with a beckhoff KL6781 MBus Terminal.
+//This Functionblock receive the requests from the other Counter Functions and send to the Hardware Counters in the field.
+//The answer from the Hardware Counters comes back to this Function and then they distribute to the Counter Function in the plc.
+//This Function must be called in a task of < 10MS. Is depends about the Baudrate. 2400Baud = 10MS Task
+//The request to a Hardware counter and the response is min. 1 second on MBus.
+
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*-------------------------------------------------------------Calcualte the number of MBus Master---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Bussystems.diNumberOfMBusMasters, 
+	diMaxNumberOfDevices:= Constants_Bussystems.diMaxNumberOfMBusMasterKL6781, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfMBusMasterLine_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Bussystems.diNumberOfMBusMasters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Bussystems.diNumberOfMBusMasters := diNrOfMBusMasterLine_OUT;	
+		iStateGVLData := 1; 
+END_IF	
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+			
+(*-------------------------------------------------------------M-Bus Master---------------------------------------------------------------*)
+
+fbMbusMaster(
+	usiRetries:= 0, 
+	bStart:= , 
+	bDisabled:= timDissableFunctions.Q OR diNrOfMBusMasterLine_OUT <= 0 OR NOT fbNumberDevice.bNumberIsCalculatet , 
+	bBusy=> bBusy, 
+	bReady=> bReady, 
+	bError=> , 
+	eError=> , 
+	stComIn:= stMBusKL6781ComIn, 
+	stComOut:= stMBusKL6781ComOut, 
+	stCom:= Lynus_Standards.GVL_Bussystems.stDataOfMBusMasterKL6781[diNrOfMBusMasterLine_OUT].stDataMBusCommunicationKL6781);
+	
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)
+			
+IF timDissableFunctions.Q THEN fbMBusMessage.bWarning := TRUE; fbMBusMessage.iWarningCode := 0; ELSE fbMBusMessage.bWarning := FALSE; END_IF   
+	IF (Lynus_Standards.GVL_Bussystems.diNumberOfMBusMasters > Constants_Bussystems.diMaxNumberOfMBusMasterKL6781) THEN 
+		fbMBusMessage.bErrorIntern := TRUE;
+			fbMBusMessage.iErrorCode := 1;
+	ELSE
+		fbMBusMessage.bErrorIntern := FALSE;
+	END_IF	
+
+IF fbMbusMaster.bError THEN 
+	fbMBusMessage.bErrorMBus := TRUE;
+		fbMBusMessage.iErrorCode := fbMbusMaster.eError;
+ELSE
+	IF NOT fbMbusMaster.bError AND NOT fbMbusMaster.bBusy THEN 
+		fbMBusMessage.bErrorMBus := FALSE;
+	END_IF
+END_IF	
+		
+fbMBusMessage(
+	bErrorMBus:= , 
+	bErrorIntern:= , 
+	bWarning:= , 
+	iWarningCode:= , 
+	iErrorCode:= , 
+	byErrorWarning=> byErrorWarning, 
+	eMessageMBusMaster=> eMessageMBusMaster);
+	
+(*-----------------------------------------------------------Handle data to Global structure for MBus Communication-----------------------------------------------------------------*)
+	
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+	//Some Parts in the GVL Reset the Slave. Otherwise there will be problems when writing the new addresses to the array in the GVL.
+	
+		Lynus_Standards.GVL_Bussystems.stDataOfMBusMasterKL6781[diCounterForGVL].eBaudrateMBusKL6781 := E_MBus_Baudrate.eMBus_NoBaudrate;
+														 		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Bussystems.diMaxNumberOfMBusMasterKL6781);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Bussystems.diMaxNumberOfMBusMasterKL6781 THEN iStateGVLData := 0; END_IF
+
+END_CASE 
+	
+IF diNrOfMBusMasterLine_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN  
+	Lynus_Standards.GVL_Bussystems.stDataOfMBusMasterKL6781[diNrOfMBusMasterLine_OUT].eBaudrateMBusKL6781 := eBaudrateMBus;
+END_IF	
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+fbPD(lrValue:= INT_TO_LREAL(eBaudrateMBus), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_KL6781_MBus_Master">
+      <LineId Id="42" Count="121" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

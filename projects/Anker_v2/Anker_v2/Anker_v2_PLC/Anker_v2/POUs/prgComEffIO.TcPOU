@@ -1,0 +1,948 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComEffIO
+VAR
+	fbCom		: FB_MqttCommunicator_V2;
+	byte_array : ARRAY[0..1023] OF BYTE;
+	struct_transfer	: struct_ADS_Anker;
+	mSize_to_Big: BOOL;
+	uint_size: UINT;
+	int_LiveCount_1min	:INT;						//{#lynus.ag#()}
+	mCountUp: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	strAuthkey := 'EIO08031879806',
+	sUserName:= , 			// see below
+	sUserPassword:= , 		// see below
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk, 
+	time_HeartBeat_sec := T#55S,
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+
+
+prg_ReadDeviceName();
+IF prg_ReadDeviceName.sDeviceName = '' THEN
+	prg_ReadDeviceName.bStart := TRUE;
+END_IF
+
+// select user / pass according device name:
+IF prg_ReadDeviceName.sDeviceName='EIOAN010001' THEN   // Rankgasse 25 		Filiale 5100
+	fbCom.sUserName:= 'e9b83688-ab68-4621-910d-c494104363e6'; 
+	fbCom.sUserPassword:= '6bac0a37-95e4-480d-b823-0ad746678bff';
+	// define the hardware version
+	prgHW_v1();
+	// define voltage channels for current measurement	
+	prgEM.ui_PhaseSelector_CH1 := 1;		// 2 mal boiler im arbeitsbereich L1
+	prgEM.ui_PhaseSelector_CH2 := 1;		// 1 mal boiler im magazinbereich L1
+	prgEM.ui_PhaseSelector_CH3 := 2;		// kühlvitrine L2
+	prgEM.ui_PhaseSelector_CH4 := 1;		// nicht verwendet
+	prgEM.ui_PhaseSelector_CH5 := 1;		// Außenbeleuchtung L1
+	prgEM.b_Invers_FB3446_CH1 := TRUE;
+	prgEM.b_Invers_FB3446_CH3 := TRUE;
+	prgEM.b_Invers_FB3446_CH5 := TRUE;
+	// define location
+	prgEMS.fDegreeOfLongitude 	:= 16.305299100;
+	prgEMS.fDegreeOfLatitude	:=	48.210828100;	
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010004' THEN	   // Simonygasse/Gentzgasse		Filiale 5043
+	fbCom.sUserName:= 'f85edbec-db0b-4af5-af68-13e6fddbac2f'; 				
+	fbCom.sUserPassword:= '3f5546cc-754c-4735-900b-f5cc6395dbed';		
+	// define the hardware version
+	prgHW_v1();
+	// define voltage channels for current measurement	
+	prgEM.ui_PhaseSelector_CH1 := 1;		// UTS Vorbereitung L1	12F4
+	prgEM.ui_PhaseSelector_CH2 := 2;		// UTS 2 Vorbereitung L2 12F5 
+	prgEM.ui_PhaseSelector_CH3 := 3;		// UTS Verkauf L3 12F6
+	prgEM.ui_PhaseSelector_CH4 := 3;		// UTS WS L3 4F3
+	prgEM.ui_PhaseSelector_CH5 := 1;		// Außenbeleuchtung		L1
+	prgEM.b_Invers_FB3446_CH1 := TRUE;
+	prgEM.b_Invers_FB3446_CH2 := TRUE;		// hat noch nie strom gesehen, sollte aber passen da alle gleich angeschlossen wurden
+	prgEM.b_Invers_FB3446_CH3 := TRUE;
+	prgEM.b_Invers_FB3446_CH4 := TRUE;
+	prgEM.b_Invers_FB3446_CH5 := TRUE;
+	// define location
+	prgEMS.fDegreeOfLongitude 	:= 16.329309940;
+	prgEMS.fDegreeOfLatitude	:= 48.231290967;	
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010003' THEN	   // Lerchenfelderstrasse 162			Filiale 5533
+	fbCom.sUserName:= '67dc4b1e-e627-4466-a305-3b7aefd169aa'; 				
+	fbCom.sUserPassword:= 'a5966a5a-d6a5-43a9-a895-ba3a0716f2b5';		
+	// define the hardware version
+	prgHW_v1();
+	// define voltage channels for current measurement	
+	prgEM.ui_PhaseSelector_CH1 := 1;		//kühlpult		L1	QF300
+	prgEM.ui_PhaseSelector_CH2 := 2;		// 
+	prgEM.ui_PhaseSelector_CH3 := 3;		//
+	prgEM.ui_PhaseSelector_CH4 := 3;		//
+	prgEM.ui_PhaseSelector_CH5 := 1;		// Reklame		L1	F300
+	prgEM.b_Invers_FB3446_CH1 := TRUE;
+	prgEM.b_Invers_FB3446_CH5 := TRUE;
+	// define location
+	prgEMS.fDegreeOfLongitude 	:= 16.339652538;
+	prgEMS.fDegreeOfLatitude	:= 48.208344761;	
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010002' THEN	   		// Bellaria Passage/U2 Volkstheat		Filiale 5727
+	fbCom.sUserName:= 'ef351b6e-8cb7-43ed-9945-e3881a3cf228'; 				
+	fbCom.sUserPassword:= '48861d95-e227-43f7-8877-affb21185524';		
+	// define the hardware version
+	prgHW_v1();
+	// define voltage channels for current measurement	
+	prgEM.ui_PhaseSelector_CH1 := 1;		// UTS Vorbereitung 	L1 	F23
+	prgEM.ui_PhaseSelector_CH2 := 1;		// UTS WC				L1 	F13
+	prgEM.ui_PhaseSelector_CH3 := 3;		//
+	prgEM.ui_PhaseSelector_CH4 := 3;		//
+	prgEM.ui_PhaseSelector_CH5 := 2;		// Außenbeleuchtung		L2	F52
+	prgEM.b_Invers_FB3446_CH1 := TRUE;
+	prgEM.b_Invers_FB3446_CH2 := TRUE;
+	prgEM.b_Invers_FB3446_CH5 := TRUE;
+	// define location
+	prgEMS.fDegreeOfLongitude 	:= 16.360278726;
+	prgEMS.fDegreeOfLatitude	:= 48.206657345;	
+	// undergound Mode
+	prgEMS.m_UnderGroundMode := TRUE; // outside light gets not switched off with sunrise
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010005' THEN	   		// Elisabethallee 81		Filiale 5083
+	fbCom.sUserName:= '638f6103-9d59-4c70-88ad-30aab513c47d'; 				
+	fbCom.sUserPassword:= '874b34d1-f8cd-4356-a784-fb064ab9af7a';		
+	// define the hardware version
+	prgHW_v1();
+	// define voltage channels for current measurement	
+	prgEM.ui_PhaseSelector_CH1 := 1;		// UTS1 Vorbereitung 	L1 	F23
+	prgEM.ui_PhaseSelector_CH2 := 2;		// UTS2 Vorbereitung	L2	F13
+	prgEM.ui_PhaseSelector_CH3 := 3;		// UTS WC				L3	F14 
+	prgEM.ui_PhaseSelector_CH4 := 3;		//
+	prgEM.ui_PhaseSelector_CH5 := 2;		// Außenbeleuchtung		L2	F19
+	prgEM.b_Invers_FB3446_CH1 := FALSE;
+	prgEM.b_Invers_FB3446_CH2 := FALSE;
+	prgEM.b_Invers_FB3446_CH3 := FALSE;
+	prgEM.b_Invers_FB3446_CH4 := TRUE;
+	prgEM.b_Invers_FB3446_CH5 := TRUE;
+	// define location
+	prgEMS.fDegreeOfLongitude 	:= 16.294545200;
+	prgEMS.fDegreeOfLatitude	:= 48.176629600;	
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010025' THEN	   		// U2 Station Hardeggasse/BA5			Filiale 5507
+	fbCom.sUserName:= '80434c2d-22bd-4a3e-bb2d-69f0ac35e0db'; 				
+	fbCom.sUserPassword:= '0e53f940-cdd7-4f5b-a1a8-5e4d71664a49';		
+	// define the hardware version
+	prgHW_v1();
+	// define voltage channels for current measurement	
+	prgEM.ui_PhaseSelector_CH1 := 2;		// UTS 		 	L2 	F??
+	prgEM.ui_PhaseSelector_CH2 := 1;		// Kühlpult		L1	F??
+	prgEM.ui_PhaseSelector_CH3 := 3;		// 						L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;		//
+	prgEM.ui_PhaseSelector_CH5 := 2;		// Außenbeleuchtung				L2	F??
+	prgEM.b_Invers_FB3446_CH1 := FALSE;
+	prgEM.b_Invers_FB3446_CH2 := TRUE;
+	prgEM.b_Invers_FB3446_CH3 := TRUE;
+	prgEM.b_Invers_FB3446_CH4 := TRUE;
+	prgEM.b_Invers_FB3446_CH5 := TRUE;
+	// define location
+	prgEMS.fDegreeOfLongitude 	:= 16.457819939;
+	prgEMS.fDegreeOfLatitude	:= 48.220869946;	
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010029' THEN		   		// Hütteldorf BHF Keißlergasse 3-5        Filiale 5198			
+	fbCom.sUserName 	:= 'f23524eb-f269-4fb3-a18e-e0a261470f55';					
+	fbCom.sUserPassword 	:= 'ffb3c162-cd85-46a4-ba72-27379fe723c7';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Vorbereitung		L1 	F12
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS Verkauf			L2	F12
+	prgEM.ui_PhaseSelector_CH3 := 3;			// Kühlpult				L3	F35 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//		
+	prgEM.ui_PhaseSelector_CH5 := 2;			// keine Reklame!
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := false;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.294545200	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.176629600	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010034' THEN		   		// Hütteldorferstraße 106 Hütteldorferstraße 106 U-Bahn        Filiale 5371			
+	fbCom.sUserName	:= '94c310df-c402-476b-b902-8bc5d91f6ade';					
+	fbCom.sUserPassword	:= '8a45ad3f-9d3e-402f-af77-c4554f9bcc96';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// Boiler				L1 		F12
+	prgEM.ui_PhaseSelector_CH2 := 2;			// Kühlvitrine			L2		F13
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//		L	F 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1		F18
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.305299100	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.210828100	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010009' THEN		   		// Meidlinger Hauptstraße 77-79 Meidlinger Hauptstraße 77-79        Filiale 5261			
+	fbCom.sUserName	:= '0e23664b-b47a-4339-af65-e78c48c0c1f1';					
+	fbCom.sUserPassword	:= '46f985c0-5138-4e06-9f5f-8d6cbf6bb885';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			//UTS Verkauf 			L1 		F36
+	prgEM.ui_PhaseSelector_CH2 := 1;			//UTS WC 				L1		F23
+	prgEM.ui_PhaseSelector_CH3 := 3;			//UTS Lager		 		L3		F25 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//Kühlpult				L3		F24 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1		F18
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := FALSE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.386657100	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.262881000	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010028' THEN		   		// Wienerbergstrasse Wienerbergstrasse 5/Top C Mall        Filiale 5520			
+	fbCom.sUserName	:= '7b285e3c-ddc5-4957-b862-f424e93635c5';					
+	fbCom.sUserPassword	:= 'c17688f0-3c1b-4a9f-96c2-b46eff4f174f';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS 			L1		F13
+	prgEM.ui_PhaseSelector_CH2 := 1;			// UTS			L1		F23
+	prgEM.ui_PhaseSelector_CH3 := 1;			// UTS			L1		F33 
+	prgEM.ui_PhaseSelector_CH4 := 1;			// Kühlpult		L1		470 
+	prgEM.ui_PhaseSelector_CH5 := 3;			// Außenbeleuchtung		L3	F70K
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.385550499	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.241795609	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010020' THEN		   		// Lugner City Gablenzgasse 5-13/Lugner City        Filiale 5263			
+	fbCom.sUserName	:= '4d0c34f6-242f-4ce1-92bd-2a764b070941';					
+	fbCom.sUserPassword	:= '558a8108-f42f-48d7-97a8-c48e3c125432';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 3;			// UTS Verkaus		L3 	F3.8
+	prgEM.ui_PhaseSelector_CH2 := 2;			//		L	F
+	prgEM.ui_PhaseSelector_CH3 := 1;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 2;			// Kühlvitrine		L2	F2.9
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	Q5
+	prgEM.b_Invers_FB3446_CH1 := FALSE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := FALSE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.377717000	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.207817100	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010018' THEN		   		// Bahnhofcity Wien West Europaplatz 1, Bahnhofcity Wie        Filiale 5265			
+	fbCom.sUserName	:= '0bd2836e-ee9c-4130-8903-5450f0f5540d';					
+	fbCom.sUserPassword	:= 'd1531b22-aa78-4f6b-b408-2f21c11385ce';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Regal			L1 	F10
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS Imbis			L2	F19
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Imbisspeicher	L3	F31 
+	prgEM.ui_PhaseSelector_CH4 := 2;			//	Kühlpult			L2	F 29
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	Q2
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.390845180	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.202456437	;
+	prgEMS.m_UnderGroundMode := TRUE; // outside light gets not switched off with sunrise		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010019' THEN		   		// Renngasse Renngasse 14        Filiale 5001			
+	fbCom.sUserName	:= 'bf8ced92-a46d-48b2-af56-60547f6321ce';					
+	fbCom.sUserPassword	:= '61791747-686c-4885-8be8-406bfee3ea34';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Vorbereitung		L1 	6F7
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS WC				L2	6F6
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Milch			L3	3F7 
+	prgEM.ui_PhaseSelector_CH4 := 2;			// Kühlpult				L2	F5Q2 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	7Q3
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := false;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.262190342	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.197818950	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010033' THEN		   		// Mariahilferstraße 91 Mariahilferstraße 91        Filiale 5018			
+	fbCom.sUserName	:= '53718463-6bcb-4885-861d-383ef724fa5c';					
+	fbCom.sUserPassword	:= '252ebe28-d58c-4eb9-87b5-04ce9e212053';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Vorbereitung 2	L1 	F3.10
+	prgEM.ui_PhaseSelector_CH2 := 1;			// UTS Vorbereitung 1	L1	F3.8
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Verkauf			L3	F3.6 
+	prgEM.ui_PhaseSelector_CH4 := 3;			// Kühlpult				L3	F.3 
+	prgEM.ui_PhaseSelector_CH5 := 3;			// Außenbeleuchtung		L3	Q9
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.360289454	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.201419564	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010006' THEN		   		// Garnisongasse Garnisongasse 10        Filiale 5044			
+	fbCom.sUserName	:= 'f70ae8bf-a2ec-4e2a-bbf1-cdcfeb11a94b';					
+	fbCom.sUserPassword	:= 'ce441061-a992-4904-8171-2d98b16613eb';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Speicher	L1 	F12
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 2;			// Kühlpult		L1	F24 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1	F18
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.384187937	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.233988793	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010030' THEN		   		// Absberggasse Absberggasse 25        Filiale 5054			
+	fbCom.sUserName	:= '58bda6eb-da56-4070-ba7e-83a2c9d5f537';					
+	fbCom.sUserPassword	:= '375e5db9-5ba8-4c7b-a99b-2b38592b4d5c';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 2;			// UTS		L2 	LS2 
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//	Kühlvitrine	L3	LS25 
+	prgEM.ui_PhaseSelector_CH5 := 3;			// Außenbeleuchtung		L3	FI LS
+	prgEM.b_Invers_FB3446_CH1 := FALSE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.330613494	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.174646680	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010011' THEN		   		// Keplerplatz Keplerplatz 13        Filiale 5057			
+	fbCom.sUserName	:= 'c31751ab-0ec6-434d-bdd4-ec062325205f';					
+	fbCom.sUserPassword	:= '5e45b6e4-c3ac-4566-b099-9d201bb6cae2';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// 		L 	F
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//		L	F 
+	prgEM.ui_PhaseSelector_CH5 := 3;			// Außenbeleuchtung		L3	Q80
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.334213018	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.203861545	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010022' THEN		   		// Jedleseerstraße Jedleseerstraße 77        Filiale 5128			
+	fbCom.sUserName	:= '99da4823-b5b9-4e09-8ec5-44f292bc7eac';					
+	fbCom.sUserPassword	:= 'b12b5b8f-e041-443d-9394-b6bab7b480fb';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS WC				L1 	F23
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS Lager			L2	F14
+	prgEM.ui_PhaseSelector_CH3 := 1;			// UTS Verkauf			L1	F15 
+	prgEM.ui_PhaseSelector_CH4 := 3;			// UTS Vorbereitung		L3	F17 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1	F12
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := FALSE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.377128363	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.185738774	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN0100' THEN		   		// Hütteldorferstraße 160 Hütteldorferstraße 160        Filiale 5167			
+	fbCom.sUserName	:= '458ee459-101a-4c08-81bc-44ed19c30611';					
+	fbCom.sUserPassword	:= 'e578a281-8aad-4514-89a3-282e9cd0f337';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// 		L 	F
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//		L	F 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L	F
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.337463856	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.196975075	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010032' THEN		   		// Handelskai ÖBB Handelskai ÖBB        Filiale 5177			
+	fbCom.sUserName	:= '6ba23e70-3351-4848-b132-07a59078f6be';					
+	fbCom.sUserPassword	:= 'e0281776-e30c-4066-afb8-32ca196af899';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Bei Kaffeem.		L2 	F3.8
+	prgEM.ui_PhaseSelector_CH2 := 3;			// UTS Vorbereitung		L3	F2.7
+	prgEM.ui_PhaseSelector_CH3 := 2;			// UTS WC				L1	F2.8 
+	prgEM.ui_PhaseSelector_CH4 := 1;			// Kühlpult				L1	F3.10 
+	prgEM.ui_PhaseSelector_CH5 := 3;			// Außenbeleuchtung		L3	F3.3
+	prgEM.b_Invers_FB3446_CH1 := false;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := false;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.304274201	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.210897231	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010024' THEN		   		// Wollzeile Wollzeile 30        Filiale 5182			
+	fbCom.sUserName	:= '18d01dc6-6f22-4da0-a795-3bae466dbabb';					
+	fbCom.sUserPassword	:= '1835d046-0c98-4f28-9014-041a0a1c3b3b';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// 	UTS WC	L1 	Q3F8
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//	Kühlung	L3	Q3F3 
+	prgEM.ui_PhaseSelector_CH5 := 3;			// Außenbeleuchtung		L3	Q3F6
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.360278726	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.206657345	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010007' THEN		   		// Rochusmarkt Rochusmarkt 10-12        Filiale 5185			
+	fbCom.sUserName	:= 'e9733950-d8d8-40a5-b6fa-1a52d45ec5ce';			//'94c310df-c402-476b-b902-8bc5d91f6ade';					
+	fbCom.sUserPassword	:= '9f22b23f-817a-4c97-8572-383aa73dfb10';  //'8a45ad3f-9d3e-402f-af77-c4554f9bcc96';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS1 Vorbereitung		L1 	F7
+	prgEM.ui_PhaseSelector_CH2 := 3;			// UTS2 Vorbereitung		L2	F8
+	prgEM.ui_PhaseSelector_CH3 := 2;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 2;			// Snackvitrine				L3	F9 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung			L3	F
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.346025467	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.220119379	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010015' THEN		   		// Mariahilferstraße 1 Mariahilferstraße 1D        Filiale 5201			
+	fbCom.sUserName	:= 'b162cc0f-cf1c-411b-8e81-907687c4939a';					
+	fbCom.sUserPassword	:= '02965cdd-2de7-4bfc-af37-b59cb82db904';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 3;			// UTS Lager		L3 	F3
+	prgEM.ui_PhaseSelector_CH2 := 1;			// UTS Vorne		L1	F4
+	prgEM.ui_PhaseSelector_CH3 := 2;			// 	UTS Unten WC1	L2	F5 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//	UTS Kunden Wc	L3	F6 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1	F18
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := FALSE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.399519444	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.255969882	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010010' THEN		   		// Traisengasse ÖBB Traisengasse ÖBB (EG 001)        Filiale 5227			
+	fbCom.sUserName	:= '24672601-ae5f-43ad-8f2e-c8fd76dff6fd';					
+	fbCom.sUserPassword	:= 'fab3fd24-6270-41b0-bc0f-e394dcfa811e';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 2;			// UTS Vorbereitung		L2 	F34
+	prgEM.ui_PhaseSelector_CH2 := 1;			// UTS Nebengebäuce		L1	F36 
+	prgEM.ui_PhaseSelector_CH3 := 1;			// em3					L	F 
+	prgEM.ui_PhaseSelector_CH4 := 1;			//	Kühlpult			L1	F33 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung	NICHT VORHANDEN	L	F
+	prgEM.b_Invers_FB3446_CH1 := FALSE;						
+	prgEM.b_Invers_FB3446_CH2 := FALSE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.311821938	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.199116916	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN0100' THEN		   		// Am Hauptbahnhof Am Hauptbahnhof        Filiale 5264			
+	fbCom.sUserName	:= '1644fb2d-5fcc-4db1-91c3-86b24448a68d';					
+	fbCom.sUserPassword	:= 'c4bfb835-dba3-427b-8898-c788e8385820';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// 		L 	F
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//		L	F 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L	F
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.413322091	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.191961600	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010021' THEN		   		// Wilhelminen-Spital Montleartstraße 37/Wilhelminen        Filiale 5268			
+	fbCom.sUserName	:= 'd9f0efb1-9f97-44af-80a3-845a70c16e5c';					
+	fbCom.sUserPassword	:= '61bef05e-ac12-4da8-b0e4-accb68f1c3a6';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// 		L 	F			keine anderen Lasten möglich!
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//		L	F 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1	F19
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.431502104	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.206378487	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010014' THEN		   		// Währinger Gürtel / AKH Währinger Gürtel 18-20/AKH        Filiale 5274			
+	fbCom.sUserName	:= '562a358b-9af8-4176-9baa-7b1562d8e524';					
+	fbCom.sUserPassword	:= '909a80ed-762d-4c4e-8570-21eab896ca68';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 2;			// UTS Verkauf		L2 	Q84		ist L1
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 2;			//	Kühlpulut 1+2	L2	Q87 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L	F   Wird zentral geschalten
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.457819939	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.220869946	;		
+	prgEMS.m_UnderGroundMode := TRUE; // outside light gets not switched off with sunrise
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010027' THEN		   		// Floridsdorf BHF Franz Jonas Platz 1        Filiale 5315			
+	fbCom.sUserName	:= '94bfbceb-ec69-4d04-99bb-ae57abb58c21';					
+	fbCom.sUserPassword	:= 'dc4805ae-f87b-447e-8c94-274232f44332';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS WC Personal		L1 	F2.6
+	prgEM.ui_PhaseSelector_CH2 := 1;			// UTS Vorbereitung	5l	L1	F5.3
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Vorbereitung 10l	L3	F5.4 
+	prgEM.ui_PhaseSelector_CH4 := 1;			// UTS Verkauf			L1	F1.3 
+	prgEM.ui_PhaseSelector_CH5 := 3;			// Außenbeleuchtung		L3	F3.10
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.347130537	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.168947679	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010023' THEN		   		// Erdbergstraße Erdbergstraße 143, Town Town U        Filiale 5502			
+	fbCom.sUserName	:= 'ae74d71e-0ce5-4a51-8f3c-8e83903a7b25';					
+	fbCom.sUserPassword	:= 'df3222e0-0efd-479a-8e4e-85e8bd987d0f';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 3;			// UTS WC		 		L2 	e15
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS Verkauf			L1	e23
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Vorbereitung		L2	e34 
+	prgEM.ui_PhaseSelector_CH4 := 1;			// Kühlmöbel			L3	e61 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1	e60
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.364822388	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.249097565	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010031' THEN		   		// Wehlistraße Wehlistr. 289/U2 Donaumarina        Filiale 5505			
+	fbCom.sUserName	:= 'd0f64b11-86af-4272-9a52-24d5218a3862';					
+	fbCom.sUserPassword	:= '64a58085-7f34-4e59-a382-2e644150db08';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 2;			// UTS Verkauf			L2	F33
+	prgEM.ui_PhaseSelector_CH2 := 1;			// UTS WC				L1	F2
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Vorbereitung1 	L3	F3
+	prgEM.ui_PhaseSelector_CH4 := 2;			// UTS Vorbereitung2	L2	F4
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	F36
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := FALSE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.398427800	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.192716200	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010008' THEN		   		// Heiligenstadt BHF Boschstraße 8, Heiligenstadt B        Filiale 5523			
+	fbCom.sUserName	:= '7d5d682a-5ed7-491f-a063-553ad0ca4f4b';					
+	fbCom.sUserPassword	:= '44b0fadc-8dbc-448c-8989-73d75c65231c';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 2;			// UTS WC	 		L2 	Q2F7
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS Lager		L2	F5
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Pult			L3	FILS7 
+	prgEM.ui_PhaseSelector_CH4 := 2;			//	Kühlpult		L2	Q3F8 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L	F
+	prgEM.b_Invers_FB3446_CH1 := FALSE;						
+	prgEM.b_Invers_FB3446_CH2 := FALSE;						
+	prgEM.b_Invers_FB3446_CH3 := FALSE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.408102512	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.193864060	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010012' THEN		   		// Landstraßer Hauptstraße 146 Landstraßer Hauptstraße 146        Filiale 5525			
+	fbCom.sUserName	:= '2ed9776c-c3f0-479f-ae0a-f4869a0581da';					
+	fbCom.sUserPassword	:= '42f768c9-aa38-4539-a5fc-ecd9f03a27ef';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 2;			// UTS Kunden WC1		L2 	F8
+	prgEM.ui_PhaseSelector_CH2 := 3;			// UTS Kunden WC2		L3	F9
+	prgEM.ui_PhaseSelector_CH3 := 1;			// UTS Personal WC		L1	F10 
+	prgEM.ui_PhaseSelector_CH4 := 2;			// UTS Imbis			L2	F11 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	Q84
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.392526925	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.218641445	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010035' THEN		   		// Würtzlerstraße Würtzlerstraße 15/Markhofgasse        Filiale 5528			
+	fbCom.sUserName	:= 'd6d7c7c5-3963-49ef-898a-28512dd344df';					
+	fbCom.sUserPassword	:= '227e3869-53ea-4b7b-b3c5-2ecab7407da3';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// 		L 	F
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 2;			// Kühlpult				L2	Q42
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	Q23
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.339652538	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.208344761	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010017' THEN		   		// Praterstern Bahnhof Praterstern Bahnhof        Filiale 5531			
+	fbCom.sUserName	:= '9b3e12b3-cfcd-40c4-a14b-8e53072028d9';					
+	fbCom.sUserPassword	:= 'ab97b554-f196-4262-802f-d59f4cbab8a9';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Vorbereitung	1		L1 	F4.1
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS Borbereitung 2 		L2	F4.2
+	prgEM.ui_PhaseSelector_CH3 := 3;			// UTS Waschraum			L3	F4.3 
+	prgEM.ui_PhaseSelector_CH4 := 1;			// UTS Hinterland			L1	F4.4 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung			L2	F3.3
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.422074800	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.210492700	;		
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010016' THEN		   		// Olympiaplatz Olympiaplatz 2/Stadion Center        Filiale 5537			
+	fbCom.sUserName	:= '9ba9d4f3-d836-4a03-9528-eadd823f31f3';					
+	fbCom.sUserPassword	:= '5dd102dd-5d23-4d9b-8fca-744f26d159f6';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS		L1 	F1.5
+	prgEM.ui_PhaseSelector_CH2 := 2;			// 		L	F
+	prgEM.ui_PhaseSelector_CH3 := 3;			// 		L	F 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//		L	F 
+	prgEM.ui_PhaseSelector_CH5 := 1;			// Außenbeleuchtung		L1	F3.8
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.418316364	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.185352504	;		
+
+	prgEMS.m_UnderGroundMode := TRUE; // outside light gets not switched off with sunrise	
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010026' THEN		   		//  Guglgasse 6, Gasometer A, Top        Filiale 5605			
+	fbCom.sUserName	:= 'fa19753f-a594-40a2-8c4c-c0cb999316b2';					
+	fbCom.sUserPassword	:= '424679d2-d00a-459f-a681-1afdf0209b7d';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 1;			// UTS Vorbereitung		L2 	F30.4
+	prgEM.ui_PhaseSelector_CH2 := 2;			// UTS Lager			L3	F30.5
+	prgEM.ui_PhaseSelector_CH3 := 1;			// 	UTS Verkauf			L1	F30.6 
+	prgEM.ui_PhaseSelector_CH4 := 3;			//	Kühlpult			L1	F10.7 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	F40.6
+	prgEM.b_Invers_FB3446_CH1 := TRUE;						
+	prgEM.b_Invers_FB3446_CH2 := FALSE;						
+	prgEM.b_Invers_FB3446_CH3 := FALSE;						
+	prgEM.b_Invers_FB3446_CH4 := FALSE;						
+	prgEM.b_Invers_FB3446_CH5 := FALSE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.418316364	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.185352504	;	
+
+	prgEMS.m_UnderGroundMode := TRUE; // outside light gets not switched off with sunrise	
+ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010013' THEN		   		// Schwedenplatz        Filiale 5531			
+	fbCom.sUserName	:= 'cd54a7f7-a22c-4329-a0cb-47b3717e1645';					
+	fbCom.sUserPassword	:= '4d217701-7937-4985-b59d-87b6071eba3f';					
+	// define the hardware version						
+	prgHW_v1();						
+	// define voltage channels for current measurement						
+	prgEM.ui_PhaseSelector_CH1 := 3;			// UTS Vorbereitung		L3 	Q43
+	prgEM.ui_PhaseSelector_CH2 := 3;			// 			L	F
+	prgEM.ui_PhaseSelector_CH3 := 1;			// 				L	F 
+	prgEM.ui_PhaseSelector_CH4 := 1;			//				L	F 
+	prgEM.ui_PhaseSelector_CH5 := 2;			// Außenbeleuchtung		L2	Q16
+	prgEM.b_Invers_FB3446_CH1 := false;						
+	prgEM.b_Invers_FB3446_CH2 := TRUE;						
+	prgEM.b_Invers_FB3446_CH3 := TRUE;						
+	prgEM.b_Invers_FB3446_CH4 := TRUE;						
+	prgEM.b_Invers_FB3446_CH5 := TRUE;						
+	// define location						
+	prgEMS.fDegreeOfLongitude 	:= 		16.418316364	;		
+	prgEMS.fDegreeOfLatitude	:= 		48.185352504	;	
+
+	prgEMS.m_UnderGroundMode := FALSE; // outside light gets not switched off with sunrise	
+END_IF
+
+
+// copy values to struct	
+struct_transfer.int_liveCount 				:= 	struct_transfer.int_liveCount+1;
+struct_transfer.lr_RealPower_Grid			:=	prgEM.lr_RealPower_Grid	;
+struct_transfer.lr_ApparentPower_Grid		:=	prgEM.lr_ApparentPower_Grid	;
+struct_transfer.lr_ReactivePower_Grid		:=	prgEM.lr_ReactivePower_Grid	;
+struct_transfer.lr_Frequency_Grid			:=	prgEM.lr_Frequency_Grid	;
+struct_transfer.lr_Voltage_L1N				:=	prgEM.lr_Voltage_L1N	;
+struct_transfer.lr_Voltage_L2N				:=	prgEM.lr_Voltage_L2N	;
+struct_transfer.lr_Voltage_L3N				:=	prgEM.lr_Voltage_L3N	;
+struct_transfer.lr_Voltage_L1L2				:=	prgEM.lr_Voltage_L1L2	;
+struct_transfer.lr_Voltage_L2L3				:=	prgEM.lr_Voltage_L2L3	;
+struct_transfer.lr_Voltage_L3L1				:=	prgEM.lr_Voltage_L3L1	;
+struct_transfer.lr_Current_L1				:=	prgEM.lr_Current_L1	;
+struct_transfer.lr_Current_L2				:=	prgEM.lr_Current_L2	;
+struct_transfer.lr_Current_L3				:=	prgEM.lr_Current_L3	;
+struct_transfer.lrPower_EM1					:=	prgEM.lrPower_EM1	;
+struct_transfer.lrPower_EM2					:=	prgEM.lrPower_EM2	;
+struct_transfer.lrPower_EM3					:=	prgEM.lrPower_EM3	;
+struct_transfer.lrPower_EM4					:=	prgEM.lrPower_EM4	;
+struct_transfer.lrPower_EM5					:=	prgEM.lrPower_EM5	;
+struct_transfer.lrPower_EM6					:=	prgEM.lrPower_EM6	;
+struct_transfer.lrPower_House				:=	prgEM.lrPower_House	;
+struct_transfer.lr_EnergyCounter_Grid		:=	prgEM.lr_EnergyCounter_Grid	;
+struct_transfer.lr_EnergyCounter_EM1		:=	prgEM.lr_EnergyCounter_EM1	;
+struct_transfer.lr_EnergyCounter_EM2		:=	prgEM.lr_EnergyCounter_EM2	;
+struct_transfer.lr_EnergyCounter_EM3		:=	prgEM.lr_EnergyCounter_EM3	;
+struct_transfer.lr_EnergyCounter_EM4		:=	prgEM.lr_EnergyCounter_EM4	;
+struct_transfer.lr_EnergyCounter_EM5		:=	prgEM.lr_EnergyCounter_EM5	;
+struct_transfer.lr_EnergyCounter_EM6		:=	prgEM.lr_EnergyCounter_EM6	;
+struct_transfer.lr_EnergyCounter_House		:=	prgEM.lr_EnergyCounter_House	;
+
+struct_transfer.b_Manual_On_CH1				:=	prgEMS.	b_Manual_On_CH1	;
+struct_transfer.b_Manual_Off_CH1			:=	prgEMS.	b_Manual_Off_CH1	;
+struct_transfer.b_Manual_On_CH2				:=	prgEMS.	b_Manual_On_CH2	;
+struct_transfer.b_Manual_Off_CH2			:=	prgEMS.	b_Manual_Off_CH2	;
+struct_transfer.b_Manual_On_CH3				:=	prgEMS.	b_Manual_On_CH3	;
+struct_transfer.b_Manual_Off_CH3			:=	prgEMS.	b_Manual_Off_CH3	;
+struct_transfer.b_Manual_On_CH4				:=	prgEMS.	b_Manual_On_CH4	;
+struct_transfer.b_Manual_Off_CH4			:=	prgEMS.	b_Manual_Off_CH4	;
+struct_transfer.b_Manual_On_CH5				:=	prgEMS.	b_Manual_On_CH5	;
+struct_transfer.b_Manual_Off_CH5			:=	prgEMS.	b_Manual_Off_CH5	;
+struct_transfer.b_Manual_On_Coffee_CH6		:=	prgEMS.	b_Manual_On_Coffee_CH6	;
+struct_transfer.b_Manual_Off_Coffee_CH6		:=	prgEMS.	b_Manual_Off_Coffee_CH6	;
+struct_transfer.b_Manual_On_Vent_CH7		:=	prgEMS.	b_Manual_On_Vent_CH7	;
+struct_transfer.b_Manual_Off_Vent_CH7		:=	prgEMS.	b_Manual_Off_Vent_CH7	;
+struct_transfer.b_LoadOn_CH1				:=	prgEMS.	b_LoadOn_CH1	;
+struct_transfer.b_LoadOn_CH2				:=	prgEMS.	b_LoadOn_CH2	;
+struct_transfer.b_LoadOn_CH3				:=	prgEMS.	b_LoadOn_CH3	;
+struct_transfer.b_LoadOn_CH4				:=	prgEMS.	b_LoadOn_CH4	;
+struct_transfer.b_LoadOn_CH5				:=	prgEMS.	b_LoadOn_CH5	;
+struct_transfer.b_LoadOn_CH6				:=	prgEMS.	b_LoadOn_CH6	;
+struct_transfer.b_LoadOn_CH7				:=	prgEMS.	b_LoadOn_CH7	;
+struct_transfer.byte_MoFr_Open_Hour			:=	prgEMS.	byte_MoFr_Open_Hour	;
+struct_transfer.byte_MoFr_Open_Minute		:=	prgEMS.	byte_MoFr_Open_Minute	;
+struct_transfer.byte_MoFr_Close_Hour		:=	prgEMS.	byte_MoFr_Close_Hour	;
+struct_transfer.byte_MoFr_Close_Minute		:=	prgEMS.	byte_MoFr_Close_Minute	;
+struct_transfer.byte_Sa_Open_Hour			:=	prgEMS.	byte_Sa_Open_Hour	;
+struct_transfer.byte_Sa_Open_Minute			:=	prgEMS.	byte_Sa_Open_Minute	;
+struct_transfer.byte_Sa_Close_Hour			:=	prgEMS.	byte_Sa_Close_Hour	;
+struct_transfer.byte_Sa_Close_Minute		:=	prgEMS.	byte_Sa_Close_Minute	;
+struct_transfer.byte_So_Open_Hour			:=	prgEMS.	byte_So_Open_Hour	;
+struct_transfer.byte_So_Open_Minute			:=	prgEMS.	byte_So_Open_Minute	;
+struct_transfer.byte_So_Close_Hour			:=	prgEMS.	byte_So_Close_Hour	;
+struct_transfer.byte_So_Close_Minute		:=	prgEMS.	byte_So_Close_Minute	;
+struct_transfer.b_Enable_Control_CH1		:=	prgEMS.	b_Enable_Control_CH1	;
+struct_transfer.real_Offset_Start_CH1		:=	prgEMS.	real_Offset_Start_CH1	;
+struct_transfer.real_Offset_Stop_CH1		:=	prgEMS.	real_Offset_Stop_CH1	;
+struct_transfer.b_Enable_Control_CH2		:=	prgEMS.	b_Enable_Control_CH2	;
+struct_transfer.real_Offset_Start_CH2		:=	prgEMS.	real_Offset_Start_CH2	;
+struct_transfer.real_Offset_Stop_CH2		:=	prgEMS.	real_Offset_Stop_CH2	;
+struct_transfer.b_Enable_Control_CH3		:=	prgEMS.	b_Enable_Control_CH3	;
+struct_transfer.real_Offset_Start_CH3		:=	prgEMS.	real_Offset_Start_CH3	;
+struct_transfer.real_Offset_Stop_CH3		:=	prgEMS.	real_Offset_Stop_CH3	;
+struct_transfer.b_Enable_Control_CH4		:=	prgEMS.	b_Enable_Control_CH4	;
+struct_transfer.real_Offset_Start_CH4		:=	prgEMS.	real_Offset_Start_CH4	;
+struct_transfer.real_Offset_Stop_CH4		:=	prgEMS.	real_Offset_Stop_CH4	;
+struct_transfer.b_Enable_Control_CH5		:=	prgEMS.	b_Enable_Control_CH5	;
+struct_transfer.real_Offset_Start_CH5		:=	prgEMS.	real_Offset_Start_CH5	;
+struct_transfer.real_Offset_Stop_CH5		:=	prgEMS.	real_Offset_Stop_CH5	;
+struct_transfer.b_Enable_Control_Coffee_CH6	:=	prgEMS.	b_Enable_Control_Coffee_CH6	;
+struct_transfer.real_Offset_Start_Coffee_CH6:=	prgEMS.	real_Offset_Start_Coffee_CH6	;
+struct_transfer.real_Offset_Stop_Coffee_CH6	:=	prgEMS.	real_Offset_Stop_Coffee_CH6	;
+struct_transfer.b_Enable_Control_Vent_CH7	:=	prgEMS.	b_Enable_Control_Vent_CH7	;
+struct_transfer.real_Offset_Start_CH7		:=	prgEMS.	real_Offset_Start_CH7	;
+struct_transfer.real_Offset_Stop_CH7		:=	prgEMS.	real_Offset_Stop_CH7	;
+
+(*struct_transfer.		:=  ;
+struct_transfer.		:=  ;
+struct_transfer.		:=  ;
+struct_transfer.		:=  ;
+struct_transfer.		:=  ;
+struct_transfer.		:=  ;
+*)
+
+
+// copy struct to byte array
+IF SIZEOF(struct_transfer) > SIZEOF(byte_array) THEN
+	memcpy(ADR(byte_array),ADR(struct_transfer),SIZEOF(byte_array));
+	uint_size := SIZEOF(struct_transfer);
+	mSize_to_Big := TRUE;
+ELSE
+	memcpy(ADR(byte_array),ADR(struct_transfer),SIZEOF(struct_transfer));
+	mSize_to_Big := FALSE;
+END_IF
+uint_size := SIZEOF(struct_transfer);
+
+
+// liveCount count up every minute
+
+IF prgSystemTime.structSystemTime.wSecond = 59 AND NOT mCountUp THEN
+	int_LiveCount_1min := int_LiveCount_1min+1;
+	mCountUp := TRUE;
+ELSif prgSystemTime.structSystemTime.wSecond <> 59 then
+	mCountUp := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgComEffIO">
+      <LineId Id="8" Count="1" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="10" Count="2" />
+      <LineId Id="2197" Count="0" />
+      <LineId Id="13" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="210" Count="2" />
+      <LineId Id="604" Count="1" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="599" Count="3" />
+      <LineId Id="1955" Count="1" />
+      <LineId Id="908" Count="0" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="611" Count="1" />
+      <LineId Id="879" Count="0" />
+      <LineId Id="899" Count="1" />
+      <LineId Id="882" Count="7" />
+      <LineId Id="917" Count="0" />
+      <LineId Id="891" Count="0" />
+      <LineId Id="1954" Count="0" />
+      <LineId Id="918" Count="0" />
+      <LineId Id="1953" Count="0" />
+      <LineId Id="921" Count="0" />
+      <LineId Id="892" Count="1" />
+      <LineId Id="922" Count="12" />
+      <LineId Id="936" Count="15" />
+      <LineId Id="960" Count="0" />
+      <LineId Id="952" Count="0" />
+      <LineId Id="954" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="956" Count="0" />
+      <LineId Id="958" Count="0" />
+      <LineId Id="965" Count="13" />
+      <LineId Id="989" Count="0" />
+      <LineId Id="984" Count="0" />
+      <LineId Id="979" Count="2" />
+      <LineId Id="996" Count="17" />
+      <LineId Id="990" Count="0" />
+      <LineId Id="1370" Count="18" />
+      <LineId Id="1390" Count="37" />
+      <LineId Id="1429" Count="56" />
+      <LineId Id="1985" Count="0" />
+      <LineId Id="1486" Count="151" />
+      <LineId Id="1657" Count="37" />
+      <LineId Id="1696" Count="37" />
+      <LineId Id="1735" Count="37" />
+      <LineId Id="1774" Count="18" />
+      <LineId Id="2186" Count="0" />
+      <LineId Id="1794" Count="37" />
+      <LineId Id="1833" Count="56" />
+      <LineId Id="1891" Count="37" />
+      <LineId Id="1930" Count="18" />
+      <LineId Id="1993" Count="1" />
+      <LineId Id="1961" Count="18" />
+      <LineId Id="1992" Count="0" />
+      <LineId Id="1991" Count="0" />
+      <LineId Id="1999" Count="20" />
+      <LineId Id="955" Count="0" />
+      <LineId Id="2028" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="2032" Count="0" />
+      <LineId Id="2085" Count="26" />
+      <LineId Id="2054" Count="1" />
+      <LineId Id="2112" Count="53" />
+      <LineId Id="2034" Count="0" />
+      <LineId Id="2037" Count="5" />
+      <LineId Id="2035" Count="1" />
+      <LineId Id="2043" Count="10" />
+      <LineId Id="2176" Count="1" />
+      <LineId Id="2033" Count="0" />
+      <LineId Id="2179" Count="0" />
+      <LineId Id="2178" Count="0" />
+      <LineId Id="2180" Count="0" />
+      <LineId Id="2183" Count="2" />
+      <LineId Id="2181" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

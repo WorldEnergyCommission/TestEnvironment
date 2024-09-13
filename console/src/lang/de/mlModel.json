@@ -1,0 +1,1818 @@
+{
+  "HeatingCircuitOptimization": {
+    "previewName": "Heizkreis-Optimierung",
+    "mainView": {
+      "heating": "Heizen",
+      "mpcReady": "MPC Bereit",
+      "service": {
+        "on": "Regler Ein",
+        "off": "Regler Aus"
+      },
+      "handleMinusMessage": "Die Energieeinsparung beträgt 3%."
+    },
+    "settingsView": {
+      "title": "Settings for lowering mode",
+      "loweringModeTabs": [
+        "Zeit Einstellungen",
+        "Temperatur Einstellungen",
+        "Modus Einstellungen"
+      ],
+      "activateLoweringMode": "Absenk-Temperatur Aktivieren",
+      "loweringTemperature": "Absenk-Temperatur/°C",
+      "serviceOffTemperature": "Regler Ausschalttemperatur/°C",
+      "chartTabs": ["Diagramm", "Vorhersage"],
+      "forecastTabs": ["Temp/Ventil", "Wetter"],
+      "onM": "Ein/min",
+      "onH": "Ein/h",
+      "offM": "Aus/min",
+      "offH": "Aus/h",
+      "chartLabels": {
+        "chart": {
+          "roomTemp": "Raumtemperatur",
+          "valvePosition": "Ventilposition"
+        },
+        "tempValve": {
+          "roomTemp": "Raumtemperatur",
+          "valvePosition": "Ventilposition"
+        },
+        "weather": {
+          "air": "Lufttemperatur",
+          "globalRadiation": "Globale Strahlung Horizontal"
+        }
+      },
+      "energySavingModesList": {
+        "comfort": "Modus Comfort",
+        "balanced": "Modus Ausgeglichen",
+        "energySaving": "Modus Energieeinsparung"
+      }
+    },
+    "controllerMappings": {
+      "valveReturnType": {
+        "label": "Ventil Typ",
+        "description": "0-1 Digital"
+      },
+      "flowTemperature": {
+        "label": "Vorlauftemperatur",
+        "description": "32 Bit Wert"
+      },
+      "newSetTemperature": {
+        "label": "Neue Solltemperatur",
+        "description": "32 Bit Wert"
+      },
+      "returnTemperature": {
+        "label": "Rücklauftemperatur",
+        "description": "32 Bit Wert"
+      },
+      "areaTemperature": {
+        "label": "Raumtemperatur",
+        "description": "32 Bit Wert"
+      },
+      "valvePosition": {
+        "label": "Ventilstellung",
+        "description": "0-1 or 0-100"
+      },
+      "newValvePosition": {
+        "label": "Neue Ventilstellung",
+        "description": "0-1 or 0-100"
+      },
+      "newAreaTemperature": {
+        "label": "Neue Raumtemperatur",
+        "description": "32 Bit Wert"
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "32 Bit Wert"
+      },
+      "errorWarning": {
+        "label": "Fehler/Warnung",
+        "description": "0 = OK 1 = Warnung 2 = Fehler"
+      },
+      "mpcReady": {
+        "label": "MPC bereit",
+        "description": "0-1"
+      }
+    }
+  },
+  "PVProductionService": {
+    "previewName": "PV Produktions Service",
+    "mainView": {
+      "actualPower": "Istleistung PV:",
+      "calculatedPower": "Berechnete Leistung 24h:",
+      "calculatedEnergy": "Berechnete Energie 24h:",
+      "service": "Service Bereit"
+    },
+    "settingsView": {
+      "chartTabs": ["Diagramm", "Vorhersage"],
+      "chartMQTTTabs": ["Leistung", "Energie"],
+      "chartLabels": {
+        "power": {
+          "actualPower": "Istleistung PV",
+          "calculatedPower": "Berechnete Leistung"
+        },
+        "energy": {
+          "calculatedEnergy": "Berechnete Energie",
+          "producedEnergy": "Produzierte Energie"
+        },
+        "forecast": {
+          "predictedEnergy": "Vorhersage Energie",
+          "predictedPower": "Vorhersage Leistung"
+        }
+      }
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start Date",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "32 Bit Wert"
+      },
+      "errorWarning": {
+        "label": "Fehler/Warnung",
+        "description": "0 = OK 1 = Warnung 2 = Fehler"
+      },
+      "power": {
+        "label": "Istleistung PV",
+        "description": "32 Bit Wert"
+      },
+      "predictedPower": {
+        "label": "Berechnete Leistung",
+        "description": "32 Bit Wert"
+      },
+      "predictedEnergy": {
+        "label": "Berechnete Energie",
+        "description": "32 Bit Wert"
+      },
+      "mpcReady": {
+        "label": "PV Erzeugungs Service Bereit",
+        "description": "0-1"
+      }
+    },
+    "scaling": "kWp PV Anlage"
+  },
+  "ConsumptionService": {
+    "previewName": "Verbrauchs Service",
+    "mainView": {
+      "actualPower": "Istleistung:",
+      "calculatedPower": "Berechnete Leistung 24h:",
+      "calculatedEnergy": "Berechnete Energie 24h:",
+      "service": "Service Bereit"
+    },
+    "settingsView": {
+      "chartTabs": ["Diagramm", "Vorhersage"],
+      "chartMQTTTabs": ["Leistung", "Energie"],
+      "chartLabels": {
+        "power": {
+          "actualPower": "Istleistung",
+          "calculatedPower": "Berechnete Leistung"
+        },
+        "energy": {
+          "calculatedEnergy": "Berechnete Energie",
+          "consumedEnergy": "Verbrauchte Energie"
+        },
+        "forecast": {
+          "predictedEnergy": "Vorhersage Energie",
+          "predictedPower": "Vorhersage Leistung"
+        }
+      }
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start Date",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "32 Bit Wert"
+      },
+      "errorWarning": {
+        "label": "Fehler/Warnung",
+        "description": "0 = OK 1 = Warnung 2 = Fehler"
+      },
+      "power": {
+        "label": "Aktueller Verbrauch",
+        "description": "32 Bit Wert"
+      },
+      "predictedPower": {
+        "label": "Berechnete Leistung",
+        "description": "32 Bit Wert"
+      },
+      "predictedEnergy": {
+        "label": "Berechnete Energie",
+        "description": "32 Bit Wert"
+      },
+      "mpcReady": {
+        "label": "Verbrauchsservice bereit",
+        "description": "0-1"
+      }
+    },
+    "scaling": "Maximaler Verbrauch in kW"
+  },
+  "EMS": {
+    "previewName": "EMS",
+    "ems": "Allgemein",
+    "deleteLoader": "Dieser Schritt benötigt etwas Zeit",
+    "mainView": {
+      "actualView": "Aktuelle Ansicht",
+      "forecastView": "Ansicht Vorhersage",
+      "centralEndpoint": "Zentraler Energiepunkt",
+      "serviceReady": "Service Bereit"
+    },
+    "bypassActive": "Bypass aktiv!",
+    "islandActive": "Inselbetrieb aktiv!",
+    "settingsView": {
+      "fields": {
+        "sizeMainFuseChargingStation": "Größe Hauptsicherung der Ladestationen",
+        "sizeMainFuse": "Größe Hauptsicherung",
+        "maxDephOfDischargeInEmergencyPowerMode": "Maximale Entladetiefe im Notstrombetrieb",
+        "reserveInBatteryForEmergencyPowerMode": "Reserve Ladung in Batterie für Notstrombetrieb",
+        "minimalSOCForAdaptiveSelfConsumption": "Minimaler SOC für adaptive Eigenverbrauchsoptimierung",
+        "priorityMinChargeBatterySOCInEmergencyPowerMode": "Priorisierte Ladung der Batterien im Notstrombetrieb",
+        "reserveChargingFromGrid": "Maximale Ladung vom Netz",
+        "updatingTimeEMS": "Update Zeit EMS",
+        "operationModeEMS": "Betriebsmodus EMS",
+        "messageEMSFunction": "Nachricht der EMS Funktion",
+        "enableEMS": "Freigabe EMS",
+        "allowedChargingFromGrid": "Laden vom Netz erlauben",
+        "mainFuseMonitoring": "Aktiviere Hauptsicherungsüberwachung Ladestationen",
+        "algorithm_model_ems": "EMS Model"
+      },
+      "mappingModel": {
+        "standard": "Standart",
+        "hypermodelOne": "Hypermodel 1"
+      },
+      "mappingOperation": {
+        "allOff": "Alle Aus",
+        "selfConsumption": "Eigenverbrauchsoptimierung",
+        "peakLoadCapping": "Spitzenlastkappung",
+        "loadManagement": "Lastmanagement",
+        "adaptiveSelfConsumption": "Adaptive Eigenverbrauchsoptimierung"
+      },
+      "mappingMessage": {
+        "disabled": "Deaktiviert",
+        "enabled": "Aktiviert",
+        "allPrioritiesAtMinimum": "Alle Prioritäten sind auf dem Minimum",
+        "allPrioritiesAtMaximum": "Alle Prioritäten sind auf dem Maximum",
+        "missingPowerValuesOnDeviceSetup": "Fehlende Leistungsangaben in den Verbrauchereinstellungen",
+        "tooManyFunctionsInThisProject": "Zu Viele Funktionen/Geräte in diesem Projekt"
+      },
+      "tabs": {
+        "emsSettings": "EMS Einstellungen",
+        "modeSettings": "Modus Einstellungen"
+      },
+      "tariffModes": {
+        "energyOptimized": "Energie Optimiert",
+        "balancedOptimization": "Ausgeglichene Optimierung",
+        "tariffOptimized": "Tarif Optimiert",
+        "disabledMode": "Deaktiviert"
+      },
+      "workMode": "Arbeitsmodus"
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start Date",
+        "description": ""
+      },
+      "activate_heating_pump": {
+        "label": "Wärmepumpen aktivieren",
+        "description": "0-1"
+      },
+      "calculated_battery_power": {
+        "label": "Neue Batterieleistung",
+        "description": "32 Bit Wert"
+      },
+      "state_enable_ems": {
+        "label": "Status Freigabe EMS (@:basicControls.Switch)",
+        "description": "0-1"
+      },
+      "enable_ems": {
+        "label": "Freigabe EMS (@:basicControls.Switch)",
+        "description": "0-1"
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "32 Bit Wert"
+      },
+      "errorWarning": {
+        "label": "Fehler/Warnung (@:basicControls.ShowEvent)",
+        "description": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      "mpcReady": {
+        "label": "Energieoptimierung bereit (@:basicControls.ShowEvent)",
+        "description": "0-1"
+      },
+      "size_main_fuse": {
+        "label": "Größe Hauptsicherung Ladestation (@:basicControls.InputField)",
+        "description": "0-500"
+      },
+      "operation_mode": {
+        "label": "Betriebsart EMS (@:basicControls.DropDown)",
+        "description": "0 = Alles aus; 1 = Eigenverbrauch; 2 = Spitzenlastkappung; 3 = Lastmanagement; 4 = Adaptive Eigenverbrauchsoptimierung;"
+      },
+      "model_ems": {
+        "label": "Model EMS (@:basicControls.DropDown)",
+        "description": "0 = Standart; 1 = Hypermodel 1;"
+      },
+      "max_depth": {
+        "label": "Max Entladetiefe im Notstrombetrieb (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "reserve_battery": {
+        "label": "Reserve-Batterie-SOC für Notstrombetrieb (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "adaptive_self_consumption": {
+        "label": "Minimaler SOC für adaptive Eigenverbrauchsoptimierung (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "min_charge_battery": {
+        "label": "Vorrangige Mindestladung Batterie SOC im Notstrombetrieb (@:basicControls.InputField)",
+        "description": "25-75"
+      },
+      "reserve_charge": {
+        "label": "Reserveladung vom Netz (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "update_time": {
+        "label": "Aktualisierungszeit EMS (@:basicControls.InputField)",
+        "description": "1-600"
+      },
+      "message": {
+        "label": "Meldung EMS (@:basicControls.DropDown)",
+        "description": "0 = Deaktiviert; 1 = Aktivier; 2 = Alle Prioritäten auf dem Minimum; 3 =  Alle Prioritäten auf dem Maximum; 4 = Fehlende Leistungswerte bei Geräteeinstellung"
+      },
+      "allow_charging_button": {
+        "label": "Taster um laden vom Netz zu erlauben (@:basicControls.Switch2V)",
+        "description": "0-1"
+      },
+      "allow_charging_state": {
+        "label": "Status Laden vom Netz erlauben (@:basicControls.Switch2V)",
+        "description": "0-1"
+      },
+      "enable_controlling": {
+        "label": "Status Steuerung",
+        "description": "0-1"
+      },
+      "state_main_fuse": {
+        "label": "Status Hauptsicherung (@:basicControls.Switch)",
+        "description": "0-1"
+      },
+      "activate_main_fuse": {
+        "label": "Hauptsicherung Aktivieren (@:basicControls.Switch)",
+        "description": "0-1"
+      }
+    },
+    "groups": {
+      "producer": {
+        "title": "Erzeuger"
+      },
+      "producerConsumer": {
+        "title": "Erzeuger Verbraucher"
+      },
+      "consumer": {
+        "title": "Verbraucher"
+      }
+    },
+    "systems": {
+      "pv": {
+        "title": "PV Systeme",
+        "mappings": {
+          "power": {
+            "label": "PV-Istleistung (@:basicControls.OutputField)",
+            "description": "Min/Max -1000+1000 (max 2 comas)"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h Pv-Anlage",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h PV-Anlage",
+            "description": "32 Bit Wert"
+          },
+          "error": {
+            "label": "Fehler/Warnung PV system (@:basicControls.ShowEvent)",
+            "description": "0= OK\n1 = Warnung\n2= Fehler"
+          },
+          "title": {
+            "label": "Title",
+            "description": ""
+          }
+        },
+        "settings": {
+          "actualPower": "Aktuelle Leistung PV System"
+        }
+      },
+      "generator": {
+        "title": "Generatoren",
+        "mappings": {
+          "power": {
+            "label": "Aktuelle Generatorleistung (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h Generator",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h Generator",
+            "description": "32 Bit Wert"
+          },
+          "error": {
+            "label": "Fehler/Warnung Generator (@:basicControls.ShowEvent)",
+            "description": "0= OK\n1 = Warnung\n2= Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "state_reset": {
+            "label": "Status Reset-Taste Generator (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "state_generator": {
+            "label": "Status Generator (@:basicControls.ShowEventDot)",
+            "description": "1 = Grünes Licht. Alle anderen Werte kein Licht"
+          },
+          "enable_soc": {
+            "label": "SOC-Generator aktivieren (@:basicControls.ShowEventDot)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC-Generator deaktivieren (@:basicControls.ShowEventDot)",
+            "description": "0-100%"
+          },
+          "switch_enable": {
+            "label": "Generator Freigabe (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_reset": {
+            "label": "Taste Reset Generator (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "state_enable": {
+            "label": "Status Freigabe Generator (@:basicControls.Switch2V)",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "enableGenerator": "Freigabe Generator",
+          "reset": "Reset",
+          "enableSOC": "SOC für aktivierung",
+          "disableSOC": "SOC für deaktivierung",
+          "actualGeneratorPower": "Aktuelle Leistung Generator",
+          "stateGenerator": "Status Generator"
+        }
+      },
+      "grid": {
+        "title": "Netz",
+        "mappings": {
+          "power": {
+            "label": "Ist-Netzleistung (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h Netz",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h Netz",
+            "description": "32 Bit Wert"
+          },
+          "error": {
+            "label": "Fehler/Warnung Netz (@:basicControls.ShowEvent)",
+            "description": "0= OK 1 = Warnung 2= Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "size": {
+            "label": "Größe Netzanschluss (@:basicControls.InputField)",
+            "description": "0-2000 KW"
+          },
+          "status_island": {
+            "label": "Status Inselbetrieb",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "sizeGridConnection": "Größe Netzanschluss",
+          "actualGridPower": "Aktuelle Leistung Netz"
+        }
+      },
+      "battery": {
+        "title": "Batterien",
+        "mappings": {
+          "power": {
+            "label": "Tatsächliche Batterieleistung (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h Batterie",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h Batterie",
+            "description": "32 Bit Wert"
+          },
+          "target_power": {
+            "label": "Sollleistung Batterie (@:basicControls.OutputField)",
+            "description": "-100 +100"
+          },
+          "state_enable": {
+            "label": "Status Freigabe Batterie (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_reset": {
+            "label": "Status Reset-Taste Batterie (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "error": {
+            "label": "Fehler/Warnung Batterie (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Warnung 2 = Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "soc": {
+            "label": "Aktueller Batterie-SOC (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "size_capacity": {
+            "label": "Größe Kapazität Batterie (@:basicControls.InputField)",
+            "description": "0-1000 kWh"
+          },
+          "capacity": {
+            "label": "Aktuelle Batteriekapazität (@:basicControls.OutputField)",
+            "description": "32 Bit Wert"
+          },
+          "soc_range_max": {
+            "label": "Ladezustandsbereich: max (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "soc_range_min": {
+            "label": "Ladezustandsbereich: min (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "state_soc_range_max": {
+            "label": "Status Ladezustandsbereich: max (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_soc_range_min": {
+            "label": "Status Ladezustandsbereich: min (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "priority": {
+            "label": "Priorität Batterie (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "switch_enable": {
+            "label": "Freigabe Batterie (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_reset": {
+            "label": "Taster Reset Batterie (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "status_bypass": {
+            "label": "Status Bypass",
+            "description": "0-1"
+          },
+          "battery_standby_optimization_state": {
+            "label": "Status Batterie-Standby-Optimierung",
+            "description": "0 oder 2"
+          },
+          "battery_standby_optimization_mode": {
+            "label": "Modus Batterie-Standby-Optimierung",
+            "description": "0 oder 2"
+          },
+          "battery_standby_optimization_time_on": {
+            "label": "Zeitschwelle “Ein” (Minuten)",
+            "description": "1 bis x Minuten"
+          },
+          "battery_standby_optimization_time_off": {
+            "label": "Zeitschwelle “Aus” (Minuten)",
+            "description": "1 bis x Minuten"
+          },
+          "battery_standby_optimization_power_on": {
+            "label": "Schwellenwert Leistung “Ein” (kWh)",
+            "description": "1 bis x Kilowattstunden"
+          },
+          "battery_standby_optimization_power_off": {
+            "label": "Schwellenwert Leistung “Aus” (kWh)",
+            "description": "1 bis x Kilowattstunden"
+          }
+        },
+        "settings": {
+          "enableBattery": "Freigabe Batterie",
+          "reset": "Reset",
+          "priorityEMS": "Priorität für EMS",
+          "maxSizeOfBatteryCapacity": "Maximale Größe der Batteriekapazität",
+          "socRangeMax": "Ladezustandsbereich Max",
+          "socRangeMin": "Ladezustandsbereich Min",
+          "actualBatterySOC": "Aktueller Batterie SOC",
+          "actualBatteryPower": "Aktuelle Leistung Batterie",
+          "actualBatteryCapacity": "Aktuelle Batteriekapazität",
+          "targetBatteryPower": "Leistungsvorgabe Batterie",
+          "socOperationRange": "Ladezustandsbereich"
+        }
+      },
+      "house": {
+        "title": "Verbrauch Haus",
+        "mappings": {
+          "power": {
+            "label": "Aktuelle Hausleistung (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "state_enable": {
+            "label": "Status Freigabe Hausstrom (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h Hausleistung",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h Hausleistung",
+            "description": "32 Bit Wert"
+          },
+          "switch_enable": {
+            "label": "Freigabe Hausstrom (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "error": {
+            "label": "Fehler/Warnung Hausleistung (@:basicControls.ShowEvent)",
+            "description": "0= OK\n1 = Warnung\n2= Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          }
+        },
+        "settings": {
+          "enableHouseConsumption": "Freigabe Hausverbrauch",
+          "actualHouseConsumption": "Aktuelle Leistung Verbrauch Haus"
+        }
+      },
+      "charge_station": {
+        "title": "EV Ladestationen",
+        "mappings": {
+          "power": {
+            "label": "Aktuelle Leistung der Ladestation (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h-Ladestation",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h-Ladestation",
+            "description": "32 Bit Wert"
+          },
+          "error": {
+            "label": "Fehler/Warnung Elektro Ladestation (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Warnung 2 = Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "car_connected": {
+            "label": "Auto angeschlossen (@:basicControls.ShowEventDot)",
+            "description": "1 = Grünes Licht. Alle anderen Werte kein Licht"
+          },
+          "charging_time": {
+            "label": "Ladedauer Ladestation (@:basicControls.OutputField)",
+            "description": "32 Bit Wert"
+          },
+          "state_charging_station": {
+            "label": "Status Ladestation (@:basicControls.ShowEventDot)",
+            "description": "1 = Grünes Licht. Alle anderen Werte kein Licht"
+          },
+          "state_emergency": {
+            "label": "Status Ladestation Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_manual": {
+            "label": "Status Manuell ein Ladestation (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "min_power": {
+            "label": "Status min Leistung Ladestation (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "switch_emergency": {
+            "label": "Ladestation Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Priorität Ladestation (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC-Ladestation aktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC-Ladestation deaktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "max_power": {
+            "label": "Maximale Leistung Ladestation (@:basicControls.InputField)",
+            "description": "0-500"
+          },
+          "slider_manual": {
+            "label": "Leistung manuell Ladestation (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "slider_target_power": {
+            "label": "Status Leistung manuell Ladestation (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "slider_min_power": {
+            "label": "Min Leistung Ladestation (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "target_power": {
+            "label": "Soll-Leistung Ladestation (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_enable": {
+            "label": "Status Freigabe Ladestation (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_enable": {
+            "label": "Freigabe Ladestation (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_manual": {
+            "label": "Ladestation Manuell Ein (@:basicControls.Switch2V)",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "manualON": "Manuell einschalten",
+          "atEmergencyPowerOff": "Im Notstrombetrieb Aus",
+          "enableChargingStation": "Freigabe Ladestation",
+          "manualPower": "Manuelle Leistung",
+          "minimalPower": "Minimale Dauerleistung",
+          "priorityEMS": "Priorität für EMS",
+          "enableSOC": "SOC für aktivierung",
+          "disableSOC": "SOC für deaktivierung",
+          "maxPower": "Maximale Leistung",
+          "actualPowerChargingStation": "Aktuelle Leistung EV Ladestation",
+          "chargingTime": "Ladezeit",
+          "targetPowerChargingStation": "Leistungsvorgabe Ladestation",
+          "carConnected": "Fahrzeug verbunden",
+          "stateChargingStation": "Status Ladestation"
+        }
+      },
+      "electric_heating": {
+        "title": "Elektrische Heizelemente",
+        "mappings": {
+          "power": {
+            "label": "Aktuelle elektrische Heizelementleistung (@:basicControls.OutputField)",
+            "description": "Min/Max -1000+1000 (max 2 comas)"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h elektrisches Heizelement",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h elektrischer Heizstab",
+            "description": "32 Bit Wert"
+          },
+          "error": {
+            "label": "Fehler/Warnung elektrisches Heizelement (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Warnung 2 = Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "temperature": {
+            "label": "Temperatur Kessel elektrisches Heizelement (@:basicControls.OutputField)",
+            "description": "-30 +120"
+          },
+          "state_electric_heating": {
+            "label": "Status elektrisches Heizelement (@:basicControls.ShowEventDot)",
+            "description": "1 = Green Light. All other values no light"
+          },
+          "state_emergency": {
+            "label": "Status Elektrisches Heizelement Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-100%"
+          },
+          "state_manual": {
+            "label": "Status Manuell ein elektrisches Heizelement (@:basicControls.Slider)",
+            "description": "0-1"
+          },
+          "state_time": {
+            "label": "Status Zeitsteuerung aktivieren elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_disable_protection": {
+            "label": "Status Legionellenschutz deaktivieren elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_emergency": {
+            "label": "Elektrisches Heizelement Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Priorität elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC elektrisches Heizelement aktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC elektrisches Heizelement deaktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "switch_disable_protection": {
+            "label": "Legionellenschutz deaktivieren elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_manual": {
+            "label": "Manuelles Ein elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_target_power": {
+            "label": "Status manuelle Leistung elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_time": {
+            "label": "Zeitsteuerung aktivieren elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "hour_on": {
+            "label": "Stunde Ein elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_on": {
+            "label": "Minuten Ein elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "hour_off": {
+            "label": "Stunde Aus elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_off": {
+            "label": "Minuten Aus elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "target_temp_on": {
+            "label": "Soll-Temp Ein elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-120"
+          },
+          "target_temp_off": {
+            "label": "Soll-Temp Aus elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-120"
+          },
+          "target_temp_max": {
+            "label": "Soll-Temp Max elektrisches Heizelement (@:basicControls.InputField)",
+            "description": "0-120"
+          },
+          "max_power": {
+            "label": "Max. Leistung",
+            "instanceLabel": "Max. Leistung {count}",
+            "description": "0-500"
+          },
+          "target_power": {
+            "label": "Sollleistung elektrisches Heizelement (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_enable": {
+            "label": "Status Freigabe elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_enable": {
+            "label": "Freigabe elektrisches Heizelement (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_manual": {
+            "label": "Manuelle Leistung elektrisches Heizelement",
+            "description": "0-100%"
+          }
+        },
+        "settings": {
+          "on": "Ein",
+          "off": "Aus",
+          "temperatureOn": "Temperatur Ein",
+          "temperatureOff": "Temperatur Aus",
+          "temperatureMax": "Temperatur Max",
+          "actualPowerHeatingElement": "Aktuelle Leistung elektrisches Heizelement",
+          "temperatureBoiler": "Temperatur Boiler",
+          "targetPowerHeatingElement": "Leistungsvorgabe elektrisches Heizelement",
+          "stateHeatingElement": "Status elektrisches Heizelement",
+          "manualON": "Manuell einschalten",
+          "atEmergencyPowerOff": "Im Notstrombetrieb Aus",
+          "activateTimeControl": "Zeitsteuerung aktivieren",
+          "disableLegionellaProtection": "Legionellenschutz deaktivieren",
+          "enableHeatingElement": "Freigabe elektrisches Heizelement",
+          "manualPower": "Manuelle Leistung",
+          "priorityEMS": "Priorität für EMS",
+          "enableSOC": "SOC für aktivierung",
+          "disableSOC": "SOC für deaktivierung",
+          "maxPower": "Maximale Leistung"
+        }
+      },
+      "heating_pump": {
+        "title": "Wärmepumpen",
+        "mappings": {
+          "power": {
+            "label": "Aktuelle Wärmepumpenleistung (@:basicControls.OutputField)",
+            "description": "Min/Max -1000+1000 (max 2 comas)"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h Wärmepumpe",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h Wärmepumpe",
+            "description": "32 Bit Wert"
+          },
+          "error": {
+            "label": "Fehler/Warnung Wärmepumpe (@:basicControls.ShowEvent)",
+            "description": "0= OK 1 = Warnung 2= Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "state_reset": {
+            "label": "Status Reset-Taste Wärmepumpe (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "state_heating_pump": {
+            "label": "Status Wärmepumpe (@:basicControls.ShowEventDot)",
+            "description": "1 = Green Light. All other values no light"
+          },
+          "state_emergency": {
+            "label": "Status Wärmepumpe Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_manual": {
+            "label": "Status Manuell ein Wärmepumpe (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "manual_power": {
+            "label": "Status manuelle Leistung Wärmepumpe (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_time": {
+            "label": "Status Zeitsteuerung Wärmepumpe (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_time_power": {
+            "label": "Status Leistungsvorgabe wenn Zeitsteuerung aktiviert Wärmepumpe (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "flow_temperature": {
+            "label": "Istwert Vorlauftemperatur Wärmepumpe (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "return_temperature": {
+            "label": "Istwert Rücklauftemperatur Wärmepumpe (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "inlet_temperature": {
+            "label": "Quelle Vorlauftemperatur Wärmepumpe (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "outlet_temperature": {
+            "label": "Quelle Rücklauftemperatur Wärmepumpe (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "boiler_temperature": {
+            "label": "Boiler-Temp Heizsystem Wärmepumpe (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "boiler_water_temperature": {
+            "label": "Boiler-Temp Brauchwasser-Wärmepumpe (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "switch_emergency": {
+            "label": "Wärmepumpe Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Priorität Wärmepumpe (@:basicControls.Switch2V)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC Wärmepumpe aktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC Wärmepumpe deaktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "switch_reset": {
+            "label": "Taste Reset Wärmepumpe (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "switch_manual": {
+            "label": "Manuell Ein Wärmepumpe (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_power": {
+            "label": "Leistungsvorgabe wenn Zeitsteuerung aktiviert Wärmepumpe (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "switch_time": {
+            "label": "Zeitsteuerung aktivieren Wärmepumpe (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "hour_on": {
+            "label": "Stunde Ein Wärmepumpe (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_on": {
+            "label": "Minuten Ein Wärmepumpe (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "hour_off": {
+            "label": "Stunde Aus Wärmepumpe (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_off": {
+            "label": "Minuten Aus Wärmepumpe (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "max_power": {
+            "label": "Max. Leistung",
+            "instanceLabel": "Max. Leistung {count}",
+            "description": "0-500"
+          },
+          "switch_enable": {
+            "label": "Freigabe Wärmepumpe (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_manual": {
+            "label": "Manuelle Leistung der Wärmepumpe (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "target_power": {
+            "label": "Soll-Leistung Wärmepumpe (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_enable": {
+            "label": "Status Freigabe Wärmepumpe (@:basicControls.Switch2V)",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "on": "Ein",
+          "off": "Aus",
+          "actualPowerHeatingPump": "Aktuelle Leistung Wärmepumpe",
+          "flowTemperature": "Vorlauftemperatur",
+          "returnTemperature": "Rücklauftemperatur",
+          "sourceInletTemperature": "Eintrittstemperatur Quelle",
+          "sourceOutletTemperature": "Austrittstemperatur Quelle",
+          "boilerTempHeatingSystem": "Boiler Temperatur Heizung",
+          "boilerTempServiceWater": "Boiler Temperatur Brauchwasser",
+          "targetPowerHeatingPump": "Leistungsvorgabe Wärmepumpe",
+          "stateHeatingPump": "Status Wärmepumpe",
+          "manualON": "Manuell einschalten",
+          "atEmergencyPowerOff": "Im Notstrombetrieb Aus",
+          "activateTimeControl": "Zeitsteuerung aktivieren",
+          "enableHeatingPump": "Freigabe Wärmepumpe",
+          "reset": "Reset",
+          "manualPower": "Manuelle Leistung",
+          "powerWhenTimeControlActive": "Leistung wenn Zeitsteuerung aktiviert",
+          "priorityEMS": "Priorität für EMS",
+          "enableSOC": "SOC für aktivierung",
+          "disableSOC": "SOC für deaktivierung",
+          "maxPower": "Maximale Leistung"
+        }
+      },
+      "big_consumer": {
+        "title": "Große Verbraucher",
+        "mappings": {
+          "power": {
+            "label": "Aktuelle Leistung anderer großer Verbraucher (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Berechnete Leistung 24h großer Verbraucher",
+            "description": "32 Bit Wert"
+          },
+          "calculated_energy": {
+            "label": "Berechnete Energie 24h großer Verbraucher",
+            "description": "32 Bit Wert"
+          },
+          "error": {
+            "label": "Fehler/Warnung anderer großer Verbraucher (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Warnung 2 = Fehler"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "state_consumer": {
+            "label": "Status anderer großer Verbraucher (@:basicControls.ShowEventDot)",
+            "description": "1 = Green Light. All other values no light"
+          },
+          "state_emergency": {
+            "label": "Status Großer Verbraucher Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_manual": {
+            "label": "Status Manuell Ein großer Verbraucher (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_emergency": {
+            "label": "Großer Verbraucher Aus Notstrombetrieb (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Priorität großer Verbraucher (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC großer Verbraucher aktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC großer Verbraucher deaktivieren (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "switch_manual": {
+            "label": "Manuell ein großer Verbraucher (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_enable": {
+            "label": "Status Freigabe großer Verbraucher (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_enable": {
+            "label": "Freigabe großer Verbraucher (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "target_power": {
+            "label": "Sollleistung großer Verbraucher (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "slider_manual": {
+            "label": "Manuelle Leistung des großern Verbrauchers (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "slider_target_power": {
+            "label": "Status manuelle Leistung des großen Verbrauchers (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "max_power": {
+            "label": "Maximale Leistung große Verbraucher (@:basicControls.InputField)",
+            "description": "0-500"
+          }
+        },
+        "settings": {
+          "manualON": "Manuell einschalten",
+          "atEmergencyPowerOff": "Im Notstrombetrieb Aus",
+          "enableBigConsumer": "Freigabe Grosser Verbraucher",
+          "manualPower": "Manuelle Leistung",
+          "priorityEMS": "Priorität für EMS",
+          "enableSOC": "SOC für aktivierung",
+          "disableSOC": "SOC für deaktivierung",
+          "maxPower": "Maximale Leistung",
+          "actualPowerBigConsumer": "Aktuelle Leistung grosser Verbraucher",
+          "targetPowerBigConsumer": "Leistungsvorgabe grosser Verbraucher",
+          "stateBigConsumer": "Status grosser Verbraucher"
+        }
+      },
+      "heat_meter": {
+        "title": "Wärmemengenzähler",
+        "mappings": {
+          "power": {
+            "label": "Akkumulierte Wärme",
+            "description": "-1000 +1000 KW"
+          }
+        }
+      },
+      "heat_producer": {
+        "title": "Wärmeerzeuger"
+      }
+    },
+    "scalingPV": "kWp PV Analge",
+    "scalingConsumption": "Maximaler Verbrauch in kW",
+    "scalingBatteryPower": "Battery Power",
+    "electricTariff": {
+      "title": "Einstellungen Strom Tarif",
+      "enableTariff": "Stromtarif verwenden aktivieren",
+      "startLowTariff": "Start Niedertarif",
+      "endLowTariff": "Ende Niedertarif",
+      "startHighTariff": "Start Hochtarif",
+      "endHighTariff": "Ende Hochtarif",
+      "priceLowTariff": "Preis Niedertarif (€/CHF pro kWh)",
+      "priceHighTariff": "Preis Hochtarif (€/CHF pro kWh)"
+    },
+    "batteryStandbyOptimization": {
+      "title": "Einstellungen Batterie-Standby-Optimierung",
+      "workingMode": "Arbeitsmodus",
+      "workingModeButton": "Arbeitsmodus aktualisieren",
+      "workingModeDeactivated": "Deaktivieren",
+      "workingModeLoadBased": "Lastabhängig",
+      "powerThresholdOn": "Schwellenwert Leistung “Ein”",
+      "powerThresholdOff": "Schwellenwert Leistung “Aus”",
+      "timeThresholdOn": "Zeitschwelle “Ein”",
+      "timeThresholdOff": "Zeitschwelle “Aus”"
+    },
+    "charts": {
+      "tooltip": "Diagramm Fenster öffnen",
+      "autarchy": "Autarkie Grad",
+      "noDevicesConfigured": "Keine Geräte für dieses Diagramm konfiguriert",
+      "chartProdConst": {
+        "title": "Diagramm Produktion/Verbrauch",
+        "powerPV": {
+          "title": "Leistung PV",
+          "actualPVPower": "Aktuelle PV Leistung",
+          "calculatedPVPower": "Berechnete PV Leistung"
+        },
+        "energyPV": {
+          "title": "Energie PV",
+          "calculatedEnergy": "Berechnete Energie",
+          "producedEnergy": "Produzierte Energie"
+        },
+        "powerConsumption": {
+          "title": "Leistung Verbrauch",
+          "actualPower": "Aktuelle Leistung Verbrauch",
+          "calculatedPower": "Berechnete Leistung Verbrauch"
+        },
+        "energyConsumption": {
+          "title": "Energie Verbrauch",
+          "calculatedEnergy": "Berechnete Energie",
+          "consumedEnergy": "Verbrauchte Energie"
+        }
+      },
+      "chartDifference": {
+        "title": "Diagramm Eigenverbrauch",
+        "pvProduction": "PV Produktion",
+        "consumption": "Verbrauch",
+        "grid": "Netz"
+      },
+      "chartTimeTableConsumer": {
+        "title": "Diagramm mit Leistungsvorgabe der Verbraucher",
+        "target_power": "Leistungsvorgabe Batterie",
+        "soc": "SOC",
+        "power": "Aktuelle Leistung Batterie"
+      },
+      "forecast": {
+        "title": "Vorhersage",
+        "pv": {
+          "title": "PV"
+        },
+        "consumption": {
+          "title": "Verbrauch"
+        },
+        "difference": {
+          "title": "Eigenverbrauch",
+          "predictedPVPower": "Vorhersage PV Leistung",
+          "predictedConsumption": "Vorhersage Verbrauch",
+          "predictedGrid": "Vorhersage Netz"
+        },
+        "timeTableConsumer": {
+          "title": "Leistungsvorgabe der Verbraucher"
+        }
+      }
+    }
+  },
+  "PVMonitoringService": {
+    "previewName": "PV-Überwachung",
+    "mainView": {
+      "pvPower": "PV Leistung",
+      "efficiency": "Effizienz",
+      "service": "Service Bereit"
+    },
+    "settingsView": {
+      "pvEfficiencyDecay": "PV Wirkungsgradabfall"
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start-Datum",
+        "description": ""
+      },
+      "endDate": {
+        "label": "Ende-Datum",
+        "description": ""
+      },
+      "efficiency": {
+        "label": "Effizienz",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "32 Bit Wert"
+      },
+      "errorWarning": {
+        "label": "Fehler/Warnung",
+        "description": "0 = OK 1 = Warnung 2 = Fehler"
+      },
+      "power": {
+        "label": "Aktuelle Leistung",
+        "description": "32 Bit Wert"
+      },
+      "mpcReady": {
+        "label": "Service Bereit",
+        "description": "0-1"
+      }
+    }
+  },
+  "SetpointOptimizer": {
+    "previewName": "Sollwert-Optimierer",
+    "ems": "Allgemein",
+    "mainView": {
+      "serviceReady": "Service Bereit",
+      "actualView": "Aktuelle Ansicht",
+      "forecastView": "Ansicht Vorhersage"
+    },
+    "settingsView": {
+      "title": "Sollwert Optimierer Einstellungen",
+      "algorithm_model": {
+        "standard": "Standard",
+        "hypermodel": "Hypermodell 1"
+      },
+      "algorithm_additional_processors": {
+        "standard": "Standard",
+        "topTemperatureValue": "Höchster Temperaturwert"
+      },
+      "dialog": {
+        "save": "Sollen die Änderungen gespeichert werden?",
+        "description": "Achtung! Diese Änderung bewirkt, dass das Modell eine Woche lang trainiert. Während dieser Zeit können Ungenauigkeiten auftreten.",
+        "topTemperatureValue": "Nur die höchsten Raumtemperaturen werden herangezogen um zu verhindert, dass sehr kühle Räume (z.b. bei offenem Fenster) das Gesamtsystem nicht negativ beeinflussen."
+      }
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start Datum",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "32 Bit Wert"
+      },
+      "errorWarning": {
+        "label": "Fehler/Warnung (@:basicControls.ShowEvent)",
+        "description": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      "mpcReady": {
+        "label": "Energie Optimisierung Bereit (@:basicControls.ShowEvent)",
+        "description": "0-1"
+      }
+    },
+    "groups": {
+      "heating": {
+        "title": "Heizen"
+      },
+      "cooling": {
+        "title": "Kühlen"
+      },
+      "hybrid": {
+        "title": "Hybrid"
+      }
+    },
+    "heating_curve_settings": {
+      "mapping": {
+        "y1y_upper": {
+          "title": "Endpunkt Bereich Max",
+          "description": "y1y upper"
+        },
+        "y1y_lower": {
+          "title": "Endpunkt Bereich Min",
+          "description": "y1y lower"
+        },
+        "y2y_upper": {
+          "title": "Fusspunkt-Bereich Max",
+          "description": "y2y upper"
+        },
+        "y2y_lower": {
+          "title": "Fusspunkt Bereich Min",
+          "description": "y2y lower"
+        },
+        "y1x": {
+          "title": "Aussentemperatur (Endpunkt)",
+          "description": "y1x"
+        },
+        "y2x": {
+          "title": "Aussentemperatur (Fusspunkt)",
+          "description": "y2x"
+        },
+        "y1_y2_difference": {
+          "title": "Minimale Differenz",
+          "description": "Y2-Y1"
+        },
+        "advanced_curve_settings": {
+          "title": "Erweiterte Heizkurveneinstellungen",
+          "description": "Die erweiterten Heizkurveneinstellungen aktivieren oder deaktivieren"
+        },
+        "algorithm_model": {
+          "title": "Model",
+          "description": "Wählen Sie zwischen Algorithmusmodellen"
+        },
+        "algorithm_additional_processors": {
+          "title": "Zusätzliche Prozessoren",
+          "description": "Wählen Sie einen zusätzlichen Prozess für das Algorithmusmodell"
+        }
+      }
+    },
+    "systems": {
+      "heating_air_systems": {
+        "title": "Luft-Heizungs Systeme",
+        "single": "Luft-Heizungs System",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Aktuelle Zuluft Temperatur",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Aktuelle Abluft Temperatur",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Raumtemperaturen",
+            "instanceLabel": "Raumtemperatur {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Ein/Aus-Status",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Optimierte Vorlauftemperatur",
+            "description": ""
+          },
+          "name": {
+            "label": "Titel",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Maximale Zuluft Temperatur",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Minimale Zuluft Temperatur",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Sollwert Raumtemperatur",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Aktuelle Fortluft Temperatur",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Aktuelle Aussenluft Temperatur",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Neue/Optimierte Vorlauftemperatur",
+            "description": ""
+          }
+        }
+      },
+      "heating_water_systems": {
+        "title": "Wasser-Heizungs Systeme",
+        "single": "Wasser-Heizungs System",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Vorlauftemperatur",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Rücklauftemperatur",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Raumtemperaturen",
+            "instanceLabel": "Raumtemperatur {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Ein/Aus-Status",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Optimierte Luftstromtemperatur",
+            "description": ""
+          },
+          "name": {
+            "label": "Titel",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Maxmimale Vorlauftemperatur",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Minimale Vorlauftemperatur",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Sollwert Raumtemperatur",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Zulufttemperatur",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Ablufttemperatur",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Neue/Optimierte Vorlauftemperatur",
+            "description": ""
+          }
+        }
+      },
+      "cooling_air_systems": {
+        "title": "Luft-Kühlungs Systeme",
+        "single": "Luft-Kühlungs System",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Aktuelle Zuluft Temperatur",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Aktuelle Abluft Temperatur",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Raumtemperaturen",
+            "instanceLabel": "Raumtemperatur {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Ein/Aus-Status",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Optimierte Luftstromtemperatur",
+            "description": ""
+          },
+          "name": {
+            "label": "Titel",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Maximale Zuluft Temperatur",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Minimale Zuluft Temperatur",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Sollwert Raumtemperatur",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Aktuelle Fortluft Temperatur",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Aktuelle Aussenluft Temperatur",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Neue/Optimierte Vorlauftemperatur",
+            "description": ""
+          }
+        }
+      },
+      "cooling_water_systems": {
+        "title": "Wasser-Kühlungs Systeme",
+        "single": "Wasser-Kühlungs System",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Vorlauftemperatur",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Rücklauftemperatur",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Raumtemperaturen",
+            "instanceLabel": "Raumtemperatur {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Ein/Aus-Status",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Optimierte Luftstromtemperatur",
+            "description": ""
+          },
+          "name": {
+            "label": "Titel",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Maxmimale Vorlauftemperatur",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Minimale Vorlauftemperatur",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Sollwert Raumtemperatur",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Zulufttemperatur",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Ablufttemperatur",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Neue/Optimierte Vorlauftemperatur",
+            "description": ""
+          }
+        }
+      },
+      "hybrid_water_systems": {
+        "title": "Wasser-Hybrid Systeme",
+        "single": "Wasser-Hybrid System",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Vorlauftemperatur",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Rücklauftemperatur",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Raumtemperaturen",
+            "instanceLabel": "Raumtemperatur {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Ein/Aus-Status",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Optimierte Luftstromtemperatur",
+            "description": ""
+          },
+          "name": {
+            "label": "Titel",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Maxmimale Vorlauftemperatur",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Minimale Vorlauftemperatur",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Sollwert Raumtemperatur",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Zulufttemperatur",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Ablufttemperatur",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Neue/Optimierte Vorlauftemperatur",
+            "description": ""
+          }
+        }
+      },
+      "hybrid_air_systems": {
+        "title": "Luft-Hybrid Systeme",
+        "single": "Luft-Hybrid System",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Aktuelle Zuluft Temperatur",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Aktuelle Abluft Temperatur",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Raumtemperaturen",
+            "instanceLabel": "Raumtemperatur {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Ein/Aus-Status",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Optimierte Luftstromtemperatur",
+            "description": ""
+          },
+          "name": {
+            "label": "Titel",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Maximale Zuluft Temperatur",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Minimale Zuluft Temperatur",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Sollwert Raumtemperatur",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Aktuelle Fortluft Temperatur",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Aktuelle Aussenluft Temperatur",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Neue/Optimierte Vorlauftemperatur",
+            "description": ""
+          }
+        }
+      }
+    },
+    "centralEndpoint": "Zentrale Energieverteilung",
+    "systemsSettings": {
+      "heating": "Heizen",
+      "cooling": "Kühlen"
+    },
+    "charts": {
+      "variables": {
+        "flow_temperature": "Vorlauftemperatur",
+        "return_temperature": "Rücklauftemperatur",
+        "supply_air_temperature": "Zuluft Temperatur",
+        "exhaust_air_temperature": "Abluft Temperatur",
+        "forecast": "Vorhersage",
+        "predicted_setpoint": "Vorhersage Solltemperatur"
+      },
+      "navigation": {
+        "chartsRoomTemperatures": "Raumtemperaturen",
+        "chartControlVariables": "System Temperaturen",
+        "forecast": "Vorhersage",
+        "temperatures": "Temperaturen"
+      }
+    }
+  },
+  "LoadMonitor": {
+    "previewName": "Lademonitor",
+    "settingsView": {
+      "title": "Lademonitor Einstellungen",
+      "bakingWindowDuration": "Backzeitraum"
+    },
+    "tableView": {
+      "title": "Historie",
+      "date": "Datum",
+      "bakingStart": "Im Backzeitraum",
+      "firstBakingStart": "Erster Backvorgang",
+      "beforeOpening": "Backbeginn <1h vor dem Öffnen",
+      "beforeClosing": "Backbeginn <1h vor Schließung"
+    },
+    "controllerMappings": {
+      "power": {
+        "label": "Tatsächliche Leistung",
+        "description": "Integer"
+      },
+      "powerOverThreshold": {
+        "label": "Leistung liegt über dem berechneten Schwellenwert",
+        "description": "0-1"
+      }
+    }
+  },
+  "BakingMonitor": {
+    "previewName": "Backmonitor",
+    "controllerMappings": {
+      "power": {
+        "label": "Tatsächliche Leistung",
+        "description": "Integer"
+      },
+      "powerOverThreshold": {
+        "label": "Leistung liegt über dem berechneten Schwellenwert",
+        "description": "0-1"
+      }
+    },
+    "additionalMappings": {
+      "name_line": "Stromverbrauch",
+      "name_area": "Backzeit",
+      "calendar": "Kalender"
+    }
+  }
+}

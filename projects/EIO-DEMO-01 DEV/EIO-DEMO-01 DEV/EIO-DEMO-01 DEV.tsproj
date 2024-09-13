@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.56">
+	<Project ProjectGUID="{5EC18858-28F7-4099-80C2-1E0274B5EDBF}" TargetNetId="192.168.0.67.1.1" Target64Bit="true" ShowHideConfigurations="#x3c7">
+		<System>
+			<Licenses>
+				<Target BkhfOrder="01280767" CustomOrder="60000492"/>
+			</Licenses>
+			<Tasks>
+				<Task Id="4" Priority="19" CycleTime="50000" AmsPort="351" AdtTasks="true">
+					<Name>FastTask</Name>
+				</Task>
+				<Task Id="5" Priority="22" CycleTime="200000" AmsPort="352" AdtTasks="true">
+					<Name>SlowTask</Name>
+				</Task>
+				<Task Id="6" Priority="21" CycleTime="100000" AmsPort="353" AdtTasks="true">
+					<Name>MiddleTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project GUID="{A4359DF7-C4BC-4969-8F3C-2EB615D1FC52}" Name="PLC Dev Barac" PrjFilePath="PLC Dev Barac\PLC Dev Barac.plcproj" TmcFilePath="PLC Dev Barac\PLC Dev Barac.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" CopyTmcToTarget="true" CopyTpyToTarget="false" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC Dev Barac\PLC Dev Barac.tmc" TmcHash="{50FFE1D6-D295-17C2-1D89-E5B8A48F1B45}">
+					<Name>PLC Dev Barac Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id>0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>19</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>21</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>22</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="19" OTCID="#x08502002"/>
+						<TaskPouOid Prio="21" OTCID="#x08502003"/>
+						<TaskPouOid Prio="22" OTCID="#x08502004"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+			<Project GUID="{1754709B-C409-49E5-877B-86089D25CD40}" Name="PLC Dev Reichinger" PrjFilePath="PLC Dev Reichinger\PLC Dev Reichinger.plcproj" TmcFilePath="PLC Dev Reichinger\PLC Dev Reichinger.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC Dev Reichinger\PLC Dev Reichinger.tmc" TmcHash="{DB8F2289-D973-C21A-0BB4-6B5D25B18770}">
+					<Name>PLC Dev Reichinger Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id>0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>19</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>21</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>22</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="19" OTCID="#x08502041"/>
+						<TaskPouOid Prio="21" OTCID="#x08502042"/>
+						<TaskPouOid Prio="22" OTCID="#x08502043"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+			<Project GUID="{D9D392C3-5899-49F3-AA00-36B567B27179}" Name="PLC Dev Auhofcenter" PrjFilePath="PLC Dev Auhofcenter\PLC Dev Auhofcenter.plcproj" TmcFilePath="PLC Dev Auhofcenter\PLC Dev Auhofcenter.tmc" ReloadTmc="true" AmsPort="853" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502080" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC Dev Auhofcenter\PLC Dev Auhofcenter.tmc" TmcHash="{BE1728EE-1A97-8237-28E4-09EBCCD4B089}">
+					<Name>PLC Dev Auhofcenter Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id>0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>19</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>21</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>22</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="19" OTCID="#x08502081"/>
+						<TaskPouOid Prio="21" OTCID="#x08502082"/>
+						<TaskPouOid Prio="22" OTCID="#x08502083"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+			<Project GUID="{7406F673-BBCA-4882-9FBE-ED62C14D681F}" Name="PLC Dev Anker1" PrjFilePath="PLC Dev Anker1\PLC Dev Anker1.plcproj" TmcFilePath="PLC Dev Anker1\PLC Dev Anker1.tmc" ReloadTmc="true" AmsPort="854" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x085020c0" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC Dev Anker1\PLC Dev Anker1.tmc" TmcHash="{A789B8D7-F06B-356D-3DDE-1D85326C17A1}">
+					<Name>PLC Dev Anker1 Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id>0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>19</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>21</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>22</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="19" OTCID="#x085020c1"/>
+						<TaskPouOid Prio="21" OTCID="#x085020c2"/>
+						<TaskPouOid Prio="22" OTCID="#x085020c3"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+			<Project GUID="{F48FCA04-4A82-4B74-B3E2-40152008D579}" Name="PLC Dev Anker2" PrjFilePath="PLC Dev Anker2\PLC Dev Anker2.plcproj" TmcFilePath="PLC Dev Anker2\PLC Dev Anker2.tmc" ReloadTmc="true" AmsPort="855" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502100" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC Dev Anker2\PLC Dev Anker2.tmc" TmcHash="{A42028F3-6DE1-6D52-A944-9E47E7CF09D7}">
+					<Name>PLC Dev Anker2 Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id>0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>19</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>21</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>22</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="19" OTCID="#x08502101"/>
+						<TaskPouOid Prio="21" OTCID="#x08502102"/>
+						<TaskPouOid Prio="22" OTCID="#x08502103"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+			<Project GUID="{51774FB0-5CF7-4C07-82A8-F68993EEAEF8}" Name="PLC DEV Anker3" PrjFilePath="PLC DEV Anker3\PLC DEV Anker3.plcproj" TmcFilePath="PLC DEV Anker3\PLC DEV Anker3.tmc" ReloadTmc="true" AmsPort="856" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502140" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC DEV Anker3\PLC DEV Anker3.tmc" TmcHash="{C20B8578-307C-41C1-9C5E-61BBCD9CE14A}">
+					<Name>PLC DEV Anker3 Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id>0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>19</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>21</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id>2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>22</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="19" OTCID="#x08502141"/>
+						<TaskPouOid Prio="21" OTCID="#x08502142"/>
+						<TaskPouOid Prio="22" OTCID="#x08502143"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+		</Plc>
+	</Project>
+</TcSmProject>

@@ -1,0 +1,866 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{c842405a-c1cc-4da8-98d1-398e47c34bd3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	//Alfen_1
+	fbAlfen_1						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_1				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_1				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_1	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_1			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_1			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_1			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_1_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_1_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_1_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_1_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_1_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_1			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_1_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_1_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_1_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_1_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_1			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_1			: BOOL;												//{#lynus.ag#()}
+	//Alfen_2
+	fbAlfen_2						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_2				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_2				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_2	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_2			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_2			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_2			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_2_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_2_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_2_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_2_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_2_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_2			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_2_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_2_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_2_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_2_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_2			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_2			: BOOL;												//{#lynus.ag#()}
+	//Alfen_3
+	fbAlfen_3						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_3				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_3				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_3	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_3			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_3			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_3			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_3_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_3_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_3_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_3_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_3_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_3			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_3_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_3_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_3_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_3_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_3			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_3			: BOOL;												//{#lynus.ag#()}
+	//Alfen_4
+	fbAlfen_4						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_4				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_4				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_4	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_4			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_4			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_4			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_4_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_4_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_4_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_4_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_4_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_4			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_4_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_4_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_4_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_4_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_4			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_4			: BOOL;												//{#lynus.ag#()}
+	//Alfen_5
+	fbAlfen_5						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_5				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_5				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_5	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_5			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_5			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_5			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_5_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_5_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_5_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_5_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_5_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_5			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_5_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_5_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_5_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_5_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_5			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_5			: BOOL;												//{#lynus.ag#()}
+	//Alfen_6
+	fbAlfen_6						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_6				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_6				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_6	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_6			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_6			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_6			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_6_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_6_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_6_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_6_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_6_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_6			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_6_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_6_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_6_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_6_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_6			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_6			: BOOL;												//{#lynus.ag#()}
+	//Alfen_7
+	fbAlfen_7						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_7				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_7				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_7	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_7			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_7			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_7			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_7_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_7_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_7_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_7_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_7_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_7			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_7_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_7_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_7_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_7_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_7			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_7			: BOOL;												//{#lynus.ag#()}
+	//Alfen_8
+	fbAlfen_8						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_8				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_8				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_8	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_8			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_8			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_8			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_8_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_8_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_8_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_8_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_8_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_8			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_8_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_8_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_8_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_8_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_8			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_8			: BOOL;												//{#lynus.ag#()}
+	//Alfen_9
+	fbAlfen_9						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_9				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_9				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_9	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_9			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_9			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_9			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_9_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_9_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_9_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_9_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_9_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_9			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_9_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_9_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_9_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_9_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_9			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_9			: BOOL;												//{#lynus.ag#()}
+	//Alfen_10
+	fbAlfen_10						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_10				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_10				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_10	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_10			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_10			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_10			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_10_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_10_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_10_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_10_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_10_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_10			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_10_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_10_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_10_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_10_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_10			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_10			: BOOL;												//{#lynus.ag#()}
+	//Alfen_11
+	fbAlfen_11						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen_11				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen_11				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen_11	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen_11			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen_11			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen_11			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_11_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_11_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_11_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_11_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_11_max	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen_11			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_11_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_11_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_11_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_11_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen_11			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen_11			: BOOL;												//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+	//Alfen_1
+	bEnable_Alfen_1					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_1				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_1				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_1	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_1					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_1				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_1			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_1				: REAL;												//{#lynus.ag#()}
+	//Alfen_2
+	bEnable_Alfen_2					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_2				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_2				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_2	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_2					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_2				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_2			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_2				: REAL;												//{#lynus.ag#()}
+	//Alfen_3
+	bEnable_Alfen_3					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_3				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_3				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_3	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_3					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_3				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_3			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_3				: REAL;												//{#lynus.ag#()}
+	//Alfen_4
+	bEnable_Alfen_4					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_4				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_4				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_4	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_4					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_4				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_4			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_4				: REAL;												//{#lynus.ag#()}
+	//Alfen_5
+	bEnable_Alfen_5					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_5				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_5				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_5	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_5					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_5				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_5			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_5				: REAL;												//{#lynus.ag#()}
+	//Alfen_6
+	bEnable_Alfen_6					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_6				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_6				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_6	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_6					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_6				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_6			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_6				: REAL;												//{#lynus.ag#()}
+	//Alfen_7
+	bEnable_Alfen_7					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_7				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_7				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_7	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_7					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_7				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_7			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_7				: REAL;												//{#lynus.ag#()}
+	//Alfen_8
+	bEnable_Alfen_8					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_8				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_8				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_8	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_8					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_8				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_8			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_8				: REAL;												//{#lynus.ag#()}
+	//Alfen_9
+	bEnable_Alfen_9					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_9				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_9				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_9	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_9					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_9				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_9			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_9				: REAL;												//{#lynus.ag#()}
+	//Alfen_10
+	bEnable_Alfen_10					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_10				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_10				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_10	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_10					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_10				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_10			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_10				: REAL;												//{#lynus.ag#()}
+	//Alfen_11
+	bEnable_Alfen_11					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen_11				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen_11				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen_11	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen_11					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen_11				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen_11			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen_11				: REAL;												//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[				
+(*-----------------------------------------------------------------------Alfen_1------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_1.stSetupECS.bManualyOn := bManualyOn_Alfen_1;
+fbAlfen_1.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_1;
+fbAlfen_1.stSetupECS.byPriority := byPrio_Alfen_1;
+fbAlfen_1.stSetupECS.byEnableSOC := bySOCEnable_Alfen_1;
+fbAlfen_1.stSetupECS.byDisableSOC := bySOCDisable_Alfen_1;
+fbAlfen_1.stSetupECS.rMaxPower := rMaxPower_Alfen_1;
+fbAlfen_1.stSetupECS.byCSMinPower := byMinPower_Alfen_1;	
+
+fbAlfen_1(
+	bEnable:= bEnable_Alfen_1, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.21', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_1 := fbAlfen_1.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_1 := fbAlfen_1.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_1 := fbAlfen_1.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_1 := fbAlfen_1.stDataECS.lrTotalPower;
+lrPower_Alfen_1_S1 :=  fbAlfen_1.stDataECS.arrSocketPower[1];
+lrPower_Alfen_1_S2 :=  fbAlfen_1.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_1_S1 := fbAlfen_1.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_1_S2 := fbAlfen_1.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_1_max := MAX(rChargingTimeInMin_Alfen_1_S1,rChargingTimeInMin_Alfen_1_S2);
+wState_Alfen_1_S1 := fbAlfen_1.stDataECS.arrSocketStateECS[1];
+wState_Alfen_1_S2 := fbAlfen_1.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_1_S1 := fbAlfen_1.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_1_S2 := fbAlfen_1.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_1 := fbAlfen_1.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_1 := fbAlfen_1.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_1 := fbAlfen_1.stDataECS.rTargetPower;
+bEnabled_Alfen_1 := fbAlfen_1.stDataECS.bEnabled;
+bCarConnected_Alfen_1 := fbAlfen_1.stDataECS.bCarConnected;	
+
+
+(*-----------------------------------------------------------------------Alfen_2------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_2.stSetupECS.bManualyOn := bManualyOn_Alfen_2;
+fbAlfen_2.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_2;
+fbAlfen_2.stSetupECS.byPriority := byPrio_Alfen_2;
+fbAlfen_2.stSetupECS.byEnableSOC := bySOCEnable_Alfen_2;
+fbAlfen_2.stSetupECS.byDisableSOC := bySOCDisable_Alfen_2;
+fbAlfen_2.stSetupECS.rMaxPower := rMaxPower_Alfen_2;
+fbAlfen_2.stSetupECS.byCSMinPower := byMinPower_Alfen_2;	
+
+fbAlfen_2(
+	bEnable:= bEnable_Alfen_2, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.22', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_2 := fbAlfen_2.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_2 := fbAlfen_2.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_2 := fbAlfen_2.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_2 := fbAlfen_2.stDataECS.lrTotalPower;
+lrPower_Alfen_2_S1 :=  fbAlfen_2.stDataECS.arrSocketPower[1];
+lrPower_Alfen_2_S2 :=  fbAlfen_2.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_2_S1 := fbAlfen_2.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_2_S2 := fbAlfen_2.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_2_max := MAX(rChargingTimeInMin_Alfen_2_S1,rChargingTimeInMin_Alfen_2_S2);
+wState_Alfen_2_S1 := fbAlfen_2.stDataECS.arrSocketStateECS[1];
+wState_Alfen_2_S2 := fbAlfen_2.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_2_S1 := fbAlfen_2.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_2_S2 := fbAlfen_2.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_2 := fbAlfen_2.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_2 := fbAlfen_2.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_2 := fbAlfen_2.stDataECS.rTargetPower;
+bEnabled_Alfen_2 := fbAlfen_2.stDataECS.bEnabled;
+bCarConnected_Alfen_2 := fbAlfen_2.stDataECS.bCarConnected;	
+
+(*-----------------------------------------------------------------------Alfen_3------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_3.stSetupECS.bManualyOn := bManualyOn_Alfen_3;
+fbAlfen_3.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_3;
+fbAlfen_3.stSetupECS.byPriority := byPrio_Alfen_3;
+fbAlfen_3.stSetupECS.byEnableSOC := bySOCEnable_Alfen_3;
+fbAlfen_3.stSetupECS.byDisableSOC := bySOCDisable_Alfen_3;
+fbAlfen_3.stSetupECS.rMaxPower := rMaxPower_Alfen_3;
+fbAlfen_3.stSetupECS.byCSMinPower := byMinPower_Alfen_3;	
+
+fbAlfen_3(
+	bEnable:= bEnable_Alfen_3, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.23', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_3 := fbAlfen_3.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_3 := fbAlfen_3.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_3 := fbAlfen_3.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_3 := fbAlfen_3.stDataECS.lrTotalPower;
+lrPower_Alfen_3_S1 :=  fbAlfen_3.stDataECS.arrSocketPower[1];
+lrPower_Alfen_3_S2 :=  fbAlfen_3.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_3_S1 := fbAlfen_3.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_3_S2 := fbAlfen_3.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_3_max := MAX(rChargingTimeInMin_Alfen_3_S1,rChargingTimeInMin_Alfen_3_S2);
+wState_Alfen_3_S1 := fbAlfen_3.stDataECS.arrSocketStateECS[1];
+wState_Alfen_3_S2 := fbAlfen_3.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_3_S1 := fbAlfen_3.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_3_S2 := fbAlfen_3.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_3 := fbAlfen_3.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_3 := fbAlfen_3.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_3 := fbAlfen_3.stDataECS.rTargetPower;
+bEnabled_Alfen_3 := fbAlfen_3.stDataECS.bEnabled;
+bCarConnected_Alfen_3 := fbAlfen_3.stDataECS.bCarConnected;	
+
+(*-----------------------------------------------------------------------Alfen_4------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_4.stSetupECS.bManualyOn := bManualyOn_Alfen_4;
+fbAlfen_4.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_4;
+fbAlfen_4.stSetupECS.byPriority := byPrio_Alfen_4;
+fbAlfen_4.stSetupECS.byEnableSOC := bySOCEnable_Alfen_4;
+fbAlfen_4.stSetupECS.byDisableSOC := bySOCDisable_Alfen_4;
+fbAlfen_4.stSetupECS.rMaxPower := rMaxPower_Alfen_4;
+fbAlfen_4.stSetupECS.byCSMinPower := byMinPower_Alfen_4;	
+
+fbAlfen_4(
+	bEnable:= bEnable_Alfen_4, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.24', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_4 := fbAlfen_4.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_4 := fbAlfen_4.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_4 := fbAlfen_4.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_4 := fbAlfen_4.stDataECS.lrTotalPower;
+lrPower_Alfen_4_S1 :=  fbAlfen_4.stDataECS.arrSocketPower[1];
+lrPower_Alfen_4_S2 :=  fbAlfen_4.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_4_S1 := fbAlfen_4.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_4_S2 := fbAlfen_4.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_4_max := MAX(rChargingTimeInMin_Alfen_4_S1,rChargingTimeInMin_Alfen_4_S2);
+wState_Alfen_4_S1 := fbAlfen_4.stDataECS.arrSocketStateECS[1];
+wState_Alfen_4_S2 := fbAlfen_4.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_4_S1 := fbAlfen_4.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_4_S2 := fbAlfen_4.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_4 := fbAlfen_4.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_4 := fbAlfen_4.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_4 := fbAlfen_4.stDataECS.rTargetPower;
+bEnabled_Alfen_4 := fbAlfen_4.stDataECS.bEnabled;
+bCarConnected_Alfen_4 := fbAlfen_4.stDataECS.bCarConnected;	
+(*-----------------------------------------------------------------------Alfen_5------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_5.stSetupECS.bManualyOn := bManualyOn_Alfen_5;
+fbAlfen_5.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_5;
+fbAlfen_5.stSetupECS.byPriority := byPrio_Alfen_5;
+fbAlfen_5.stSetupECS.byEnableSOC := bySOCEnable_Alfen_5;
+fbAlfen_5.stSetupECS.byDisableSOC := bySOCDisable_Alfen_5;
+fbAlfen_5.stSetupECS.rMaxPower := rMaxPower_Alfen_5;
+fbAlfen_5.stSetupECS.byCSMinPower := byMinPower_Alfen_5;	
+
+fbAlfen_5(
+	bEnable:= bEnable_Alfen_5, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.25', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_5 := fbAlfen_5.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_5 := fbAlfen_5.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_5 := fbAlfen_5.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_5 := fbAlfen_5.stDataECS.lrTotalPower;
+lrPower_Alfen_5_S1 :=  fbAlfen_5.stDataECS.arrSocketPower[1];
+lrPower_Alfen_5_S2 :=  fbAlfen_5.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_5_S1 := fbAlfen_5.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_5_S2 := fbAlfen_5.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_5_max := MAX(rChargingTimeInMin_Alfen_5_S1,rChargingTimeInMin_Alfen_5_S2);
+wState_Alfen_5_S1 := fbAlfen_5.stDataECS.arrSocketStateECS[1];
+wState_Alfen_5_S2 := fbAlfen_5.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_5_S1 := fbAlfen_5.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_5_S2 := fbAlfen_5.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_5 := fbAlfen_5.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_5 := fbAlfen_5.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_5 := fbAlfen_5.stDataECS.rTargetPower;
+bEnabled_Alfen_5 := fbAlfen_5.stDataECS.bEnabled;
+bCarConnected_Alfen_5 := fbAlfen_5.stDataECS.bCarConnected;
+(*-----------------------------------------------------------------------Alfen_6------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_6.stSetupECS.bManualyOn := bManualyOn_Alfen_6;
+fbAlfen_6.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_6;
+fbAlfen_6.stSetupECS.byPriority := byPrio_Alfen_6;
+fbAlfen_6.stSetupECS.byEnableSOC := bySOCEnable_Alfen_6;
+fbAlfen_6.stSetupECS.byDisableSOC := bySOCDisable_Alfen_6;
+fbAlfen_6.stSetupECS.rMaxPower := rMaxPower_Alfen_6;
+fbAlfen_6.stSetupECS.byCSMinPower := byMinPower_Alfen_6;	
+
+fbAlfen_6(
+	bEnable:= bEnable_Alfen_6, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.26', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_6 := fbAlfen_6.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_6 := fbAlfen_6.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_6 := fbAlfen_6.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_6 := fbAlfen_6.stDataECS.lrTotalPower;
+lrPower_Alfen_6_S1 :=  fbAlfen_6.stDataECS.arrSocketPower[1];
+lrPower_Alfen_6_S2 :=  fbAlfen_6.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_6_S1 := fbAlfen_6.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_6_S2 := fbAlfen_6.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_6_max := MAX(rChargingTimeInMin_Alfen_6_S1,rChargingTimeInMin_Alfen_6_S2);
+wState_Alfen_6_S1 := fbAlfen_6.stDataECS.arrSocketStateECS[1];
+wState_Alfen_6_S2 := fbAlfen_6.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_6_S1 := fbAlfen_6.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_6_S2 := fbAlfen_6.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_6 := fbAlfen_6.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_6 := fbAlfen_6.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_6 := fbAlfen_6.stDataECS.rTargetPower;
+bEnabled_Alfen_6 := fbAlfen_6.stDataECS.bEnabled;
+bCarConnected_Alfen_6 := fbAlfen_6.stDataECS.bCarConnected;
+(*-----------------------------------------------------------------------Alfen_7------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_7.stSetupECS.bManualyOn := bManualyOn_Alfen_7;
+fbAlfen_7.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_7;
+fbAlfen_7.stSetupECS.byPriority := byPrio_Alfen_7;
+fbAlfen_7.stSetupECS.byEnableSOC := bySOCEnable_Alfen_7;
+fbAlfen_7.stSetupECS.byDisableSOC := bySOCDisable_Alfen_7;
+fbAlfen_7.stSetupECS.rMaxPower := rMaxPower_Alfen_7;
+fbAlfen_7.stSetupECS.byCSMinPower := byMinPower_Alfen_7;	
+
+fbAlfen_7(
+	bEnable:= bEnable_Alfen_7, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.27', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_7 := fbAlfen_7.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_7 := fbAlfen_7.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_7 := fbAlfen_7.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_7 := fbAlfen_7.stDataECS.lrTotalPower;
+lrPower_Alfen_7_S1 :=  fbAlfen_7.stDataECS.arrSocketPower[1];
+lrPower_Alfen_7_S2 :=  fbAlfen_7.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_7_S1 := fbAlfen_7.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_7_S2 := fbAlfen_7.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_7_max := MAX(rChargingTimeInMin_Alfen_7_S1,rChargingTimeInMin_Alfen_7_S2);
+wState_Alfen_7_S1 := fbAlfen_7.stDataECS.arrSocketStateECS[1];
+wState_Alfen_7_S2 := fbAlfen_7.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_7_S1 := fbAlfen_7.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_7_S2 := fbAlfen_7.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_7 := fbAlfen_7.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_7 := fbAlfen_7.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_7 := fbAlfen_7.stDataECS.rTargetPower;
+bEnabled_Alfen_7 := fbAlfen_7.stDataECS.bEnabled;
+bCarConnected_Alfen_7 := fbAlfen_7.stDataECS.bCarConnected;	
+(*-----------------------------------------------------------------------Alfen_8------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_8.stSetupECS.bManualyOn := bManualyOn_Alfen_8;
+fbAlfen_8.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_8;
+fbAlfen_8.stSetupECS.byPriority := byPrio_Alfen_8;
+fbAlfen_8.stSetupECS.byEnableSOC := bySOCEnable_Alfen_8;
+fbAlfen_8.stSetupECS.byDisableSOC := bySOCDisable_Alfen_8;
+fbAlfen_8.stSetupECS.rMaxPower := rMaxPower_Alfen_8;
+fbAlfen_8.stSetupECS.byCSMinPower := byMinPower_Alfen_8;	
+
+fbAlfen_8(
+	bEnable:= bEnable_Alfen_8, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.28', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_8 := fbAlfen_8.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_8 := fbAlfen_8.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_8 := fbAlfen_8.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_8 := fbAlfen_8.stDataECS.lrTotalPower;
+lrPower_Alfen_8_S1 :=  fbAlfen_8.stDataECS.arrSocketPower[1];
+lrPower_Alfen_8_S2 :=  fbAlfen_8.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_8_S1 := fbAlfen_8.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_8_S2 := fbAlfen_8.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_8_max := MAX(rChargingTimeInMin_Alfen_8_S1,rChargingTimeInMin_Alfen_8_S2);
+wState_Alfen_8_S1 := fbAlfen_8.stDataECS.arrSocketStateECS[1];
+wState_Alfen_8_S2 := fbAlfen_8.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_8_S1 := fbAlfen_8.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_8_S2 := fbAlfen_8.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_8 := fbAlfen_8.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_8 := fbAlfen_8.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_8 := fbAlfen_8.stDataECS.rTargetPower;
+bEnabled_Alfen_8 := fbAlfen_8.stDataECS.bEnabled;
+bCarConnected_Alfen_8 := fbAlfen_8.stDataECS.bCarConnected;	
+(*-----------------------------------------------------------------------Alfen_9------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_9.stSetupECS.bManualyOn := bManualyOn_Alfen_9;
+fbAlfen_9.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_9;
+fbAlfen_9.stSetupECS.byPriority := byPrio_Alfen_9;
+fbAlfen_9.stSetupECS.byEnableSOC := bySOCEnable_Alfen_9;
+fbAlfen_9.stSetupECS.byDisableSOC := bySOCDisable_Alfen_9;
+fbAlfen_9.stSetupECS.rMaxPower := rMaxPower_Alfen_9;
+fbAlfen_9.stSetupECS.byCSMinPower := byMinPower_Alfen_9;	
+
+fbAlfen_9(
+	bEnable:= bEnable_Alfen_9, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.29', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_9 := fbAlfen_9.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_9 := fbAlfen_9.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_9 := fbAlfen_9.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_9 := fbAlfen_9.stDataECS.lrTotalPower;
+lrPower_Alfen_9_S1 :=  fbAlfen_9.stDataECS.arrSocketPower[1];
+lrPower_Alfen_9_S2 :=  fbAlfen_9.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_9_S1 := fbAlfen_9.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_9_S2 := fbAlfen_9.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_9_max := MAX(rChargingTimeInMin_Alfen_9_S1,rChargingTimeInMin_Alfen_9_S2);
+wState_Alfen_9_S1 := fbAlfen_9.stDataECS.arrSocketStateECS[1];
+wState_Alfen_9_S2 := fbAlfen_9.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_9_S1 := fbAlfen_9.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_9_S2 := fbAlfen_9.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_9 := fbAlfen_9.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_9 := fbAlfen_9.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_9 := fbAlfen_9.stDataECS.rTargetPower;
+bEnabled_Alfen_9 := fbAlfen_9.stDataECS.bEnabled;
+bCarConnected_Alfen_9 := fbAlfen_9.stDataECS.bCarConnected;	
+(*-----------------------------------------------------------------------Alfen_10------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_10.stSetupECS.bManualyOn := bManualyOn_Alfen_10;
+fbAlfen_10.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_10;
+fbAlfen_10.stSetupECS.byPriority := byPrio_Alfen_10;
+fbAlfen_10.stSetupECS.byEnableSOC := bySOCEnable_Alfen_10;
+fbAlfen_10.stSetupECS.byDisableSOC := bySOCDisable_Alfen_10;
+fbAlfen_10.stSetupECS.rMaxPower := rMaxPower_Alfen_10;
+fbAlfen_10.stSetupECS.byCSMinPower := byMinPower_Alfen_10;	
+
+fbAlfen_10(
+	bEnable:= bEnable_Alfen_10, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.30', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_10 := fbAlfen_10.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_10 := fbAlfen_10.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_10 := fbAlfen_10.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_10 := fbAlfen_10.stDataECS.lrTotalPower;
+lrPower_Alfen_10_S1 :=  fbAlfen_10.stDataECS.arrSocketPower[1];
+lrPower_Alfen_10_S2 :=  fbAlfen_10.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_10_S1 := fbAlfen_10.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_10_S2 := fbAlfen_10.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_10_max := MAX(rChargingTimeInMin_Alfen_10_S1,rChargingTimeInMin_Alfen_10_S2);
+wState_Alfen_10_S1 := fbAlfen_10.stDataECS.arrSocketStateECS[1];
+wState_Alfen_10_S2 := fbAlfen_10.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_10_S1 := fbAlfen_10.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_10_S2 := fbAlfen_10.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_10 := fbAlfen_10.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_10 := fbAlfen_10.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_10 := fbAlfen_10.stDataECS.rTargetPower;
+bEnabled_Alfen_10 := fbAlfen_10.stDataECS.bEnabled;
+bCarConnected_Alfen_10 := fbAlfen_10.stDataECS.bCarConnected;	
+(*-----------------------------------------------------------------------Alfen_11------------------------------------------------------*)
+
+//Manual Power
+fbAlfen_11.stSetupECS.bManualyOn := bManualyOn_Alfen_11;
+fbAlfen_11.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen_11;
+fbAlfen_11.stSetupECS.byPriority := byPrio_Alfen_11;
+fbAlfen_11.stSetupECS.byEnableSOC := bySOCEnable_Alfen_11;
+fbAlfen_11.stSetupECS.byDisableSOC := bySOCDisable_Alfen_11;
+fbAlfen_11.stSetupECS.rMaxPower := rMaxPower_Alfen_11;
+fbAlfen_11.stSetupECS.byCSMinPower := byMinPower_Alfen_11;	
+
+fbAlfen_11(
+	bEnable:= bEnable_Alfen_11, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 1,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.31', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen_11 := fbAlfen_11.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen_11 := fbAlfen_11.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen_11 := fbAlfen_11.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen_11 := fbAlfen_11.stDataECS.lrTotalPower;
+lrPower_Alfen_11_S1 :=  fbAlfen_11.stDataECS.arrSocketPower[1];
+lrPower_Alfen_11_S2 :=  fbAlfen_11.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_11_S1 := fbAlfen_11.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_11_S2 := fbAlfen_11.stDataECS.arrChargingTimeInMin[2];		
+rChargingTimeInMin_Alfen_11_max := MAX(rChargingTimeInMin_Alfen_11_S1,rChargingTimeInMin_Alfen_11_S2);
+wState_Alfen_11_S1 := fbAlfen_11.stDataECS.arrSocketStateECS[1];
+wState_Alfen_11_S2 := fbAlfen_11.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_11_S1 := fbAlfen_11.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_11_S2 := fbAlfen_11.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen_11 := fbAlfen_11.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen_11 := fbAlfen_11.stDataECS.bySCSMinPower;
+rTargetPower_Alfen_11 := fbAlfen_11.stDataECS.rTargetPower;
+bEnabled_Alfen_11 := fbAlfen_11.stDataECS.bEnabled;
+bCarConnected_Alfen_11 := fbAlfen_11.stDataECS.bCarConnected;	
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="839" Count="35" />
+      <LineId Id="1286" Count="0" />
+      <LineId Id="875" Count="7" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="923" Count="0" />
+      <LineId Id="940" Count="0" />
+      <LineId Id="1101" Count="35" />
+      <LineId Id="1287" Count="0" />
+      <LineId Id="1137" Count="44" />
+      <LineId Id="1288" Count="0" />
+      <LineId Id="1182" Count="8" />
+      <LineId Id="1321" Count="43" />
+      <LineId Id="1276" Count="0" />
+      <LineId Id="1398" Count="43" />
+      <LineId Id="1366" Count="0" />
+      <LineId Id="1471" Count="43" />
+      <LineId Id="1365" Count="0" />
+      <LineId Id="1546" Count="43" />
+      <LineId Id="1515" Count="0" />
+      <LineId Id="1621" Count="43" />
+      <LineId Id="928" Count="0" />
+      <LineId Id="1698" Count="43" />
+      <LineId Id="1696" Count="0" />
+      <LineId Id="1773" Count="43" />
+      <LineId Id="1742" Count="0" />
+      <LineId Id="1849" Count="43" />
+      <LineId Id="1817" Count="0" />
+      <LineId Id="1697" Count="0" />
+      <LineId Id="1695" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

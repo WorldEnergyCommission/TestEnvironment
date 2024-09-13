@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_INT" Id="{e9d7e1dd-786b-489e-b167-730308c93bff}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_CV_WORD_TO_INT
+VAR_INPUT
+	{attribute 'hide'}
+	wInputValue					: WORD;								//Input value that is converted into the output value
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	iOutputValue				: INT;								//Converted output value							
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//WORD TO INT
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+iOutputValue := WORD_TO_INT(wInputValue);
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_INT">
+      <LineId Id="37" Count="2" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

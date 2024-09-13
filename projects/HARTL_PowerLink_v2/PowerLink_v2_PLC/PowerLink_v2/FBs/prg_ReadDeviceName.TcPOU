@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prg_ReadDeviceName" Id="{d4b9ca14-f27d-4d64-abbf-78404738a3dc}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prg_ReadDeviceName
+VAR CONSTANT
+	cNetId			: T_AmsNetID := '';				// local
+END_VAR
+VAR_INPUT
+	bStart			: BOOL := TRUE;       			// flag to trigger (re)start of statemachine
+END_VAR
+VAR
+	eState			: E_State := E_State.Init;
+	hrGetValue		: HRESULT;	
+
+	sDeviceName		: STRING(39);
+
+
+	fbDiagRegister	: FB_IPCDiag_Register := (sNetId:=cNetId);
+	fbDiagRead		: FB_IPCDiag_ReadParameter := (sNetId:=cNetId);
+	nKeyIdx			: USINT := 1;
+	aParameterKeys	: ARRAY[1..1] OF E_IPCDiag_ParameterKey := [	E_IPCDiag_ParameterKey.IPCDeviceName];
+	ton_wait: Ton;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE eState OF
+E_State.Init:
+	IF NOT fbDiagRegister.bBusy THEN
+		fbDiagRegister(bExecute:=TRUE); // need to be executed once
+	ELSE
+		fbDiagRegister(bExecute:=FALSE);
+	END_IF
+	IF NOT fbDiagRegister.bBusy THEN
+		IF fbDiagRegister.bError THEN
+			eState := E_State.Error;
+		ELSE
+			eState := E_State.Idle;
+		END_IF
+	END_IF
+
+E_State.Idle:	
+	ton_wait.IN := TRUE;
+	IF ton_wait.Q THEN 
+	    bStart := TRUE;	
+		ton_wait.IN := FALSE;
+	END_IF    
+	IF bStart THEN
+        bStart := FALSE;
+        eState := E_State.ReadOnce;
+    END_IF
+	
+E_State.ReadOnce: // reads every parameter once
+	IF NOT fbDiagRead.bBusy THEN
+		fbDiagRead(bExecute:= TRUE, eParameterKey:=aParameterKeys[nKeyIdx], fbRegister:=fbDiagRegister);	
+	ELSE
+		fbDiagRead(bExecute:= FALSE, fbRegister:=fbDiagRegister);
+	END_IF
+	IF NOT fbDiagRead.bBusy THEN
+		IF fbDiagRead.bError OR FALSE THEN
+			eState := E_State.Error;
+		ELSE // get value
+			IF aParameterKeys[nKeyIdx] = E_IPCDiag_ParameterKey.IPCDeviceName THEN
+				hrGetValue := fbDiagRead.GetParameter(pBuffer:=ADR(sDeviceName), nBufferSize:=SIZEOF(sDeviceName));
+			END_IF
+				
+			IF SUCCEEDED(hrGetValue) THEN
+				eState := E_State.Wait;
+			ELSE
+				eState := E_State.Error;
+			END_IF
+		END_IF
+	END_IF	
+
+	
+E_State.Error:
+	(* implementation of error logging and error handling *)
+	(* hint: An error could also occur if a parameter is not supported by chosen hardware or image. 
+	E.g. not all IPCs offer a CPU temperature measurement. *)
+	ton_wait.IN := TRUE;
+	IF ton_wait.Q THEN 
+		eState := E_State.Init;
+		ton_wait.IN := FALSE;
+	END_IF
+	
+E_State.Wait:	// wait for new trigger
+	IF bStart THEN
+		eState := E_State.Init;
+	END_IF
+	
+END_CASE
+ton_wait(PT := T#2S);]]></ST>
+    </Implementation>
+    <LineIds Name="prg_ReadDeviceName">
+      <LineId Id="3" Count="0" />
+      <LineId Id="334" Count="6" />
+      <LineId Id="1030" Count="3" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="1024" Count="0" />
+      <LineId Id="1026" Count="0" />
+      <LineId Id="1078" Count="3" />
+      <LineId Id="1027" Count="0" />
+      <LineId Id="1082" Count="0" />
+      <LineId Id="1028" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="1025" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="851" Count="1" />
+      <LineId Id="855" Count="6" />
+      <LineId Id="991" Count="0" />
+      <LineId Id="883" Count="0" />
+      <LineId Id="862" Count="0" />
+      <LineId Id="1126" Count="0" />
+      <LineId Id="863" Count="0" />
+      <LineId Id="881" Count="0" />
+      <LineId Id="865" Count="3" />
+      <LineId Id="849" Count="0" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="302" Count="1" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="1073" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="1076" Count="1" />
+      <LineId Id="1130" Count="0" />
+      <LineId Id="1127" Count="0" />
+      <LineId Id="1129" Count="0" />
+      <LineId Id="1131" Count="1" />
+      <LineId Id="1128" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

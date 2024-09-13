@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_SINT" Id="{912e9afa-bac3-4898-9ced-63d869831563}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_CV_WORD_TO_SINT
+VAR_INPUT
+	{attribute 'hide'}
+	wInputValue					: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	eByteOrderForConvert		: eByteOrder;						//Byte Format
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	siOutputValue_1				: SINT;								//Converted output value
+	{attribute 'hide'}							
+	siOutputValue_2				: SINT;								//Converted output value
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//The byte order can be selected between BigEndian and LittleEndian
+//WORD TO SINT
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+IF eByteOrderForConvert = eByteOrder.eBigEndian THEN
+	siOutputValue_1 := BYTE_TO_SINT(WORD_TO_BYTE(SHR(wInputValue,8) AND 16#FFFF));
+	siOutputValue_2 := BYTE_TO_SINT(WORD_TO_BYTE(wInputValue AND 16#FFFF));
+ELSE
+	siOutputValue_2 := BYTE_TO_SINT(WORD_TO_BYTE(SHR(wInputValue,8) AND 16#FFFF));
+	siOutputValue_1 := BYTE_TO_SINT(WORD_TO_BYTE(wInputValue AND 16#FFFF));
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_SINT">
+      <LineId Id="44" Count="2" />
+      <LineId Id="17" Count="5" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="28" Count="4" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

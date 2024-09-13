@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgBattery_H1" Id="{a742e2b4-8e0c-4f86-960b-eaa67f503c17}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgBattery_H1
+VAR PERSISTENT
+	bEnableBattery				: BOOL;							//{#lynus.ag#()}
+	byPrioBattery				: BYTE;							//{#lynus.ag#()}
+	lrMaxCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	lrCounterBattProd			: LREAL;						//{#lynus.ag#()}
+	lrCounterBattCons			: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR
+	fbBattery					: FB_Xelectrix_Powerbox;
+	fbBattCounter				: FB_EnergyCounter;
+	bIsEnabledBattery			: BOOL;							//{#lynus.ag#()}
+	bResetBattery				: BOOL;							//{#lynus.ag#()}
+	bSResetBattery				: BOOL;							//{#lynus.ag#()}
+	byErrorWarningBattery		: BYTE;							//{#lynus.ag#()}
+	dwSOCBattery				: DWORD;						//{#lynus.ag#()}
+	rTargetPowerBattery			: REAL;							//{#lynus.ag#()}
+	lrPowerBattery				: LREAL;						//{#lynus.ag#()}
+	lrActualCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	bBatteryBypassClosed		: BOOL;							//{#lynus.ag#()}
+	
+	bIn_1				AT%I*	: BOOL;			// vermultich Batterie Einspeisung geschlossen
+	bIn_2				AT%I*	: BOOL;			// Bypass Schalter geschlossen
+	bIn_3				AT%I*	: BOOL;	
+	bIn_4				AT%I*	: BOOL;	
+	bIn_5				AT%I*	: BOOL;	
+	bIn_6				AT%I*	: BOOL;	
+	bIn_7				AT%I*	: BOOL;	
+	bIn_8				AT%I*	: BOOL;	
+
+	mtest: BOOL;
+	int_GridState: INT;											//{#lynus.ag#()}
+	int_BatteryState: INT;										//{#lynus.ag#()}
+	int_OperatingState: INT;									//{#lynus.ag#()}
+	int_ErrorState: INT;										//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF mtest THEN
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[1,1].rTargetPowerEMS:=0;
+	mtest:=FALSE;
+END_IF
+
+fbBattery(
+	bEnable:= bEnableBattery, 
+	bActivateControl:= TRUE, 
+	byUnitID:= 1, 
+	byPriority:= byPrioBattery, 
+	diNrOfEMS_IN:= prgEMS_H1.fbEMS.diNrOfEMS_OUT, 
+	lrMaxCapacityBattery:= lrMaxCapacityBattery, 
+	sIPAdress:= '192.168.1.139', 						// modify IP Adress
+	bReset:= bResetBattery, 
+	stDataXelectrix=> , 
+	stDataBatt=> , 
+	stDataBattInverter=> , 
+	stDataEMPower_Grid=> , 
+	stDataEMCounter_Grid=> , 
+	diNrOfBatt_OUT=> , 
+	diNrOfBattInverter_OUT=> , 
+	diNrOfEM_OUT_Grid=> , 
+	lrMaxCapacityBattery_OUT=> );
+	
+//Out
+bIsEnabledBattery := fbBattery.stDataBatt.bEnabled;
+	bSResetBattery := fbBattery.stDataBattInverter.bStateReset;
+		dwSOCBattery := fbBattery.stDataBatt.dwSOC;
+			rTargetPowerBattery := fbBattery.stDataBattInverter.rTargetPower;
+				lrPowerBattery := fbBattery.stDataBatt.lrPower;
+					lrActualCapacityBattery := fbBattery.lrMaxCapacityBattery_OUT;	
+						byErrorWarningBattery := fbBattery.stDataBatt.byErrorWarning;
+						
+						
+// EnergyCounter
+fbBattCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerBattery, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbBattCounter.lrTotalCounterEnergy_Production > lrCounterBattProd THEN  	
+	lrCounterBattProd := fbBattCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+IF fbBattCounter.lrTotalCounterEnergy_Consumption > lrCounterBattCons THEN  	
+	lrCounterBattCons := fbBattCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// send e states to cloud
+int_GridState 		:= fbBattery.stDataXelectrix.eGridState;
+int_BatteryState	:= fbBattery.stDataXelectrix.eBatteryState;
+int_OperatingState	:= fbBattery.stDataXelectrix.eOperatingState;
+int_ErrorState		:= fbBattery.stDataXelectrix.eErrorState;]]></ST>
+    </Implementation>
+    <LineIds Name="prgBattery_H1">
+      <LineId Id="192" Count="2" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="115" Count="44" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="199" Count="5" />
+      <LineId Id="198" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

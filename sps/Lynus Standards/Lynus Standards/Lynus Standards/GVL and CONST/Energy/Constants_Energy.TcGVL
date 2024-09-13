@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <GVL Name="Constants_Energy" Id="{af77bfde-ecb3-452d-b5b8-46391c110a67}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'conditionalshow'}
+VAR_GLOBAL CONSTANT
+	//Here we can set the limits for the energy devices
+	{attribute 'hide'}
+	diMaxNumberOfBatterys												: DINT := 15;
+	{attribute 'hide'}
+	diMaxNumberOfBatteryInverters										: DINT := 15;
+	{attribute 'hide'}
+	diMaxNumberOfPvSystems												: DINT := 15;
+	{attribute 'hide'}
+	diMaxNumberOfGridConnections										: DINT := 15;
+	{attribute 'hide'}
+	diMaxNumberOfGenerators												: DINT := 15;
+	{attribute 'hide'}
+	diMaxNumberOfElectricHeatingElements								: DINT := 15;
+	{attribute 'hide'}
+	diMaxNumberOfHouseConsumptions										: DINT := 15;
+	{attribute 'hide'}
+	diMaxNumberOfHeatingPumps											: DINT := 15;
+	{attribute 'hide'}	
+	diMaxNumberOfElectricChargingStations								: DINT := 100;
+	{attribute 'hide'}
+	diMaxNumberOfOtherBigConsumers										: DINT := 30;
+	{attribute 'hide'}
+	diMaxNumberOfElectricMeters											: DINT := 150;
+	{attribute 'hide'}
+	diMaxNumberOfEMS													: DINT := 10;
+	{attribute 'hide'}
+	diMaxNumberOfValveControls											: DINT := 50;
+	{attribute 'hide'}
+	diMaxNumberOfSetPointOpt											: DINT := 50;
+	//Target power limit in % to switch off the step switched and on/off devices
+	{attribute 'hide'}
+	byTargetOffPowerForOnOffDevices										: BYTE := 95;
+	//Tolerance surplus/Consumption calculation EMS (Unit kW)
+	{attribute 'hide'}
+	rToleranceSurplusConsumption										: REAL := 0.05;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

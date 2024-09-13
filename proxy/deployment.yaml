@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+  namespace: lynus
+  labels:
+    app: proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxy
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: proxy
+          image: ghcr.io/efficientio/efficientio/proxy:TAG
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          env:
+            - name: REDIS_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_ADDRESS
+                  name: lynus-credentials
+            - name: CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: CLUSTER_NAME
+                  name: lynus-credentials
+            - name: SERVICE_WEBSOCKETS
+              value: mosquitto:9001
+            - name: SERVICE_MQTT
+              value: mosquitto:1883
+            - name: MAX_MESSAGES
+              value: "8192"
+            - name: MEASUREMENTS_PER_MESSAGE
+              value: "32"
+          ports:
+            - containerPort: 9001
+              name: websockets
+            - containerPort: 1883
+              name: mqtt
+            - containerPort: 8000
+              name: http
+      nodeSelector:
+        nodetype: large
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy
+  namespace: lynus
+spec:
+  selector:
+    app: proxy
+  ports:
+    - port: 1883
+      name: mqtt
+    - port: 9001
+      name: websockets
+    - port: 80
+      targetPort: 8000
+      name: http
+  type: ClusterIP

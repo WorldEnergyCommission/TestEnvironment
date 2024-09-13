@@ -1,0 +1,360 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="MAIN" Id="{dd9ee22c-1735-43e5-b6fb-089a9db9dab1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fbVarInfo						: FB_VarInfo;	
+	timStart						: TON;
+	timResetConnection				: TON;
+	byLPArr							: BYTE;
+	iState							: INT;	
+	uiErrorCounter					: UINT;
+	fbMonitor						: FB_SPOpt_Monitoring_extTime;
+	bSEnableOp						: BOOL;			//{#lynus.ag#()}
+	rHeartbeat						: REAL;			//{#lynus.ag#()}
+	rErrorWarning					: REAL;			//{#lynus.ag#()}
+	rSPOptReady						: REAL;			//{#lynus.ag#()}
+	rNewTargetValue					: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	byHB							: BYTE;			//Watchdog
+	FPStart							: R_TRIG;
+	FPDone							: R_TRIG;
+	FPError							: R_TRIG;
+	fbHttp							: FB_GetSet_Data_Auhofcenter;
+		
+	x: INT;
+
+	// Riverside
+	rRiverside_AT					: REAL;			//{#lynus.ag#()}
+	rRiverside_VL					: REAL;			//{#lynus.ag#()}
+	rRiverside_RL					: REAL;			//{#lynus.ag#()}
+	rRiverside_EGPalmers			: REAL;			//{#lynus.ag#()}
+	rRiverside_EGNanuNana			: REAL;			//{#lynus.ag#()}
+	rRiverside_EGKindOptik			: REAL;			//{#lynus.ag#()}
+	rRiverside_EGBijouBrigitte		: REAL;			//{#lynus.ag#()}
+	rRiverside_OGGlaskubus			: REAL;			//{#lynus.ag#()}
+	rRiverside_OGMediaMarkt			: REAL;			//{#lynus.ag#()}
+	rRiverside_OGDepot				: REAL;			//{#lynus.ag#()}
+	rRiverside_OGRauwolf			: REAL;			//{#lynus.ag#()}
+	rRiverside_OGYuzu				: REAL;			//{#lynus.ag#()}
+
+	Timer_Wait: Ton;
+	
+	bDissableExtHBRIV : BOOL;			//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bEnableWrite					: BOOL:=TRUE;		
+	bEnableOp						: BOOL;			//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Search the Variabels for Lynus
+fbVarInfo(
+	bReadInfo:= , 
+	eTMCFile:= eSelectTMCFile.eDontUseTMCFile, 
+	eSavePositionTMCFile:= eSavePositionOnPLC.ePostionC, 
+	udiCounterFoundVariables=> , 
+	bError=> , 
+	bBusy=> , 
+	byProgress=> , 
+	udiErrorCodeOut=> , 
+	eErrorVarInfo_Out=> , 
+	sVarWithError=> );
+
+//Monitor
+fbMonitor(
+	bEnable:= bEnableOp, 
+	bDissableHB:= TRUE, 
+	tChangeHBIn:= T#1H, 
+	tChangeHBOut:= T#30S, 
+	rHeartbeat:= rHeartbeat, 
+	rErrorWarning:= rErrorWarning, 
+	rSPOptReady:= rSPOptReady,
+	bReadyOut=> , 
+	bDissableExtHB=> bDissableExtHBRIV, 
+	bSEnable=> bSEnableOp, 
+	rHeartbeatOut=> );
+	
+//Read/Write Function to the Auhofcenter System	
+timStart(IN:= TRUE, PT:= T#5S, Q=> , ET=> );
+
+FPStart(CLK:= timStart.Q, Q=> );
+
+IF FPStart.Q THEN
+	iState := 1;	
+END_IF
+
+CASE iState OF
+
+	0://Stop
+		fbHttp.bStart := FALSE;
+
+	1://Read Values
+		fbHttp.bStart := TRUE;	
+			fbHttp.bReadRequest := TRUE;
+				fbHttp.bWriteRequest := FALSE;
+		
+		// Riverside
+		//DV900 Aussentemperatur °C
+		x:=1;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV900';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV911 Riverside Vorlauftemperatur °C
+		x:=2;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV911';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV912 Riverside Rücklauftemperatur °C
+		x:=3;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV912';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV921 Riverside Raumtemperatur Mall EG, vor Palmers °C
+		x:=4;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV921';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV922 Riverside Raumtemperatur Mall EG, vor Nanu-Nana °C
+		x:=5;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV922';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV923 Riverside Raumtemperatur Mall EG, vor Kind Optik °C
+		x:=6;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV923';
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV924 Riverside Raumtemperatur Mall EG, vor Bijou Brigitte °C
+		x:=7;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV924';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV925 Riverside Raumtemperatur Mall 1. OG, Glaskubus °C
+		x:=8;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV925';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV926 Riverside Raumtemperatur Mall 1. OG, vor Media Markt °C
+		x:=9;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV926';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV927 Riverside Raumtemperatur Mall 1. OG, vor Depot °C
+		x:=10;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV927';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV928 Riverside Raumtemperatur Mall 1. OG, vor Rauwolf °C
+		x:=11;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV928';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+		//DV929 Riverside Raumtemperatur Mall 1. OG, vor Yuzu °C
+		x:=12;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV929';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+(*		//
+		x:=;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := '';	
+		fbHttp.arrListOfVariables[x].sVariableValue := '';
+*)				
+		IF FPDone.Q THEN 
+			iState := 3; 
+				//Auf Lynus Variablen mappen
+				(*-----------Riverside----------------*)
+				rRiverside_AT	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[1].sVariableValue);
+				rRiverside_VL	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[2].sVariableValue);
+				rRiverside_RL	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[3].sVariableValue);
+				rRiverside_EGPalmers	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[4].sVariableValue);
+				rRiverside_EGNanuNana	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[5].sVariableValue);
+				rRiverside_EGKindOptik	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[6].sVariableValue);
+				rRiverside_EGBijouBrigitte	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[7].sVariableValue);
+				rRiverside_OGGlaskubus	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[8].sVariableValue);
+				rRiverside_OGMediaMarkt	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[9].sVariableValue);
+				rRiverside_OGDepot	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[10].sVariableValue);
+				rRiverside_OGRauwolf	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[11].sVariableValue);
+				rRiverside_OGYuzu	:= STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[12].sVariableValue);
+		END_IF
+			IF FPError.Q THEN iState := 300; END_IF
+
+
+	3://wait state
+		Timer_Wait.IN := TRUE;
+		IF bEnableWrite AND Timer_Wait.Q THEN
+			Timer_Wait.IN := FALSE;
+			iState := 4; 
+		ELSIF  Timer_Wait.Q THEN
+			Timer_Wait.IN := FALSE;
+			iState := 1; 
+		END_IF
+		
+	4://Write Values
+	
+		// clear array
+		FOR byLPArr := 1 TO 100 BY 1 DO
+			fbHttp.arrListOfVariables[byLPArr].bIsString := FALSE;
+			fbHttp.arrListOfVariables[byLPArr].sVariableName := '';	
+			fbHttp.arrListOfVariables[byLPArr].sVariableValue := '';	
+		END_FOR
+		
+		IF fbMonitor.bDissableExtHB THEN byHB := 0; END_IF
+
+	
+		fbHttp.bStart := TRUE;	
+		fbHttp.bReadRequest := FALSE;
+		fbHttp.bWriteRequest := TRUE;
+					
+		
+		//Watchdog
+		fbHttp.arrListOfVariables[1].bIsString := FALSE;
+		fbHttp.arrListOfVariables[1].sVariableName := 'DV931';
+		fbHttp.arrListOfVariables[1].sVariableValue := REAL_TO_STRING(BYTE_TO_REAL(byHB));		
+	
+		// Heinzung aus/Ein
+		fbHttp.arrListOfVariables[2].bIsString := FALSE;
+		fbHttp.arrListOfVariables[2].sVariableName := 'DV932';
+		fbHttp.arrListOfVariables[2].sVariableValue := '1';	
+
+		//Neuer Sollwert für den Vorlauf für die Regelung
+		fbHttp.arrListOfVariables[3].bIsString := FALSE;
+		fbHttp.arrListOfVariables[3].sVariableName := 'DV933';
+		fbHttp.arrListOfVariables[3].sVariableValue := REAL_TO_STRING(rNewTargetValue);	
+		
+				
+		IF FPDone.Q THEN 
+			iState := 5; 
+				IF NOT fbMonitor.bDissableExtHB THEN byHB := byHB + 1; END_IF
+		END_IF
+			IF FPError.Q THEN 
+				iState := 300; 
+				IF NOT fbMonitor.bDissableExtHB THEN byHB := byHB + 1; END_IF
+			END_IF
+			
+		IF byHB > 1 THEN byHB := 0; END_IF
+	5://wait state
+		Timer_Wait.IN := TRUE;
+		IF Timer_Wait.Q THEN
+			Timer_Wait.IN := FALSE;
+			iState := 1; 
+		END_IF		
+	300://Error
+		uiErrorCounter := uiErrorCounter + 1;
+			iState := 1; 
+			
+END_CASE
+
+fbHttp(
+	bStart:= , 
+	bWriteRequest:= , 
+	bReadRequest:= , 
+	tDelayRequest:= T#10S, 
+	sHostname:= '172.24.17.110', 
+	arrListOfVariables:= , 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	arrListOfVariabelsOut=> , 
+	hrErrorCode=> );
+	
+FPDone(CLK:= fbHttp.bDone, Q=> );
+	FPError(CLK:= fbHttp.bError, Q=> );
+
+Timer_Wait(PT:=T#5S);
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="87" Count="0" />
+      <LineId Id="90" Count="9" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="1637" Count="11" />
+      <LineId Id="835" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="105" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="16" Count="2" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="8" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="1373" Count="1" />
+      <LineId Id="1379" Count="0" />
+      <LineId Id="1375" Count="2" />
+      <LineId Id="1430" Count="0" />
+      <LineId Id="1381" Count="3" />
+      <LineId Id="1389" Count="0" />
+      <LineId Id="1385" Count="3" />
+      <LineId Id="1378" Count="0" />
+      <LineId Id="1391" Count="38" />
+      <LineId Id="1433" Count="3" />
+      <LineId Id="1365" Count="0" />
+      <LineId Id="1442" Count="4" />
+      <LineId Id="1438" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="904" Count="0" />
+      <LineId Id="1459" Count="11" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="1628" Count="1" />
+      <LineId Id="1631" Count="0" />
+      <LineId Id="1669" Count="0" />
+      <LineId Id="1630" Count="0" />
+      <LineId Id="1633" Count="0" />
+      <LineId Id="1674" Count="0" />
+      <LineId Id="1635" Count="1" />
+      <LineId Id="1675" Count="0" />
+      <LineId Id="1634" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="1588" Count="0" />
+      <LineId Id="1014" Count="1" />
+      <LineId Id="1017" Count="3" />
+      <LineId Id="1016" Count="0" />
+      <LineId Id="1021" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="850" Count="0" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="47" Count="2" />
+      <LineId Id="675" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="51" Count="2" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="1664" Count="0" />
+      <LineId Id="1666" Count="2" />
+      <LineId Id="1665" Count="0" />
+      <LineId Id="1663" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="340" Count="1" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="344" Count="2" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="1676" Count="4" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="65" Count="3" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="252" Count="11" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="1670" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="1673" Count="0" />
+      <LineId Id="1671" Count="0" />
+      <LineId Id="177" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_PID_T" Id="{4bfdfe12-8044-48cc-b265-f47876182ca5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PID_T
+VAR_INPUT
+	
+	bEnable					: BOOL;						//Enable the regulation
+	
+	rSetpoint				: REAL;						//Setpoint to which the controller controls
+	
+	udiIValue				: UDINT;					//Reset time
+	
+	udiDValue				: UDINT;					//Lead time
+	
+	udiDamping				: UDINT;					//Damping
+	
+	rPValue					: REAL;						//Controller gain
+	
+	rMaxValue				: REAL;						//Max Value from the output of the controller
+	
+	rMinValue				: REAL;						//Min Value from the output of the controller
+	
+	rNeutralZone			: REAL;						//If the value of the control deviation is smaller than half of lrNeutralZone, the control signal remains the same
+	
+	bDirection				: BOOL;						//Direction from the controller
+	
+	rActualValue			: REAL;						//Current value that the controller tries to adapt to the setpoint and to regulate
+END_VAR
+VAR_OUTPUT
+	
+	rQController			: REAL;						//Controller output
+END_VAR
+VAR
+	PIDController			: FB_BA_PIDCtrl;			//PID controller
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 19.05.2021
+//Version : 1.0.0.0
+
+//This function block represents a classic PID controller that can be set individually.
+PIDController(
+	bEn:= bEnable, 
+	rW:= rSetpoint, 
+	rX:= rActualValue, 
+	udiOpMode:= 0, 
+	bActn:= bDirection, 
+	rKp:= rPValue, 
+	udiTn_ms:= udiIValue, 
+	udiTv_ms:= udiDValue, 
+	udiTd_ms:= udiDamping, 
+	rYMax:= rMaxValue, 
+	rYMin:= rMinValue, 
+	rNZ:= rNeutralZone, 
+	udiCycCl:= 1, 
+	bSync:= , 
+	rSync:= , 
+	rY=> rQController, 
+	rE=> , 
+	bARW=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PID_T">
+      <LineId Id="173" Count="2" />
+      <LineId Id="171" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="199" Count="17" />
+      <LineId Id="197" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgTemperature" Id="{23343f90-bbc1-4b2a-beec-32e126cd4db2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgTemperature
+VAR
+	
+	fb_Config			: FB_KL320xConfig;
+	stInData_1   AT%I*		: ST_KL320xInData;
+	stOutData_1  AT%Q*		: ST_KL320xOutData;
+	stInData_2   AT%I*		: ST_KL320xInData;
+	stOutData_2  AT%Q*		: ST_KL320xOutData;
+	stInData_3   AT%I*		: ST_KL320xInData;
+	stOutData_3  AT%Q*		: ST_KL320xOutData;
+	stInData_4   AT%I*		: ST_KL320xInData;
+	stOutData_4  AT%Q*		: ST_KL320xOutData;
+	stInData_temp	: ST_KL320xInData;
+	stOutData_temp	: ST_KL320xOutData;
+
+	x: INT;
+	real_Temp_BoilerOben	:REAL;				//{#lynus.ag#()}
+	real_Temp_BoilerMitte	:REAL;				//{#lynus.ag#()}
+	real_Temp_BoilerUnten	:REAL;				//{#lynus.ag#()}
+	mIn_1   AT%I*		: BOOL;
+	mIn_2   AT%I*		: BOOL;
+	mIn_3   AT%I*		: BOOL;
+	mIn_4   AT%I*		: BOOL;
+	mIn_5   AT%I*		: BOOL;
+	mIn_6   AT%I*		: BOOL;
+	mIn_7   AT%I*		: BOOL;
+	mIn_8   AT%I*		: BOOL;
+	mOut_1  AT%Q*		: BOOL;
+	mOut_2  AT%Q*		: BOOL;
+	mOut_3  AT%Q*		: BOOL;
+	mOut_4  AT%Q*		: BOOL;
+	mOut_5  AT%Q*		: BOOL;
+	mOut_6  AT%Q*		: BOOL;
+	mOut_7  AT%Q*		: BOOL;
+	mOut_8  AT%Q*		: BOOL;
+	fb_heater:FB_3HeaterControl;
+	b_OverTemperatureSwitch : BOOL;				//{#lynus.ag#()}
+	b_Xelectrix_OnMains		: BOOL;				//{#lynus.ag#()}
+	b_Xelectrix_OnGen		: BOOL;				//{#lynus.ag#()}
+	b_Xelectrix_On			: BOOL;				//{#lynus.ag#()}
+	b_Xelectrix_BypassOn	: BOOL;				//{#lynus.ag#()}
+	b_Heater1_On			: BOOL;				//{#lynus.ag#()}
+	b_Heater2_On			: BOOL;				//{#lynus.ag#()}
+	b_Heater3_On			: BOOL;				//{#lynus.ag#()}
+	real_StepHeaterControl	: REAL;				//{#lynus.ag#()}
+	real_PowerHeater1		: REAL;				//{#lynus.ag#()}
+	real_PowerHeater2		: REAL;				//{#lynus.ag#()}
+	real_PowerHeater3		: REAL;				//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	real_Boiler_SetPoint	: REAL:=70;				//{#lynus.ag#()}
+	b_Enable				: BOOL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+
+real_Temp_BoilerOben  :=  LIMIT(-20,INT_TO_REAL(stInData_1.iDataIn)/10,100);
+real_Temp_BoilerMitte :=  LIMIT(-20,INT_TO_REAL(stInData_2.iDataIn)/10,100);
+real_Temp_BoilerUnten :=  LIMIT(-20,INT_TO_REAL(stInData_3.iDataIn)/10,100);
+
+
+CASE x OF 
+	0:
+		fb_Config.bConfigurate := FALSE;
+	1:
+		stInData_temp  := stInData_1;
+		stOutData_1 	:=stOutData_temp ;
+	2:
+		stInData_temp  := stInData_2;
+		stOutData_2 	:=stOutData_temp ;
+	3:
+		stInData_temp  := stInData_3;
+		stOutData_3 	:=stOutData_temp ;
+	4:
+		stInData_temp  := stInData_4;
+		stOutData_4 	:=stOutData_temp ;
+	
+END_CASE
+// set iSetSensorType = 2 for PT1000
+fb_Config(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_temp , 
+	stOutData:= stOutData_temp);
+	
+	
+// heater control
+fb_heater(
+	m_Enbale:= b_Enable , 
+	m_Temperature_high:= NOT b_OverTemperatureSwitch, 
+	m_Battery_Discharging := prgBattery.fbBattery.stDataXelectrix.eOperatingState = E_Xelectrix_OperatingState.eDischarge,
+	real_Temperature:= MAX(real_Temp_BoilerOben,real_Temp_BoilerMitte), 
+	real_TemperatureSetPoint:= real_Boiler_SetPoint, 
+	real_GridPower := prgGrid.lrPowerGrid, 
+	real_BatteryPower := prgBattery.lrPowerBattery,
+	real_Size_Step1_kW:= 12, 
+	real_Size_Step2_kW:= 12, 
+	real_Size_Step3_kW:= 12, 
+	m_Step1=> b_Heater1_On, 
+	m_Step2=> b_Heater2_On, 
+	m_Step3=> b_Heater3_On);
+	
+//IO mapping 
+b_OverTemperatureSwitch := mIn_1;		// Overtemperature input theremostat on site
+b_Xelectrix_OnMains		:= mIn_2;
+b_Xelectrix_OnGen		:= mIn_3;
+b_Xelectrix_On			:= mIn_4;
+b_Xelectrix_BypassOn	:= mIn_5;
+
+mOut_1		:= b_Heater1_On;
+mOut_2		:= b_Heater2_On;
+mOut_3		:= b_Heater3_On;
+IF mOut_1 THEN
+	real_PowerHeater1 := fb_heater.real_Size_Step1_kW;
+ELSE
+	real_PowerHeater1 := 0;
+END_IF
+IF mOut_2 THEN
+	real_PowerHeater2 := fb_heater.real_Size_Step2_kW;
+ELSE
+	real_PowerHeater2 := 0;
+END_IF
+IF mOut_3 THEN
+	real_PowerHeater3 := fb_heater.real_Size_Step3_kW;
+ELSE
+	real_PowerHeater3 := 0;
+END_IF
+real_StepHeaterControl := SINT_TO_REAL(fb_heater.sint_Steps_On);
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgTemperature">
+      <LineId Id="63" Count="4" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="15" Count="16" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="110" Count="2" />
+      <LineId Id="114" Count="3" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="118" Count="1" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="120" Count="4" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="125" Count="1" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="160" Count="1" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="163" Count="3" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="168" Count="3" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="147" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

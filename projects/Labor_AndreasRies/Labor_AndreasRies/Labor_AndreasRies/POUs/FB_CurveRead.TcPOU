@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_CurveRead" Id="{2212211a-fe44-4f5a-8685-a229c600f196}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CurveRead
+VAR_INPUT
+	real_x	:REAL;
+	real_x1	:REAL;
+	real_y1	:REAL;
+	real_x2	:REAL;
+	real_y2	:REAL;
+	real_x3	:REAL;
+	real_y3	:REAL;
+	real_x4	:REAL;
+	real_y4	:REAL;
+END_VAR
+VAR_OUTPUT
+	real_y	:REAL;
+	m_x_Outside: BOOL;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF real_x<real_x1 THEN
+	m_x_Outside:=TRUE;
+	real_y:=real_y1;
+ELSIF real_x>real_x4 THEN
+	m_x_Outside:=TRUE;
+	real_y:=real_y4;
+ELSIF real_x>=real_x1 AND real_x<real_x2 AND (real_x2-real_x1)<>0 THEN
+	m_x_Outside:=FALSE;
+	real_y:=(real_y2-real_y1)/(real_x2-real_x1)*(real_x-real_x1)+real_y1;
+ELSIF real_x>=real_x2 AND real_x<real_x3 AND (real_x3-real_x2)<>0 THEN
+	m_x_Outside:=FALSE;
+	real_y:=(real_y3-real_y2)/(real_x3-real_x2)*(real_x-real_x2)+real_y2;
+ELSIF real_x>=real_x3 AND real_x<=real_x4 AND (real_x4-real_x3)<>0 THEN
+	m_x_Outside:=FALSE;
+	real_y:=(real_y4-real_y3)/(real_x4-real_x3)*(real_x-real_x3)+real_y3;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CurveRead">
+      <LineId Id="18" Count="15" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

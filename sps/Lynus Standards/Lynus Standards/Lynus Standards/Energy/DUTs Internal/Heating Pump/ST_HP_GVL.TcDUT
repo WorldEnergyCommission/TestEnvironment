@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_HP_GVL" Id="{debc188c-1f91-4323-af56-ef0461dfef13}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_HP_GVL :
+STRUCT
+	//Data from the heating pump to the GVL to other functions.
+	{attribute 'hide'}
+	bEnabled									: BOOL;										//Heating pump is enabled
+	{attribute 'hide'}
+	bIsStepSwitched								: BOOL;										//Heating pump is step switched or not
+	{attribute 'hide'}
+	bIsControllable 							: BOOL;										//Heating pump is controllable
+	{attribute 'hide'}
+	byErrorWarning								: BYTE;										//Show if the function has a Error or a Warning
+	{attribute 'hide'}
+	byPriority									: BYTE; 									//Priority of the device if controlled via the EMS block => 1 2 3 (If 0 then this device does not exist for the EMS block)
+	{attribute 'hide'}
+	byNumberOfSteps								: BYTE;										//Numer of steps form the heating pump
+	{attribute 'hide'}
+	rBoilerTempHeatingSys						: REAL;										//Boiler temperature heating system
+	{attribute 'hide'}
+	rBoilerTempServiceWater						: REAL;										//Boiler temperature service water
+	{attribute 'hide'}
+	rFlowTemp									: REAL;										//Flow temperature Heat pump
+	{attribute 'hide'}
+	rReturnTemp									: REAL;										//Return temperature Heat pump
+	{attribute 'hide'}
+	rFlowTempEnergySource						: REAL;										//Flow temperature Energy Source
+	{attribute 'hide'}
+	rReturnTempEnergySource						: REAL;										//Return temperature Energy Source
+	{attribute 'hide'}
+	lrElPower									: LREAL;									//Electric Power Heating pump with unit kW
+	{attribute 'hide'}
+	lrElPowerConsumption						: LREAL;									//Consumption heating pump with unit kW
+	{attribute 'hide'}
+	lrElPowerProduction							: LREAL;									//Production heating pump with unit kW
+	{attribute 'hide'}
+	arrMaxPower									: ARRAY[1..2] OF REAL; 						//Maximum power of the load in kW (Per stage) (If no stage or only On Off then max power in array[1])
+	//Data from the EMS function to the GVL to the heating pump function.
+	{attribute 'hide'}
+	bExternalOnCommand							: BOOL;										//Use to switch on the HP in lower tariff when we have not enough surplues power in the next 24 Hours.
+	{attribute 'hide'}
+	arrTargetPowerEMS							: ARRAY[1..2] OF REAL;						//Target power from 0% to +100% from the EMS function
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

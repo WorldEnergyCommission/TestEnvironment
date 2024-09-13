@@ -1,0 +1,83 @@
+<template>
+  <DeviceCardWrapper>
+    <template #title>
+      {{ chartTitle }}
+    </template>
+    <template #actions>
+      <DeviceActions :device="chartData" />
+    </template>
+    <template #content>
+      <div class="h-100">
+        <BaseChart
+          :chart-data="chartData"
+          :navigation-items-to-exclude="[]"
+          class="chartStyles"
+          :is-preview="true"
+          :show-device-actions="false"
+        />
+      </div>
+      <div class="d-flex justify-end pr-3">
+        <DeviceDescription v-bind="{ description }" />
+      </div>
+    </template>
+  </DeviceCardWrapper>
+</template>
+
+<script lang="ts">
+import { defineComponent, PropType } from "vue";
+
+import DeviceActions from "@/ui/components/devices/actions/DeviceActions.vue";
+import DeviceDescription from "@/ui/components/devices/actions/DeviceDescription.vue";
+import BaseChart from "@/ui/components/devices/charts/charts/BaseChart.vue";
+import { ChartData } from "@/ui/components/devices/charts/charts/types";
+import DeviceCardWrapper from "@/ui/components/devices/layout/DeviceCardWrapper";
+
+export default defineComponent({
+  components: {
+    DeviceDescription,
+    BaseChart,
+    DeviceCardWrapper,
+    DeviceActions,
+  },
+  props: {
+    chartWidth: Number,
+    multipleLines: {
+      type: Boolean,
+    },
+    columnViewType: {
+      type: String,
+    },
+    chartDescriptionType: { default: "type1", type: String },
+    chartTitle: {
+      default: "Column chart",
+      type: String,
+    },
+    chartData: {
+      type: Object as PropType<ChartData>,
+    },
+  },
+  data() {
+    const descriptionTypes: any = {
+      type1: "chartsDescription.ColumnChart",
+      type2: "chartsDescription.ColumnChart2",
+    };
+
+    return {
+      descriptionTypes,
+    };
+  },
+  computed: {
+    description() {
+      return this.$tm(this.descriptionTypes[this.chartDescriptionType]);
+    },
+  },
+});
+</script>
+
+<style lang="scss">
+@import "./src/ui/scss/variables";
+
+.chartStyles {
+  width: 100%;
+}
+</style>

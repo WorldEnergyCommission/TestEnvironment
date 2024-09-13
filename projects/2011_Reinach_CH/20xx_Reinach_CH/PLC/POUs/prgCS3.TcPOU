@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS3" Id="{4da06e11-25c7-4964-bd10-d4c40cc92e71}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+----------------------------------- Alpitronic -----------------------------------
+This Program is used for setting up Alpitronic Hyperchargers
+*)
+
+PROGRAM prgCS3
+VAR
+	fbAlfen						: FB_ECS_Alfen_NG9xx_Platform;
+	bSManualyOn_Alfen				: BOOL;												//{#lynus.ag#()}
+	bEnabled_Alfen				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_Alfen	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS_Alfen			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning_Alfen			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal_Alfen			: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_S1				: LREAL;											//{#lynus.ag#()}
+	lrPower_Alfen_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMin_Alfen_S2	: REAL;												//{#lynus.ag#()}
+	rTargetPower_Alfen			: REAL;												//{#lynus.ag#()}
+	wState_Alfen_S1				: WORD;												//{#lynus.ag#()}
+	wState_Alfen_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySession_Alfen_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySession_Alfen_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy_Alfen			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_Alfen			: BOOL;												//{#lynus.ag#()}
+	real_Target_Temp: REAL;
+	liLPActualSurplusOrConsumption: INT;
+	lrActualSurplusOrConsumption: LREAL;
+	lreal_CSConsumptionTest: LREAL;
+END_VAR
+
+VAR PERSISTENT
+	//Alfen
+	bEnable_Alfen					: BOOL;												//{#lynus.ag#()}
+	bManualyOn_Alfen				: BOOL;												//{#lynus.ag#()}
+	byMinPower_Alfen				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower_Alfen	: BYTE;												//{#lynus.ag#()}
+	byPrio_Alfen					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable_Alfen				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable_Alfen			: BYTE;												//{#lynus.ag#()}
+	rMaxPower_Alfen				: REAL;												//{#lynus.ag#()}
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[				
+(*-----------------------------------------------------------------------Alfen------------------------------------------------------*)
+
+//Manual Power
+fbAlfen.stSetupECS.bManualyOn := bManualyOn_Alfen;
+fbAlfen.stSetupECS.byManualyTargetPower := byManualyTargetPower_Alfen;
+fbAlfen.stSetupECS.byPriority := byPrio_Alfen;
+fbAlfen.stSetupECS.byEnableSOC := bySOCEnable_Alfen;
+fbAlfen.stSetupECS.byDisableSOC := bySOCDisable_Alfen;
+fbAlfen.stSetupECS.rMaxPower := rMaxPower_Alfen;
+fbAlfen.stSetupECS.byCSMinPower := byMinPower_Alfen;	
+
+fbAlfen(
+	bEnable:= bEnable_Alfen, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= 2, 
+	byNumberOfSockets:= 2,		//1 or 2. Depends on whether it is a single or double charging station  (Default: Single)
+	byNumberOfConnectionWire:= 1, //1 or 2.  Depends on whether the charging station is supplied via a supply line or
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.23', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );						
+
+bSManualyOn_Alfen := fbAlfen.stDataECS.bSManualyOn;
+bySManualyTargetPower_Alfen := fbAlfen.stDataECS.bySManualyTargetPower;
+byErrorWarning_Alfen := fbAlfen.stDataECS.byErrorWarning;
+lrPowerTotal_Alfen := fbAlfen.stDataECS.lrTotalPower;
+lrPower_Alfen_S1 :=  fbAlfen.stDataECS.arrSocketPower[1];
+lrPower_Alfen_S2 :=  fbAlfen.stDataECS.arrSocketPower[2];
+rChargingTimeInMin_Alfen_S1 := fbAlfen.stDataECS.arrChargingTimeInMin[1];
+rChargingTimeInMin_Alfen_S2 := fbAlfen.stDataECS.arrChargingTimeInMin[2];		
+wState_Alfen_S1 := fbAlfen.stDataECS.arrSocketStateECS[1];
+wState_Alfen_S2 := fbAlfen.stDataECS.arrSocketStateECS[2];
+lrEnergySession_Alfen_S1 := fbAlfen.stDataECS.arrSocketEnergySession[1];
+lrEnergySession_Alfen_S2 := fbAlfen.stDataECS.arrSocketEnergySession[2];
+lrTotalEnergy_Alfen := fbAlfen.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECS_Alfen := fbAlfen.stDataECS.bySCSMinPower;
+rTargetPower_Alfen := fbAlfen.stDataECS.rTargetPower;
+bEnabled_Alfen := fbAlfen.stDataECS.bEnabled;
+bCarConnected_Alfen := fbAlfen.stDataECS.bCarConnected;	
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS3">
+      <LineId Id="839" Count="43" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="923" Count="1" />
+      <LineId Id="936" Count="0" />
+      <LineId Id="928" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgLynusVar" Id="{eefdd7e0-f245-44dc-9034-1356eac6849f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgLynusVar
+VAR
+	fbVarInfo			: FB_VarInfo;
+	fbRW1				: FB_ReadWrite;
+	fbRW2				: FB_ReadWrite;
+	fbRW3				: FB_ReadWrite;
+	fbRW4				: FB_ReadWrite;
+	fbRW5				: FB_ReadWrite;
+	fbRW6				: FB_ReadWrite;
+	fbRW7				: FB_ReadWrite;
+	fbRW8				: FB_ReadWrite;
+	fbRW9				: FB_ReadWrite;
+	fbRW10				: FB_ReadWrite;
+	
+	FPError				: ARRAY[1..10] OF R_TRIG;
+	arrError			: ARRAY[1..10] OF UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbVarInfo(
+	bReadInfo:= , 
+	eTMCFile:= eSelectTMCFile.eUseTMCFile, 
+	eSavePositionTMCFile:= eSavePositionOnPLC.ePostionC, 
+	udiCounterFoundVariables=> , 
+	bError=> , 
+	bBusy=> , 
+	byProgress=> , 
+	udiErrorCodeOut=> , 
+	eErrorVarInfo_Out=> , 
+	sVarWithError=> );
+	
+fbRW1();
+fbRW2();
+fbRW3();
+fbRW4();
+fbRW5();
+fbRW6();
+fbRW7();
+fbRW8();
+fbRW9();
+fbRW10();
+
+
+FPError[1](CLK:= fbRW1.bError, Q=> );
+FPError[2](CLK:= fbRW2.bError, Q=> );
+FPError[3](CLK:= fbRW3.bError, Q=> );
+FPError[4](CLK:= fbRW4.bError, Q=> );
+FPError[5](CLK:= fbRW5.bError, Q=> );
+FPError[6](CLK:= fbRW6.bError, Q=> );
+FPError[7](CLK:= fbRW7.bError, Q=> );
+FPError[8](CLK:= fbRW8.bError, Q=> );
+FPError[9](CLK:= fbRW9.bError, Q=> );
+FPError[10](CLK:= fbRW10.bError, Q=> );
+
+IF FPError[1].Q THEN arrError[1] := arrError[1] + 1; END_IF 
+IF FPError[2].Q THEN arrError[2] := arrError[2] + 1; END_IF 
+IF FPError[3].Q THEN arrError[3] := arrError[3] + 1; END_IF 
+IF FPError[4].Q THEN arrError[4] := arrError[4] + 1; END_IF 
+IF FPError[5].Q THEN arrError[5] := arrError[5] + 1; END_IF 
+IF FPError[6].Q THEN arrError[6] := arrError[6] + 1; END_IF 
+IF FPError[7].Q THEN arrError[7] := arrError[7] + 1; END_IF 
+IF FPError[8].Q THEN arrError[8] := arrError[8] + 1; END_IF 
+IF FPError[9].Q THEN arrError[9] := arrError[9] + 1; END_IF 
+IF FPError[10].Q THEN arrError[10] := arrError[10] + 1; END_IF 
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgLynusVar">
+      <LineId Id="16" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="18" Count="7" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="26" Count="5" />
+      <LineId Id="48" Count="3" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="112" Count="8" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="124" Count="8" />
+      <LineId Id="110" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

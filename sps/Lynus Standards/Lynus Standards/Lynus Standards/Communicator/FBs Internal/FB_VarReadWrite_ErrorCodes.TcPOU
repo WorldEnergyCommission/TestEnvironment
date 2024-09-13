@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_VarReadWrite_ErrorCodes" Id="{72925ba6-bcb6-4998-bf54-026c9e45dcfa}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_VarReadWrite_ErrorCodes
+VAR_INPUT
+	{attribute 'hide'}
+	bErrorADS					: BOOL;											//Error ADS function
+	{attribute 'hide'}
+	bErrorIntern				: BOOL;											//Other Error
+	{attribute 'hide'}
+	udiErrorCodeADS				: UDINT;										//Error Code ADS function
+	{attribute 'hide'}
+	udiErrorCodesInternRead		: UDINT;										//Error code from read function
+	{attribute 'hide'}
+	udiErrorCodesInternWrite	: UDINT;										//Error code from write function
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	udiErrorCodeADS_Out			: UDINT;										//ADS return code
+	{attribute 'hide'}
+	bError						: BOOL;											//Error flag
+	eErrorReadWrite_Out			: eErrorReadWrite;								//Enum with Error from the Var read/write function
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 20.04.2020
+//Version : 1.0.0.0
+
+//With this function its possible to give out a Error return code from the ads or the internal codes from the read/write variable function
+//Directly from the ads
+IF bErrorIntern OR bErrorADS THEN bError := TRUE; ELSE bError := FALSE; END_IF
+	IF bErrorADS THEN udiErrorCodeADS_Out := udiErrorCodeADS; ELSE udiErrorCodeADS_Out := 0; END_IF
+
+//Internal error codes
+IF bErrorIntern AND udiErrorCodesInternRead = 0 THEN eErrorReadWrite_Out := eErrorReadWrite.eErrorRead; END_IF
+IF bErrorIntern AND udiErrorCodesInternRead = 1 THEN eErrorReadWrite_Out := eErrorReadWrite.eErrorSizeFloatValueRead; END_IF
+IF bErrorIntern AND udiErrorCodesInternWrite = 0 THEN eErrorReadWrite_Out := eErrorReadWrite.eErrorWrite; END_IF
+IF bErrorIntern AND udiErrorCodesInternWrite = 1 THEN eErrorReadWrite_Out := eErrorReadWrite.eErrorSizeValueWrite; END_IF 
+	IF NOT bErrorIntern AND NOT bErrorADS THEN
+		eErrorReadWrite_Out := eErrorReadWrite.eNoError; 
+	END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VarReadWrite_ErrorCodes">
+      <LineId Id="118" Count="2" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="73" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="153" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

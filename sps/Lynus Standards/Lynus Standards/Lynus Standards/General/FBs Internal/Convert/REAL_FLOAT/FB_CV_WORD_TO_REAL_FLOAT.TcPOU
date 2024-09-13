@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_REAL_FLOAT" Id="{0d8943f6-a72c-4ada-a228-43e517923c57}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_CV_WORD_TO_REAL_FLOAT
+VAR_INPUT
+	{attribute 'hide'}
+	wInputValue_1				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	wInputValue_2				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	eByteOrderForConvert		: eByteOrder;						//Byte Format
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	rOutputValue				: REAL;								//Converted output value							
+END_VAR
+VAR
+	unConvertRealToDword		: ST_UN_FLOAT_CONVERT_DWORD_REAL;	//Union to convert the value
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//The byte order can be selected between BigEndian and LittleEndian
+//WORD TO REAL
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+IF eByteOrderForConvert = eByteOrder.eBigEndian THEN
+	unConvertRealToDword.dwRawValue := SHL(WORD_TO_DWORD(wInputValue_1),16) + WORD_TO_DWORD(wInputValue_2);
+ELSE
+	unConvertRealToDword.dwRawValue := SHL(WORD_TO_DWORD(wInputValue_2),16) + WORD_TO_DWORD(wInputValue_1);
+END_IF
+
+IF IsFinite(F_REAL(unConvertRealToDword.rValueFloat)) THEN
+	rOutputValue := unConvertRealToDword.rValueFloat;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_REAL_FLOAT">
+      <LineId Id="102" Count="2" />
+      <LineId Id="17" Count="5" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="30" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="88" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,228 @@
+{{define "user"}} {{template "header"}}
+<h1 class="mb-0">{{.user.FirstName}} {{.user.LastName}}</h1>
+<a
+  href="https://accounts.{{.domain}}/auth/admin/master/console/#/realms/{{.realm}}/users/{{.user.ID}}"
+  target="_blank"
+  >{{.user.ID}}</a
+>
+<div class="form-check">
+  {{if .user.Enabled}}
+  <input
+    checked
+    class="form-check-input"
+    id="flexCheckDefault"
+    onchange="updateStatus(this)"
+    type="checkbox"
+  />
+  {{else}}
+  <input
+    class="form-check-input"
+    id="flexCheckDefault"
+    onchange="updateStatus(this)"
+    type="checkbox"
+  />
+  {{end}}
+  <label class="form-check-label" for="flexCheckDefault">Enabled Status</label>
+</div>
+<script>
+  function updateStatus(e) {
+    fetch(
+      "/api/userstatus?realm={{.realm}}&user={{.user.ID}}&enabled=" + e.checked
+    ).then(() => console.log("updated"));
+  }
+</script>
+<div>
+  <div class="btn btn-primary" onclick="resetPassword()">Reset Password</div>
+  <script>
+    function resetPassword() {
+      fetch("/api/reset-password?realm={{.realm}}&user={{.user.ID}}")
+        .then((res) => res.text())
+        .then((res) => alert(res));
+    }
+  </script>
+</div>
+<div class="row mt-4">
+  <div class="col-4">
+    <h3>Contact</h3>
+    <p>
+      E-Mail: <a href="mailto:{{.user.Email}}">{{.user.Email}}</a><br />
+      Phone: <a href="tel:{{.user.Mobile}}">{{.user.Mobile}}</a>
+    </p>
+  </div>
+  <div class="col-4">
+    <h3>Address</h3>
+    <p>
+      Street: {{.user.Address.Street}}<br />
+      City/Locality: {{.user.Address.City}} {{.user.Address.ZipCode}}<br />
+      Country: {{.user.Address.Country}}
+    </p>
+  </div>
+  {{ if ne .user.Organization.Name "" }}
+  <div class="col-4">
+    <h3>Organization</h3>
+    <p>
+      Name: {{.user.Organization.Name}}<br />
+      Tax-ID: {{.user.Organization.ID}}
+    </p>
+  </div>
+  {{end}}
+</div>
+<div class="row">
+  <div class="col-10">
+    <h2>{{len .projects}} Projects</h2>
+  </div>
+  <div class="col-2">
+    <input
+      class="form-control"
+      max='{{.now.Format "2006-01"}}'
+      onchange="window.location.href = `${window.location.href.split('?')[0]}?month=${event.target.value}&realm=${new URLSearchParams(window.location.search).get('realm')}`"
+      type="month"
+      value='{{.month.Format "2006-01"}}'
+    />
+  </div>
+</div>
+<div class="card">
+  <table class="table mb-0">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Ongoing Charges</th>
+        <th scope="col">Variables</th>
+        <th scope="col">Created</th>
+        <th scope="col">Limits</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range $index, $project := .projects}}
+      <tr>
+        <td style="width: 25%">{{$project.ID}}</td>
+        <td style="width: 10%">{{$project.Name}}</td>
+        <td style="width: 10%">{{$project.Cost}}</td>
+        <td style="width: 10%">{{$project.Variables}}</td>
+        <td style="width: 10%">{{$project.CreatedAt.Format "02/01/2006"}}</td>
+        <td style="width: 25%">
+          <div class="row">
+            <div class="col-4">
+              <div class="form-group">
+                <label>Collections</label>
+                <input
+                  class="form-control"
+                  id="limit_collections_{{$project.ID}}"
+                  type="number"
+                  value="{{$project.Limits.Collections}}"
+                />
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="form-group">
+                <label>Devices</label>
+                <input
+                  class="form-control"
+                  id="limit_devices_{{$project.ID}}"
+                  type="number"
+                  value="{{$project.Limits.Devices}}"
+                />
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="form-group">
+                <label>Members</label>
+                <input
+                  class="form-control"
+                  id="limit_members_{{$project.ID}}"
+                  type="number"
+                  value="{{$project.Limits.Members}}"
+                />
+              </div>
+            </div>
+            <div class="col-12 mt-2">
+              <button
+                class="btn btn-outline-primary w-100"
+                onclick="updateLimits('{{$project.ID}}')"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {{end}}
+      <tr>
+        <th>Total</th>
+        <td></td>
+        <td>{{.cost}}</td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<script>
+  function updateLimits(project) {
+    devices = document.querySelector("#limit_devices_" + project).value;
+    collections = document.querySelector("#limit_collections_" + project).value;
+    members = document.querySelector("#limit_members_" + project).value;
+
+    fetch(
+      `/api/projectlimits?devices=${devices}&collections=${collections}&members=${members}&project=${project}`
+    ).then(() => console.log("updated"));
+  }
+</script>
+<div class="row mt-4">
+  <div class="col-6">
+    <h2>Invoices</h2>
+  </div>
+  <div class="col-6">
+    <a class="btn btn-primary float-end" onclick="invoice()">Create Invoice</a>
+    <script>
+      const invoice = () => {
+        let url =
+          '/invoices?user={{.user.ID}}&created_at={{.month.Format "2006-01-02"}}&due_at={{.next_month.Format "2006-01-02"}}&amount={{.cost}}&name=Invoice {{.month.Format "2006-01"}}&description=Informationen zu Projekten und Variablen per E-Mail zugestellt';
+
+        window.open(url);
+      };
+    </script>
+  </div>
+  <div class="col-12">
+    <div class="card">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Created At</th>
+            <th scope="col">Due At</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Paid At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range $index, $invoice := .invoices}}
+          <tr>
+            <td style="width: 30%">
+              <a
+                href='/invoices?id={{$invoice.ID}}&user={{$invoice.UserID}}&created_at={{$invoice.CreatedAt.Format "2006-01-02"}}&due_at={{$invoice.DueAt.Format "2006-01-02"}}&amount={{$invoice.Amount}}&name={{$invoice.Name}}&description={{$invoice.Description}}&notes={{$invoice.Notes}}{{if $invoice.PaidAt.Valid}}&paid_at={{ $invoice.PaidAt.Time.Format "2006-01-02" }}{{end}}'
+                target="_blank"
+              >
+                {{$invoice.ID}}
+              </a>
+            </td>
+            <td style="width: 15%">{{$invoice.Name}}</td>
+            <td style="width: 15%">
+              {{$invoice.CreatedAt.Format "02/01/2006"}}
+            </td>
+            <td style="width: 15%">{{$invoice.DueAt.Format "02/01/2006"}}</td>
+            <td style="width: 15%">{{$invoice.Amount}}</td>
+            <td style="width: 10%">
+              {{if $invoice.PaidAt.Valid}}{{ $invoice.PaidAt.Time.Format
+              "2006-01-02" }}{{else}}-{{end}}
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}

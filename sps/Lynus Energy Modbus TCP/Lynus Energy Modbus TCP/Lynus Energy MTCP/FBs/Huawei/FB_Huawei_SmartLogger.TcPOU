@@ -1,0 +1,1384 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Huawei_SmartLogger" Id="{b4c12ce6-c6bb-4362-a4da-542ebf2a554d}" SpecialFunc="None">
+    <Declaration><![CDATA[// {attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_Huawei_SmartLogger
+VAR_INPUT PERSISTENT
+	bEnable						: BOOL;				//True = Function is enabled, FALSE = Function is dissabled, no new Data
+	sIPAdress					: STRING(15);		//IP Adress from the Inverter
+	sint_ID_Iverter1			:SINT;				// ID of inveter 1
+	sint_ID_Iverter2			:SINT;				// ID of inveter 2
+	sint_ID_Iverter3			:SINT;				// ID of inveter 3
+	sint_ID_Iverter4			:SINT;				// ID of inveter 4
+	sint_ID_Iverter5			:SINT;				// ID of inveter 5
+	sint_ID_Iverter6			:SINT;				// ID of inveter 6
+	sint_ID_Iverter7			:SINT;				// ID of inveter 7
+	sint_ID_Iverter8			:SINT;				// ID of inveter 8
+	sint_ID_Iverter9			:SINT;				// ID of inveter 9
+	sint_ID_Iverter10			:SINT;				// ID of inveter 10
+	sint_ID_Iverter11			:SINT;				// ID of inveter 11
+	sint_ID_Iverter12			:SINT;				// ID of inveter 12
+	
+	
+END_VAR
+VAR_OUTPUT
+	st_Huawei_SmartLogger		: ARRAY[1..20] OF ST_Huawei_SmartLogger_OutData;					//Output structure with Data 
+	stDataEMPower_PV			: ARRAY[1..20] OF ST_ElectricMeter_Output_Power;					//Output structure with Data from Electric Meter PV (Power Data)
+	stDataEMCounter_PV 			: ARRAY[1..20] OF ST_ElectricMeter_Output_Counter;					//Output structure with Data from Electric Meter PV (Counter Data)
+	diNrOfEM_OUT_PV				: DINT;																//Active Number from the Electric Meter for using on other functions
+END_VAR
+VAR
+	sint_ID_Iverter				:ARRAY[1..12] OF SINT;				// Array of ID of inveter 
+	fbMeter						: ARRAY[1..30] OF FB_ElectricMeter;					//Electric Meter Function 
+	fbElMeter					: FB_ElectricMeter;									//Electric Meter Function for sumation values 
+	
+	fbNumberDevice				: FB_NumberOfDevice;								//Function block to calcualte the number of the Device
+	fbConvertEnergyRegister		: FB_CV_WORD_TO_DWORD;								//Convert function
+	fbMBRead_FC3				: FB_MBReadRegs;									//Modbus Read Function (FC3)
+	timDelay					: TON;												//Timer for Delay between Requests
+	timTimeout					: TON;												//Timer for Timeout
+	timDissableFunctions		: TON;												//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL		: TON;												//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	FPEnable					: R_TRIG;											//Internal positive Edge
+	FPError_FC_3				: R_TRIG;											//Internal positive Edge
+	PD_String					: FB_PersistentData_String;							//Function to save persistent data 
+	stFloat						: ST_UN_FLOAT_CONVERT_DWORD_REAL;					//Convert the Float Raw Value
+	arrBuffer_FC3				: ARRAY[0..25] OF WORD;							//Buffer with Data from FC3
+	arrPD						: ARRAY[1..2] OF FB_PersistentData_Number;			//Function to save persistent data 
+	byWaitInStep				: BYTE;												//Wait in Step before start to clean data on PLC
+	iStateGVLData				: INT;												//State machine to handle the data on the GVL
+	iStateModbus				: INT;												//State variable for Statemachine
+	iStateModbus_CP				: INT;												//Compare State variable
+	diCounterForGVL				: DINT;												//Counter to clean old data on GVL
+	lrCheckValue				: LREAL;											//Internal Value to check the value before convert
+	x							: INT;
+	i: INT;
+	int_Poll_Counter			: INT;												//Poll1 = inverter_ID 1,....
+	byLPForInverter: INT;
+	lrCounterEnergyProduction: LREAL;
+	dwInput: DWORD;
+	int_maxPolls				:INT :=12;											//maximum number of polls / inverter. 
+	ton_Wait: Ton;
+	FB_ConvertData			:FB_Convert_Huawei_SmartLogger;
+	lreal1: LREAL;
+	lreal2: LREAL;
+	lreal3: LREAL;
+	lreal4: LREAL;
+	lreal5: LREAL;
+	lreal6: LREAL;
+	lreal7: LREAL;
+	lreal8: LREAL;
+	lreal9: LREAL;
+	lreal10: LREAL;
+	lreal11: LREAL;
+	lreal12: LREAL;
+	lreal13: LREAL;
+	lreal14: LREAL;
+	lreal15: LREAL;
+	lreal16: LREAL;
+	lreal17: LREAL;
+	lreal18: LREAL;
+	lreal19: LREAL;
+	lreal20: LREAL;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner
+//Company : EfficientIO
+//Date : 17.10.2022
+//Version : 0.0.0.1		
+
+//With this function its possible to read out values from the SmartLogger from the manufacturer Huawei
+//This Function read out the Values from up to 12 inverters behind a SmartLogger. The SmartLogger could handle up to 247 inverters. 
+//The protocol to the Inverter is Modbus TCP
+//Attention. To access the registers, an offset of 1 must always be subtracted. Register 40001 would then be on register 40000.
+//The document "SmartLogger ModBus Interface Definitions.pdf" issue 35 got used for the Modbus adress List
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+
+(*------------------------------------------------------------------------------------------General Input Part---------------------------------------------------------------------------------------------*)
+
+//Check limitation
+sint_ID_Iverter1 := LIMIT(0,sint_ID_Iverter1,127);
+sint_ID_Iverter2 := LIMIT(0,sint_ID_Iverter2,127);
+sint_ID_Iverter3 := LIMIT(0,sint_ID_Iverter3,127);
+sint_ID_Iverter4 := LIMIT(0,sint_ID_Iverter4,127);
+sint_ID_Iverter5 := LIMIT(0,sint_ID_Iverter5,127);
+sint_ID_Iverter6 := LIMIT(0,sint_ID_Iverter6,127);
+sint_ID_Iverter7 := LIMIT(0,sint_ID_Iverter7,127);
+sint_ID_Iverter8 := LIMIT(0,sint_ID_Iverter8,127);
+sint_ID_Iverter9 := LIMIT(0,sint_ID_Iverter9,127);
+sint_ID_Iverter10:= LIMIT(0,sint_ID_Iverter10,127);
+sint_ID_Iverter11:= LIMIT(0,sint_ID_Iverter11,127);
+sint_ID_Iverter12 := LIMIT(0,sint_ID_Iverter12,127);
+// copy in an array, easier for handling in the state maschine
+sint_ID_Iverter[1]	:=	sint_ID_Iverter1;
+sint_ID_Iverter[2]	:=	sint_ID_Iverter2;
+sint_ID_Iverter[3]	:=	sint_ID_Iverter3;
+sint_ID_Iverter[4]	:=	sint_ID_Iverter4;
+sint_ID_Iverter[5]	:=	sint_ID_Iverter5;
+sint_ID_Iverter[6]	:=	sint_ID_Iverter6;
+sint_ID_Iverter[7]	:=	sint_ID_Iverter7;
+sint_ID_Iverter[8]	:=	sint_ID_Iverter8;
+sint_ID_Iverter[9]	:=	sint_ID_Iverter9;
+sint_ID_Iverter[10]	:=	sint_ID_Iverter10;
+sint_ID_Iverter[11]	:=	sint_ID_Iverter11;
+sint_ID_Iverter[12]	:=	sint_ID_Iverter12;
+
+
+
+(*-------------------------------------------------------------Calcualte the number of EM System---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT_PV, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := diNrOfEM_OUT_PV;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backend for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the EfficientIO Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+IF timResetConnectionOnGVL.Q THEN 
+	Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; 
+END_IF
+IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN 
+	timDissableFunctions.IN := TRUE; 
+ELSE 
+	timDissableFunctions.IN := FALSE; 
+END_IF  
+timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+	
+(*------------------------------------------------------------------------------------------State Machine---------------------------------------------------------------------------------------------*)
+	
+//Enable
+FPEnable(CLK:= bEnable, Q=> );
+IF FPEnable.Q AND iStateModbus = 0 THEN 
+	iStateModbus := 1; 
+END_IF
+IF NOT bEnable OR timDissableFunctions.Q THEN 
+	iStateModbus := 0; 
+END_IF
+
+//Timer for delay
+timDelay(IN:= , PT:= T#100MS, Q=> , ET=> );	
+
+//Timer for Timeout in Statemachine
+IF iStateModbus = iStateModbus_CP THEN 
+	timTimeout.IN := TRUE; 
+ELSE 
+	timTimeout.IN := FALSE; 
+END_IF
+IF iStateModbus = 0 THEN 
+	timTimeout.IN := FALSE; 
+END_IF
+timTimeout(IN:= , PT:= T#20S, Q=> , ET=> );	
+
+
+//Statemachine
+CASE iStateModbus OF
+	
+	0://Init Step
+		iStateModbus_CP := iStateModbus;
+		timDelay.IN := FALSE;
+		FOR i:=1 TO 20 BY 1 DO
+			st_Huawei_SmartLogger[i].bFunctionIsActive := FALSE;
+			st_Huawei_SmartLogger[i].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown ;
+		END_FOR
+		
+		fbMBRead_FC3.bExecute := FALSE;
+		lrCheckValue := 0;
+									
+	1://Read out first inverter
+		int_Poll_Counter:=1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	2://Wait and go to step 1 or step 3
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := 3;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+
+	3://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	4://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+	
+	5://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	6://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+		
+	7://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+
+	8://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+		
+	9://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	10://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+		
+	11://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	12://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+		
+	13://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 1
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	14://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+		
+	15://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	16://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+
+	17://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	18://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+		
+	19://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+
+	20://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+
+	21://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	22://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+
+	23://Read out next inverter
+		st_Huawei_SmartLogger[int_Poll_Counter].bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbus;
+		fbMBRead_FC3.nQuantity := 25;
+		fbMBRead_FC3.nMBAddr := (51000+(25*(SINT_TO_WORD(sint_ID_Iverter[int_Poll_Counter]) - 1)));
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			// convert received data
+			FB_ConvertData(	arrBuffer_FC3			:=	arrBuffer_FC3,
+											int_Poll_Counter		:=	int_Poll_Counter,
+											lrPowerTotal			=>	fbMeter[int_Poll_Counter].lrPowerTotal,	
+											lrReactivePowerTotal	=> 	fbMeter[int_Poll_Counter].lrReactivePowerTotal,
+											eOperatingStateInverter	=>	st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter);
+	
+			//Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbus := iStateModbus+1;
+			IF arrBuffer_FC3[9]<>0 THEN
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			ELSE
+				st_Huawei_SmartLogger[int_Poll_Counter].bError := FALSE; 
+				st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter 
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrBuffer_FC3[9] >= 16#0300 AND arrBuffer_FC3[9] <= 16#0308 THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState := E_Huawei_SmartLogger_Error.eHuawei_SmartLoggerError;
+		END_IF
+	
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbus := 300;
+			st_Huawei_SmartLogger[int_Poll_Counter].eOperatingStateInverter := E_Huawei_SmartLogger_OperatingState.Unknown;
+			st_Huawei_SmartLogger[int_Poll_Counter].eErrorState	:=	E_Huawei_SmartLogger_Error.eModbusTCPError;
+		END_IF
+		
+	24://Wait and go to step +1 or step 100
+		iStateModbus_CP := iStateModbus;
+		IF sint_ID_Iverter[int_Poll_Counter+1] = 0 OR int_Poll_Counter=int_maxPolls THEN		// if ID is not in use, go to state 100
+			iStateModbus := 100;
+		ELSE
+			iStateModbus := iStateModbus+1;
+			int_Poll_Counter:=int_Poll_Counter+1;			//Poll int_Poll_Counter : Inverter int_Poll_Counter 	
+		END_IF
+
+
+
+
+		
+		
+		
+	100://Wait and go to step 1 
+		iStateModbus_CP := iStateModbus;
+		ton_Wait.In:=TRUE;
+		IF ton_Wait.Q THEN
+			ton_Wait.In:=FALSE;
+			iStateModbus := 1;
+		END_IF
+			
+	300://Error
+		iStateModbus_CP := iStateModbus;
+		timDelay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		st_Huawei_SmartLogger[int_Poll_Counter].bError := TRUE;
+		ton_Wait.In:=TRUE;
+		IF ton_Wait.Q THEN
+			ton_Wait.In:=FALSE;
+			iStateModbus := 1;
+		END_IF
+END_CASE
+
+// wait timer
+ton_Wait(PT:=T#2S);
+
+	
+
+(*------------------------------------------------------------------------------------------Modbus TCP Function---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(	sIPAddr:= sIPAdress, 
+				nTCPPort:= 502, 
+				nUnitID := 0,
+				cbLength:= SIZEOF(arrBuffer_FC3), 
+				pDestAddr:= ADR(arrBuffer_FC3), 
+				tTimeout:= T#10S );
+
+FPError_FC_3(CLK:= fbMBRead_FC3.bError, Q=> );
+
+(*----------------------------------------------------------------------------------------Electric Meter Data----------------------------------------------------------------------------------------------*)
+
+//Error and Warning
+FOR x:=1 TO 20 BY 1 DO
+	IF timDissableFunctions.Q THEN 
+		fbMeter[x].bWarning := TRUE; 
+		fbMeter[x].iWarningCode := 0; 
+	ELSE 
+		fbMeter[x].bWarning := FALSE; 
+	END_IF   
+
+	IF st_Huawei_SmartLogger[x].bError OR Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN 
+		fbMeter[x].bError := TRUE; 
+	ELSE 
+		fbMeter[x].bError := FALSE; 
+	END_IF  
+
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN 
+		fbMeter[x].iErrorCode := 1;
+	ELSIF st_Huawei_SmartLogger[x].bError THEN 
+		fbMeter[x].iErrorCode := 0;
+	END_IF  
+
+	//Function block for meter data
+	fbMeter[x](
+		bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+		bError:= , 
+		bEnableReadOutFunction:= TRUE, 
+		bWriteWithDelay:= TRUE,
+		bPowerDataInvers:= TRUE, 
+		bReadOutDataDone:= TRUE,
+		iTimeReadOutInterval:= , 
+		iErrorCode:= , 
+		iWarningCode:= , 
+		lrTotalCounterEnergy_Consumption:= 0, 
+		lrTotalCounterEnergy_Production:= , 
+		lrCounterEnergyT1_Consumption:= 0, 
+		lrCounterEnergyT2_Consumption:= 0, 
+		lrCounterEnergyT1_Production:= , 
+		lrCounterEnergyT2_Production:= 0, 
+		lrCurrentL1:= , 
+		lrVoltageL1N:= , 
+		lrVoltageL1L2:= , 
+		lrPowerL1:= 0, 
+		lrCurrentL2:= , 
+		lrVoltageL2N:= , 
+		lrVoltageL2L3:= , 
+		lrPowerL2:= 0, 
+		lrCurrentL3:= , 
+		lrVoltageL3N:= , 
+		lrVoltageL3L1:= , 
+		lrPowerL3:= 0, 
+		lrPowerTotal:= , 
+		lrFrequency:= , 
+		lrReactivePowerTotal:= , 
+		lrApparentPowerTotal:= , 
+		tTimDelayOutput:= T#5S, 
+		stDataEMOutPower=> , 
+		stDataEMOutPowerDelay=> stDataEMPower_PV[x], 
+		stDataEMOutCounter=> ,
+		stDataEMOutCounterDelay=> stDataEMCounter_PV[x], 
+		bReadOutMeter=> );
+
+END_FOR
+//Read Out Data done for EM Function
+IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError THEN 
+	fbMeter[int_Poll_Counter].bReadOutDataDone := TRUE;
+ELSE 
+	fbMeter[int_Poll_Counter].bReadOutDataDone := FALSE;
+END_IF
+
+
+
+(*-----------------------------------------------------------Handle data to Global structure for the Electric Meter system-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+		diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+		IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN 
+			iStateGVLData := 2; 
+		END_IF
+		//To much Devices, back to the Init step
+		IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN 
+			iStateGVLData := 0; 
+		END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].bEnabled := FALSE;	
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].byErrorWarning := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Consumption := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Production := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Consumption := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Production := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPower := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerProduction := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Consumption := 0;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Production := 0;
+		
+		diCounterForGVL := diCounterForGVL + 1;
+		diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricMeters);
+		//Back to the init step
+		IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricMeters THEN 
+			iStateGVLData := 0; 
+		END_IF
+END_CASE 	 
+
+IF diNrOfEM_OUT_PV > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].bEnabled := fbElMeter.stDataEMOutPower.bEnabled;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].byErrorWarning := fbElMeter.stDataEMOutPower.byErrorWarning;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Production;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Consumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Production;		
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPower := fbElMeter.lrPowerTotal; // fbElMeter.stDataEMOutPower.lrPowerTotal;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerConsumption := fbElMeter.stDataEMOutPower.lrPowerConsumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerProduction := fbElMeter.stDataEMOutPower.lrPowerProduction;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Consumption := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Production := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+
+// Sum values for Meter
+fbElMeter.lrPowerTotal := 0;
+FOR byLPForInverter := 1 TO 20 BY 1 DO 
+	lrCounterEnergyProduction := lrCounterEnergyProduction + fbMeter[byLPForInverter].stDataEMOutCounterDelay.lrTotalCounterEnergy_Production;
+	IF lrCounterEnergyProduction > fbElMeter.lrCounterEnergyT1_Production THEN
+		fbElMeter.lrCounterEnergyT1_Production := lrCounterEnergyProduction;
+	END_IF
+	fbElMeter.lrPowerTotal := fbElMeter.lrPowerTotal + fbMeter[byLPForInverter].stDataEMOutPowerDelay.lrPowerTotal;
+END_FOR	
+					
+fbElMeter.lrTotalCounterEnergy_Production := fbElMeter.lrCounterEnergyT1_Production; 
+fbElMeter(bEnable:=TRUE);
+
+
+lreal1:=fbMeter[1].stDataEMOutPowerDelay.lrPowerTotal;
+lreal2:=fbMeter[2].stDataEMOutPowerDelay.lrPowerTotal;
+lreal3:=fbMeter[3].stDataEMOutPowerDelay.lrPowerTotal;
+lreal4:=fbMeter[4].stDataEMOutPowerDelay.lrPowerTotal;
+lreal5:=fbMeter[5].stDataEMOutPowerDelay.lrPowerTotal;
+lreal6:=fbMeter[6].stDataEMOutPowerDelay.lrPowerTotal;
+lreal7:=fbMeter[7].stDataEMOutPowerDelay.lrPowerTotal;
+lreal8:=fbMeter[8].stDataEMOutPowerDelay.lrPowerTotal;
+lreal9:=fbMeter[9].stDataEMOutPowerDelay.lrPowerTotal;
+lreal10:=fbMeter[10].stDataEMOutPowerDelay.lrPowerTotal;
+lreal11:=fbMeter[11].stDataEMOutPowerDelay.lrPowerTotal;
+lreal12:=fbMeter[12].stDataEMOutPowerDelay.lrPowerTotal;
+lreal13:=fbMeter[13].stDataEMOutPowerDelay.lrPowerTotal;
+lreal14:=fbMeter[14].stDataEMOutPowerDelay.lrPowerTotal;
+lreal15:=fbMeter[15].stDataEMOutPowerDelay.lrPowerTotal;
+lreal16:=fbMeter[16].stDataEMOutPowerDelay.lrPowerTotal;
+lreal17:=fbMeter[17].stDataEMOutPowerDelay.lrPowerTotal;
+lreal18:=fbMeter[18].stDataEMOutPowerDelay.lrPowerTotal;
+lreal19:=fbMeter[19].stDataEMOutPowerDelay.lrPowerTotal;
+lreal20:=fbMeter[20].stDataEMOutPowerDelay.lrPowerTotal;
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+// arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+// arrPD[2](lrValue:= BYTE_TO_LREAL(byAmountOfInverters), bEventBasedActive=> );
+PD_String(sText:= sIPAdress, bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Huawei_SmartLogger">
+      <LineId Id="10" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="4591" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="1542" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="1408" Count="0" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="1060" Count="1" />
+      <LineId Id="1059" Count="0" />
+      <LineId Id="1997" Count="1" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="3541" Count="10" />
+      <LineId Id="3813" Count="0" />
+      <LineId Id="3798" Count="0" />
+      <LineId Id="3800" Count="12" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="810" Count="0" />
+      <LineId Id="812" Count="18" />
+      <LineId Id="811" Count="0" />
+      <LineId Id="1149" Count="0" />
+      <LineId Id="1151" Count="1" />
+      <LineId Id="1618" Count="3" />
+      <LineId Id="1658" Count="1" />
+      <LineId Id="1622" Count="0" />
+      <LineId Id="1660" Count="0" />
+      <LineId Id="1662" Count="1" />
+      <LineId Id="1661" Count="0" />
+      <LineId Id="1150" Count="0" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="769" Count="0" />
+      <LineId Id="591" Count="0" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="1664" Count="0" />
+      <LineId Id="1666" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="1667" Count="1" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="1669" Count="1" />
+      <LineId Id="1672" Count="0" />
+      <LineId Id="1671" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="1674" Count="1" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="4454" Count="0" />
+      <LineId Id="4456" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="2817" Count="1" />
+      <LineId Id="2814" Count="0" />
+      <LineId Id="1950" Count="0" />
+      <LineId Id="1940" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="2819" Count="0" />
+      <LineId Id="120" Count="1" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="3537" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="1676" Count="1" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="1101" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="3746" Count="1" />
+      <LineId Id="3749" Count="2" />
+      <LineId Id="3745" Count="0" />
+      <LineId Id="2855" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="2010" Count="0" />
+      <LineId Id="518" Count="0" />
+      <LineId Id="2011" Count="0" />
+      <LineId Id="2013" Count="1" />
+      <LineId Id="2418" Count="0" />
+      <LineId Id="2433" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="2893" Count="0" />
+      <LineId Id="516" Count="1" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="2440" Count="0" />
+      <LineId Id="4378" Count="4" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="4383" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="521" Count="1" />
+      <LineId Id="2455" Count="1" />
+      <LineId Id="4457" Count="0" />
+      <LineId Id="2457" Count="1" />
+      <LineId Id="2905" Count="0" />
+      <LineId Id="3755" Count="2" />
+      <LineId Id="3814" Count="0" />
+      <LineId Id="3759" Count="33" />
+      <LineId Id="4384" Count="4" />
+      <LineId Id="3736" Count="0" />
+      <LineId Id="4389" Count="0" />
+      <LineId Id="3737" Count="1" />
+      <LineId Id="3816" Count="0" />
+      <LineId Id="3740" Count="2" />
+      <LineId Id="4458" Count="0" />
+      <LineId Id="3743" Count="0" />
+      <LineId Id="3817" Count="0" />
+      <LineId Id="3870" Count="0" />
+      <LineId Id="3818" Count="0" />
+      <LineId Id="3820" Count="36" />
+      <LineId Id="4390" Count="4" />
+      <LineId Id="3862" Count="0" />
+      <LineId Id="4395" Count="0" />
+      <LineId Id="3863" Count="5" />
+      <LineId Id="4459" Count="0" />
+      <LineId Id="3869" Count="0" />
+      <LineId Id="3924" Count="0" />
+      <LineId Id="3871" Count="0" />
+      <LineId Id="3873" Count="41" />
+      <LineId Id="4377" Count="0" />
+      <LineId Id="3915" Count="8" />
+      <LineId Id="4460" Count="0" />
+      <LineId Id="3978" Count="0" />
+      <LineId Id="3925" Count="0" />
+      <LineId Id="3927" Count="37" />
+      <LineId Id="4396" Count="4" />
+      <LineId Id="3970" Count="0" />
+      <LineId Id="4401" Count="0" />
+      <LineId Id="3971" Count="6" />
+      <LineId Id="4461" Count="0" />
+      <LineId Id="4032" Count="0" />
+      <LineId Id="3979" Count="0" />
+      <LineId Id="3981" Count="37" />
+      <LineId Id="4402" Count="4" />
+      <LineId Id="4024" Count="0" />
+      <LineId Id="4407" Count="0" />
+      <LineId Id="4025" Count="5" />
+      <LineId Id="4462" Count="0" />
+      <LineId Id="4031" Count="0" />
+      <LineId Id="3587" Count="0" />
+      <LineId Id="4033" Count="0" />
+      <LineId Id="4035" Count="37" />
+      <LineId Id="4408" Count="4" />
+      <LineId Id="4078" Count="0" />
+      <LineId Id="4413" Count="0" />
+      <LineId Id="4079" Count="5" />
+      <LineId Id="4463" Count="0" />
+      <LineId Id="4085" Count="0" />
+      <LineId Id="3588" Count="0" />
+      <LineId Id="4086" Count="0" />
+      <LineId Id="4088" Count="31" />
+      <LineId Id="4419" Count="4" />
+      <LineId Id="4125" Count="0" />
+      <LineId Id="4424" Count="4" />
+      <LineId Id="4131" Count="0" />
+      <LineId Id="4429" Count="0" />
+      <LineId Id="4132" Count="5" />
+      <LineId Id="4464" Count="0" />
+      <LineId Id="4138" Count="1" />
+      <LineId Id="4146" Count="0" />
+      <LineId Id="4148" Count="37" />
+      <LineId Id="4430" Count="4" />
+      <LineId Id="4191" Count="0" />
+      <LineId Id="4435" Count="0" />
+      <LineId Id="4192" Count="5" />
+      <LineId Id="4465" Count="0" />
+      <LineId Id="4198" Count="0" />
+      <LineId Id="4252" Count="0" />
+      <LineId Id="4199" Count="0" />
+      <LineId Id="4201" Count="31" />
+      <LineId Id="4436" Count="4" />
+      <LineId Id="4238" Count="0" />
+      <LineId Id="4441" Count="0" />
+      <LineId Id="4239" Count="11" />
+      <LineId Id="4466" Count="0" />
+      <LineId Id="4251" Count="0" />
+      <LineId Id="4140" Count="0" />
+      <LineId Id="4253" Count="0" />
+      <LineId Id="4255" Count="37" />
+      <LineId Id="4442" Count="4" />
+      <LineId Id="4298" Count="0" />
+      <LineId Id="4447" Count="0" />
+      <LineId Id="4299" Count="5" />
+      <LineId Id="4467" Count="0" />
+      <LineId Id="4305" Count="0" />
+      <LineId Id="4141" Count="0" />
+      <LineId Id="4306" Count="0" />
+      <LineId Id="4308" Count="37" />
+      <LineId Id="4448" Count="4" />
+      <LineId Id="4351" Count="0" />
+      <LineId Id="4453" Count="0" />
+      <LineId Id="4352" Count="5" />
+      <LineId Id="4468" Count="0" />
+      <LineId Id="4358" Count="0" />
+      <LineId Id="4142" Count="3" />
+      <LineId Id="3589" Count="2" />
+      <LineId Id="3392" Count="1" />
+      <LineId Id="4366" Count="3" />
+      <LineId Id="3282" Count="0" />
+      <LineId Id="4370" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="4371" Count="4" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="4361" Count="1" />
+      <LineId Id="4360" Count="0" />
+      <LineId Id="4365" Count="0" />
+      <LineId Id="4363" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="1829" Count="0" />
+      <LineId Id="3539" Count="1" />
+      <LineId Id="1831" Count="2" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="1147" Count="0" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="1158" Count="0" />
+      <LineId Id="3398" Count="0" />
+      <LineId Id="1834" Count="1" />
+      <LineId Id="1837" Count="3" />
+      <LineId Id="656" Count="0" />
+      <LineId Id="1841" Count="1" />
+      <LineId Id="1844" Count="0" />
+      <LineId Id="1843" Count="0" />
+      <LineId Id="3400" Count="0" />
+      <LineId Id="867" Count="0" />
+      <LineId Id="1845" Count="0" />
+      <LineId Id="868" Count="0" />
+      <LineId Id="1847" Count="0" />
+      <LineId Id="869" Count="0" />
+      <LineId Id="3410" Count="0" />
+      <LineId Id="3413" Count="37" />
+      <LineId Id="3411" Count="1" />
+      <LineId Id="1578" Count="0" />
+      <LineId Id="1580" Count="0" />
+      <LineId Id="1579" Count="0" />
+      <LineId Id="1848" Count="0" />
+      <LineId Id="3401" Count="0" />
+      <LineId Id="4592" Count="0" />
+      <LineId Id="1851" Count="0" />
+      <LineId Id="771" Count="0" />
+      <LineId Id="832" Count="0" />
+      <LineId Id="657" Count="0" />
+      <LineId Id="661" Count="10" />
+      <LineId Id="1852" Count="1" />
+      <LineId Id="672" Count="1" />
+      <LineId Id="1855" Count="0" />
+      <LineId Id="1854" Count="0" />
+      <LineId Id="674" Count="1" />
+      <LineId Id="696" Count="1" />
+      <LineId Id="699" Count="5" />
+      <LineId Id="706" Count="3" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="683" Count="2" />
+      <LineId Id="1856" Count="1" />
+      <LineId Id="687" Count="2" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="714" Count="1" />
+      <LineId Id="718" Count="0" />
+      <LineId Id="717" Count="0" />
+      <LineId Id="719" Count="1" />
+      <LineId Id="722" Count="3" />
+      <LineId Id="658" Count="0" />
+      <LineId Id="3451" Count="0" />
+      <LineId Id="3453" Count="1" />
+      <LineId Id="4636" Count="0" />
+      <LineId Id="3456" Count="4" />
+      <LineId Id="3473" Count="0" />
+      <LineId Id="3476" Count="1" />
+      <LineId Id="3455" Count="0" />
+      <LineId Id="759" Count="0" />
+      <LineId Id="4593" Count="1" />
+      <LineId Id="4530" Count="0" />
+      <LineId Id="4596" Count="18" />
+      <LineId Id="4529" Count="0" />
+      <LineId Id="760" Count="3" />
+      <LineId Id="765" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

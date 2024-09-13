@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgEMS" Id="{cd09de00-7d0c-4acf-aa0f-0b56eaa0eb3f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR
+	EMS					: FB_EMS;			//{#lynus.ag#()}
+	iMassageEMS			: INT;				//{#lynus.ag#()}
+	fbreboot			: NT_Reboot;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[EMS(
+	bEnable:= , 
+	diNrOfEM_IN_ECS:= , 
+	stSetupEMS:= , 
+	eOperationMode:= ,
+	eSpeedModeBackendController:= E_SpeedModeBackendController_EMS.eSlow, 
+	eSpeedModeLocalController:= E_SpeedModeLocalController_EMS.eBalanced,
+	eMessageEMS=> , 
+	bStateEnable=> , 
+	bStateAllowChrgFromGrid=> , 
+	bMissingPowerData=> , 
+	bSurplusAvailable=> , 
+	bActivateHP=> , 
+	bControllingState=> , 
+	byProgress=> , 
+	diNrOfEMS_OUT=> , 
+	rHeartbeat=> , 
+	rErrorWarning=> , 
+	rEnergyOptReady=> , 
+	rNewBattPower=> , 
+	arrMinPrioReached=> , 
+	arrMaxPrioReached=> );
+	
+iMassageEMS := ems.eMessageEMS;
+
+fbreboot(
+	NETID:= , 
+	DELAY:= , 
+	START:= , 
+	TMOUT:= , 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="7" Count="4" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="12" Count="13" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="46" Count="7" />
+      <LineId Id="45" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

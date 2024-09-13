@@ -1,0 +1,407 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Shelly_Pro1PM_Helper_2" Id="{6e003766-8c92-4751-a2eb-97d55dc92583}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_Pro1PM_Helper_2
+VAR_INPUT
+	bSend			: BOOL;
+	bSetOnP1		: BOOL;
+	bSetOffP1		: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient		: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy			: BOOL;
+	bError			: BOOL;
+	bStateP1		: BOOL;
+	lrapowerP1		: LREAL;
+	lrvoltageP1		: LREAL;
+	lraenergyP1		: LREAL;
+	lrTemperatureP1	: LREAL;
+END_VAR
+
+VAR
+	fbRequestSwitch0	: FB_IotHttpRequest;
+	RisingEdge			: R_TRIG;
+	RisingEdgeSetOnP1	: R_TRIG;
+	RisingEdgeSetOffP1	: R_TRIG;
+	fbJson				: FB_JsonDomParser;
+	nState				: UDINT;
+	timTimeout			: TON;
+	tTimeOut			: TIME := T#30S;
+	timTimeoutSwitch	: TON;
+	tTimeOutSwitch		: TIME := T#5S;
+	bGetContentResult	: BOOL;
+	sContentS0			: STRING(511);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+	
+	fbRequest2         : FB_IotHttpRequest;
+	fbRequest3         : FB_IotHttpRequest;
+	fbHeader            : FB_IotHttpHeaderFieldMap;
+	
+	sRealm	:	STRING(511);
+	sPassword :	STRING(511) := ':sh3lly4ankerio2$$';
+	snonce	:	STRING(511);
+	scnonce	:	STRING(511);
+	shash	: STRING(511);
+	bhash	: BOOL;
+	
+	aData	: STRING(511);
+	a_ha1	: ARRAY[0..31] OF BYTE;
+	str_ha1 : STRING(511);
+	str_Toha1   : STRING(511);
+	udint_length_string : UDINT;
+	
+	a_ha2	: ARRAY[0..31] OF BYTE;
+	str_ha2 : STRING(511);
+	str_Toha2   : STRING(511);
+	
+	a_response	: ARRAY[0..31] OF BYTE;
+	str_response : STRING(511);
+	str_Toresponse   : STRING(511);
+
+	str_authorization	: STRING(2048);
+	
+	sfincontent	: STRING(511);
+	int_CountOffWrite: INT;
+	int_CountOnWrite: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN 
+		nState := 0;
+		bBusy := FALSE;
+	END_IF
+	
+timTimeoutSwitch(IN:= bSetOnP1 OR bSetOffP1, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeoutSwitch.Q THEN 
+		bSetOnP1 := FALSE;
+		bSetOffP1 := FALSE;
+	END_IF
+
+RisingEdge(CLK:= bSend );
+RisingEdgeSetOnP1(CLK:= bSetOnP1 );
+RisingEdgeSetOffP1(CLK:= bSetOffP1 );
+
+CASE nState OF
+	0:	
+		IF RisingEdge.Q THEN 
+			IF
+				fbRequestSwitch0.SendRequest(sUri:='/rpc/Switch.GetStatus?id=0', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+				nState:= 1;
+				nReqCount:= nReqCount+1;
+				bBusy:= TRUE;
+				bError:= FALSE;
+			END_IF					
+		END_IF
+	1:
+		IF NOT fbRequestSwitch0.bBusy THEN
+			bError:= TRUE;
+			IF NOT fbRequestSwitch0.bError THEN
+				bGetContentResult:= fbRequestSwitch0.GetHeaderField(pValue:= ADR(sContentS0), 
+														 nValueSize:= SIZEOF(sContentS0), sField := 'WWW-Authenticate');
+				IF fbRequestSwitch0.nStatusCode = 401 THEN
+					bGetJsonResult:= FALSE;
+						sRealm := sContentS0;
+						sRealm := DELETE(sRealm, FIND(sRealm, 'realm') + 7, 0);
+						sRealm := DELETE(sRealm, LEN(sRealm), FIND(sRealm, '"'));
+						
+						snonce := sContentS0;
+						snonce := DELETE(snonce, FIND(snonce, 'nonce') + 7, 0);
+						snonce := DELETE(snonce, LEN(snonce), FIND(snonce, '"'));
+						
+						scnonce := 'YmawvYzT';
+					
+						aData := sRealm;
+						
+						str_Toha1:=concat('admin:', sRealm);
+						str_Toha1:=concat(str_Toha1, sPassword);
+		 
+						udint_length_string:= len2(ADR(str_Toha1));
+						F_GenerateHashValue(E_HashMode.HASH_SHA256,ADR(str_Toha1),udint_length_string,ADR(a_ha1),32);
+						
+							str_ha1:=concat(byte_to_hexstr(a_ha1[0],2,TRUE),byte_to_hexstr(a_ha1[1],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[2],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[3],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[4],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[5],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[6],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[7],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[8],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[9],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[10],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[11],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[12],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[13],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[14],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[15],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[16],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[17],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[18],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[19],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[20],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[21],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[22],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[23],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[24],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[25],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[26],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[27],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[28],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[29],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[30],2,TRUE));
+							str_ha1:=concat(str_ha1,byte_to_hexstr(a_ha1[31],2,TRUE));
+						
+						str_Toha2:='GET:/rpc/Switch.GetStatus?id=0';
+		 
+						udint_length_string:= len2(ADR(str_Toha2));
+						F_GenerateHashValue(E_HashMode.HASH_SHA256,ADR(str_Toha2),udint_length_string,ADR(a_ha2),32);
+						
+							str_ha2:=concat(byte_to_hexstr(a_ha2[0],2,TRUE),byte_to_hexstr(a_ha2[1],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[2],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[3],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[4],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[5],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[6],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[7],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[8],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[9],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[10],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[11],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[12],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[13],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[14],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[15],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[16],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[17],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[18],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[19],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[20],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[21],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[22],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[23],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[24],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[25],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[26],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[27],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[28],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[29],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[30],2,TRUE));
+							str_ha2:=concat(str_ha2,byte_to_hexstr(a_ha2[31],2,TRUE));
+							
+						// <ha1> + ":" + <nonce> + ":" + <nc> + ":" + <cnonce> + ":" + "auth" + ":" + <ha2>
+						
+						str_Toresponse:=concat(str_ha1,':');
+						str_Toresponse:=concat(str_Toresponse,snonce);
+						str_Toresponse:=concat(str_Toresponse,':00000001:');
+						str_Toresponse:=concat(str_Toresponse,scnonce);
+						str_Toresponse:=concat(str_Toresponse,':');
+						str_Toresponse:=concat(str_Toresponse,'auth:');
+						str_Toresponse:=concat(str_Toresponse,str_ha2);
+						
+						udint_length_string:= len2(ADR(str_Toresponse));
+						F_GenerateHashValue(E_HashMode.HASH_SHA256,ADR(str_Toresponse),udint_length_string,ADR(a_response),32);
+						
+							str_response:=concat(byte_to_hexstr(a_response[0],2,TRUE),byte_to_hexstr(a_response[1],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[2],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[3],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[4],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[5],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[6],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[7],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[8],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[9],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[10],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[11],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[12],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[13],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[14],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[15],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[16],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[17],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[18],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[19],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[20],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[21],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[22],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[23],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[24],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[25],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[26],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[27],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[28],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[29],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[30],2,TRUE));
+							str_response:=concat(str_response,byte_to_hexstr(a_response[31],2,TRUE));
+							
+						// "Digest username=\"admin\", realm=\"shellypro4pm-083af27cfbac\", nonce=\"63768368\", uri=\"/rpc/Switch.GetStatus?id=0\", algorithm=\"SHA-256\", qop=auth, nc=00000001, cnonce=\"oKOklSrS\", response=\"d1d59d1e015dee0a3acfc97b20a0fa0ff851b03d79ca00df59ce018a63041468\""
+						
+						str_authorization:=concat('Digest username="admin", realm="',sRealm);
+						str_authorization:=concat(str_authorization,'", nonce="');
+						str_authorization:=concat(str_authorization,snonce);
+						str_authorization:=concat(str_authorization,'", algorithm="SHA-256", uri="/rpc/Switch.GetStatus?id=0", qop=auth, nc=00000001, cnonce="');
+						str_authorization:=concat(str_authorization,scnonce);
+						str_authorization:=concat(str_authorization,'", response="');
+						str_authorization:=concat(str_authorization,str_response);
+						str_authorization:=concat(str_authorization,'"');
+						
+						fbHeader.AddField('Authorization', str_authorization, FALSE);
+						IF fbRequest2.SendRequest(sUri:= '/rpc/Switch.GetStatus?id=0', fbClient:= fbClient, eRequestType:= ETcIotHttpRequestType.HTTP_Get, 0, 0, fbHeader) THEN
+							nState:= 2;
+							bBusy:= TRUE;
+							bError:= FALSE;
+						END_IF
+				END_IF
+			END_IF
+		END_IF
+	
+	
+	2:
+		IF NOT fbRequest2.bBusy THEN
+			bError:= TRUE;
+			
+			IF NOT fbRequest2.bError THEN				 
+				bGetContentResult:= fbRequest2.GetContent(pContent:= ADR(sfincontent), nContentSize:= SIZEOF(sfincontent), bSetNullTermination:= TRUE);
+	
+				IF fbRequest2.nStatusCode >= 200 AND fbRequest2.nStatusCode < 300 THEN
+					bGetJsonResult:= FALSE;
+					jsonDoc:= fbRequest2.GetJsonDomContent(fbJson);
+					IF jsonDoc <> 0 THEN
+						bGetJsonResult:= TRUE;
+						IF fbJson.HasMember(jsonDoc, 'output')  THEN
+							jsonVal:= fbJson.FindMember(jsonDoc, 'output');
+							nValidResCount:= nValidResCount+1;					
+							IF fbJson.IsBool(jsonVal) AND (fbJson.GetBool(jsonVal)=TRUE OR fbJson.GetBool(jsonVal)=FALSE) THEN							
+								bStateP1:= fbJson.GetBool(jsonVal);									
+							END_IF
+						END_IF
+						IF fbJson.HasMember(jsonDoc, 'apower')  THEN
+							jsonVal:= fbJson.FindMember(jsonDoc, 'apower');
+							nValidResCount:= nValidResCount+1;
+							IF fbJson.IsDouble(jsonVal) AND fbJson.GetDouble(jsonVal)> -3.402823E+38 AND fbJson.GetDouble(jsonVal)< 3.402823E+38 THEN							
+								lrapowerP1:= fbJson.GetDouble(jsonVal);									
+							END_IF
+						END_IF
+						IF fbJson.HasMember(jsonDoc, 'voltage')  THEN
+							jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+							nValidResCount:= nValidResCount+1;					
+							IF fbJson.IsDouble(jsonVal) AND fbJson.GetDouble(jsonVal)> -3.402823E+38 AND fbJson.GetDouble(jsonVal)< 3.402823E+38 THEN
+								lrvoltageP1:= fbJson.GetDouble(jsonVal);									
+							END_IF
+						END_IF
+						IF fbJson.HasMember(jsonDoc, 'temperature')  THEN
+							jsonVal:= fbJson.FindMember(jsonDoc, 'temperature');
+							 IF fbJson.HasMember(jsonVal, 'tC') AND fbJson.GetDouble(jsonVal)> -3.402823E+38 AND fbJson.GetDouble(jsonVal)< 3.402823E+38 THEN							
+								jsonVal:= fbJson.FindMember(jsonVal, 'tC');
+								nValidResCount:= nValidResCount+1;					
+								IF fbJson.IsDouble(jsonVal) AND fbJson.GetDouble(jsonVal)> -3.402823E+38 AND fbJson.GetDouble(jsonVal)< 3.402823E+38 THEN
+									lrTemperatureP1:= fbJson.GetDouble(jsonVal);									
+								END_IF
+							END_IF
+						END_IF
+						IF fbJson.HasMember(jsonDoc, 'aenergy')  THEN
+							jsonVal:= fbJson.FindMember(jsonDoc, 'aenergy');
+							IF fbJson.HasMember(jsonVal, 'total') AND fbJson.GetDouble(jsonVal)> -3.402823E+38 AND fbJson.GetDouble(jsonVal)< 3.402823E+38 THEN							
+								jsonVal:= fbJson.FindMember(jsonVal, 'total');
+								nValidResCount:= nValidResCount+1;
+								IF fbJson.IsDouble(jsonVal) AND fbJson.GetDouble(jsonVal)> -3.402823E+38 AND fbJson.GetDouble(jsonVal)< 3.402823E+38 THEN
+									lraenergyP1:= fbJson.GetDouble(jsonVal);
+								END_IF
+							bError:= FALSE;
+							END_IF
+						END_IF	
+					nResCount:= nResCount+1;			
+					END_IF
+				END_IF
+			END_IF
+			
+		nState:= 3;
+		bBusy:= FALSE;
+			IF bError THEN
+				nErrCount:= nErrCount+1;
+			END_IF
+		END_IF
+	
+	
+	3:
+		IF fbRequest3.SendRequest(sUri:= '/rpc/Switch.GetStatus?id=0', fbClient:= fbClient, eRequestType:= ETcIotHttpRequestType.HTTP_Get, 0, 0, fbHeader) THEN
+			nState:= 4;
+		END_IF
+
+	4:	
+		IF bSetOnP1 AND NOT bStateP1 THEN 
+			IF
+				fbRequest3.SendRequest(sUri:='/rpc/Switch.Set?id=0&on=true', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, fbHeader) THEN				
+				bSetOnP1 := FALSE;
+				int_CountOnWrite := int_CountOnWrite +1;
+				nState:= 5;
+				bBusy:= TRUE;
+				bError:= FALSE;
+			END_IF					
+		ELSIF bSetOffP1 AND bStateP1 THEN 
+			IF	
+				fbRequest3.SendRequest(sUri:='/rpc/Switch.Set?id=0&on=false', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, fbHeader) THEN				
+				bSetOffP1 := FALSE;
+				int_CountOffWrite := int_CountOffWrite +1;
+				nState:= 5;
+				bBusy:= TRUE;
+				bError:= FALSE;
+			END_IF	
+		ELSE
+			nState:= 5;
+		END_IF
+	5:
+		bBusy:= FALSE;
+		nState:= 0;
+
+	
+END_CASE
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_Pro1PM_Helper_2">
+      <LineId Id="82" Count="10" />
+      <LineId Id="99" Count="4" />
+      <LineId Id="110" Count="2" />
+      <LineId Id="770" Count="7" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="419" Count="159" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="207" Count="4" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="653" Count="45" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="795" Count="0" />
+      <LineId Id="244" Count="2" />
+      <LineId Id="361" Count="6" />
+      <LineId Id="717" Count="1" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="764" Count="0" />
+      <LineId Id="816" Count="1" />
+      <LineId Id="755" Count="0" />
+      <LineId Id="767" Count="0" />
+      <LineId Id="797" Count="17" />
+      <LineId Id="720" Count="0" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="750" Count="1" />
+      <LineId Id="754" Count="0" />
+      <LineId Id="740" Count="0" />
+      <LineId Id="738" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

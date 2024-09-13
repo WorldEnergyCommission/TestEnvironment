@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Battery_Output" Id="{77a19c58-d741-44a3-ad42-9c9b72a92f13}">
+    <Declaration><![CDATA[TYPE ST_Battery_Output :
+STRUCT
+	bEnabled									: BOOL;							//Battery enabled
+	byErrorWarning								: BYTE;							//Show if the function has a Error or a Warning		
+	dwSOC										: DWORD;						//{#lynus.ag#()} //The actual Battery state of Charge
+	dwSOH										: DWORD;						//The actual battery state of health
+	rBatteryVoltage								: REAL;							//Battery Voltage with Unit V with max. 2 comas
+	rMaxDcChargeCurrent							: REAL;							//Max. dc charge current battery with unit A 
+	rMaxDcDischargeCurrent						: REAL;							//Max. dc discharge current battery with unit A
+	rMaxChargeVoltage							: REAL;							//Max. charge voltage from the battery with unit V	
+	lrPower										: LREAL;						//{#lynus.ag#()} //Battery Power with unit kW
+	lrPowerConsumption							: LREAL;						//Battery power consumption with unit kW (charging)
+	lrPowerProduction							: LREAL;						//Battery power production with unit kW (discharging)
+	lrCurrent									: LREAL;						//Battery current with unit A with max. 2 comas
+	lrTemp										: LREAL;						//Battery temperarure with unit °C with max. 2 comas
+	lrCapacity									: LREAL;						//{#lynus.ag#()} //Actual Battery capacity in kWh with max. 2 comas	
+	eMessage									: E_Message_Battery;			//Message from the Battery				
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

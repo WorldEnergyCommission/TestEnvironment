@@ -1,0 +1,604 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComEffIO
+VAR
+	fbCom		: FB_MqttCommunicator_V2;
+	int_PowerLinkNumber: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	strAuthkey := 'EIO08031879806',
+	sUserName:= , 			// see below
+	sUserPassword:= , 		// see below
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+
+
+prg_ReadDeviceName();
+IF prg_ReadDeviceName.sDeviceName = '' THEN
+	prg_ReadDeviceName.bStart := TRUE;
+END_IF
+
+// select user / pass according device name:
+ IF prg_ReadDeviceName.sDeviceName = 'HARTL-CX-7BDAA6' THEN   // powerlink #1
+	fbCom.sUserName:= 'ff706992-502b-43c6-8bfd-4102c11712b1'; 
+	fbCom.sUserPassword:= 'c02d99ff-a830-4cb7-a7e9-b968a4039aae';
+    prgCS.m_PAC2200 := FALSE;
+	prgCS.m_EM24_DIN := TRUE;	
+	prgEM.uiCurrentTransformerRatioL1 := 64;
+	prgEM.uiCurrentTransformerRatioL2 := 64;
+	prgEM.uiCurrentTransformerRatioL3 := 64;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := FALSE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+	
+	int_PowerLinkNumber :=1; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'HARTL-CX-7BDAE2' THEN   // powerlink #2
+	fbCom.sUserName:= '1aadb7ae-6c2f-45d6-8a76-490672e2f407'; 
+	fbCom.sUserPassword:= '63b6d752-f501-4734-b9f8-814d56a365ab';
+    prgCS.m_PAC2200 := FALSE;
+	prgCS.m_EM24_DIN := TRUE;	
+	prgEM.uiCurrentTransformerRatioL1 := 64;
+	prgEM.uiCurrentTransformerRatioL2 := 64;
+	prgEM.uiCurrentTransformerRatioL3 := 64;	
+	//PV
+	prgPV.m_Enphase := TRUE;
+	prgPV.m_KL3403 := FALSE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+	
+	int_PowerLinkNumber :=2; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'HARTL-CX-7BDAB5' THEN   // powerlink #3
+	fbCom.sUserName:= '21fb24f0-5311-4dec-a3c2-aacdaf7e170e'; 
+	fbCom.sUserPassword:= '986af255-140d-48a9-82a9-cc9f22b85e6c';
+    prgCS.m_PAC2200 := FALSE;
+	prgCS.m_EM24_DIN := TRUE;	
+	prgEM.uiCurrentTransformerRatioL1 := 64;
+	prgEM.uiCurrentTransformerRatioL2 := 64;
+	prgEM.uiCurrentTransformerRatioL3 := 64;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := FALSE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := TRUE;
+	
+	int_PowerLinkNumber :=3; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020001' THEN   // SSP #EIOPL020001 old #EIOPL010004
+    fbCom.sUserName:= '83c6307a-a7b0-43e9-a2fe-45e74619114e'; 
+    fbCom.sUserPassword:= 'd39e59c3-d892-4896-bc94-87434209735a';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+	int_PowerLinkNumber :=4; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020002' THEN   // SSP #EIOPL020002 old #EIOPL010005
+    fbCom.sUserName:= 'd82c78c9-a22f-4a02-a4e2-b60cb14578ce'; 
+    fbCom.sUserPassword:= 'd5475033-40ea-4fcc-9aaa-7da49676978e';
+	prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=5; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020003' THEN   // SSP #EIOPL020003 old #EIOPL010006
+    fbCom.sUserName:= 'e1203d29-4823-45d5-b192-ec10cabda3c1'; 
+    fbCom.sUserPassword:= '97f94eab-c46e-4086-934c-c6e2012329aa';
+	prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=6; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020004' THEN   // SSP EIOPL020004 old #EIOPL010007
+    fbCom.sUserName:= '9821dcb6-8e4c-4f5a-913f-6230c78b7612'; 
+    fbCom.sUserPassword:= 'fbcef800-1fa6-4eb0-9a53-bf7eb24b66e8';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;    
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := FALSE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := TRUE;
+	int_PowerLinkNumber :=7; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020005' THEN   // SSP #EIOPL020005 old #EIOPL010008
+    fbCom.sUserName:= 'a1d5f45c-8c7a-4faf-8f69-f947d51703ac'; 
+    fbCom.sUserPassword:= '24a7c398-f039-43bd-9a40-3647981d1ca4';
+	prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=8; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020006' THEN
+    fbCom.sUserName:= 'fc49cab8-c489-47bf-9a1e-01e802dbd72b'; 
+    fbCom.sUserPassword:= '5b8f0f3c-4fa8-4180-a0d2-8e94018e7d1c';
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=9; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020007' THEN
+    fbCom.sUserName:= '8f69b278-713d-4d45-94a7-886243835275'; 
+    fbCom.sUserPassword:= '6daad10c-2cd3-4a4b-aaf5-13c3219d749c';
+    int_PowerLinkNumber :=10; 
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;    
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+	int_PowerLinkNumber :=10; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020008' THEN
+    fbCom.sUserName:= '7f8d7893-d03a-4a61-963b-7b6ff8de7579'; 
+    fbCom.sUserPassword:= 'f36b5e0a-533e-4295-89fa-9ebe9fb44562';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=11; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020009' THEN
+    fbCom.sUserName:= 'e03b3d58-9cf2-4dea-b840-4463b146ad11'; 
+    fbCom.sUserPassword:= 'b0dd09c1-2145-4996-9cec-acb7d3f87396';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+ 	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=12; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020010' THEN
+    fbCom.sUserName:= '7ebe01ff-01b5-499d-961c-e9e4424f78c3'; 
+    fbCom.sUserPassword:= '67bfcf2b-97e9-4c65-9085-c9bcef4503e7';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=13; 
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020011' THEN
+    fbCom.sUserName:= 'ad720297-eec1-4291-8dc9-2aa2880f96b0'; 
+    fbCom.sUserPassword:= '0c4d8ed2-3a42-4cac-a6e6-336a66b25006';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=14;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020012' THEN
+    fbCom.sUserName:= '7c9958ae-7435-444d-a6eb-4d8e3987a069'; 
+    fbCom.sUserPassword:= '169a8ccd-5640-4497-9ac9-6745ecb5db5b';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=15;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020013' THEN
+    fbCom.sUserName:= '4dd5d284-7d5b-46f7-a20b-43c9751d7fb3'; 
+    fbCom.sUserPassword:= '456bac02-fb12-47e4-a021-1888f551cd2e';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=16;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020014' THEN
+    fbCom.sUserName:= '3a26b1f5-5b5c-498e-8b86-862869d53b43'; 
+    fbCom.sUserPassword:= '05c5c231-d7b4-4994-aea6-6510fc1e10b0';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=18;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020015' THEN
+    fbCom.sUserName:= '9189ae67-3aff-4725-bdd0-3fcb0a8db52e'; 
+    fbCom.sUserPassword:= 'e5d16dfe-4f81-4480-84b3-2197b932441a';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=18;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020016' THEN
+    fbCom.sUserName:= 'a39853f2-c9d5-4cc6-9136-22d315b0670d'; 
+    fbCom.sUserPassword:= '4635bb9d-bed2-49c3-bcd9-79409f474f48';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=19;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020017' THEN
+    fbCom.sUserName:= '8a26b74a-4cc1-4d36-9272-091dfb696354'; 
+    fbCom.sUserPassword:= 'b8e54bb9-0776-412d-8dbe-c5b4a773dc5c';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;	
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;	
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=20;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020018' THEN
+    fbCom.sUserName:= '4f5be7d9-0811-431e-a553-c3ff6150c158'; 
+    fbCom.sUserPassword:= 'e50d6b6d-4e7a-4b0d-abb4-1cba6f64be02';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=21;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020019' THEN
+    fbCom.sUserName:= '337afc54-dcee-48e4-b1db-c6421f684699'; 
+    fbCom.sUserPassword:= '72ad2466-c12a-476e-89c8-aaeedff94dde';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=22;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020020' THEN
+    fbCom.sUserName:= '6564a824-5a4e-4464-a176-26c302579785'; 
+    fbCom.sUserPassword:= '75c773e1-d251-47c9-a193-db94195b752d';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=23;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020021' THEN
+    fbCom.sUserName:= 'eafcc9ea-3a53-4b3d-963c-a5a6a7ddc10a'; 
+    fbCom.sUserPassword:= 'fae8e37a-a806-46eb-a8c6-35c2bcdc9bcd';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=24;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020022' THEN
+    fbCom.sUserName:= '02a0fbe4-6767-4b54-889f-26ba2ba95037'; 
+    fbCom.sUserPassword:= '71565ed5-f246-47db-ab21-1e4fe784a442';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=25;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020023' THEN
+    fbCom.sUserName:= '3944e180-a845-4f00-8995-ccb92777f5e9'; 
+    fbCom.sUserPassword:= '2e466602-ccb6-477d-b345-eeabe0c98bd2';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=26;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020024' THEN
+    fbCom.sUserName:= 'b8ddea10-7cf1-485e-9bab-bff5ed218522'; 
+    fbCom.sUserPassword:= 'e276fcf9-63a1-4b0a-9de8-f7ab6f4aa54b';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=27;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020025' THEN
+    fbCom.sUserName:= 'c1e5bcf7-d8b1-4efc-95d7-a802a440b6ef'; 
+    fbCom.sUserPassword:= '0cb7bb98-8a52-4c88-8e0c-32bca060c4d8';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=28;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020026' THEN
+    fbCom.sUserName:= 'e597ae44-2b07-406e-8692-3087f0eb31c0'; 
+    fbCom.sUserPassword:= 'cdf86e91-c371-420f-a817-97dcd7975a5f';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=29;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020027' THEN
+    fbCom.sUserName:= '5cfd62a0-67f8-4dc7-ae71-a1400c47338f'; 
+    fbCom.sUserPassword:= 'b7de68af-71d9-45e2-965d-221b5628e29c';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=30;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020035' THEN
+    fbCom.sUserName:= 'fb5fd083-3c72-4b40-8d30-6b5a5ec0fd26'; 
+    fbCom.sUserPassword:= '4834fd7b-a24a-413a-8c93-950413f31f45';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=38;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020034' THEN
+    fbCom.sUserName:= 'd71aeef5-98db-40cb-aab3-654ca1fb35e8'; 
+    fbCom.sUserPassword:= '0afe37f1-9a63-426d-8961-dbb0cffe9be3';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=37;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020033' THEN
+    fbCom.sUserName:= '5e1310b5-d378-4fa6-95c6-952346a91da8'; 
+    fbCom.sUserPassword:= 'a799a025-7a84-49cf-9d9d-53de1a59e194';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=36;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020032' THEN
+    fbCom.sUserName:= 'cbda35ec-b65b-4eb2-8b03-d792cf9e8631'; 
+    fbCom.sUserPassword:= '1fd72c03-53f6-497f-98e4-3a69ebd8ccca';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=35;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020031' THEN
+    fbCom.sUserName:= '28d04863-a9e0-4785-a144-18aa1b6d041e'; 
+    fbCom.sUserPassword:= 'c289ce23-bf7c-4efa-9fb0-711a61d6a742';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=34;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020030' THEN
+    fbCom.sUserName:= '158f2d24-1dcc-4950-8d8e-7e5311626ec1'; 
+    fbCom.sUserPassword:= '32cecfe9-c818-48b4-8f32-f269592f4e90';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=33;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020029' THEN
+    fbCom.sUserName:= 'bb8277c1-8ad6-44d9-a0ac-5c3fa884b7a3'; 
+    fbCom.sUserPassword:= 'd4a543b9-4bfc-4bed-9e5a-139bc546dba7';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=32;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020028' THEN
+    fbCom.sUserName:= 'd6dc216a-e1ab-4d4c-85b5-9d687c22bf75'; 
+    fbCom.sUserPassword:= '7b180f93-5ddb-47c4-8446-0a9df3b62f5c';
+    prgCS.m_PAC2200 := TRUE;
+	prgCS.m_EM24_DIN := FALSE;
+	prgEM.uiCurrentTransformerRatioL1 := 100;
+	prgEM.uiCurrentTransformerRatioL2 := 100;
+	prgEM.uiCurrentTransformerRatioL3 := 100;
+	//PV
+	prgPV.m_Enphase := FALSE;
+	prgPV.m_KL3403 := TRUE;
+	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
+    int_PowerLinkNumber :=31;
+	//Next PowerLinkNumber is 39
+ END_IF
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgComEffIO">
+      <LineId Id="8" Count="1" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="10" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="210" Count="44" />
+      <LineId Id="256" Count="25" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="283" Count="9" />
+      <LineId Id="294" Count="85" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="184" Count="2" />
+      <LineId Id="380" Count="7" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="188" Count="2" />
+      <LineId Id="389" Count="8" />
+      <LineId Id="191" Count="3" />
+      <LineId Id="398" Count="8" />
+      <LineId Id="195" Count="3" />
+      <LineId Id="437" Count="8" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="201" Count="1" />
+      <LineId Id="407" Count="8" />
+      <LineId Id="203" Count="3" />
+      <LineId Id="416" Count="8" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="458" Count="11" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="594" Count="7" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="603" Count="106" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="716" Count="11" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="735" Count="11" />
+      <LineId Id="749" Count="0" />
+      <LineId Id="751" Count="11" />
+      <LineId Id="750" Count="0" />
+      <LineId Id="769" Count="11" />
+      <LineId Id="768" Count="0" />
+      <LineId Id="782" Count="11" />
+      <LineId Id="781" Count="0" />
+      <LineId Id="795" Count="11" />
+      <LineId Id="794" Count="0" />
+      <LineId Id="808" Count="11" />
+      <LineId Id="807" Count="0" />
+      <LineId Id="821" Count="11" />
+      <LineId Id="820" Count="0" />
+      <LineId Id="834" Count="11" />
+      <LineId Id="833" Count="0" />
+      <LineId Id="847" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="56" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

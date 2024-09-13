@@ -1,0 +1,426 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ElectricMeter" Id="{ce254dcf-24e8-4b57-bae2-e9b1fa21e2bc}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_ElectricMeter
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;											//Enable the function
+	{attribute 'hide'}
+	bError								: BOOL;											//Error from the meter
+	{attribute 'hide'}
+	bWarning							: BOOL;											//Warning from the meter
+	{attribute 'hide'}
+	bEnableReadOutFunction				: BOOL;											//Enable the output to Read out the Meter
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;											//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	bPowerDataInvers					: BOOL;											//With True its possible to invert all received power data from the electric meter
+	{attribute 'hide'}
+	bReadOutDataDone					: BOOL;											//With this Input you can send the command to the Function that the reading out from the data is done
+	{attribute 'hide'}
+	iTimeReadOutInterval				: INT;											//Delay in seconds to read out the electric meter
+	{attribute 'hide'}
+	iErrorCode							: INT;											//Error Code from external EHE
+	{attribute 'hide'}
+	iWarningCode						: INT;											//Warning Code from external EHE
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;										//Total Counter for Energy consumption with unit kWh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;										//Total Counter for Energy production with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;										//Total counter for energy Tariff 1 consumption with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;										//Total counter for energy Tariff 2 consumption with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;										//Total counter for energy Tariff 1 production with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;										//Total counter for energy Tariff 2 production with unit kWh
+	{attribute 'hide'}
+	lrCurrentL1							: LREAL;										//Current from L1 with unit A
+	{attribute 'hide'}
+	lrVoltageL1N						: LREAL;										//Voltage L1-N with unit V
+	{attribute 'hide'}
+	lrVoltageL1L2						: LREAL;										//Voltage L1-L2 with unit V
+	{attribute 'hide'}
+	lrPowerL1							: LREAL;										//Power L1 with unit W
+	{attribute 'hide'}
+	lrCurrentL2							: LREAL;										//Current from L2 with unit A
+	{attribute 'hide'}
+	lrVoltageL2N						: LREAL;										//Voltage L2-N with unit V
+	{attribute 'hide'}
+	lrVoltageL2L3						: LREAL;										//Voltage L2-L3 with unit V
+	{attribute 'hide'}
+	lrPowerL2							: LREAL;										//Power L2 with unit W
+	{attribute 'hide'}
+	lrCurrentL3							: LREAL;										//Current from L3 with unit A
+	{attribute 'hide'}
+	lrVoltageL3N						: LREAL;										//Voltage L3-N with unit V
+	{attribute 'hide'}
+	lrVoltageL3L1						: LREAL;										//Voltage L3-L1 with unit V
+	{attribute 'hide'}
+	lrPowerL3							: LREAL;										//Power L3 with unit W
+	{attribute 'hide'}
+	lrPowerTotal						: LREAL;										//Total power with unit W
+	{attribute 'hide'}		
+	lrFrequency							: LREAL;										//Frequency with unit HZ
+	{attribute 'hide'}
+	lrReactivePowerTotal				: LREAL;										//Reactive power with unit var
+	{attribute 'hide'}
+	lrApparentPowerTotal				: LREAL;										//Apparent Power with unit VA
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;									//Delay Time to write some Data to the Output
+END_VAR                             	
+VAR_OUTPUT    
+	{attribute 'hide'}                      	
+	stDataEMOutPower					: ST_ElectricMeter_Output_Power;				//Electric meter power output data
+	{attribute 'hide'}
+	stDataEMOutPowerDelay				: ST_ElectricMeter_Output_Power;				//Electric meter power output data with delay
+	{attribute 'hide'}
+	bReadOutMeter						: BOOL;											//Pulse to read out the meter
+END_VAR 
+VAR_OUTPUT PERSISTENT
+	{attribute 'conditionalshow'}                     	
+	stDataEMOutCounter					: ST_ElectricMeter_Output_Counter;				//Electric meter counter output data
+	{attribute 'conditionalshow'}
+	stDataEMOutCounterDelay				: ST_ElectricMeter_Output_Counter;				//Electric meter counter output data with delay
+END_VAR                            	
+VAR       
+	FPEnable							: R_TRIG;										//Internal positive edge
+	FNEnable							: F_TRIG;										//Internal negative Edge  
+	FNReadOutDone						: F_TRIG;                        				//Internal negative Edge 
+	tim0								: TON;											//Timer for read out time
+	tim1								: TON;											//Timer reset read out
+	timDelayOutputs						: TON;											//Timer to send Data with Delay to the outputs
+	timSavePD							: TON;											//Timer to save the persistent Data when the Event Based Mode is active
+	arrPD								: ARRAY[1..12] OF FB_PersistentData_Number;		//Function to save persistent data
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 20.05.2021
+//Version : 1.0.0.0
+
+//With this function block can read in data from a electric couter.
+//The time how often the meter is reading out can be selected on the inputs
+//The Counter Values are saved persistend only every 6 hours when the Event Based Mode is active on the Persistend Master Function Block
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+iTimeReadOutInterval := LIMIT(1,iTimeReadOutInterval,3600);
+
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+
+lrPowerL1 := LIMIT(-999999999999999,lrPowerL1,999999999999999);
+	lrPowerL2 := LIMIT(-999999999999999,lrPowerL2,999999999999999);	
+		lrPowerL3 := LIMIT(-999999999999999,lrPowerL3,999999999999999);	
+			lrPowerTotal := LIMIT(-999999999999999,lrPowerTotal,999999999999999);	
+			
+lrReactivePowerTotal := LIMIT(-999999999999999,lrReactivePowerTotal,999999999999999);
+	lrApparentPowerTotal := LIMIT(-999999999999999,lrApparentPowerTotal,999999999999999);	
+	
+lrCurrentL1 := LIMIT(-999999999999999,lrCurrentL1,999999999999999);
+	lrCurrentL2 := LIMIT(-999999999999999,lrCurrentL2,999999999999999);
+		lrCurrentL3 := LIMIT(-999999999999999,lrCurrentL3,999999999999999);
+
+lrVoltageL1N := LIMIT(0,lrVoltageL1N,100000);
+	lrVoltageL1L2 := LIMIT(0,lrVoltageL1L2,100000);
+lrVoltageL2N := LIMIT(0,lrVoltageL2N,100000);
+	lrVoltageL2L3 := LIMIT(0,lrVoltageL2L3,100000);
+lrVoltageL3N := LIMIT(0,lrVoltageL3N,100000);
+	lrVoltageL3L1 := LIMIT(0,lrVoltageL3L1,100000);
+
+lrFrequency := LIMIT(0,lrFrequency,200);
+
+(*------------------------------------------------------------------------------------Activate to read out the meter-------------------------------------------------------------------*)
+FPEnable(CLK:= bEnable, Q=> );
+
+tim0(IN:= NOT tim0.Q, PT:= (T#1S * iTimeReadOutInterval) , Q=> , ET=> );
+	IF (bEnableReadOutFunction AND (tim0.Q OR FPEnable.Q)) THEN
+		bReadOutMeter := TRUE;
+	END_IF
+	
+tim1(IN:= bReadOutMeter, PT:=T#100MS , Q=> , ET=> );
+	IF tim1.Q OR NOT bEnableReadOutFunction THEN
+		bReadOutMeter := FALSE;
+	END_IF		
+
+(*------------------------------------------------------------------------------------Error and Warning-----------------------------------------------------------------------*)	
+
+stDataEMOutPower.byErrorWarning := 0;
+	IF bWarning THEN stDataEMOutPower.byErrorWarning := 1; END_IF  
+	IF bError THEN stDataEMOutPower.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF stDataEMOutPower.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataEMOutPower.eMessage := E_Message_EM.eNoConnectionToBackend;
+ELSIF stDataEMOutPower.byErrorWarning = 1 AND iWarningCode = 1 THEN stDataEMOutPower.eMessage := E_Message_EM.eElectricMeterWarning;
+ELSIF stDataEMOutPower.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataEMOutPower.eMessage := E_Message_EM.eElectricMeterError;
+ELSIF stDataEMOutPower.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataEMOutPower.eMessage := E_Message_EM.eTooMuchElectricMeter;
+ELSE stDataEMOutPower.eMessage := E_Message_EM.eNoMessage; 
+END_IF
+	
+(*-------------------------------------------------------------------------------------------Data from the meter----------------------------------------------------------------------------*)
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+			FNEnable(CLK:= bEnable, Q=> );	
+
+//Counter Data
+FNReadOutDone(CLK:= bReadOutDataDone, Q=> );
+
+IF FNReadOutDone.Q AND NOT bError THEN
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataEMOutCounter.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT(lrTotalCounterEnergy_Production * 100)) / 100; END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataEMOutCounter.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT(lrTotalCounterEnergy_Consumption * 100)) / 100; END_IF
+	IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataEMOutCounter.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT(lrCounterEnergyT1_Consumption * 100)) / 100; END_IF
+	IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataEMOutCounter.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT(lrCounterEnergyT2_Consumption * 100)) / 100; END_IF
+	IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataEMOutCounter.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT(lrCounterEnergyT1_Production * 100)) / 100; END_IF
+	IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataEMOutCounter.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT(lrCounterEnergyT2_Production * 100)) / 100; END_IF
+END_IF		
+			
+//Power Data
+IF bEnable THEN
+	stDataEMOutPower.lrPowerTotal := lrPowerTotal / 1000;
+	stDataEMOutPower.lrPowerTotal := LINT_TO_LREAL(LREAL_TO_LINT(stDataEMOutPower.lrPowerTotal * 100)) / 100;
+	IF NOT bPowerDataInvers THEN
+		IF 	stDataEMOutPower.lrPowerTotal < 0 THEN
+			stDataEMOutPower.lrPowerProduction := (stDataEMOutPower.lrPowerTotal * - 1);
+			stDataEMOutPower.lrPowerConsumption := 0;
+		ELSIF stDataEMOutPower.lrPowerTotal > 0 THEN
+			stDataEMOutPower.lrPowerProduction := 0;
+			stDataEMOutPower.lrPowerConsumption := stDataEMOutPower.lrPowerTotal;
+		ELSIF stDataEMOutPower.lrPowerTotal = 0 THEN
+			stDataEMOutPower.lrPowerProduction := 0;
+			stDataEMOutPower.lrPowerConsumption := 0;
+		END_IF
+	ELSE
+		IF 	stDataEMOutPower.lrPowerTotal < 0 THEN
+			stDataEMOutPower.lrPowerProduction := 0;
+			stDataEMOutPower.lrPowerConsumption := (stDataEMOutPower.lrPowerTotal * - 1);
+		ELSIF stDataEMOutPower.lrPowerTotal > 0 THEN
+			stDataEMOutPower.lrPowerProduction := stDataEMOutPower.lrPowerTotal;
+			stDataEMOutPower.lrPowerConsumption := 0;
+		ELSIF stDataEMOutPower.lrPowerTotal = 0 THEN
+			stDataEMOutPower.lrPowerProduction := 0;
+			stDataEMOutPower.lrPowerConsumption := 0;
+		END_IF
+	END_IF										
+	stDataEMOutPower.lrReactivePowerTotal := lrReactivePowerTotal / 1000;
+	stDataEMOutPower.lrReactivePowerTotal := LINT_TO_LREAL(LREAL_TO_LINT(stDataEMOutPower.lrReactivePowerTotal * 100)) / 100;
+	stDataEMOutPower.lrApparentPowerTotal := lrApparentPowerTotal / 1000;
+	stDataEMOutPower.lrApparentPowerTotal := LINT_TO_LREAL(LREAL_TO_LINT(stDataEMOutPower.lrApparentPowerTotal * 100)) / 100;											
+	stDataEMOutPower.lrFrequency := LINT_TO_LREAL(LREAL_TO_LINT(lrFrequency * 100)) / 100;;
+	stDataEMOutPower.lrVoltageL1N := LINT_TO_LREAL(LREAL_TO_LINT(lrVoltageL1N * 100)) / 100;
+	stDataEMOutPower.lrVoltageL1L2 := LINT_TO_LREAL(LREAL_TO_LINT(lrVoltageL1L2 * 100)) / 100;
+	stDataEMOutPower.lrCurrentL1 := LINT_TO_LREAL(LREAL_TO_LINT(lrCurrentL1 * 100)) / 100;
+	stDataEMOutPower.lrPowerL1 :=  lrPowerL1 / 1000;
+	stDataEMOutPower.lrPowerL1 := LINT_TO_LREAL(LREAL_TO_LINT(stDataEMOutPower.lrPowerL1 * 100)) / 100;
+	stDataEMOutPower.lrVoltageL2N := LINT_TO_LREAL(LREAL_TO_LINT(lrVoltageL2N * 100)) / 100;
+	stDataEMOutPower.lrVoltageL2L3 := LINT_TO_LREAL(LREAL_TO_LINT(lrVoltageL2L3 * 100)) / 100;
+	stDataEMOutPower.lrCurrentL2 := LINT_TO_LREAL(LREAL_TO_LINT(lrCurrentL2 * 100)) / 100;
+	stDataEMOutPower.lrPowerL2 := lrPowerL2 / 1000;
+	stDataEMOutPower.lrPowerL2 := LINT_TO_LREAL(LREAL_TO_LINT(stDataEMOutPower.lrPowerL2 * 100)) / 100;
+	stDataEMOutPower.lrVoltageL3N := LINT_TO_LREAL(LREAL_TO_LINT(lrVoltageL3N * 100)) / 100;
+	stDataEMOutPower.lrVoltageL3L1 := LINT_TO_LREAL(LREAL_TO_LINT(lrVoltageL3L1 * 100)) / 100;
+	stDataEMOutPower.lrCurrentL3 := LINT_TO_LREAL(LREAL_TO_LINT(lrCurrentL3 * 100)) / 100;
+	stDataEMOutPower.lrPowerL3 := lrPowerL3 / 1000;
+	stDataEMOutPower.lrPowerL3 := LINT_TO_LREAL(LREAL_TO_LINT(stDataEMOutPower.lrPowerL3 * 100)) / 100;
+		stDataEMOutPower.bEnabled := bEnable;	
+ELSE																																														
+	stDataEMOutPower.lrPowerTotal := 0;
+	stDataEMOutPower.lrPowerProduction := 0;
+	stDataEMOutPower.lrPowerConsumption := 0;
+	stDataEMOutPower.lrReactivePowerTotal := 0;
+	stDataEMOutPower.lrApparentPowerTotal := 0;
+	stDataEMOutPower.lrFrequency := 0;
+	stDataEMOutPower.lrVoltageL1N := 0;
+	stDataEMOutPower.lrVoltageL1L2 := 0;
+	stDataEMOutPower.lrCurrentL1 := 0;
+	stDataEMOutPower.lrPowerL1 := 0;
+	stDataEMOutPower.lrVoltageL2N := 0;
+	stDataEMOutPower.lrVoltageL2L3 := 0;
+	stDataEMOutPower.lrCurrentL2 := 0;
+	stDataEMOutPower.lrPowerL2 := 0;
+	stDataEMOutPower.lrVoltageL3N := 0;
+	stDataEMOutPower.lrVoltageL3L1 := 0;
+	stDataEMOutPower.lrCurrentL3 := 0;
+	stDataEMOutPower.lrPowerL3 := 0;
+		stDataEMOutPower.bEnabled := bEnable;
+	
+	bReadOutMeter := FALSE;																							
+END_IF			
+
+(*---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataEMOutPowerDelay := stDataEMOutPower; 
+		stDataEMOutCounterDelay := stDataEMOutCounter;
+END_IF 
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+//When the Event Based mode is active, save the Data only every 6h
+//When we have this Function Blocks in the plc code use the Mode "Power Fail" if the PLC System has this possibility
+timSavePD(IN:= GVL_Persistent_Data.bEventBasedActive AND NOT timSavePD.Q, PT:= T#6H, Q=> , ET=> );
+
+IF timSavePD.Q THEN
+	arrPD[1].lrValue := stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+	arrPD[2].lrValue := stDataEMOutCounter.lrCounterEnergyT1_Production;
+	arrPD[3].lrValue := stDataEMOutCounter.lrCounterEnergyT2_Consumption; 
+	arrPD[4].lrValue := stDataEMOutCounter.lrCounterEnergyT2_Production;
+	arrPD[5].lrValue := stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+	arrPD[6].lrValue := stDataEMOutCounter.lrTotalCounterEnergy_Production;
+	arrPD[7].lrValue := stDataEMOutCounterDelay.lrCounterEnergyT1_Consumption;
+	arrPD[8].lrValue := stDataEMOutCounterDelay.lrCounterEnergyT1_Production;
+	arrPD[9].lrValue := stDataEMOutCounterDelay.lrCounterEnergyT2_Consumption;
+	arrPD[10].lrValue := stDataEMOutCounterDelay.lrCounterEnergyT2_Production;
+	arrPD[11].lrValue := stDataEMOutCounterDelay.lrTotalCounterEnergy_Consumption;
+	arrPD[12].lrValue := stDataEMOutCounterDelay.lrTotalCounterEnergy_Production;
+END_IF
+
+arrPD[1](lrValue:= , bEventBasedActive=> );
+arrPD[2](lrValue:= , bEventBasedActive=> );
+arrPD[3](lrValue:= , bEventBasedActive=> );
+arrPD[4](lrValue:= , bEventBasedActive=> );
+arrPD[5](lrValue:= , bEventBasedActive=> );
+arrPD[6](lrValue:= , bEventBasedActive=> );
+arrPD[7](lrValue:= , bEventBasedActive=> );
+arrPD[8](lrValue:= , bEventBasedActive=> );
+arrPD[9](lrValue:= , bEventBasedActive=> );
+arrPD[10](lrValue:= , bEventBasedActive=> );
+arrPD[11](lrValue:= , bEventBasedActive=> );
+arrPD[12](lrValue:= , bEventBasedActive=> );
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ElectricMeter">
+      <LineId Id="1297" Count="2" />
+      <LineId Id="1295" Count="1" />
+      <LineId Id="1300" Count="1" />
+      <LineId Id="1957" Count="0" />
+      <LineId Id="951" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="1303" Count="0" />
+      <LineId Id="1302" Count="0" />
+      <LineId Id="2246" Count="4" />
+      <LineId Id="1304" Count="0" />
+      <LineId Id="1403" Count="1" />
+      <LineId Id="1408" Count="0" />
+      <LineId Id="1412" Count="1" />
+      <LineId Id="1415" Count="2" />
+      <LineId Id="1305" Count="0" />
+      <LineId Id="1046" Count="0" />
+      <LineId Id="1405" Count="0" />
+      <LineId Id="1409" Count="0" />
+      <LineId Id="1369" Count="0" />
+      <LineId Id="1368" Count="0" />
+      <LineId Id="1370" Count="0" />
+      <LineId Id="1406" Count="1" />
+      <LineId Id="1410" Count="1" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="844" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="785" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="57" Count="7" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="1455" Count="0" />
+      <LineId Id="1062" Count="0" />
+      <LineId Id="1710" Count="0" />
+      <LineId Id="1458" Count="0" />
+      <LineId Id="1711" Count="0" />
+      <LineId Id="1457" Count="0" />
+      <LineId Id="1537" Count="0" />
+      <LineId Id="1539" Count="0" />
+      <LineId Id="1712" Count="0" />
+      <LineId Id="2053" Count="0" />
+      <LineId Id="1540" Count="1" />
+      <LineId Id="1546" Count="0" />
+      <LineId Id="1538" Count="0" />
+      <LineId Id="1456" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="1551" Count="0" />
+      <LineId Id="1553" Count="0" />
+      <LineId Id="1552" Count="0" />
+      <LineId Id="1559" Count="0" />
+      <LineId Id="1808" Count="0" />
+      <LineId Id="1806" Count="0" />
+      <LineId Id="1817" Count="1" />
+      <LineId Id="1811" Count="5" />
+      <LineId Id="1810" Count="0" />
+      <LineId Id="1820" Count="0" />
+      <LineId Id="1809" Count="0" />
+      <LineId Id="1550" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="1078" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="1613" Count="0" />
+      <LineId Id="1093" Count="0" />
+      <LineId Id="1082" Count="7" />
+      <LineId Id="1080" Count="0" />
+      <LineId Id="1614" Count="0" />
+      <LineId Id="1617" Count="8" />
+      <LineId Id="1616" Count="0" />
+      <LineId Id="1615" Count="0" />
+      <LineId Id="1094" Count="0" />
+      <LineId Id="1077" Count="0" />
+      <LineId Id="1096" Count="0" />
+      <LineId Id="1095" Count="0" />
+      <LineId Id="1076" Count="0" />
+      <LineId Id="1111" Count="1" />
+      <LineId Id="1120" Count="0" />
+      <LineId Id="1402" Count="0" />
+      <LineId Id="1123" Count="0" />
+      <LineId Id="1119" Count="0" />
+      <LineId Id="1125" Count="0" />
+      <LineId Id="1135" Count="0" />
+      <LineId Id="1130" Count="0" />
+      <LineId Id="1126" Count="0" />
+      <LineId Id="1113" Count="0" />
+      <LineId Id="1371" Count="3" />
+      <LineId Id="1496" Count="0" />
+      <LineId Id="1557" Count="0" />
+      <LineId Id="1383" Count="2" />
+      <LineId Id="1388" Count="0" />
+      <LineId Id="1391" Count="4" />
+      <LineId Id="1397" Count="3" />
+      <LineId Id="1229" Count="0" />
+      <LineId Id="1220" Count="1" />
+      <LineId Id="1242" Count="0" />
+      <LineId Id="1217" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="1497" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="1561" Count="5" />
+      <LineId Id="1821" Count="0" />
+      <LineId Id="1560" Count="0" />
+      <LineId Id="1824" Count="0" />
+      <LineId Id="1829" Count="0" />
+      <LineId Id="1955" Count="0" />
+      <LineId Id="2149" Count="1" />
+      <LineId Id="1939" Count="0" />
+      <LineId Id="1941" Count="0" />
+      <LineId Id="1940" Count="0" />
+      <LineId Id="1942" Count="0" />
+      <LineId Id="1944" Count="10" />
+      <LineId Id="1943" Count="0" />
+      <LineId Id="1830" Count="3" />
+      <LineId Id="1823" Count="0" />
+      <LineId Id="1834" Count="1" />
+      <LineId Id="1837" Count="4" />
+      <LineId Id="1836" Count="0" />
+      <LineId Id="1826" Count="2" />
+      <LineId Id="1825" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

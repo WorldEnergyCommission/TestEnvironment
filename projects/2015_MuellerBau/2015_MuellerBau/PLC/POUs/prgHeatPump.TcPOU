@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgHeatPump" Id="{4b08ab89-193c-4965-952f-17b12cf78ea8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHeatPump
+VAR
+	fb_word_to_float	:FB_CV_WORD_TO_REAL_FLOAT;
+	real_ProductionTemperatureOut		: REAL;									//{#lynus.ag#()}
+	real_ProductionTemperatureIn		: REAL;									//{#lynus.ag#()}
+	real_CompresorSuctionPressure		: REAL;									//{#lynus.ag#()}
+	real_CompressorDischargePressure	: REAL;									//{#lynus.ag#()}
+	real_DHWTemperature					: REAL;									//{#lynus.ag#()}
+	real_OutdoorTemperature				: REAL;									//{#lynus.ag#()}
+	real_BrineCircuitPressure			: REAL;									//{#lynus.ag#()}
+	real_ProductionCircuitPressure		: REAL;									//{#lynus.ag#()}
+	real_CompressorStartTempForDHW		: REAL;									//{#lynus.ag#()}
+	real_COP							: REAL;									//{#lynus.ag#()}
+	real_PF								: REAL;									//{#lynus.ag#()}
+	real_CondensationTemperature		: REAL;									//{#lynus.ag#()}
+	real_Superheat						: REAL;									//{#lynus.ag#()}
+	real_ExpansionValvePosition			: REAL;									//{#lynus.ag#()}
+	real_SetpointDHWBUS					: REAL;									//{#lynus.ag#()}
+	real_BUSHeatingDG1Setpoint			: REAL;									//{#lynus.ag#()}
+	real_BUSHeatingSG2Setpoint			: REAL;									//{#lynus.ag#()}
+	real_BUSHeatingSG3Setpoint			: REAL;									//{#lynus.ag#()}
+	real_BUSHeatingSG4Setpoint			: REAL;									//{#lynus.ag#()}
+	real_BUSCoolingDG1Setpoint			: REAL;									//{#lynus.ag#()}
+	real_BUSCoolingSG2Setpoint			: REAL;									//{#lynus.ag#()}
+	real_BUSCoolingSG3Setpoint			: REAL;									//{#lynus.ag#()}
+	real_BUSCoolingSG4Setpoint			: REAL;									//{#lynus.ag#()}
+	real_SupplytemperatureSG2			: REAL;									//{#lynus.ag#()}
+	real_SupplytemperatureSG3			: REAL;									//{#lynus.ag#()}
+	real_SupplytemperatureSG4			: REAL;									//{#lynus.ag#()}
+	real_DHWStarttemperature			: REAL;									//{#lynus.ag#()}
+	real_Evaporationtemperature			: REAL;									//{#lynus.ag#()}
+	real_Heatingbuffertanktemp			: REAL;									//{#lynus.ag#()}
+	real_Coolingbuffertanktemp			: REAL;									//{#lynus.ag#()}
+	real_EER							: REAL;									//{#lynus.ag#()}
+	real_Compresordischargetemp			: REAL;									//{#lynus.ag#()}
+	real_Surplusactivationsetpoint		: REAL;									//{#lynus.ag#()}
+	real_Consumptionlimitsetpoint 		: REAL;									//{#lynus.ag#()}
+	real_CompressorRPM					: REAL;									//{#lynus.ag#()}
+	real_ScrollTemp						: REAL;									//{#lynus.ag#()}
+	real_Invertertemperature			: REAL;									//{#lynus.ag#()}
+	real_Powerconsumption				: REAL;									//{#lynus.ag#()}
+	real_Condensationcapacity			: REAL;									//{#lynus.ag#()}
+
+	real_Heatpumpstate					: REAL;									//{#lynus.ag#()}
+	// 1=Off; 2=On; 3=Emergency; 0=Keyboard
+	real_Workingprogram					: REAL;									//{#lynus.ag#()}
+	// 1=Winter;2=Summer; 3=Mixed; 0=Keyboard
+	real_BUS_DHWDemand					: REAL;									//{#lynus.ag#()}
+	real_BUS_SG2Demand					: REAL;									//{#lynus.ag#()}
+	real_BUS_SG3Demand					: REAL;									//{#lynus.ag#()}
+	real_BUS_SG4Demand					: REAL;									//{#lynus.ag#()}
+//	real_			: REAL;									//{#lynus.ag#()}
+//	real_			: REAL;									//{#lynus.ag#()}
+	
+	bool_HP_Alarm					: BOOL;								//{#lynus.ag#()}
+	bool_HP_BusControlEnable		: BOOL;								//{#lynus.ag#()}
+
+	mTest: BOOL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MODBUS_RTU_EcoForest();
+IF MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[10]<>0 THEN 	
+	real_ProductionTemperatureOut 	:=INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[2]))/10;
+	real_ProductionTemperatureIn 	:=INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[3]))/10;
+	real_CompresorSuctionPressure 	:=INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[5]))/10;
+	real_CompressorDischargePressure:=int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[6]))/10;
+	real_DHWTemperature				:=int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[7]))/10;
+	real_OutdoorTemperature			:=int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[10]))/10;
+	real_BrineCircuitPressure		:=int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[12]))/10;
+	real_ProductionCircuitPressure	:=int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[13]))/10;
+	real_CompressorStartTempForDHW	:=int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[1].wArrayReceiveBuffer[14]))/10;
+END_IF
+IF (MODBUS_RTU_EcoForest.structArrayModbusRTU[2].wArrayReceiveBuffer[7])/10 <> 0 THEN	
+	real_COP						:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[2].wArrayReceiveBuffer[7]))/10;	
+	real_PF							:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[2].wArrayReceiveBuffer[8]))/10;
+END_IF	
+IF  (MODBUS_RTU_EcoForest.structArrayModbusRTU[3].wArrayReceiveBuffer[0])/10 <>0 THEN 	
+	real_CondensationTemperature	:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[3].wArrayReceiveBuffer[0]))/10;	
+END_IF	
+IF (MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[1])/10 <> 0 THEN
+	real_Superheat					:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[0]))/10;	
+	real_ExpansionValvePosition		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[1]))/10;	
+	real_SetpointDHWBUS				:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[2]))/10;	
+	real_BUSHeatingDG1Setpoint		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[3]))/10;	
+	real_BUSHeatingSG2Setpoint		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[4]))/10;	
+	real_BUSHeatingSG3Setpoint		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[5]))/10;	
+	real_BUSHeatingSG4Setpoint		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[6]))/10;	
+	real_BUSCoolingDG1Setpoint		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[7]))/10;	
+	real_BUSCoolingSG2Setpoint		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[8]))/10;	
+	real_BUSCoolingSG3Setpoint		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[9]))/10;	
+	real_BUSCoolingSG4Setpoint		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[4].wArrayReceiveBuffer[10]))/10;	
+END_IF
+
+
+IF (MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[1])/10 <> 0 THEN 
+	real_SupplytemperatureSG2		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[0]))/10;	
+	real_SupplytemperatureSG3		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[1]))/10;	
+	real_SupplytemperatureSG4		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[2]))/10;	
+	real_DHWStarttemperature		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[3]))/10;	
+	real_Evaporationtemperature		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[4]))/10;	
+	real_Heatingbuffertanktemp		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[5]))/10;	
+	real_Coolingbuffertanktemp		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[6]))/10;	
+	real_EER						:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[7]))/10;	
+	real_Compresordischargetemp		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[7].wArrayReceiveBuffer[8]))/10;	
+END_IF
+
+IF (MODBUS_RTU_EcoForest.structArrayModbusRTU[8].wArrayReceiveBuffer[0])/10 <> 0 THEN
+	real_Surplusactivationsetpoint	:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[8].wArrayReceiveBuffer[0]))/10;	
+	real_Consumptionlimitsetpoint	:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[8].wArrayReceiveBuffer[1]))/10;	
+END_IF
+
+IF MODBUS_RTU_EcoForest.structArrayModbusRTU[5].wArrayReceiveBuffer[3] <> 0 THEN		
+	real_CompressorRPM 				:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[5].wArrayReceiveBuffer[0]));
+	real_ScrollTemp					:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[5].wArrayReceiveBuffer[2]));
+	real_Invertertemperature		:= int_to_real(word_to_int(MODBUS_RTU_EcoForest.structArrayModbusRTU[5].wArrayReceiveBuffer[3]));
+END_IF
+
+IF MODBUS_RTU_EcoForest.structArrayModbusRTU[6].wArrayReceiveBuffer[3] <> 0 THEN
+	real_Powerconsumption			:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[6].wArrayReceiveBuffer[2]));		
+	real_Condensationcapacity		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[6].wArrayReceiveBuffer[3]));		
+END_IF
+
+IF MODBUS_RTU_EcoForest.structArrayModbusRTU[9].wArrayReceiveBuffer[8] <> 0 THEN // [8] = Start counter
+	real_Heatpumpstate		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[9].wArrayReceiveBuffer[0]));	
+	real_Workingprogram		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[9].wArrayReceiveBuffer[1]));	
+	real_BUS_DHWDemand		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[9].wArrayReceiveBuffer[2]));
+	real_BUS_SG2Demand		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[9].wArrayReceiveBuffer[4]));	
+	real_BUS_SG3Demand		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[9].wArrayReceiveBuffer[5]));	
+	real_BUS_SG4Demand		:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[9].wArrayReceiveBuffer[6]));	
+END_IF
+	
+
+bool_HP_Alarm 				:= WORD_TO_BOOL(MODBUS_RTU_EcoForest.structArrayModbusRTU[10].wArrayReceiveBuffer[0]);
+bool_HP_BusControlEnable	:= WORD_TO_BOOL(MODBUS_RTU_EcoForest.structArrayModbusRTU[10].wArrayReceiveBuffer[3]);
+
+//			:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[].wArrayReceiveBuffer[]));	
+//			:= INT_TO_REAL(WORD_TO_INT(MODBUS_RTU_EcoForest.structArrayModbusRTU[].wArrayReceiveBuffer[]));	
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgHeatPump">
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="3" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="20" Count="2" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="39" Count="5" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="110" Count="8" />
+      <LineId Id="129" Count="3" />
+      <LineId Id="141" Count="1" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="150" Count="1" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="145" Count="1" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="226" Count="2" />
+      <LineId Id="234" Count="1" />
+      <LineId Id="239" Count="1" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="167" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

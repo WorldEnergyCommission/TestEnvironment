@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgEnphase" Id="{810b2ac9-6175-4d3b-98c1-7a57737a3843}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEnphase
+VAR
+	fbEnphase					: FB_Enphase;
+	fbPVCounter					: FB_EnergyCounter;
+	fbGridCounter				: FB_EnergyCounter;
+	lrPowerPV_W					: LREAL;
+	lrPowerGrid_W				: LREAL;
+	lrPowerPV					: LREAL;						//{#lynus.ag#()}
+	lrPowerGrid					: LREAL;						//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+	lrCounterPV					: LREAL;						//{#lynus.ag#()}
+	lrCounterGrid				: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbEnphase(
+	bStart:= TRUE, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.1.30', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpowerprod => lrPowerPV_W,
+	lrpowercons => lrPowerGrid_W );
+	
+// re-calc Power to kW
+lrPowerPV := lrPowerPV_W / 1000;
+lrPowerGrid := lrPowerGrid_W / 1000;
+
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Consumption > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbGridCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerGrid, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbGridCounter.lrTotalCounterEnergy_Consumption > lrCounterGrid THEN  	
+	lrCounterGrid := fbGridCounter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgEnphase">
+      <LineId Id="15" Count="8" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="72" Count="2" />
+      <LineId Id="40" Count="12" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="57" Count="12" />
+      <LineId Id="55" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

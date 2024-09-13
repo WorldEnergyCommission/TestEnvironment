@@ -1,0 +1,459 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HTTP_Get_Zaptec_ECS_State" Id="{0dd77381-dee0-4749-83ca-6a99322e8ebf}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HTTP_Get_Zaptec_ECS_State
+VAR_INPUT
+	{attribute 'hide'}
+	bSend              	 	: BOOL;													//Send the Request to the Service
+	{attribute 'hide'}
+	sToken					: STRING(1500);											//Bearer Token
+	{attribute 'hide'}
+	sTokenType				: STRING(50);											//Token Type
+	{attribute 'hide'}
+	sChargerID				: STRING(50);											//Charger ID
+	{attribute 'hide'}
+	tTimeOut				: TIME := T#10S;										//Timer for Timeout
+END_VAR
+VAR_IN_OUT
+	{attribute 'hide'}
+    fbClient            	: FB_IotHttpClient;										//Connection to the HTTP Client Function
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bValidResult			: BOOL;													//Valid Result received from Server
+	{attribute 'hide'}
+	bBusy               	: BOOL;													//Function is Busy
+	{attribute 'hide'}
+	bError             		: BOOL;													//Function has a error
+	{attribute 'hide'}
+	stChargerStates			: ST_Zaptec_ECS_State;									//Structure with the States of the charging station
+END_VAR
+VAR
+	fbJsonRead				: FB_JsonDomParser;										//Json Parser
+	jsonInt		  			: SJsonValue;											//Json Value
+	jsonDoc		  			: SJsonValue;											//Json Value
+	jsonStateID		 		: SJsonValue;											//Json Value
+	jsonIteratorArrayStart	: SJsonAIterator;										//Json AIterator
+	jsonIteratorArrayEnd	: SJsonAIterator;										//Json AIterator
+	fbRequest           	: FB_IotHttpRequest;									//Http Request Function
+    fbHeader            	: FB_IotHttpHeaderFieldMap;								//Header Function
+	timTimeout				: TON;													//Timer for Timeout
+ 	RisingEdge         	 	: R_TRIG;												//Internal rising edge
+	diStateID				: DINT;													//State ID
+   	bGetContentResult  	 	: BOOL;													//True when we receive content												
+    nState             	 	: UDINT;												//Statemachine for the http request
+    nReqCount          	 	: UDINT;												//Request Counter
+    nResCount           	: UDINT;												//Receive Counter
+    nValidResCount      	: UDINT;												//Valid Receive Counter
+    nErrCount           	: UDINT;												//Error Counter
+    bOnce               	: BOOL:= TRUE;											//Add the addidional Header Part
+	sBearerToken			: STRING(1600);											//Bearer Token
+	sBearerToken_CP			: STRING(1600);											//Bearer Token
+	sContent            	: STRING(15000);										//Received Content
+	sUri					: STRING;												//URL for the Request
+	sValueAsString			: STRING(255);											//received Value as a String
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 03.11.2021
+//Version : 1.0.0.0
+
+//With this Function its possible to make a State Request to a Charging Station in the Zaptec Account.
+//To use this Function is neccessary to call first a Bearer Token for this Zaptec Account with the Post Request Function
+//This Function deliver follow Information =>
+//Online Stat
+//Enable State
+//Set Current
+//Warnings
+//Operation State
+
+//Prepear Bearer Token
+sTokenType := CONCAT(sTokenType,' ');
+	CONCAT2(ADR(sTokenType),ADR(sToken),ADR(sBearerToken),SIZEOF(sBearerToken));
+
+//Add the Bearer Token to the Header
+IF sBearerToken <> sBearerToken_CP AND nState = 0 THEN bOnce := TRUE; sBearerToken_CP := sBearerToken; END_IF  
+
+IF bOnce THEN
+    fbHeader.AddField('Authorization',sBearerToken, FALSE);
+    bOnce:= FALSE;
+END_IF
+
+//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN nState := 0; bBusy := FALSE; END_IF
+
+//Statemachine to generate the Request
+
+sUri := CONCAT(CONCAT('/api/chargers/',sChargerID),'/state');
+
+RisingEdge(CLK:= bSend);
+	CASE nState OF
+		
+		0://Request
+			IF RisingEdge.Q THEN
+				IF fbRequest.SendRequest(sUri:= sUri, fbClient:= fbClient, 
+										 eRequestType:= ETcIotHttpRequestType.HTTP_GET, 0, 0, fbHeader) THEN
+					nState:= 1;
+					nReqCount:= nReqCount + 1;
+					bBusy:= TRUE;
+					bError:= FALSE;
+					bValidResult := FALSE;
+				END_IF
+			END_IF
+			
+		1://Wait for the Response
+			IF NOT fbRequest.bBusy THEN
+				bError:= TRUE;
+					IF NOT fbRequest.bError THEN
+						bGetContentResult:= fbRequest.GetContent(pContent:= ADR(sContent),
+																 nContentSize:= SIZEOF(sContent), 
+																 bSetNullTermination:= TRUE);
+						IF fbRequest.nStatusCode >= 200 AND fbRequest.nStatusCode < 300 THEN
+							bValidResult := TRUE;
+							nResCount:= nResCount + 1;
+							bError:= FALSE;
+							//Parse Document
+							jsonInt := fbJsonRead.ParseDocument(sContent);
+								IF jsonInt <> 0 THEN
+									IF fbJsonRead.IsArray(jsonInt) THEN
+										jsonIteratorArrayStart := fbJsonRead.ArrayBegin(jsonInt);	
+											jsonIteratorArrayEnd := fbJsonRead.ArrayEnd(jsonInt);
+									ELSE
+										bError := TRUE;
+									END_IF
+								ELSE
+									bError := TRUE;
+								END_IF
+									//Start to Decode the Json File
+									IF jsonInt <> 0 AND jsonIteratorArrayStart <> 0 AND jsonIteratorArrayEnd <> 0 AND NOT bError THEN
+										WHILE jsonIteratorArrayStart <> jsonIteratorArrayEnd DO  
+											jsonDoc := fbJsonRead.GetArrayValue(jsonIteratorArrayStart);
+												//Find Charger ID
+												jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ChargerId');
+													IF jsonStateID <> 0 THEN
+														IF fbJsonRead.IsString(jsonStateID) THEN	
+															stChargerStates.sChargerID := fbJsonRead.GetString(jsonStateID);
+														ELSE
+															bError := TRUE;
+														END_IF
+													END_IF
+												//Find State ID
+												jsonStateID := fbJsonRead.FindMember(jsonDoc, 'StateId');	
+													IF jsonStateID <> 0 THEN
+														IF fbJsonRead.IsInt(jsonStateID) THEN
+															diStateID := fbJsonRead.GetInt(jsonStateID);
+																//Online State
+																IF diStateID = -2 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				IF fbJsonRead.GetString(jsonStateID) = '0' THEN
+																					stChargerStates.bIsOnline := FALSE;
+																				ELSIF fbJsonRead.GetString(jsonStateID) = '1' THEN 
+																					stChargerStates.bIsOnline := TRUE;
+																				END_IF 	
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Actual Current L1
+																IF diStateID = 507 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN  
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rCurrentL1 := STRING_TO_REAL(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Actual Current L2
+																IF diStateID = 508 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');
+																		IF jsonStateID <> 0 THEN 	
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rCurrentL2 := STRING_TO_REAL(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Actual Current L3
+																IF diStateID = 509 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rCurrentL3 := STRING_TO_REAL(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Max Current
+																IF diStateID = 510 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rMaxCurrect := STRING_TO_REAL(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Min Current
+																IF diStateID = 511 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rMinCurrect := STRING_TO_REAL(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Actual Power
+																IF diStateID = 513 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rPower := STRING_TO_REAL(sValueAsString);
+																						stChargerStates.rPower := stChargerStates.rPower / 1000;	
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Energy from actual/last session
+																//This not allwas has the member ValueAsString, so on this point no error
+																IF diStateID = 553 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');
+																		IF jsonStateID <> 0 THEN
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rEnergySession := STRING_TO_REAL(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		END_IF
+																END_IF
+																//Allocated Currect
+																IF diStateID = 708 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.rAllocatedCurrent := STRING_TO_REAL(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Operation State
+																IF diStateID = 710 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.diOperationMode := STRING_TO_DINT(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Enabled State
+																IF diStateID = 711 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				IF fbJsonRead.GetString(jsonStateID) = '0' THEN
+																					stChargerStates.bIsEnabled := FALSE;
+																				ELSIF fbJsonRead.GetString(jsonStateID) = '1' THEN 
+																					stChargerStates.bIsEnabled := TRUE;
+																				END_IF 	
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+																//Warnings
+																IF diStateID = 804 THEN 	
+																	jsonStateID := fbJsonRead.FindMember(jsonDoc, 'ValueAsString');	
+																		IF jsonStateID <> 0 THEN 
+																			IF fbJsonRead.IsString(jsonStateID) THEN
+																				sValueAsString := fbJsonRead.GetString(jsonStateID);
+																					stChargerStates.diWarnings := STRING_TO_DINT(sValueAsString);
+																			ELSE
+																				bError := TRUE;	
+																			END_IF
+																		ELSE
+																			bError := TRUE;
+																		END_IF
+																END_IF
+														ELSE
+															bError := TRUE;	
+														END_IF	
+													END_IF 		
+														//Next Part from Array
+														jsonIteratorArrayStart := fbJsonRead.NextArray(jsonIteratorArrayStart);
+										END_WHILE		
+									END_IF
+						END_IF
+					END_IF
+						nState:= 0;
+						bBusy:= FALSE;
+							IF bError THEN
+								nErrCount:= nErrCount + 1;
+							END_IF
+			END_IF
+			
+	END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HTTP_Get_Zaptec_ECS_State">
+      <LineId Id="307" Count="2" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="648" Count="5" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="420" Count="1" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="114" Count="3" />
+      <LineId Id="885" Count="0" />
+      <LineId Id="887" Count="1" />
+      <LineId Id="886" Count="0" />
+      <LineId Id="313" Count="1" />
+      <LineId Id="427" Count="1" />
+      <LineId Id="118" Count="2" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="121" Count="7" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="131" Count="7" />
+      <LineId Id="440" Count="1" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="435" Count="1" />
+      <LineId Id="442" Count="8" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="453" Count="1" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="654" Count="3" />
+      <LineId Id="659" Count="0" />
+      <LineId Id="661" Count="1" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="658" Count="0" />
+      <LineId Id="464" Count="4" />
+      <LineId Id="491" Count="2" />
+      <LineId Id="776" Count="0" />
+      <LineId Id="494" Count="8" />
+      <LineId Id="778" Count="1" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="477" Count="0" />
+      <LineId Id="724" Count="2" />
+      <LineId Id="780" Count="0" />
+      <LineId Id="727" Count="5" />
+      <LineId Id="782" Count="1" />
+      <LineId Id="781" Count="0" />
+      <LineId Id="723" Count="0" />
+      <LineId Id="734" Count="2" />
+      <LineId Id="784" Count="0" />
+      <LineId Id="737" Count="5" />
+      <LineId Id="785" Count="2" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="744" Count="2" />
+      <LineId Id="788" Count="0" />
+      <LineId Id="747" Count="5" />
+      <LineId Id="789" Count="2" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="664" Count="2" />
+      <LineId Id="792" Count="0" />
+      <LineId Id="667" Count="5" />
+      <LineId Id="793" Count="2" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="674" Count="2" />
+      <LineId Id="796" Count="0" />
+      <LineId Id="677" Count="5" />
+      <LineId Id="797" Count="2" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="504" Count="2" />
+      <LineId Id="800" Count="0" />
+      <LineId Id="507" Count="1" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="763" Count="0" />
+      <LineId Id="513" Count="2" />
+      <LineId Id="801" Count="2" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="765" Count="0" />
+      <LineId Id="808" Count="0" />
+      <LineId Id="766" Count="1" />
+      <LineId Id="774" Count="0" />
+      <LineId Id="768" Count="5" />
+      <LineId Id="775" Count="0" />
+      <LineId Id="764" Count="0" />
+      <LineId Id="818" Count="12" />
+      <LineId Id="817" Count="0" />
+      <LineId Id="519" Count="2" />
+      <LineId Id="804" Count="0" />
+      <LineId Id="522" Count="5" />
+      <LineId Id="805" Count="2" />
+      <LineId Id="518" Count="0" />
+      <LineId Id="529" Count="2" />
+      <LineId Id="809" Count="0" />
+      <LineId Id="532" Count="8" />
+      <LineId Id="810" Count="2" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="543" Count="2" />
+      <LineId Id="813" Count="0" />
+      <LineId Id="546" Count="5" />
+      <LineId Id="814" Count="2" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="472" Count="1" />
+      <LineId Id="461" Count="1" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="153" Count="7" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

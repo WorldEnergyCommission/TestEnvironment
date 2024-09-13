@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComEffIO
+VAR
+	fbCom		: FB_MqttCommunicator;
+	
+	bHBTimmer: BOOL;							//{#lynus.ag#()}
+	bHBSending: BOOL;							//{#lynus.ag#()}
+	bError: BOOL;								//{#lynus.ag#()}
+//	intTimerHB: DINT;							//{#lynus.ag#()}
+	f_Trig_HB: f_trig;
+	stringArray_Last_HB: ARRAY[0..50] OF STRING(30);
+	intCount: INT;
+	time_Temp: TIME;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+//	strAuthkey := 'EIO08031879806',
+	sUserName:= '23350b8f-0dd0-45a1-81c8-ba17e8bb725d', 
+	sUserPassword:= '85980257-5407-453d-9391-9272ac26737f', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionC, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+	
+bHBTimmer 	:= fbCom.fbTimerHB.Q;
+bHBSending 	:= fbCom.bHBSending;
+bError		:= fbCom.bError;
+// intTimerHB 	:= TIME_TO_DINT(fbCom.fbTimerHB.ET);
+
+prg_SystemTime();
+f_Trig_HB(CLK :=  fbCom.bHBSending);
+IF f_Trig_HB.Q THEN
+	IF intCount>50 OR intCount<0 THEN
+		intCount:=0;
+	END_IF
+	stringArray_Last_HB[intCount] := prg_SystemTime.stringSystemTime_ms;
+	intCount := intCount+1;
+END_IF
+
+time_Temp := fbCom.fbTimerHB.ET;
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgComEffIO">
+      <LineId Id="8" Count="1" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="10" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="51" Count="8" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="29" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

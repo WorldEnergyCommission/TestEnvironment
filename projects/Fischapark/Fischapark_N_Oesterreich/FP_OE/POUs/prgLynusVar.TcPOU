@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgLynusVar" Id="{f0d96063-d05f-4608-97c4-1a5b90627e8f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgLynusVar
+VAR
+	fbVarInfo		: FB_VarInfo;
+	fbRW1			: FB_ReadWrite;
+	fbRW2			: FB_ReadWrite;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbVarInfo(
+	bReadInfo:= , 
+	eTMCFile:= eSelectTMCFile.eDontUseTMCFile, 
+	eSavePositionTMCFile:= eSavePositionOnPLC.ePostionC, 
+	udiCounterFoundVariables=> , 
+	bError=> , 
+	bBusy=> , 
+	byProgress=> , 
+	udiErrorCodeOut=> , 
+	eErrorVarInfo_Out=> , 
+	sVarWithError=> );
+	
+fbRW1();
+fbRW2();
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgLynusVar">
+      <LineId Id="9" Count="9" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="F_Scalvalue" Id="{46f4cc08-a82f-40e6-888d-8ba08e380fe8}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION F_Scalvalue : REAL
+VAR_INPUT
+	{attribute 'hide'}
+	x 	: REAL;		//Scale Value
+	{attribute 'hide'}
+	x1	: REAL;		//Point 1, x-coordinate
+	{attribute 'hide'}
+	y1	: REAL;		//Point 1, y-coordinate
+	{attribute 'hide'}
+	x2	: REAL;		//Point 2, x-coordinate
+	{attribute 'hide'}
+	y2	: REAL;		//Point 2, y-coordinate
+END_VAR
+VAR
+	{attribute 'hide'}
+	k, d: REAL;		//Calculation points
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Slope of the straight line
+IF x2 <> x1 THEN
+	k:=	(y2 - y1) / (x2 - x1);
+ELSE
+	//Avoid division by 0
+	k:= 1;
+END_IF
+//Intersection with the Y axis
+d:= y1 - (k * x1);
+
+//Output scaling
+F_Scalvalue:= (k * x) + d;]]></ST>
+    </Implementation>
+    <LineIds Name="F_Scalvalue">
+      <LineId Id="36" Count="10" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

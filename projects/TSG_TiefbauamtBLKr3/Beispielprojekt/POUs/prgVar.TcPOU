@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgVar" Id="{2131ffba-df93-4f0e-b2c8-6272bbbd19d5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgVar
+VAR
+	fbVar			: FB_VarInfo;
+	fbrw1			: FB_ReadWrite;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbVar(
+	bReadInfo:= , 
+	eTMCFile:= eSelectTMCFile.eUseTMCFile, 
+	eSavePositionTMCFile:= eSavePositionOnPLC.ePostionC, 
+	udiCounterFoundVariables=> , 
+	bError=> , 
+	bBusy=> , 
+	byProgress=> , 
+	udiErrorCodeOut=> , 
+	eErrorVarInfo_Out=> , 
+	sVarWithError=> );
+	
+fbrw1();]]></ST>
+    </Implementation>
+    <LineIds Name="prgVar">
+      <LineId Id="8" Count="11" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

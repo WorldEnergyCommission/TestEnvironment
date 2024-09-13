@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_NumberOfDevice" Id="{5a6b7445-7e7f-4b94-bc14-8ae5366a360f}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_NumberOfDevice
+VAR_INPUT
+	{attribute 'hide'}
+	diActualNumberOfDevices			: DINT;							//Actual Number for this Device
+	{attribute 'hide'}
+	diMaxNumberOfDevices			: DINT;							//Max Numbers for this Device
+	{attribute 'hide'}
+	udiCounterOnlineChange			: UDINT;						//Actual Counter for Online change
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bNumberIsCalculatet				: BOOL;							//Number for this Device ic calculatet
+	{attribute 'hide'}
+	bFPNumberIsCalculatet			: BOOL;							//Number for this Device ic calculatet. Only positive Edge
+	{attribute 'hide'}
+	bOnlineChange					: BOOL;							//Its true for 1 cycle when a Online change was success
+	{attribute 'hide'}
+	diNumberForThisDevice			: DINT;							//Number for this Device
+	{attribute 'hide'}
+	diNumberOfTotalDevices			: DINT;							//Total Devices without Limits
+END_VAR
+VAR
+	FPCalculatet					: R_TRIG;						//Internal positive edge
+	udiCounterOnlineChange_CP		: UDINT;						//Counter online changen to compare with the original input variable
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 29.05.2021
+//Version : 1.0.0.0
+
+//With this Function its possible to count a number for a Device in PLC
+//The number reset and renew when we have a online change on the plc
+
+//Calculate the number of Device
+IF NOT bNumberIsCalculatet THEN
+	IF diActualNumberOfDevices < diMaxNumberOfDevices THEN diNumberForThisDevice := diActualNumberOfDevices + 1; bNumberIsCalculatet := TRUE; END_IF 
+		diNumberOfTotalDevices := diActualNumberOfDevices + 1;
+			FPCalculatet.CLK := TRUE;
+				diNumberForThisDevice := LIMIT(0,diNumberForThisDevice,diMaxNumberOfDevices);		
+END_IF 
+	//Reset when we have a online change
+	IF bOnlineChange THEN bOnlineChange := FALSE; END_IF
+		IF udiCounterOnlineChange <> udiCounterOnlineChange_CP THEN
+			bNumberIsCalculatet := FALSE;
+				diNumberForThisDevice := 0;
+					diNumberOfTotalDevices := diNumberForThisDevice;
+						udiCounterOnlineChange_CP := udiCounterOnlineChange;   
+							bOnlineChange := TRUE;	
+								FPCalculatet.CLK := FALSE;			
+		END_IF  
+		
+FPCalculatet(CLK:= , Q=> bFPNumberIsCalculatet);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_NumberOfDevice">
+      <LineId Id="20" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="41" Count="3" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="52" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

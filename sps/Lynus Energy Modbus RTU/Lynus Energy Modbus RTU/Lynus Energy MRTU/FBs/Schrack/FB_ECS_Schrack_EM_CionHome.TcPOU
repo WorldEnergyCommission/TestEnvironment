@@ -1,0 +1,883 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ECS_Schrack_EM_CionHome" Id="{5cd4d295-a4f7-4024-8bb0-3c9a9a2b6b62}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ECS_Schrack_EM_CionHome
+VAR_INPUT PERSISTENT
+	bEnable										: BOOL;																			//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bPowerDataInvers							: BOOL;																			//With True its possible to invert all received power data from the electric meter
+	byElectricFuseLine							: BYTE; 																		//Electric Fuse Line on wich the ECS is connected => 1 2 3 (If 0 then this charging station is not connected to a Electric Fuse Line)
+	byMBAdress									: BYTE;																			//The Modbus Adress from the Slave
+	diNrOfMBRTUMasterLine_IN					: DINT;																			//Number of the RTU Master Function on what this function can send or write data
+	diNrOfEMS_IN								: DINT;																			//Number of EMS what control this Device.
+	diNrOfEM_IN_CS								: DINT;																			//Number of the electric meter for incoming power data. (Power Data for this Device)
+	stSetupECS									: ST_Setup_ECS;																	//{#lynus.ag#()} //Setup charging station
+END_VAR
+VAR_OUTPUT
+	stDataECS									: ST_ECS_Output;																//{#lynus.ag#()} //Electric charging station output data
+	eSchrackErrors								: E_Schrack_ECS_Error;															//Error List of the Schrack charging station
+	diNrOfECS_OUT								: DINT;																			//Active Number from the Electric charging Function for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbCS										: FB_ElectricChargingStation;													//Function block for electric charging station
+	{attribute 'hide'}
+	fbNumberDevice								: FB_NumberOfDevice;															//Function block to calcualte the number of the Device
+	fbDIExternalLock							: FB_XL1XXX_DI;																	//Digital Input from external loock signal
+	{attribute 'hide'}
+	fbCVChargingTime							: FB_CV_WORD_TO_DWORD;															//Convert the 2 word in a real type
+	{attribute 'hide'}
+	timDelay									: TON;																			//Timer for Delay between Requests
+	{attribute 'hide'}
+	timTimeout									: TON;																			//Timer for Timeout
+	{attribute 'hide'}
+	timDissableFunctions						: TON;																			//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL						: TON;																			//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	timResetCS									: TOF;																			//Timer to send every 60 minutes a Reset command
+	{attribute 'hide'}
+	FPErrorMaster								: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPEnable									: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPChargingReleaseInvalid					: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPStateU									: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPResetCS									: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FNError1CS									: F_TRIG;																		//Internal negative Edge
+	{attribute 'hide'}
+	FNError2CS									: F_TRIG;																		//Internal negative Edge
+	{attribute 'hide'}
+	FNError3CS									: F_TRIG;																		//Internal negative Edge
+	{attribute 'hide'}
+	arrPD										: ARRAY[1..18] OF FB_PersistentData_Number;										//Function to save persistent data
+	{attribute 'hide'}
+	arrErrorECS									: ARRAY[1..3] OF BOOL;															//Error from the ECS
+	{attribute 'hide'}
+	arrDefaultModbusAdress						: ARRAY[1..247] OF BYTE;														//Default Modbuss Adress Array to fill in in the GVL Array after a Online change
+	{attribute 'hide'}
+	arrDefaultReadWrite							: ARRAY[1..Constants_Bussystems.wQuantityOfRegistersMBRTUMaster] OF WORD;		//Default Read/Write Array to fill in in the GVL Array after a Online change
+	{attribute 'hide'}
+	arrCounterForGVL							: ARRAY[1..2] OF DINT;															//Counter to clean old data on GVL
+	{attribute 'hide'}
+	bChargeCableIsConnected						: BOOL;																			//Shows if the Charge cabel i sconnected to the ECS and the Car
+	{attribute 'hide'}
+	bAdressIsSet								: BOOL;																			//Its true when the new Modbus Adress from the Slave is set in the Array on the GVL for the Master	
+	{attribute 'hide'}
+	bChargingReleaseInavlid						: BOOL;																			//State of the charging release invalid	
+	{attribute 'hide'}
+	bResetCS									: BOOL;																			//Reset the charging station after a internal Charging station error or Charging Station Stae 16#55
+	{attribute 'hide'}
+	byWaitInStep								: BYTE;																			//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	byNumberOfSameMBAdress						: BYTE;																			//Number of Same Modbus adress on 1 Modbus Master
+	{attribute 'hide'}
+	byMBAdress_Old								: BYTE;																			//Old Modbus Adress to compare with the new Modbus Adress to start the state machine to set in the Array on the GVL
+	{attribute 'hide'}
+	byMBAdress_CP								: BYTE;																			//Variable to compare the Modbus Adress in the State Machine. When the Adress change when the state machine is active then the state machine starts from new with the new adress 
+	{attribute 'hide'}
+	byLPSlaveAdress								: BYTE;																			//Loop for the state machine to set the adress from the Slave in the array on the GVL
+	{attribute 'hide'}
+	iStateGVLData								: INT;																			//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	iStateModbusRead							: INT;																			//State machine for read out Data over Modbus RTU
+	{attribute 'hide'}
+	iStateModbusWrite							: INT;																			//State machine for write Data over Modbus RTU
+	{attribute 'hide'}
+	iStateModbusError							: INT;																			//State machine for error out Data over Modbus RTU	
+	{attribute 'hide'}
+	iStateModbus_CP								: INT;																			//Variable to compare the state machine variable to set or reset the timeout timer
+	{attribute 'hide'}
+	wCPStateECS									: WORD;																			//CP State from th CS
+	{attribute 'hide'}
+	wLPCleanBuffer								: WORD;																			//Loop to clear the send and write Buffer on the GVL
+	{attribute 'hide'}
+	diNrOfMBRTUMasterLine_IN_Old				: DINT;																			//Old Modbus RTU Line to compare with the new Modbus RTU Line to start the state machine to set in the Array on the GVL
+	{attribute 'hide'}
+	diNrOfMBRTUMasterLine_IN_CP					: DINT;																			//Variable to compare the Modbus RTU Line in the State Machine. When the Modbus RTU Line change when the state machine is active then the state machine starts from new with the new Modbus RTU Line
+	{attribute 'hide'}
+	diNumberOfActiveBatterys					: DINT;																			//Number of active batterys
+	{attribute 'hide'}
+	diNumberOfBatteryInverterInEPO				: DINT;																			//Number of battery inverters that work in Emergency Power operation 
+	{attribute 'hide'}
+	diLPForGVL									: DINT;																			//Loop to clean old data on GVL
+	{attribute 'hide'}
+	dwSumSOC									: DWORD;																		//Sum of the SOC from all batterys
+	{attribute 'hide'}	
+	liLPBatteryData								: LINT;																			//Loop to check some data from batterys
+	{attribute 'hide'}
+	liLPInEPO									: LINT;																			//Loop to check if 1 or more battery inverters build a island grid
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	byMBAdress_ForChange						: BYTE;																			//When we have 2 same Adresses on 1 Modbus RTU Line the byMBAdress_Int is set to 0. After a other change on the Input Adress Field so we can start to set the Adress in the Array in the GVL
+	byMBAdress_Int								: BYTE;																			//Internal Adress what is using for the Read and Write functions
+	diNrOfEMS_IN_CP								: DINT;																			//Number of EMS what control this Device to compare with the original
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 12.07.2021
+//Version : 1.0.0.0
+
+//With this Funcition its possible to communicate with a Schrack Electric charging station from the Cion Home and Semipublic Series over Modbus RTU.
+//Runs with this ECS : EMCION11C-
+//EMCION22C-
+//EMCION22P-
+//EMCION11CR
+//EMCION22CR
+//EMCION22PR
+//Its possible to controll the charging station over the charg current
+//This function set the minimal charge current from the charging station to 6 Ampere 
+//When the Function send 0 Ampere or is switched of, then the charging station is blocked and its not possible to charge
+//Versions that are supported : Date : 13.04.2021
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+
+byMBAdress := LIMIT(0,byMBAdress,247);
+	diNrOfMBRTUMasterLine_IN := LIMIT(0,diNrOfMBRTUMasterLine_IN,Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx);	
+		diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+			diNrOfEM_IN_CS := LIMIT(0,diNrOfEM_IN_CS,Constants_Energy.diMaxNumberOfElectricMeters);
+				byElectricFuseLine := LIMIT(0,byElectricFuseLine,30);
+
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+//Energy Session Input data
+fbCS.bCalculateEnergySession := FALSE;
+fbCS.arrSocketPowerECS[1] := 0;
+fbCS.arrSocketPowerECS[2] := 0;
+fbCS.arrSocketPowerECS[3] := 0;
+fbCS.arrSocketPowerECS[4] := 0;
+fbCS.arrSocketEnergySession[1] := 0;
+fbCS.arrSocketEnergySession[2] := 0;
+fbCS.arrSocketEnergySession[3] := 0;
+fbCS.arrSocketEnergySession[4] := 0;
+
+IF NOT bPowerDataInvers THEN
+	fbCS.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Production * 1000;
+	fbCS.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Production * 1000;
+	fbCS.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+	fbCS.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+	fbCS.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Production * 1000;
+	fbCS.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Consumption * 1000;
+		fbCS.lrTotalPowerECS := (Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrPower * 1000) * - 1;
+ELSE
+	fbCS.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+	fbCS.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Consumption * 1000;
+	fbCS.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Production * 1000;
+	fbCS.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Production * 1000;
+	fbCS.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Consumption * 1000;
+	fbCS.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Production * 1000;
+		fbCS.lrTotalPowerECS := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrPower * 1000;
+END_IF			
+
+(*-------------------------------------------------------------Calcualte the number of ECS---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricChargingStations, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfECS_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := diNrOfECS_OUT;	
+		iStateGVLData := 1;	
+			byMBAdress_Old := 0;
+				diNrOfMBRTUMasterLine_IN_Old := 0;
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+			
+(*--------------------------------------------------------------------------------------------Error from the Master Function-------------------------------------------------------------------------------------*)
+
+FPErrorMaster(CLK:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 2 AND bEnable, Q=> );
+
+(*--------------------------------------------------------------------------------------------Modbus Adress Slave Function-------------------------------------------------------------------------------------*)
+
+FPEnable(CLK:= bEnable, Q=> );
+
+//When the Adress is changed then set the new Adress in the Array
+//When we have the Adress more then 1 time in 1 line then set to 0 and wait for the next change on the Input Variable for the Modbus Adress
+IF byMBAdress <> byMBAdress_ForChange AND bEnable THEN byMBAdress_ForChange := byMBAdress; byNumberOfSameMBAdress := 0; END_IF     
+	IF byMBAdress <> byMBAdress_Int AND byNumberOfSameMBAdress = 0 AND bEnable THEN byMBAdress_Int := byMBAdress; END_IF 
+		IF NOT bEnable THEN byMBAdress_Int := 0; END_IF 
+		
+IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bNoNewMBusAdress AND iStateGVLData = 0 AND (MEMCMP(ADR(byMBAdress_Int),ADR(byMBAdress_Old),SIZEOF(byMBAdress_Old)) <> 0 OR MEMCMP(ADR(diNrOfMBRTUMasterLine_IN),ADR(diNrOfMBRTUMasterLine_IN_Old),SIZEOF(diNrOfMBRTUMasterLine_IN_Old)) <> 0) THEN
+	//Check if we have more then 1 time this Adress in 1 Line
+	byNumberOfSameMBAdress := 0;	
+		FOR byLPSlaveAdress := 1 TO 247 BY 1 DO
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] = byMBAdress_Int AND 
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] <> 0 THEN 
+						byNumberOfSameMBAdress := byNumberOfSameMBAdress + 1; 
+				END_IF 
+		END_FOR
+			IF byNumberOfSameMBAdress > 0 THEN 
+				byMBAdress_Int := 0;
+			END_IF	
+				bAdressIsSet := FALSE; 
+					//Delte the old Adress from the old Array
+					FOR byLPSlaveAdress := 1 TO 247 BY 1 DO
+						IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN_Old].arrAllModbusSlaveAdresses[byLPSlaveAdress] = byMBAdress_Old THEN
+							Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN_Old].arrAllModbusSlaveAdresses[byLPSlaveAdress] := 0;
+						END_IF	 
+					END_FOR
+						//Set the New Adress in Array
+						byMBAdress_Old := byMBAdress_Int;
+							diNrOfMBRTUMasterLine_IN_Old := diNrOfMBRTUMasterLine_IN;
+								FOR byLPSlaveAdress := 1 TO 247 BY 1 DO
+									IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] = 0 AND NOT bAdressIsSet THEN 
+										Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] := byMBAdress_Int; 
+											bAdressIsSet := TRUE;
+									END_IF 
+								END_FOR
+END_IF	
+
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timDelay(IN:= , PT:= T#200MS, Q=> , ET=> );
+
+//Timer for Timeout in Statemachine
+IF (iStateModbusRead > 0 AND iStateModbusRead <= 6 AND iStateModbusRead = iStateModbus_CP) OR
+		(iStateModbusWrite > 0 AND iStateModbusWrite <= 3 AND iStateModbusWrite = iStateModbus_CP) THEN
+			timTimeout.IN := TRUE;
+ELSE	
+			timTimeout.IN := FALSE;
+END_IF 
+	//Timeout Timer is dissabled when the slave wait that his adress is in porgress on the RTU Master, or is dissabled or the Terminal is not configured
+	IF (iStateModbusRead = 0 AND iStateModbusWrite = 0) OR NOT bEnable OR NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured THEN timTimeout.IN := FALSE; END_IF
+		timTimeout(IN:= , PT:= T#30S, Q=> , ET=> );
+
+//Not Enabled
+IF NOT bEnable OR NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured THEN iStateModbusRead := 0; iStateModbusError := 0; iStateModbusWrite := 0; END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step (Wait that the Slave is enabled and the Terminal is configured)
+		
+		IF bEnable AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured THEN
+			//Start Timer for start the Statemachine
+			IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+		
+			//Reset the Read and Write Buffer on the GVL before starting
+			IF byMBAdress_Int = Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byActualMBAdressInProgrss THEN
+				FOR wLPCleanBuffer := 1 TO Constants_Bussystems.wQuantityOfRegistersMBRTUMaster BY 1 DO
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPCleanBuffer] := 0;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[wLPCleanBuffer] := 0;
+				END_FOR
+			END_IF
+			
+			IF timDelay.Q AND byMBAdress_Int = Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byActualMBAdressInProgrss AND NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bReadWriteIsDone THEN
+				timDelay.IN := FALSE;
+					iStateModbusRead := 1;
+						diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN;
+							byMBAdress_CP := byMBAdress_Int; 	
+								Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+									bResetCS := FALSE;
+			END_IF
+		END_IF
+	
+	1://Read Out the first States from the charging station (Register 121)
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 1;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 121;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1].0 THEN bChargeCableIsConnected := TRUE; ELSE bChargeCableIsConnected := TRUE; END_IF 
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1].6 THEN eSchrackErrors := E_Schrack_ECS_Error.eGroupError; arrErrorECS[1] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1].7 THEN eSchrackErrors := E_Schrack_ECS_Error.eFILSError; arrErrorECS[1] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1].8 THEN eSchrackErrors := E_Schrack_ECS_Error.eChargingCableError; arrErrorECS[1] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1].9 THEN eSchrackErrors := E_Schrack_ECS_Error.eChargingCableRejectedError; arrErrorECS[1] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1].10 THEN eSchrackErrors := E_Schrack_ECS_Error.eLoadContactorError; arrErrorECS[1] := TRUE;
+			ELSE 
+				arrErrorECS[1] := FALSE;
+			END_IF
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 2;		
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF 
+			
+	2://Read Out the CP State from the charging station (Register 139)
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 1;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 139;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			wCPStateECS := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1]; 	
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 3;
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+			
+	3://Read Out the next Error Registers and the charging time (Register 146 - 152)
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 7;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 146;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			//Communication Error (Reg 146)
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1] = 1 THEN eSchrackErrors := E_Schrack_ECS_Error.eCommunicationErrorToTheCar; arrErrorECS[2] := TRUE;
+			//Configuration Error (Reg 147)
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[2] = 1 THEN eSchrackErrors := E_Schrack_ECS_Error.eConfigurationErrorOnLP; arrErrorECS[2] := TRUE;
+			//Other Errors (Reg 150)
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].0 THEN eSchrackErrors := E_Schrack_ECS_Error.eFILSError; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].1 THEN eSchrackErrors := E_Schrack_ECS_Error.eChargingCableError; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].2 THEN eSchrackErrors := E_Schrack_ECS_Error.eChargingCableRejectedError; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].3 THEN eSchrackErrors := E_Schrack_ECS_Error.eRCMUError; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].4 THEN eSchrackErrors := E_Schrack_ECS_Error.eRCMUErrorCurrentDetected; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].5 THEN eSchrackErrors := E_Schrack_ECS_Error.eLockingError; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].6 THEN eSchrackErrors := E_Schrack_ECS_Error.eUndervoltageError; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].7 THEN eSchrackErrors := E_Schrack_ECS_Error.eOvervoltageError; arrErrorECS[2] := TRUE;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5].8 THEN eSchrackErrors := E_Schrack_ECS_Error.eLoadContactorError; arrErrorECS[2] := TRUE;
+			ELSE
+				arrErrorECS[2] := FALSE;
+			END_IF
+			//Charging Time (Reg 151-152)
+			fbCVChargingTime(wInputValue_1:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[6], wInputValue_2:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[7], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );
+				fbCS.arrSocketChargingTimeInput[1] := DWORD_TO_REAL(fbCVChargingTime.dwOutputValue) / 60000; 
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 4;
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+			
+	4://Read Out the Controller State (Register 306)
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 1;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 306;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1] = 1 THEN eSchrackErrors := E_Schrack_ECS_Error.eControllerError; arrErrorECS[3] := TRUE;
+			ELSE
+				arrErrorECS[3] := FALSE;
+			END_IF
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 5;
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+	
+	5://Read Out the state of the charging release invalid (Register 120)
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 1;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 120;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1] = 1 THEN 
+				bChargingReleaseInavlid := TRUE;
+			ELSE
+				bChargingReleaseInavlid := FALSE;
+			END_IF
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 6;
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+		
+	6://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+		
+			iStateModbusWrite := 1;
+				//-1 because 0 is the Init Step for Read on Modbus RTU Slave State machine
+				iStateModbusRead := - 1;
+				
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+	
+END_CASE
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+
+IF NOT arrErrorECS[1] AND NOT arrErrorECS[2] AND NOT arrErrorECS[3] THEN eSchrackErrors := E_Schrack_ECS_Error.eNoError; END_IF
+
+IF timDissableFunctions.Q THEN fbCS.bWarning := TRUE; fbCS.iWarningCode := 0; ELSE fbCS.bWarning := FALSE; END_IF   
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS > Constants_Energy.diMaxNumberOfElectricChargingStations OR Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 2 OR eSchrackErrors <> E_Schrack_ECS_Error.eNoError OR timTimeout.Q THEN 
+		fbCS.bError := TRUE;
+	ELSE 
+		fbCS.bError := FALSE;
+			fbCS.iErrorCode := 0;
+	END_IF
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS > Constants_Energy.diMaxNumberOfElectricChargingStations THEN fbCS.iErrorCode := 1; END_IF
+	IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 2 OR eSchrackErrors <> E_Schrack_ECS_Error.eNoError OR timTimeout.Q THEN fbCS.iErrorCode := 0; END_IF   
+
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+
+//Calcualte the total SOC if we have more then 1 battery in our system
+diNumberOfActiveBatterys := 0;
+	dwSumSOC := 0;
+		FOR liLPBatteryData := 1 TO Constants_Energy.diMaxNumberOfBatterys BY 1 DO
+			IF Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].bEnabled THEN diNumberOfActiveBatterys := diNumberOfActiveBatterys + 1; END_IF
+				dwSumSOC := dwSumSOC + Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].dwSOC;
+		END_FOR
+	
+IF diNumberOfActiveBatterys > 0 THEN
+	fbCS.dwBatterySOC := DINT_TO_DWORD(DWORD_TO_DINT(dwSumSOC) / diNumberOfActiveBatterys);
+ELSE
+	fbCS.dwBatterySOC := 100;	//When we have no battery in the ems system
+END_IF
+
+//Check if one or more Batterysystems or batteryinverter make island mode
+diNumberOfBatteryInverterInEPO := 0;
+	FOR liLPInEPO := 1 TO Constants_Energy.diMaxNumberOfBatteryInverters BY 1 DO
+		IF Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,liLPInEPO].bWorkOnIslandMode THEN fbCS.bEPOIsActive := TRUE; diNumberOfBatteryInverterInEPO := diNumberOfBatteryInverterInEPO + 1; END_IF
+	END_FOR 
+		IF diNumberOfBatteryInverterInEPO <= 0 THEN fbCS.bEPOIsActive := FALSE; END_IF
+
+//Digital input for external lock signal
+fbDIExternalLock(bInvers:= FALSE, bSignal=> );
+
+//Car connected to the ECS
+IF (bChargeCableIsConnected AND (wCPStateECS = 16#42 OR wCPStateECS = 16#43 OR wCPStateECS = 16#44 OR wCPStateECS = 16#45 OR wCPStateECS = 16#46)) THEN fbCS.bCarConnected := TRUE; ELSE fbCS.bCarConnected := FALSE; END_IF 
+
+//Functionblock ECS
+
+//Charging Time, Mode 3 and SOC Car
+fbCS.arrSocketChargingTimeInput[2] := 0;
+fbCS.arrSocketChargingTimeInput[3] := 0;
+fbCS.arrSocketChargingTimeInput[4] := 0;
+	fbCS.arrSocketMode3StateECS[1] := '';
+	fbCS.arrSocketMode3StateECS[2] := '';
+	fbCS.arrSocketMode3StateECS[3] := '';
+	fbCS.arrSocketMode3StateECS[4] := '';
+		fbCS.arrSOCCar[1] := 0;
+		fbCS.arrSOCCar[2] := 0;
+		fbCS.arrSOCCar[3] := 0;
+		fbCS.arrSOCCar[4] := 0;
+
+fbCS(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured, 
+	bError:= ,
+	bWarning := ,
+	bEPOIsActive:= , 
+	bExternalLock:= fbDIExternalLock.bSignal, 
+	bCarConnected:= , 
+	bWriteWithDelay:= TRUE,
+	bCalculateEnergySession:= , 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	arrSocketChargingTimeInput:= ,
+	arrSOCCar:= , 
+	dwBatterySOC:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrTotalPowerECS:= , 
+	arrSocketEnergySession:= ,
+	rTargetPower:= Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].rTargetPowerEMS, 
+	rSupplyVoltage:= 692, 
+	rMinCurrent:= 6, 
+	tTimDelayOutput:= T#5S,
+	tDelayError:= T#60S, 
+	arrSocketMode3StateECS:= ,
+	arrSocketPowerECS:= ,
+	stSetupECS:= stSetupECS, 
+	stDataECSOut=> , 
+	stDataECSOutDelay=> stDataECS);
+
+//Reset from the charging station after a Error or Charging Station State U = 16#55
+FPStateU(CLK:= wCPStateECS = 16#55, Q=> );
+	FNError1CS(CLK:= arrErrorECS[1], Q=> );
+		FNError2CS(CLK:= arrErrorECS[2], Q=> );
+			FNError3CS(CLK:= arrErrorECS[3], Q=> );
+	
+IF ((FPStateU.Q OR FNError1CS.Q OR FNError2CS.Q OR FNError3CS.Q) AND NOT timResetCS.Q) THEN timResetCS.IN := TRUE; ELSE timResetCS.IN := FALSE; END_IF 
+
+timResetCS(IN:= , PT:= T#60M, Q=> , ET=> );
+	FPResetCS(CLK:= timResetCS.Q, Q=> );
+		IF FPResetCS.Q THEN bResetCS := TRUE; END_IF	
+		
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusWrite OF	
+
+	1://Set the minimal charging current to 6 Ampere (Reg 507)
+		iStateModbus_CP := iStateModbusWrite;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_WriteRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 1;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 507;
+
+		//Write the Data to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[1] := 6;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusWrite := 2;
+		END_IF	
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+	
+	2://Reset the CS (Reg 1000)
+		iStateModbus_CP := iStateModbusWrite;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_WriteRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 1;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 1000;
+
+		//Write the Data to the Master
+		IF bResetCS THEN
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[1] := 1234;
+		ELSE
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[1] := 0;
+		END_IF
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusWrite := 3;
+		END_IF
+		
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+		
+	3://Enable or dissable the charging station and set the charging current(Reg 100 - 101)
+		iStateModbus_CP := iStateModbusWrite;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_WriteRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 2;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 100;
+
+		FPChargingReleaseInvalid(CLK:= bChargingReleaseInavlid, Q=> );		
+				
+		//Write the Data to the Master
+		//Enable and disable
+		IF fbCS.stDataECSOut.bOutput THEN
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[1] := 1;
+		END_IF
+			IF NOT fbCS.stDataECSOut.bOutput OR FPChargingReleaseInvalid.Q THEN  
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[1] := 0;
+			END_IF
+		//Charging current
+		IF fbCS.stDataECSOut.rTargetChargeCurrent >= 6 AND fbCS.stDataECSOut.rTargetChargeCurrent <= 65535 THEN 
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[2] := REAL_TO_WORD(fbCS.stDataECSOut.rTargetChargeCurrent);
+		END_IF
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+			
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bReadWriteIsDone := TRUE;
+							iStateModbusWrite := 0;
+								iStateModbusRead := 0;
+		END_IF	
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+		
+END_CASE	
+	
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+			timDelay.IN := FALSE;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+					//Restart from new with the Read out part after a Error
+					iStateModbusRead := 0;	
+						iStateModbusError := 0;
+							iStateModbusWrite := 0;
+						
+END_CASE
+
+(*------------------------------------------------------------------------------------------Device Type for MB RTU Master---------------------------------------------------------------------------------------------*)	
+
+//Send the Device Type to the Master that he can configure the Termial with the right credentials
+Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUDeviceType := E_MBRTUMaster_DeviceType.eSchrack_ECS_CIONHOME_SEMIPUBLIC;
+
+(*-----------------------------------------------------------Handle data to Global structure for electric charging stations and Modbus RTU Communication-----------------------------------------------------------------*)
+
+//Delte al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN iStateGVLData := 10; END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			arrCounterForGVL[1] := 1; arrCounterForGVL[2] := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO 
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].bIsControllable := FALSE;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].byErrorWarning := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].byPriority := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].lrPower := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].lrPowerConsumption := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].lrPowerProduction := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].rMaxPower := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].byElectricFuseLine := 0;
+												//Set also the target value from ems back here to 0 and not in EMS function because EMS is in Standy when we have a online change (Problem when we delete a ems function and make a online change)
+												Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,arrCounterForGVL[1]].rTargetPowerEMS := 0;	
+		END_FOR
+		
+			//Reset this Part here and not in the RTU Master because on top we write then the New Adress in the List. So in the Master we delete only the GVL after a online change what set the Master by himself
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].arrAllModbusSlaveAdresses := arrDefaultModbusAdress;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].arrReadOutData := arrDefaultReadWrite;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].arrWriteOutData := arrDefaultReadWrite;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].bSlaveStartReadOrWrite := FALSE;
+							Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].eMBRTUDeviceType := E_MBRTUMaster_DeviceType.eNoModbusRTUDevice;
+								Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_NoMode;
+									Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].wModbusRegister := 0;
+										Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].wNumberOfRegister := 0;			
+		
+			//Counter for MB RTU Master
+			arrCounterForGVL[2] := arrCounterForGVL[2] + 1;
+				arrCounterForGVL[2] := LIMIT(0,arrCounterForGVL[2],Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx);
+			//Counter for ECS
+			arrCounterForGVL[1] := arrCounterForGVL[1] + 1;
+				arrCounterForGVL[1] := LIMIT(0,arrCounterForGVL[1],Constants_Energy.diMaxNumberOfElectricChargingStations);
+					//Back to the init step
+					IF arrCounterForGVL[1] >= Constants_Energy.diMaxNumberOfElectricChargingStations AND arrCounterForGVL[2] >= Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx THEN iStateGVLData := 0; END_IF
+
+	10://Clear old Data on GVL 		
+		Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].bIsControllable := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byErrorWarning := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byPriority := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPower := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPowerConsumption := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPowerProduction := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].rMaxPower := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byElectricFuseLine := 0;
+									
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+			//Back to the init step
+			iStateGVLData := 0;
+
+END_CASE 	 
+
+IF diNrOfECS_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].bEnabled := fbCS.stDataECSOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].bIsControllable := TRUE;
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byErrorWarning := fbCS.stDataECSOut.byErrorWarning;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byPriority := fbCS.stDataECSOut.byPriority;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPower := fbCS.stDataECSOut.lrTotalPower;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPowerConsumption := fbCS.stDataECSOut.lrTotalPowerConsumption;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPowerProduction := fbCS.stDataECSOut.lrTotalPowerProduction;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].rMaxPower := fbCS.stDataECSOut.rMaxPower;	
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byElectricFuseLine := byElectricFuseLine;
+END_IF 
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_CS), bEventBasedActive=> );
+arrPD[5](lrValue:= BOOL_TO_LREAL(stSetupECS.bManualyOn), bEventBasedActive=> );
+arrPD[6](lrValue:= BOOL_TO_LREAL(stSetupECS.bOnEmergPowerOff), bEventBasedActive=> );
+arrPD[7](lrValue:= BYTE_TO_LREAL(stSetupECS.byCSMinPower), bEventBasedActive=> );
+arrPD[8](lrValue:= BYTE_TO_LREAL(stSetupECS.byDisableSOC), bEventBasedActive=> );
+arrPD[9](lrValue:= BYTE_TO_LREAL(stSetupECS.byEnableSOC), bEventBasedActive=> );
+arrPD[10](lrValue:= BYTE_TO_LREAL(stSetupECS.byManualyTargetPower), bEventBasedActive=> );
+arrPD[11](lrValue:= BYTE_TO_LREAL(stSetupECS.byPriority), bEventBasedActive=> );
+arrPD[12](lrValue:= REAL_TO_LREAL(stSetupECS.rMaxPower), bEventBasedActive=> );
+arrPD[13](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );
+arrPD[14](lrValue:= BYTE_TO_LREAL(byMBAdress), bEventBasedActive=> );
+arrPD[15](lrValue:= DINT_TO_LREAL(diNrOfMBRTUMasterLine_IN), bEventBasedActive=> );
+arrPD[16](lrValue:= BYTE_TO_LREAL(byMBAdress_ForChange), bEventBasedActive=> );
+arrPD[17](lrValue:= BYTE_TO_LREAL(byMBAdress_Int), bEventBasedActive=> );
+arrPD[18](lrValue:= BYTE_TO_LREAL(byElectricFuseLine), bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ECS_Schrack_EM_CionHome">
+      <LineId Id="2333" Count="26" />
+      <LineId Id="3369" Count="0" />
+      <LineId Id="2360" Count="1" />
+      <LineId Id="3601" Count="0" />
+      <LineId Id="3603" Count="8" />
+      <LineId Id="3602" Count="0" />
+      <LineId Id="2362" Count="394" />
+      <LineId Id="3612" Count="0" />
+      <LineId Id="2758" Count="0" />
+      <LineId Id="3615" Count="1" />
+      <LineId Id="3619" Count="3" />
+      <LineId Id="3624" Count="2" />
+      <LineId Id="3623" Count="0" />
+      <LineId Id="3627" Count="2" />
+      <LineId Id="3614" Count="0" />
+      <LineId Id="2759" Count="7" />
+      <LineId Id="3484" Count="0" />
+      <LineId Id="2767" Count="2" />
+      <LineId Id="3617" Count="0" />
+      <LineId Id="2771" Count="7" />
+      <LineId Id="3485" Count="0" />
+      <LineId Id="2779" Count="3" />
+      <LineId Id="3137" Count="0" />
+      <LineId Id="3486" Count="0" />
+      <LineId Id="3618" Count="0" />
+      <LineId Id="2783" Count="170" />
+      <LineId Id="3252" Count="0" />
+      <LineId Id="2954" Count="31" />
+      <LineId Id="3253" Count="0" />
+      <LineId Id="2986" Count="15" />
+      <LineId Id="3254" Count="0" />
+      <LineId Id="3002" Count="21" />
+      <LineId Id="1079" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

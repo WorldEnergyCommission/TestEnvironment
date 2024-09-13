@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgHouse" Id="{32a50f47-0b6d-4649-94c0-50dfea60d5bd}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHouse
+VAR
+	lrPowerHouse		: LREAL;						//{#lynus.ag#()}
+	bEnableHouse		: BOOL;					//{#lynus.ag#()}
+	bHouseEnabled		: BOOL;;					//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[lrPowerHouse			:=	prg_ADS.struct_received.lrPowerHouse			;
+bEnableHouse			:=	prg_ADS.struct_received.bEnableHouse			;
+bHouseEnabled			:=	prg_ADS.struct_received.bHouseEnabled			;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgHouse">
+      <LineId Id="10" Count="3" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="ST_Zaptec_ECS_State" Id="{426bc0f3-0881-4d62-bb3d-51190ca6080e}">
+    <Declaration><![CDATA[TYPE ST_Zaptec_ECS_State :
+STRUCT
+	bIsOnline				: BOOL;			//Shows if the Charger is Online
+	bIsEnabled				: BOOL;			//Shows if the Charger is Enabled	
+	rAllocatedCurrent		: REAL;			//Shows the Allocated Current in A (Only adjustable if you set via the installation API)
+	rMaxCurrect				: REAL;			//Max Charge Current from Charging Station in A (Only adjustable if you set via the charger API)
+	rMinCurrect				: REAL;			//Min Charge Current from Charging Station in A (Only adjustable if you set via the charger API)
+	rCurrentL1				: REAL;			//Current in A from L1
+	rCurrentL2				: REAL;			//Current in A from L2
+	rCurrentL3				: REAL;			//Current in A from L3
+	rPower					: REAL;			//Power in kW
+	rEnergySession			: REAL;			//Energy in kWh from the current/last session
+	diOperationMode			: DINT;			//Operation Mode form the Charger
+	diWarnings				: DINT;			//Warnings from the Charger
+	sChargerID				: STRING(50);	//Charger ID from Response
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

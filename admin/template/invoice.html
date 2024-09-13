@@ -1,0 +1,119 @@
+{{define "invoice"}} {{template "header"}}
+<h1>Invoice</h1>
+{{ if .message }}
+<div class="alert alert-success my-4" role="alert">{{.message}}</div>
+{{ end }}
+<form class="row" method="post">
+  {{ if .id }}
+  <input name="id" type="hidden" value="{{.id}}" />
+  {{end}}
+
+  <div class="col-4">
+    <div>
+      <label class="form-label" for="user">User</label>
+      <input
+        class="form-control"
+        id="user"
+        name="user"
+        readonly="readonly"
+        type="text"
+        value="{{.user}}"
+      />
+    </div>
+    <div class="mt-2">
+      <label class="form-label" for="amount">Amount</label>
+      <input
+        class="form-control"
+        id="amount"
+        min="0"
+        name="amount"
+        step="0.01"
+        type="number"
+        value="{{.amount}}"
+      />
+    </div>
+    <div class="mt-2">
+      <label class="form-label" for="created_at">Creation Date</label>
+      <input
+        class="form-control"
+        id="created_at"
+        name="created_at"
+        type="date"
+        value="{{.created_at}}"
+      />
+    </div>
+    <div class="mt-2">
+      <label class="form-label" for="due_at">Due Date</label>
+      <input
+        class="form-control"
+        id="due_at"
+        name="due_at"
+        type="date"
+        value="{{.due_at}}"
+      />
+    </div>
+    <div class="mt-2">
+      <label class="form-label" for="paid_at">Paid Date</label>
+      <div class="d-flex">
+        <input
+          class="form-control"
+          id="paid_at"
+          name="paid_at"
+          type="date"
+          value="{{.paid_at}}"
+        />
+        <button
+          class="btn btn-secondary ms-2"
+          onclick="document.querySelector('input[name=paid]').value = ''"
+          type="button"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+    <div class="d-grid mt-4">
+      <button class="btn btn-primary" type="submit">
+        {{if .id }}Update{{ else }}Create{{end}} Invoice
+      </button>
+    </div>
+  </div>
+  <div class="col-8">
+    <div>
+      <label class="form-label" for="name">Name</label>
+      <input
+        class="form-control"
+        id="name"
+        name="name"
+        type="text"
+        value="{{.name}}"
+      />
+    </div>
+    <div class="mt-2">
+      <label class="form-label" for="description"
+        >Description <small>(HTML supported)</small></label
+      >
+      <textarea
+        class="form-control"
+        id="description"
+        name="description"
+        style="height: 195px"
+      >
+{{.description}}</textarea
+      >
+    </div>
+    <div class="mt-2">
+      <label class="form-label" for="notes"
+        >Notes <small>(not visible by customer)</small></label
+      >
+      <textarea
+        class="form-control"
+        id="notes"
+        name="notes"
+        style="height: 100px"
+      >
+{{.notes}}</textarea
+      >
+    </div>
+  </div>
+</form>
+{{end}}

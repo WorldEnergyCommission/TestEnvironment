@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgCS7" Id="{3cde5964-6ad7-484c-9966-1a6481e349aa}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS7
+VAR
+	fbAlfen1					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen2					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_1			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_1	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_1			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_1		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_1				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_1					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_1		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_1			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_2			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_2	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_2			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_2		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_2				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_2					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_2			: LREAL;											//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bManualyOnUV1_1				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_1	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_2				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_2	: BYTE;												//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*---------------------------------------------CS1-----------------------------------------------------------*)
+
+//Manual Power
+fbAlfen1.stSetupECS.bManualyOn := bManualyOnUV1_1;
+	fbAlfen1.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_1;
+
+fbAlfen1(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.201', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_1 := fbAlfen1.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_1 := fbAlfen1.stDataECS.bySManualyTargetPower;
+		byErrorWarningUV1_1 := fbAlfen1.stDataECS.byErrorWarning;	
+			rChargingTimeInMinUV1_1 := fbAlfen1.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_1 := fbAlfen1.stDataECS.lrTotalPower;	
+					wStateUV1_1 := fbAlfen1.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_1 := fbAlfen1.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_1 := fbAlfen1.stDataECS.lrTotalCounterEnergy_Consumption;	
+	
+(*---------------------------------------------CS2-----------------------------------------------------------*)
+	
+//Manual Power
+fbAlfen2.stSetupECS.bManualyOn := bManualyOnUV1_2;
+	fbAlfen2.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_2;
+	
+fbAlfen2(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.220', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_2 := fbAlfen2.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_2 := fbAlfen2.stDataECS.bySManualyTargetPower;	
+		byErrorWarningUV1_2 := fbAlfen2.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_2 := fbAlfen2.stDataECS.arrChargingTimeInMin[1];;
+				lrPowerUV1_2 := fbAlfen2.stDataECS.lrTotalPower;	
+					wStateUV1_2 := fbAlfen2.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_2 := fbAlfen2.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_2 := fbAlfen2.stDataECS.lrTotalCounterEnergy_Consumption;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS7">
+      <LineId Id="103" Count="20" />
+      <LineId Id="236" Count="6" />
+      <LineId Id="127" Count="22" />
+      <LineId Id="243" Count="6" />
+      <LineId Id="153" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM" Id="{911a6298-93ee-4aec-855e-d2e16b0de8c7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+	lrPower_Grid		: LREAL;						//{#lynus.ag#()}
+	lrPower_Grid_L1		: LREAL;						//{#lynus.ag#()}
+	lrPower_Grid_L2		: LREAL;						//{#lynus.ag#()}
+	lrPower_Grid_L3		: LREAL;						//{#lynus.ag#()}
+	lrCurrent_Grid_L1	: LREAL;						//{#lynus.ag#()}
+	lrCurrent_Grid_L2	: LREAL;						//{#lynus.ag#()}
+	lrCurrent_Grid_L3	: LREAL;						//{#lynus.ag#()}
+	lrPower_House		: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L1N	: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L2N	: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L3N	: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L1L2	: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L2L3	: LREAL;						//{#lynus.ag#()}
+	lrVoltage_Grid_L3L1	: LREAL;						//{#lynus.ag#()}
+	x:int;
+	fbGrid						: FB_Grid_Power;
+	fbGridCounter				: FB_EnergyCounter;
+	bEnableHouse		: BOOL:=TRUE;					//{#lynus.ag#()}
+	bHouseEnabled		: BOOL:=TRUE;					//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	rSizeGridConn				: REAL;									//{#lynus.ag#()}
+	lrCounterGridProd			: LREAL;								//{#lynus.ag#()}
+	lrCounterGridCons			: LREAL;								//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+//The mapping OF THIS FUNCTION must be linked with the KL3403 in the E/A Part
+// KEBA CS
+fbEM1(
+	bEnable:= true, 
+	bChannel1Invers:= FALSE,				//Invert power data when transformer are mounted upside down
+	bChannel2Invers:= FALSE,			
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 100, //Transformer ratio on the secondary side
+	uiCurrentTransformerRatioL2:= 100, 
+	uiCurrentTransformerRatioL3:= 100, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+lrPower_Grid := fbEM1.stDataEMPower.lrPowerTotal;
+lrPower_Grid_L1 := fbEM1.stDataEMPower.lrPowerL1;
+lrPower_Grid_L2 := fbEM1.stDataEMPower.lrPowerL2;
+lrPower_Grid_L3 := fbEM1.stDataEMPower.lrPowerL3;
+lrCurrent_Grid_L1 := fbEM1.stDataEMPowerRealTime.lrCurrentL1;
+lrCurrent_Grid_L2 := fbEM1.stDataEMPowerRealTime.lrCurrentL2;
+lrCurrent_Grid_L3 := fbEM1.stDataEMPowerRealTime.lrCurrentL3;
+lrVoltage_Grid_L1N:= fbEM1.stDataEMPowerRealTime.lrVoltageL1N;
+lrVoltage_Grid_L2N:= fbEM1.stDataEMPowerRealTime.lrVoltageL2N;
+lrVoltage_Grid_L3N:= fbEM1.stDataEMPowerRealTime.lrVoltageL3N;
+lrVoltage_Grid_L1L2:= fbEM1.stDataEMPowerRealTime.lrVoltageL1L2;
+lrVoltage_Grid_L2L3:= fbEM1.stDataEMPowerRealTime.lrVoltageL2L3;
+lrVoltage_Grid_L3L1:= fbEM1.stDataEMPowerRealTime.lrVoltageL3L1;
+
+lrPower_House := lrPower_Grid + prgPV.lrPowerPV + prgBattery.lrPowerBattery - prgTemperature.lr_Power_Heating1_6kW - prgTemperature.lr_Power_Heating2_10kW;
+
+IF prgCS.lrPower <22 THEN 		// not sure if the MB readout is correct. 
+	lrPower_House := lrPower_House - prgCS.lrPower;
+END_IF
+lrPower_House := MAX(0,lrPower_House);
+
+fbGrid(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_Grid:= 	prgEM.fbEM1.diNrOfEM_OUT,		
+	rSizeGridConn:= rSizeGridConn, 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );
+	
+// EnergyCounter
+fbGridCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPower_Grid, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="74" Count="3" />
+      <LineId Id="9" Count="14" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="163" Count="3" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="208" Count="1" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="238" Count="5" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="251" Count="8" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="355" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

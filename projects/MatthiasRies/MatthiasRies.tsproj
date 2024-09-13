@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.32">
+	<Project ProjectGUID="{C6B5A6B0-E0D7-4460-A7C1-072175364A46}" TargetNetId="5.100.32.125.1.1" AutoPrioManagement="true" ShowHideConfigurations="#x106">
+		<System>
+			<Settings RouterMemory="67108864">
+				<IoIdleTask Priority="4"/>
+			</Settings>
+			<Licenses IgnoreProjectLicenses="true">
+				<Target BkhfOrder="00897411" CustomOrder="60000492">
+					<CustomComment><![CDATA[MatthiasRies]]></CustomComment>
+					<ManualSelect>{3FF18E97-7754-401B-93FB-70544DE28A13}</ManualSelect>
+					<ManualSelect>{42E60F0D-E1AD-4B78-84B8-FD3ECF44FAA7}</ManualSelect>
+					<ManualSelect>{0ABFD2B0-EAE1-4DC7-AABE-03093B0786B7}</ManualSelect>
+					<ManualSelect>{66689887-CCBD-452C-AC9A-039D997C6E66}</ManualSelect>
+					<ManualSelect>{6952449D-F68C-49A2-ADE4-8639D85B33A4}</ManualSelect>
+					<ManualSelect>{4C256767-E6E6-4AF5-BD68-9F7ABAD0C200}</ManualSelect>
+				</Target>
+			</Licenses>
+			<Tasks>
+				<Task Id="3" Priority="8" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>MiddleTask</Name>
+				</Task>
+				<Task Id="4" Priority="10" CycleTime="200000" AmsPort="351" AdtTasks="true">
+					<Name>SlowTask</Name>
+				</Task>
+				<Task Id="5" Priority="6" CycleTime="50000" AmsPort="352" AdtTasks="true">
+					<Name>FastTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project GUID="{1C22E68F-E338-444C-A1B8-43CB2A1137A0}" Name="MatthiasRies" PrjFilePath="MatthiasRies\MatthiasRies.plcproj" TmcFilePath="MatthiasRies\MatthiasRies.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MatthiasRies\MatthiasRies.tmc" TmcHash="{CCCD4741-E1CC-A9E8-87B7-A57C73AD5A80}">
+					<Name>MatthiasRies Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id NeedCalleeCall="true">0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>6</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id NeedCalleeCall="true">1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010030</OTCID>
+							</ManualConfig>
+							<Priority>8</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id NeedCalleeCall="true">2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>10</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="6" OTCID="#x08502001"/>
+						<TaskPouOid Prio="8" OTCID="#x08502002"/>
+						<TaskPouOid Prio="10" OTCID="#x08502003"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+		</Plc>
+	</Project>
+</TcSmProject>

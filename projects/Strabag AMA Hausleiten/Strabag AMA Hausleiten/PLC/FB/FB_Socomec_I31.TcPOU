@@ -1,0 +1,373 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Socomec_I31" Id="{a35980f3-19d0-4ca7-8b21-859876308d39}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Socomec_I31
+VAR_INPUT PERSISTENT
+	m_Start						: BOOL;						//starts one modbus read out
+	str_IPAdress				: STRING(15);				//IP Adress of the meter
+	w_Adress					: WORD;						//modbus adress
+	uint_port					: UINT:=502;				//ModbusPort
+	byte_slaveID				: BYTE;						//SlaveID of the meter
+END_VAR
+VAR_OUTPUT
+	m_PollSuccessful			: BOOL;						//Poll succesfull		
+	lr_Freq_Hz					: LREAL;
+	lr_L1N_V					: LREAL;	
+	lr_L2N_V					: LREAL;	
+	lr_L3N_V					: LREAL;	
+	lr_L1L2_V					: LREAL;	
+	lr_L2L3_V					: LREAL;	
+	lr_L3L1_V					: LREAL;	
+	lr_I1_A						: LREAL;	
+	lr_I2_A						: LREAL;	
+	lr_I3_A						: LREAL;	
+	lr_N_A						: LREAL;	
+	lr_P_kW						: LREAL;
+	lr_Q_kVAr					: LREAL;
+	lr_S_kVA					: LREAL;
+	lr_PF						: LREAL;	
+	udint_Error_ID				: UDINT;					// ERR ID FB_MBReadRegs
+END_VAR
+VAR
+	w_Array_Received			: ARRAY[1..100] OF WORD;	// received data
+	timer_Delay					: TON;						//Timer for Delay between Requests
+	timer_TimeOut				: TON;						//Timer for Timeout MB Read
+	iStateModbusRead			: INT;						//State machine for read out Data over Modbus RTU
+	fbMBRead_FC3				: FB_MBReadRegs  ;		//Modbus Read Function (FC3)
+	rtrig_Start					: r_trig;					//positive edge for starting the read out
+	iStateModbusError			: INT;						//State machine for error out Data over Modbus TCP/IP	
+	FPError_FC_3				: R_TRIG;					//Internal positive Edge
+	arrBuffer_FC3				: ARRAY[1..100] OF WORD;		//Buffer with Data from FC3
+	timer_Connection_ok			: TON;
+	int_Data_Received			: INT;
+	m_MBTCPError				: BOOL;
+	int_Data_Received_old		: INT;
+	timer_Connection_ok_TOF	: TOF;
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	m_Poll_ok: BOOL;
+	timer_Wait: Ton;
+	int_TimeoutError: INT;
+	int_FC3Error: INT;
+	x: INT;
+	i: INT;
+	fbConvertWordToudint		: FB_CV_WORD_TO_UDINT;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*	{attribute 'hide'}--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+
+w_Adress := LIMIT(0,w_Adress,60000);
+
+	
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timer_Delay(IN:= , PT:= T#50MS, Q=> , ET=> );
+
+//Timeout Timer is dissabled when the Init Step is aktiv or the function is not enabled
+IF iStateModbusRead >1 THEN 
+	timer_Timeout.IN := FALSE; 
+END_IF
+timer_Timeout(IN:= , PT:= T#5S, Q=> , ET=> );
+
+//Enable with Delay that not all sockets have to be created at the same time
+
+rtrig_Start(CLK:= m_Start, Q=> );
+
+CASE iStateModbusRead OF
+
+	0://Init Step 
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+		FOR i := 1 TO 100 BY 1 DO
+			w_Array_Received[i] := 0;
+		END_FOR
+		iStateModbusRead := 1;
+	1: // wait for rtrig START	
+		IF rtrig_Start.Q THEN
+			iStateModbusRead := 10;
+		END_IF
+	
+	10://read the required registers
+		//Start Read
+		fbMBRead_FC3.nQuantity := 50;
+		fbMBRead_FC3.nMBAddr := w_Adress;
+		fbMBRead_FC3.bExecute := TRUE;
+		fbMBRead_FC3.nUnitID := byte_slaveID;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC3.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			
+			w_Array_Received := arrBuffer_FC3;
+			
+			
+			// convert reveived data
+			x:=1;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_Freq_Hz:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/1000;
+			x:=3;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_L1N_V:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/100;
+			x:=5;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_L2N_V:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/100;
+			x:=7;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_L3N_V:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/100;
+			
+			x:=11;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_L1L2_V:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/100;
+			x:=13;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_L2L3_V:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/100;
+			x:=15;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_L3L1_V:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/100;
+			
+			
+			x:=17;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_I1_A:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/1000;
+			x:=19;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_I2_A:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/1000;
+			x:=21;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_I3_A:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/1000;
+			x:=23;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_N_A:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/1000;
+			
+			x:=35;
+			lr_P_kW := DINT_TO_LREAL(DWORD_TO_DINT(w_Array_Received[x]*65536 + w_Array_Received[x+1]))/1000;
+			
+			x:=37;
+			lr_Q_kVAr := DINT_TO_LREAL(DWORD_TO_DINT(w_Array_Received[x]*65536 + w_Array_Received[x+1]))/1000;
+			
+			
+			x:=43;
+			fbConvertWordToudint(	wInputValue_1:= w_Array_Received[x], 
+									wInputValue_2:= w_Array_Received[x+1], 
+									eByteOrderForConvert:= eByteOrder.eBigEndian , 
+									udiOutputValue=> );
+			lr_S_kVA:= UDINT_TO_REAL(fbConvertWordToudint.udiOutputValue)/1000;
+			
+			
+			x:=45;
+			lr_PF := (REAL_TO_LREAL(WORD_TO_INT(w_Array_Received[x])))/1000;
+			
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC3.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := 30;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_3.Q THEN 
+			iStateModbusError := 300;
+			int_FC3Error := int_FC3Error+1;
+		ELSIF timer_Timeout.Q THEN  
+			timer_Timeout.IN := FALSE; 	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	
+	30://Wait and go to step 1
+		//1 because 0 is the Init Step for Read
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 0;
+			timer_Wait.IN :=FALSE;
+		END_IF
+
+			
+		
+		//Error on Master, changes on Inputs or Timeout
+		IF timer_Timeout.Q THEN 
+			iStateModbusError := 300; 
+		END_IF
+	
+END_CASE
+
+(* wait timer*)
+
+timer_Wait(PT:=T#1S);
+
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+ 
+timer_Connection_ok			(In:=int_Data_Received<>int_Data_Received_old,PT:=T#10S);
+timer_Connection_ok_TOF		(In:=NOT(int_Data_Received<>int_Data_Received_old) AND int_Data_Received>3 ,PT:=T#20S);
+int_Data_Received_old:=int_Data_Received;
+m_PollSuccessful:=NOT timer_Connection_ok.Q AND timer_Connection_ok_TOF.Q ;
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(	sIPAddr:= str_IPAdress, 
+				nTCPPort:= uint_port,
+				cbLength:= SIZEOF(arrBuffer_FC3), 
+				pDestAddr:= ADR(arrBuffer_FC3), 
+				tTimeout:= T#10S,
+				nErrId => udint_Error_ID);
+
+FPError_FC_3(CLK:= fbMBRead_FC3.bError, Q=> );		
+
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		timer_Wait.IN :=TRUE;
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		m_MBTCPError := TRUE; 		
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+				//Restart from new with the Read out part after an Error
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 0;	
+			iStateModbusError := 0;
+			timer_Wait.IN :=FALSE;
+			timer_Timeout.IN := FALSE;
+		END_IF		
+							
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Socomec_I31">
+      <LineId Id="23" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="32" Count="4" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="182" Count="1" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="553" Count="2" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="57" Count="2" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="547" Count="2" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="557" Count="1" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="73" Count="4" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="200" Count="2" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="561" Count="1" />
+      <LineId Id="565" Count="85" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="477" Count="0" />
+      <LineId Id="91" Count="5" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="386" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="375" Count="2" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="153" Count="2" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="365" Count="1" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="159" Count="2" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="209" Count="3" />
+      <LineId Id="215" Count="3" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="234" Count="4" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="240" Count="2" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="380" Count="1" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

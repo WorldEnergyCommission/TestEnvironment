@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM" Id="{911a6298-93ee-4aec-855e-d2e16b0de8c7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+//The mapping OF THIS FUNCTION must be linked with the KL3403 in the E/A Part
+// KEBA CS
+fbEM1(
+	bEnable:= true, 
+	bChannel1Invers:= FALSE,				//Invert power data when transformer are mounted upside down
+	bChannel2Invers:= FALSE,			
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 100, //Transformer ratio on the secondary side
+	uiCurrentTransformerRatioL2:= 100, 
+	uiCurrentTransformerRatioL3:= 100, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="74" Count="3" />
+      <LineId Id="9" Count="14" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="25" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

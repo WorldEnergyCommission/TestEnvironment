@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_Convert4BytesToLreal" Id="{f9d4eee8-c590-4eea-aacf-19507a8907cf}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK fb_Convert4BytesToLreal
+VAR_INPUT
+	by_InputValue_1:BYTE;
+	by_InputValue_2:BYTE;
+	by_InputValue_3:BYTE;
+	by_InputValue_4:BYTE;
+	int_Divider: INT;
+END_VAR
+VAR_OUTPUT
+	lreal_Output:LREAL;
+END_VAR
+VAR
+	FB_BYTE_TO_WORD_1 : FB_CV_BYTE_TO_WORD;
+	FB_BYTE_TO_WORD_2 : FB_CV_BYTE_TO_WORD;
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF int_Divider =0 THEN
+	int_Divider :=1;
+END_IF
+FB_BYTE_TO_WORD_1(byInputValue_1 := by_InputValue_1,byInputValue_2 := by_InputValue_2, Ebyteorderforconvert := Ebyteorder.ebigENDIAN, woutputvalue => );
+FB_BYTE_TO_WORD_2(byInputValue_1 := by_InputValue_3,byInputValue_2 := by_InputValue_4, Ebyteorderforconvert := Ebyteorder.ebigENDIAN, woutputvalue => );
+
+fbConvertWordToDword(wInputValue_1:= FB_BYTE_TO_WORD_1.woutputvalue, wInputValue_2:= FB_BYTE_TO_WORD_2.woutputvalue, eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+lreal_Output :=DINT_TO_LREAL( DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue))/int_Divider;
+
+
+				]]></ST>
+    </Implementation>
+    <LineIds Name="fb_Convert4BytesToLreal">
+      <LineId Id="29" Count="2" />
+      <LineId Id="10" Count="6" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

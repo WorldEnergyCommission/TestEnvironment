@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgModbusRTU" Id="{0a10d179-c256-4fd7-bea9-8bfaf6e61c7b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgModbusRTU
+VAR
+	uint_State								AT%I* 	: UINT;								//{#lynus.ag#()}
+	m_Enable_write: BOOL;
+	int_H02_Soll_VL_HT_Schloss: INT;													//{#lynus.ag#()}
+	int_H03_Soll_VL_Sek_NT_Schloss: INT;       									//{#lynus.ag#()}
+	int_H05_Soll_VL_HT_Schloss: INT;                 									//{#lynus.ag#()}
+	int_H06_Soll_VL_Sek_NT_Schloss: INT;       									//{#lynus.ag#()}
+	
+	int_H02_VL_HT_Schloss					: INT;										//{#lynus.ag#()}
+	int_H02_RL_HT_Schloss                   : int;                                      //{#lynus.ag#()}
+	int_H02_Energie_HT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H02_Volumen_HT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H02_Leistung_HT_Schloss             : int;                                      //{#lynus.ag#()}
+	int_H03_VL_Primaer_NT_Schloss           : int;                                      //{#lynus.ag#()}
+	int_H03_RL_Primaer_NT_Schloss           : int;                                      //{#lynus.ag#()}
+	int_H03_VL_Sek_NT_Schloss         : INT;                                      //{#lynus.ag#()}
+	int_H03_RL_Sek_NT_Schloss         : INT;                                      //{#lynus.ag#()}
+	int_H03_Energie_NT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H03_Volumen_NT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H03_Leistung_NT_Schloss             : int;                                      //{#lynus.ag#()}
+	int_H05_VL_HT_Schloss                   : int;                                      //{#lynus.ag#()}
+	int_H05_RL_HT_Schloss                   : int;                                      //{#lynus.ag#()}
+	int_H05_Energie_HT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H05_Volumen_HT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H05_Leistung_HT_Schloss             : int;                                      //{#lynus.ag#()}
+	int_H06_VL_Primaer_NT_Schloss           : int;                                      //{#lynus.ag#()}
+	int_H06_RL_Primaer_NT_Schloss           : int;                                      //{#lynus.ag#()}
+	int_H06_VL_Sek_NT_Schloss         : INT;                                      //{#lynus.ag#()}
+	int_H06_RL_Sek_NT_Schloss         : INT;                                      //{#lynus.ag#()}
+	int_H06_Energie_NT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H06_Volumen_NT_Schloss              : int;                                      //{#lynus.ag#()}
+	int_H06_Leistung_NT_Schloss             : int;                                      //{#lynus.ag#()}
+	int_S00_UG_Schloss_RT_006               : int;                                      //{#lynus.ag#()}
+	int_S00_UG_Schloss_RT_003A_B            : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_024               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_002               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_1_003             : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_2_003             : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_004               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_005               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_006               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_007               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_011               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_012               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_013               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_014               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_015               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_016               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_017               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_020_021           : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_1_025             : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_2_025             : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_026_027           : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_028               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_029               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_032               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_033               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_034               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_036               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_040_              : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_047               : int;                                      //{#lynus.ag#()}
+	int_S01_EG_Schloss_RT_053               : int;                                      //{#lynus.ag#()}
+	int_H02_Gefaengnisstoeckl_RT_006        : INT;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_001               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_002               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_003               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_004               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_005               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_006               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_007_009           : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_006_2             : INT;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_020_026           : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_027_037           : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_039_041           : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_042               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_043               : int;                                      //{#lynus.ag#()}
+	int_S02_OG_Schloss_RT_048_051           : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_007A              : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_007B              : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_008               : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_009_015           : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_016               : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_017               : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_018               : int;                                      //{#lynus.ag#()}
+	int_R01_EG_Rondell_RT_019               : int;                                      //{#lynus.ag#()}
+	int_R02_OG_Rondell_RT_001               : int;                                      //{#lynus.ag#()}
+	int_R02_OG_Rondell_RT_002               : int;                                      //{#lynus.ag#()}
+	int_R02_OG_Rondell_RT_004               : int;                                      //{#lynus.ag#()}
+	int_R02_OG_Rondell_RT_005_007           : int;                                      //{#lynus.ag#()}
+	int_R02_OG_Rondell_RT_008               : int;                                      //{#lynus.ag#()}
+	bool_H02_Status_HK_HT_Schloss			: BOOL;                                     //{#lynus.ag#()}
+	bool_H03_Status_HK_NT_Schloss           : bool;                                     //{#lynus.ag#()}
+	bool_H05_Status_HK_HT_Schloss           : bool;                                     //{#lynus.ag#()}
+	bool_H06_Status_HK_NT_Schloss           : BOOL;		                                //{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MODBUS_RTU_Poeggstall(			m_Enable_write						    := m_Enable_write						,
+                                int_H02_Soll_VL_HT_Schloss			    := int_H02_Soll_VL_HT_Schloss			,
+                                int_H03_Soll_VL_Sek_NT_Schloss    := int_H03_Soll_VL_Sek_NT_Schloss ,
+                                int_H05_Soll_VL_HT_Schloss              := int_H05_Soll_VL_HT_Schloss           ,
+                                int_H06_Soll_VL_Sek_NT_Schloss    := int_H06_Soll_VL_Sek_NT_Schloss ,
+								
+								int_H02_VL_HT_Schloss					=> int_H02_VL_HT_Schloss			 ,
+								int_H02_RL_HT_Schloss                   => int_H02_RL_HT_Schloss             ,
+								int_H02_Energie_HT_Schloss              => int_H02_Energie_HT_Schloss        ,
+								int_H02_Volumen_HT_Schloss              => int_H02_Volumen_HT_Schloss        ,
+								int_H02_Leistung_HT_Schloss             => int_H02_Leistung_HT_Schloss       ,
+								int_H03_VL_Primaer_NT_Schloss           => int_H03_VL_Primaer_NT_Schloss     ,
+                                int_H03_RL_Primaer_NT_Schloss           => int_H03_RL_Primaer_NT_Schloss     ,
+                                int_H03_VL_Sek_NT_Schloss         => int_H03_VL_Sek_NT_Schloss   ,
+                                int_H03_RL_Sek_NT_Schloss         => int_H03_RL_Sek_NT_Schloss   ,
+                                int_H03_Energie_NT_Schloss              => int_H03_Energie_NT_Schloss        ,
+                                int_H03_Volumen_NT_Schloss              => int_H03_Volumen_NT_Schloss        ,
+                                int_H03_Leistung_NT_Schloss             => int_H03_Leistung_NT_Schloss       ,
+                                int_H05_VL_HT_Schloss                   => int_H05_VL_HT_Schloss             ,
+                                int_H05_RL_HT_Schloss                   => int_H05_RL_HT_Schloss             ,
+                                int_H05_Energie_HT_Schloss              => int_H05_Energie_HT_Schloss        ,
+                                int_H05_Volumen_HT_Schloss              => int_H05_Volumen_HT_Schloss        ,
+                                int_H05_Leistung_HT_Schloss             => int_H05_Leistung_HT_Schloss       ,
+                                int_H06_VL_Primaer_NT_Schloss           => int_H06_VL_Primaer_NT_Schloss     ,
+                                int_H06_RL_Primaer_NT_Schloss           => int_H06_RL_Primaer_NT_Schloss     ,
+                                int_H06_VL_Sek_NT_Schloss         => int_H06_VL_Sek_NT_Schloss   ,
+                                int_H06_RL_Sek_NT_Schloss         => int_H06_RL_Sek_NT_Schloss   ,
+                                int_H06_Energie_NT_Schloss              => int_H06_Energie_NT_Schloss        ,
+                                int_H06_Volumen_NT_Schloss              => int_H06_Volumen_NT_Schloss        ,
+                                int_H06_Leistung_NT_Schloss             => int_H06_Leistung_NT_Schloss       ,
+                                int_S00_UG_Schloss_RT_006               => int_S00_UG_Schloss_RT_006         ,
+                                int_S00_UG_Schloss_RT_003A_B            => int_S00_UG_Schloss_RT_003A_B      ,
+                                int_S01_EG_Schloss_RT_024               => int_S01_EG_Schloss_RT_024         ,
+                                int_S01_EG_Schloss_RT_002               => int_S01_EG_Schloss_RT_002         ,
+                                int_S01_EG_Schloss_RT_1_003             => int_S01_EG_Schloss_RT_1_003       ,
+                                int_S01_EG_Schloss_RT_2_003             => int_S01_EG_Schloss_RT_2_003       ,
+                                int_S01_EG_Schloss_RT_004               => int_S01_EG_Schloss_RT_004         ,
+                                int_S01_EG_Schloss_RT_005               => int_S01_EG_Schloss_RT_005         ,
+                                int_S01_EG_Schloss_RT_006               => int_S01_EG_Schloss_RT_006         ,
+                                int_S01_EG_Schloss_RT_007               => int_S01_EG_Schloss_RT_007         ,
+                                int_S01_EG_Schloss_RT_011               => int_S01_EG_Schloss_RT_011         ,
+                                int_S01_EG_Schloss_RT_012               => int_S01_EG_Schloss_RT_012         ,
+                                int_S01_EG_Schloss_RT_013               => int_S01_EG_Schloss_RT_013         ,
+                                int_S01_EG_Schloss_RT_014               => int_S01_EG_Schloss_RT_014         ,
+                                int_S01_EG_Schloss_RT_015               => int_S01_EG_Schloss_RT_015         ,
+                                int_S01_EG_Schloss_RT_016               => int_S01_EG_Schloss_RT_016         ,
+                                int_S01_EG_Schloss_RT_017               => int_S01_EG_Schloss_RT_017         ,
+                                int_S01_EG_Schloss_RT_020_021           => int_S01_EG_Schloss_RT_020_021     ,
+                                int_S01_EG_Schloss_RT_1_025             => int_S01_EG_Schloss_RT_1_025       ,
+                                int_S01_EG_Schloss_RT_2_025             => int_S01_EG_Schloss_RT_2_025       ,
+                                int_S01_EG_Schloss_RT_026_027           => int_S01_EG_Schloss_RT_026_027     ,
+                                int_S01_EG_Schloss_RT_028               => int_S01_EG_Schloss_RT_028         ,
+                                int_S01_EG_Schloss_RT_029               => int_S01_EG_Schloss_RT_029         ,
+                                int_S01_EG_Schloss_RT_032               => int_S01_EG_Schloss_RT_032         ,
+                                int_S01_EG_Schloss_RT_033               => int_S01_EG_Schloss_RT_033         ,
+                                int_S01_EG_Schloss_RT_034               => int_S01_EG_Schloss_RT_034         ,
+                                int_S01_EG_Schloss_RT_036               => int_S01_EG_Schloss_RT_036         ,
+                                int_S01_EG_Schloss_RT_040_              => int_S01_EG_Schloss_RT_040_        ,
+                                int_S01_EG_Schloss_RT_047               => int_S01_EG_Schloss_RT_047         ,
+                                int_S01_EG_Schloss_RT_053               => int_S01_EG_Schloss_RT_053         ,
+                                int_H02_Gefaengnisstoeckl_RT_006        => int_H02_Gefaengnisstoeckl_RT_006  ,
+                                int_S02_OG_Schloss_RT_001               => int_S02_OG_Schloss_RT_001         ,
+                                int_S02_OG_Schloss_RT_002               => int_S02_OG_Schloss_RT_002         ,
+                                int_S02_OG_Schloss_RT_003               => int_S02_OG_Schloss_RT_003         ,
+                                int_S02_OG_Schloss_RT_004               => int_S02_OG_Schloss_RT_004         ,
+                                int_S02_OG_Schloss_RT_005               => int_S02_OG_Schloss_RT_005         ,
+                                int_S02_OG_Schloss_RT_006               => int_S02_OG_Schloss_RT_006         ,
+                                int_S02_OG_Schloss_RT_007_009           => int_S02_OG_Schloss_RT_007_009     ,
+                                int_S02_OG_Schloss_RT_006_2             => int_S02_OG_Schloss_RT_006_2       ,
+                                int_S02_OG_Schloss_RT_020_026           => int_S02_OG_Schloss_RT_020_026     ,
+                                int_S02_OG_Schloss_RT_027_037           => int_S02_OG_Schloss_RT_027_037     ,
+                                int_S02_OG_Schloss_RT_039_041           => int_S02_OG_Schloss_RT_039_041     ,
+                                int_S02_OG_Schloss_RT_042               => int_S02_OG_Schloss_RT_042         ,
+                                int_S02_OG_Schloss_RT_043               => int_S02_OG_Schloss_RT_043         ,
+                                int_S02_OG_Schloss_RT_048_051           => int_S02_OG_Schloss_RT_048_051     ,
+                                int_R01_EG_Rondell_RT_007A              => int_R01_EG_Rondell_RT_007A        ,
+                                int_R01_EG_Rondell_RT_007B              => int_R01_EG_Rondell_RT_007B        ,
+                                int_R01_EG_Rondell_RT_008               => int_R01_EG_Rondell_RT_008         ,
+                                int_R01_EG_Rondell_RT_009_015           => int_R01_EG_Rondell_RT_009_015     ,
+                                int_R01_EG_Rondell_RT_016               => int_R01_EG_Rondell_RT_016         ,
+                                int_R01_EG_Rondell_RT_017               => int_R01_EG_Rondell_RT_017         ,
+                                int_R01_EG_Rondell_RT_018               => int_R01_EG_Rondell_RT_018         ,
+                                int_R01_EG_Rondell_RT_019               => int_R01_EG_Rondell_RT_019         ,
+                                int_R02_OG_Rondell_RT_001               => int_R02_OG_Rondell_RT_001         ,
+                                int_R02_OG_Rondell_RT_002               => int_R02_OG_Rondell_RT_002         ,
+                                int_R02_OG_Rondell_RT_004               => int_R02_OG_Rondell_RT_004         ,
+                                int_R02_OG_Rondell_RT_005_007           => int_R02_OG_Rondell_RT_005_007     ,
+                                int_R02_OG_Rondell_RT_008               => int_R02_OG_Rondell_RT_008         ,
+                                bool_H02_Status_HK_HT_Schloss	        => bool_H02_Status_HK_HT_Schloss	 ,
+                                bool_H03_Status_HK_NT_Schloss           => bool_H03_Status_HK_NT_Schloss     ,
+                                bool_H05_Status_HK_HT_Schloss           => bool_H05_Status_HK_HT_Schloss     ,
+                                bool_H06_Status_HK_NT_Schloss           => bool_H06_Status_HK_NT_Schloss     
+									);	
+									
+								]]></ST>
+    </Implementation>
+    <LineIds Name="prgModbusRTU">
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="3" />
+      <LineId Id="23" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="3" />
+      <LineId Id="25" Count="80" />
+      <LineId Id="209" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

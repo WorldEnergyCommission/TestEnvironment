@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgSystemTime" Id="{7174bf4c-e7b8-4208-83bd-50e4eee47971}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgSystemTime
+VAR
+	fbGetTime			: NT_GetTime;
+	dtSystemTime		: DT;
+	stDateTime			: TIMESTRUCT;
+	tonGetTime			: TON;
+	nStep				: INT;
+	bSystemTimeValid	: BOOL := FALSE;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE nStep OF
+0:
+	tonGetTime(IN:=TRUE, PT:=T#500MS);
+	IF (tonGetTime.Q) THEN
+		tonGetTime(IN := FALSE);
+		nStep:=10;
+	END_IF
+
+10:
+	fbGetTime(NETID:='', START:=TRUE, TMOUT:=T#2S);
+	IF (NOT fbGetTime.BUSY) THEN
+		stDateTime := fbGetTime.TIMESTR;
+		dtSystemTime := SYSTEMtimE_TO_DT(fbGetTime.TIMESTR);
+		fbGetTime(START := FALSE);
+		bSystemTimeValid := TRUE;
+		nStep := 0;
+	END_IF	
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="prgSystemTime">
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="4" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="25" Count="6" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

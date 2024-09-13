@@ -1,0 +1,369 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV_3xFBs" Id="{3940a3f5-dd31-4276-b197-0a9b05eb909c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM pprgPV_3xFBs
+VAR_INPUT PERSISTENT
+	bEnable						: BOOL;												//True = Function is enabled, FALSE = Function is dissabled, no new Data
+	arrUnitID_Inverter			: ARRAY[1..30] OF BYTE;								//Array with the Unit ID's from each Inverter (Max 30 Inverters) (ID = 1 to 247) (0 = No Inverter)
+	arr_b_EnableWrite			: ARRAY[1..30] OF BOOL;								// Enable write function
+	arr_m_DisableInverter		: ARRAY[1..30] OF BOOL;								// disable inverter 
+	arr_int_InverterSetpoint	: ARRAY[1..30] OF INT;								// inverter setpoint i[1/100 %] 
+	real_MainsSetpointRegulate	: REAL:=-50;
+	real_Factor_Calc: REAL:=110;
+	rPValue: REAL := 2;
+	udint_IValue: UDINT:=250;
+	uditn_DValue: UDINT:=30;
+	dword_SOC_RegluateStart: DWORD:=85;
+	dword_SOC_RegluateStop: DWORD:=90;
+	realMaxGridPower_1: REAL:=-90;
+	realMaxGridPower_2: REAL:=-100;
+	realMaxGridPower_3: REAL:=-110;
+END_VAR
+VAR
+	fbPV					: FB_Symo_PV_Inverter_FLOAT_1_DM_30_InclDisable;
+//	fbPVInt					: FB_PV_Power;
+	fbPVCounter				: FB_EnergyCounter;
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV		: BYTE;					//{#lynus.ag#()}
+	
+	// extend or reduce amount of PV Inverters
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_3				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_4				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_5				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_6				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_7				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_8				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_9				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_10			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_11			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_12			: LREAL;				//{#lynus.ag#()}
+
+	real_ActualLoadPercent_PV1: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV2: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV3: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV4: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV5: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV6: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV7: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV8: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV9: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV10: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV11: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV12: REAL;				//{#lynus.ag#()}
+	real_RegulatroMaxValue_Calc: REAL;				//{#lynus.ag#()}
+	real_RegulatroMaxValue_Limit: REAL;				//{#lynus.ag#()}
+	FB_PID_Inverter :FB_PID_T;
+	FB_Linear_SOC: FB_LinearEquation;
+	real_SOCLimit: REAL;
+	int_SetPointInverter	:INT;					//{#lynus.ag#()}
+	m_PVLoadRegluationactive: BOOL;					//{#lynus.ag#()}
+	real_Setpoint_PID_In: REAL;					//{#lynus.ag#()}
+
+	FB_Linear_Frequency: FB_LinearEquation;
+	lr_ValidFrequency: LREAL;
+
+	real_FrequencyLimit: REAL;						//{#lynus.ag#()}
+
+
+	i: INT;
+	ton_PV_On_Delay_after_Off :array[1..12]of Ton;
+END_VAR
+VAR PERSISTENT
+	lrCounterPV				: LREAL;				//{#lynus.ag#()}
+	str_IP_PV				: STRING(15):= '10.0.0.101';
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+// extend or reduce amount of PV Inverters
+//   
+
+// limit mains regulator setpoint
+real_MainsSetpointRegulate := LIMIT(-80,real_MainsSetpointRegulate,0); 
+ 
+// write setpoints to PV array
+arr_int_InverterSetpoint[1] := int_SetPointInverter;
+arr_int_InverterSetpoint[2] := int_SetPointInverter;
+arr_int_InverterSetpoint[3] := int_SetPointInverter;
+arr_int_InverterSetpoint[4] := int_SetPointInverter;
+arr_int_InverterSetpoint[5] := int_SetPointInverter;
+arr_int_InverterSetpoint[6] := int_SetPointInverter;
+arr_int_InverterSetpoint[7] := int_SetPointInverter;
+arr_int_InverterSetpoint[8] := int_SetPointInverter;
+arr_int_InverterSetpoint[9] := int_SetPointInverter;
+arr_int_InverterSetpoint[10] := int_SetPointInverter;
+arr_int_InverterSetpoint[11] := int_SetPointInverter;
+arr_int_InverterSetpoint[12] := int_SetPointInverter;
+
+
+fbPV(
+	bEnable				:= TRUE, 
+	sIPAdress			:= '10.11.90.100', 			// modify IP Adress
+	arrUnitID_Inverter	:= ,
+	arr_b_EnableWrite	:= ,
+	arr_m_DisableInverter := ,
+	arrDataSymo10		=> ,
+	stDataEMPower_PV	=> , 
+	stDataEMCounter_PV	=> , 
+	diNrOfEM_OUT_PV		=> );
+	
+fbPV.arrUnitID_Inverter[1]:=1;
+fbPV.arr_b_EnableWrite[1] := arr_b_EnableWrite[1];
+fbPV.arr_m_DisableInverter[1] := arr_m_DisableInverter[1];
+fbPV.arr_int_InverterSetpoint[1] := arr_int_InverterSetpoint[1];
+
+fbPV.arrUnitID_Inverter[2]:=2;
+fbPV.arr_b_EnableWrite[2] := arr_b_EnableWrite[2];
+fbPV.arr_m_DisableInverter[2] := arr_m_DisableInverter[2];
+fbPV.arr_int_InverterSetpoint[2] := arr_int_InverterSetpoint[2];
+
+fbPV.arrUnitID_Inverter[3]:=3;
+fbPV.arr_b_EnableWrite[3] := arr_b_EnableWrite[3];
+fbPV.arr_m_DisableInverter[3] := arr_m_DisableInverter[3];
+fbPV.arr_int_InverterSetpoint[3] := arr_int_InverterSetpoint[3];
+
+fbPV.arrUnitID_Inverter[4]:=4;
+fbPV.arr_b_EnableWrite[4] := arr_b_EnableWrite[4];
+fbPV.arr_m_DisableInverter[4] := arr_m_DisableInverter[4];
+fbPV.arr_int_InverterSetpoint[4] := arr_int_InverterSetpoint[4];
+
+fbPV.arrUnitID_Inverter[5]:=5;
+fbPV.arr_b_EnableWrite[5] := arr_b_EnableWrite[5];
+fbPV.arr_m_DisableInverter[5] := arr_m_DisableInverter[5];
+fbPV.arr_int_InverterSetpoint[5] := arr_int_InverterSetpoint[5];
+
+fbPV.arrUnitID_Inverter[6]:=6;
+fbPV.arr_b_EnableWrite[6] := arr_b_EnableWrite[6];
+fbPV.arr_m_DisableInverter[6] := arr_m_DisableInverter[6];
+fbPV.arr_int_InverterSetpoint[6] := arr_int_InverterSetpoint[6];
+
+fbPV.arrUnitID_Inverter[7]:=7;
+fbPV.arr_b_EnableWrite[7] := arr_b_EnableWrite[7];
+fbPV.arr_m_DisableInverter[7] := arr_m_DisableInverter[7];
+fbPV.arr_int_InverterSetpoint[7] := arr_int_InverterSetpoint[7];
+
+fbPV.arrUnitID_Inverter[8]:=8;
+fbPV.arr_b_EnableWrite[8] := arr_b_EnableWrite[8];
+fbPV.arr_m_DisableInverter[8] := arr_m_DisableInverter[8];
+fbPV.arr_int_InverterSetpoint[8] := arr_int_InverterSetpoint[8];
+
+fbPV.arrUnitID_Inverter[9]:=9;
+fbPV.arr_b_EnableWrite[9] := arr_b_EnableWrite[9];
+fbPV.arr_m_DisableInverter[9] := arr_m_DisableInverter[9];
+fbPV.arr_int_InverterSetpoint[9] := arr_int_InverterSetpoint[9];
+
+fbPV.arrUnitID_Inverter[10]:=10;
+fbPV.arr_b_EnableWrite[10] := arr_b_EnableWrite[10];
+fbPV.arr_m_DisableInverter[10] := arr_m_DisableInverter[10];
+fbPV.arr_int_InverterSetpoint[10] := arr_int_InverterSetpoint[10];
+
+fbPV.arrUnitID_Inverter[11]:=11;
+fbPV.arr_b_EnableWrite[11] := arr_b_EnableWrite[11];
+fbPV.arr_m_DisableInverter[11] := arr_m_DisableInverter[11];
+fbPV.arr_int_InverterSetpoint[11] := arr_int_InverterSetpoint[11];
+
+fbPV.arrUnitID_Inverter[12]:=12;
+fbPV.arr_b_EnableWrite[12] := arr_b_EnableWrite[12];
+fbPV.arr_m_DisableInverter[12] := arr_m_DisableInverter[12];
+fbPV.arr_int_InverterSetpoint[12] := arr_int_InverterSetpoint[12];
+
+lrPowerPV_1 := fbPV.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_2 := fbPV.arrDataSymo10[2].lrPowerAcInverter;
+lrPowerPV_3 := fbPV.arrDataSymo10[3].lrPowerAcInverter;
+lrPowerPV_4 := fbPV.arrDataSymo10[4].lrPowerAcInverter;
+lrPowerPV_5 := fbPV.arrDataSymo10[5].lrPowerAcInverter;
+lrPowerPV_6 := fbPV.arrDataSymo10[6].lrPowerAcInverter;
+lrPowerPV_7 := fbPV.arrDataSymo10[7].lrPowerAcInverter;
+lrPowerPV_8 := fbPV.arrDataSymo10[8].lrPowerAcInverter;
+lrPowerPV_9 := fbPV.arrDataSymo10[9].lrPowerAcInverter;
+lrPowerPV_10 := fbPV.arrDataSymo10[10].lrPowerAcInverter;
+lrPowerPV_11 := fbPV.arrDataSymo10[11].lrPowerAcInverter;
+lrPowerPV_12 := fbPV.arrDataSymo10[12].lrPowerAcInverter;
+
+
+
+lrPowerPV := lrPowerPV_1 + lrPowerPV_2 + lrPowerPV_3 + lrPowerPV_4 + lrPowerPV_5 + lrPowerPV_6 + lrPowerPV_7 + lrPowerPV_8+ lrPowerPV_9+ lrPowerPV_10+ lrPowerPV_11+ lrPowerPV_12 ;
+
+// EnergyCounter
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+
+
+// calculate maximum regulator value by looking at the nomal inverter power 
+// nominal inverter Values	PV1: 50kW / PV2: 50kW / PV3: 27kW / PV4: 15kW / PV5: 15 kW / PV6: 20kW / PV7: 27kW
+real_ActualLoadPercent_PV1 := LREAL_TO_REAL(lrPowerPV_1) / 20*100;
+real_ActualLoadPercent_PV2 := LREAL_TO_REAL(lrPowerPV_2) / 20*100;
+real_ActualLoadPercent_PV3 := LREAL_TO_REAL(lrPowerPV_3) / 15*100;
+real_ActualLoadPercent_PV4 := LREAL_TO_REAL(lrPowerPV_4) / 10*100;
+real_ActualLoadPercent_PV5 := LREAL_TO_REAL(lrPowerPV_5) / 17.5*100;
+real_ActualLoadPercent_PV6 := LREAL_TO_REAL(lrPowerPV_6) / 20*100;
+real_ActualLoadPercent_PV7 := LREAL_TO_REAL(lrPowerPV_7) / 20*100;
+real_ActualLoadPercent_PV8 := LREAL_TO_REAL(lrPowerPV_8) / 20*100;
+real_ActualLoadPercent_PV9 := LREAL_TO_REAL(lrPowerPV_9) / 27*100;
+real_ActualLoadPercent_PV10 := LREAL_TO_REAL(lrPowerPV_10) / 20*100;
+real_ActualLoadPercent_PV11 := LREAL_TO_REAL(lrPowerPV_11) / 17.5*100;
+real_ActualLoadPercent_PV12 := LREAL_TO_REAL(lrPowerPV_12) / 17.5*100;
+
+real_RegulatroMaxValue_Calc := 	MAX(real_ActualLoadPercent_PV1,MAX(real_ActualLoadPercent_PV2,MAX(real_ActualLoadPercent_PV3,
+								MAX(real_ActualLoadPercent_PV4,MAX(real_ActualLoadPercent_PV5,MAX(real_ActualLoadPercent_PV6,
+								MAX(real_ActualLoadPercent_PV7,MAX(real_ActualLoadPercent_PV8,MAX(real_ActualLoadPercent_PV9,
+								MAX(real_ActualLoadPercent_PV10,MAX(real_ActualLoadPercent_PV11,real_ActualLoadPercent_PV12)))))))))));
+real_RegulatroMaxValue_Calc := LIMIT(1,real_RegulatroMaxValue_Calc,100);
+
+
+
+// limit setpoint if frequency is high
+// linear Equation Frequency
+//find out which invreter PV1 or PV1 has a valid frequency
+// No frequenca available on SYMOs????
+(*IF lrPV1_Frequency<> 0 THEN 
+	lr_ValidFrequency := lrPV1_Frequency;
+ELSIF lrPV2_Frequency<> 0 THEN 
+	lr_ValidFrequency := lrPV2_Frequency;
+ELSIF fbPVFronius3.stDataEMPower_PV.lrFrequency <> 0 THEN
+	lr_ValidFrequency := fbPVFronius3.stDataEMPower_PV.lrFrequency;
+ELSE
+	lr_ValidFrequency := 0;
+END_IF
+*)
+FB_Linear_Frequency(
+	x1:= 50.2, 
+	y1:= 10000, 
+	x2:= 50.8, 
+	y2:= 0, 
+	x:= LREAL_TO_REAL(lr_ValidFrequency), 
+	y=> real_FrequencyLimit );
+real_FrequencyLimit := LIMIT(0,real_FrequencyLimit,10000);
+real_RegulatroMaxValue_Limit := LIMIT(0,real_RegulatroMaxValue_Calc*real_Factor_Calc,10000);	// add 20% regualtion margin
+FB_PID_Inverter.rMaxValue := MIN(real_FrequencyLimit,real_RegulatroMaxValue_Limit);
+	
+// calculate setpoint for PV Island operation
+IF prgBattery.fbBattery.stDataXelectrix.eGridState = 2 THEN
+	FB_PID_Inverter.bEnable := TRUE;
+	FB_PID_Inverter.rSetpoint := LREAL_TO_REAL(LIMIT(0,(30 *real_SOCLimit/100)+  prgHouse.lrPowerHouseUndelayed,50));
+	int_SetPointInverter := REAL_TO_INT(FB_PID_Inverter.rQController);
+	FB_PID_Inverter.rActualValue:= LREAL_TO_REAL(lrPowerPV);
+	m_PVLoadRegluationactive := TRUE;
+ELSE 	// mains parallel operation
+
+	FB_PID_Inverter.bEnable := TRUE;
+//	FB_PID_Inverter.rSetpoint := LREAL_TO_REAL(- prgBattery.lrPowerBattery - real_MainsSetpointRegulate + prgHouse.lrPowerHouseUndelayed );
+	FB_PID_Inverter.rSetpoint := LREAL_TO_REAL(- real_MainsSetpointRegulate); 
+	int_SetPointInverter := REAL_TO_INT(FB_PID_Inverter.rQController);
+//	FB_PID_Inverter.rActualValue:= LREAL_TO_REAL(lrPowerPV);
+
+	FB_PID_Inverter.rActualValue:=  -prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal;
+	m_PVLoadRegluationactive := TRUE;
+END_IF
+
+
+// linea Equation SOC
+
+FB_Linear_SOC(
+	x1:= DWORD_TO_REAL(dword_SOC_RegluateStart), 
+	y1:= 100, 
+	x2:= DWORD_TO_REAL(dword_SOC_RegluateStop), 
+	y2:= 0, 
+	x:= DWORD_TO_REAL(prgBattery.dwSOCBattery), 
+	y=> real_SOCLimit);
+real_SOCLimit := LIMIT(0,real_SOCLimit,100);
+
+// PID regulatro pv setpoint
+
+
+FB_PID_Inverter(
+	bEnable:= , 
+	rSetpoint:= , 
+	udiIValue:= udint_IValue, 
+	udiDValue:= uditn_DValue, 
+	udiDamping:= 0, 
+	rPValue:= rPValue, 
+	rMaxValue:= , 
+	rMinValue:= 100, 
+	rNeutralZone:= 1, 
+	bDirection:= FALSE, 
+	rActualValue:= ,
+	rQController=> );
+	
+
+real_Setpoint_PID_In := FB_PID_Inverter.rSetpoint;
+
+
+
+// disable inverters in case of mains power too big
+IF prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal < realMaxGridPower_1 THEN
+	arr_m_DisableInverter[1] := TRUE;
+	arr_m_DisableInverter[2] := TRUE;
+	arr_m_DisableInverter[3] := TRUE;
+	arr_m_DisableInverter[4] := TRUE;
+ELSIF prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal < realMaxGridPower_2 THEN
+	arr_m_DisableInverter[5] := TRUE;
+	arr_m_DisableInverter[6] := TRUE;
+	arr_m_DisableInverter[7] := TRUE;
+	arr_m_DisableInverter[8] := TRUE;
+ELSIF prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal < realMaxGridPower_3 THEN
+	arr_m_DisableInverter[9] := TRUE;
+	arr_m_DisableInverter[10] := TRUE;
+	arr_m_DisableInverter[11] := TRUE;
+	arr_m_DisableInverter[12] := TRUE;
+END_IF
+IF prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal < -120 THEN
+	arr_m_DisableInverter[1] := TRUE;
+	arr_m_DisableInverter[2] := TRUE;
+	arr_m_DisableInverter[3] := TRUE;
+	arr_m_DisableInverter[4] := TRUE;
+	arr_m_DisableInverter[5] := TRUE;
+	arr_m_DisableInverter[6] := TRUE;
+	arr_m_DisableInverter[7] := TRUE;
+	arr_m_DisableInverter[8] := TRUE;
+	arr_m_DisableInverter[9] := TRUE;
+	arr_m_DisableInverter[10] := TRUE;
+	arr_m_DisableInverter[11] := TRUE;
+	arr_m_DisableInverter[12] := TRUE;
+END_IF
+FOR i:= 1 TO 12 BY 1 DO
+	IF arr_m_DisableInverter[i] = TRUE THEN
+		ton_PV_On_Delay_after_Off[i].IN := TRUE;
+	END_IF
+	IF ton_PV_On_Delay_after_Off[i].Q THEN
+		ton_PV_On_Delay_after_Off[i].IN := FALSE;
+		arr_m_DisableInverter[i] := FALSE;
+	END_IF
+		
+END_FOR
+ton_PV_On_Delay_after_Off[1]( PT := T#30S); 	
+ton_PV_On_Delay_after_Off[2]( PT := T#40S); 	
+ton_PV_On_Delay_after_Off[3]( PT := T#30S); 	
+ton_PV_On_Delay_after_Off[4]( PT := T#60S); 	
+ton_PV_On_Delay_after_Off[5]( PT := T#60S); 	
+ton_PV_On_Delay_after_Off[6]( PT := T#60S); 	
+ton_PV_On_Delay_after_Off[7]( PT := T#80S); 	
+ton_PV_On_Delay_after_Off[8]( PT := T#60S); 	
+ton_PV_On_Delay_after_Off[9]( PT := T#90S); 	
+ton_PV_On_Delay_after_Off[10]( PT := T#110S); 	
+ton_PV_On_Delay_after_Off[11]( PT := T#90S); 	
+ton_PV_On_Delay_after_Off[12]( PT := T#90S); 	
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV_3xFBs">
+      <LineId Id="801" Count="281" />
+      <LineId Id="497" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HTTP_Get_Auhofcenter" Id="{99f161aa-48d4-4ea3-9efb-375cd8be7fa0}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HTTP_Get_Auhofcenter
+VAR_INPUT
+	{attribute 'hide'}
+	bWriteRequest				: BOOL;													//Send a Write Request to the Server
+	{attribute 'hide'}
+	bReadRequest				: BOOL;													//Send a Read Request to the Server
+	{attribute 'hide'}
+	arrListOfVariables			: ARRAY[1..100] OF ST_ListOfVariables_Auhofcenter;		//List of Variables what the function must be send or write
+	{attribute 'hide'}
+	bSend           			: BOOL;													//Send the Request
+	{attribute 'hide'}
+	tTimeOut					: TIME := T#10S;										//Timer for Timeout
+END_VAR
+VAR_IN_OUT
+	{attribute 'hide'}
+    fbClient          			: FB_IotHttpClient;										//HTTP Client Data
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bValidResult				: BOOL;													//Valid Result received from Server
+	{attribute 'hide'}
+    bBusy             			: BOOL;													//Function is Busy
+	{attribute 'hide'}
+    bError           			: BOOL;													//Error sucess
+	{attribute 'hide'}
+	byTypeOfLastRequest			: BYTE;													//Type of the last Request. (0 = Read, 1 = Write)
+	{attribute 'hide'}
+	sContent         			: STRING(7500);											//Received Content
+END_VAR
+VAR
+    fbRequest        		 	: FB_IotHttpRequest;									//Http Function
+	RisingEdge        			: R_TRIG;												//Internal positive edge
+	timTimeout					: TON;													//Timer for Timeout
+   	bGetContentResult 			: BOOL;													//Get Content Result
+	byQuantity					: BYTE;													//Quantity of Datapoints
+	byLoop						: BYTE;													//Variable foor Loop to prepear the URI
+	nState						: UDINT;												//Statemaschine
+  	nReqCount					: UDINT;												//Counter requests
+    nResCount					: UDINT;												//Counter results
+    nValidResCount				: UDINT;												//Counter valid results
+    nErrCount					: UDINT;												//Error Counter
+	eErrorCode					: ETcIotHttpRequestError;								//Error Code
+	sUriStart					: STRING(20);											//Start URI
+	sUriComplete				: STRING(2000);											//Complete URI
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 15.07.2021
+//Version : 1.0.0.0
+
+//With this Function is possible to send a HTTP Get Request to the System in the Auhof Center in Vienna.
+
+//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN nState := 0; bBusy := FALSE; END_IF
+
+RisingEdge(CLK:= bSend);
+
+CASE nState OF
+0:
+    IF RisingEdge.Q THEN
+		
+		byQuantity := 0;
+			FOR byLoop := 1 TO 100 BY 1 DO
+				IF arrListOfVariables[byLoop].sVariableName <> '' THEN byQuantity := byQuantity + 1; END_IF 
+			END_FOR
+	
+		sUriComplete := '';
+			//Read Request
+			IF bReadRequest THEN 
+				sUriStart := '/lynus/read?';
+					sUriComplete := sUriStart;
+						IF byQuantity <= 100 THEN
+							FOR byLoop := 1 TO byQuantity BY 1 DO
+								CONCAT2(ADR(sUriComplete),ADR(arrListOfVariables[byLoop].sVariableName),ADR(sUriComplete),SIZEOF(sUriComplete));
+									IF byLoop <= (byQuantity - 1) THEN CONCAT2(ADR(sUriComplete),ADR(','),ADR(sUriComplete),SIZEOF(sUriComplete)); END_IF	
+							END_FOR
+						END_IF
+							byTypeOfLastRequest := 0;
+			END_IF
+				//Write Request
+				IF bWriteRequest THEN 
+					sUriStart := '/lynus/write?';
+						sUriComplete := sUriStart;
+							IF byQuantity <= 100 THEN
+								FOR byLoop := 1 TO byQuantity BY 1 DO
+									CONCAT2(ADR(sUriComplete),ADR(arrListOfVariables[byLoop].sVariableName),ADR(sUriComplete),SIZEOF(sUriComplete));
+										CONCAT2(ADR(sUriComplete),ADR('='),ADR(sUriComplete),SIZEOF(sUriComplete));
+											IF arrListOfVariables[byLoop].bIsString THEN CONCAT2(ADR(sUriComplete),ADR('"'),ADR(sUriComplete),SIZEOF(sUriComplete)); END_IF 	
+												CONCAT2(ADR(sUriComplete),ADR(arrListOfVariables[byLoop].sVariableValue),ADR(sUriComplete),SIZEOF(sUriComplete));
+													IF arrListOfVariables[byLoop].bIsString THEN CONCAT2(ADR(sUriComplete),ADR('"'),ADR(sUriComplete),SIZEOF(sUriComplete)); END_IF 			
+														IF byLoop <= (byQuantity - 1) THEN CONCAT2(ADR(sUriComplete),ADR(','),ADR(sUriComplete),SIZEOF(sUriComplete)); END_IF	
+								END_FOR
+							END_IF
+								byTypeOfLastRequest := 1;	
+				END_IF
+		
+		bValidResult := FALSE;
+		
+		IF fbRequest.SendRequest(sUri:= sUriComplete,
+								 fbClient:= fbClient, 
+									eRequestType:= ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+			nState:= 1;
+			nReqCount:= nReqCount+1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF
+    END_IF
+	
+1:
+    IF NOT fbRequest.bBusy THEN
+       IF NOT fbRequest.bError THEN
+            bGetContentResult:= fbRequest.GetContent(pContent:= ADR(sContent), 
+                                                     nContentSize:= SIZEOF(sContent), 
+                                                     bSetNullTermination:= TRUE);
+            IF fbRequest.nStatusCode >= 200 AND fbRequest.nStatusCode < 300 THEN
+                	bValidResult := TRUE;
+                    nValidResCount:= nValidResCount+1;
+                    bError:= FALSE;
+               		nResCount:= nResCount+1;
+           END_IF
+		   		//Error Response from the Server
+				IF sContent = 'Error' THEN bError := TRUE; END_IF
+        END_IF
+			IF fbRequest.bError THEN bError:= TRUE; eErrorCode := fbRequest.eErrorId; END_IF 
+			nState:= 0;
+			bBusy:= FALSE;
+			IF bError THEN
+				nErrCount:= nErrCount+1;
+			END_IF	
+    END_IF
+	
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HTTP_Get_Auhofcenter">
+      <LineId Id="119" Count="2" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="362" Count="1" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="178" Count="1" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="165" Count="1" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="201" Count="3" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="205" Count="1" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="43" Count="8" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="52" Count="2" />
+      <LineId Id="56" Count="3" />
+      <LineId Id="63" Count="3" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="70" Count="5" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

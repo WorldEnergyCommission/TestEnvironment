@@ -1,0 +1,261 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{bd3121db-4971-43ab-8fd4-bc94bde51b2b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV1_1					: FB_Symo_PV_Inverter_int_1_DM_30_Inverter_1;
+	fbPV1_2					: FB_Symo_PV_Inverter_INT_1_DM_30_Inverter_1;
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_3				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_4				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_5				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_6				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_7				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_8				: LREAL;				//{#lynus.ag#()}
+
+	fbCounterPV_1			: FB_EnergyCounter;
+	fbCounterPV_2			: FB_EnergyCounter;
+	fbCounterPV_3			: FB_EnergyCounter;
+	fbCounterPV_4			: FB_EnergyCounter;
+	fbCounterPV_5			: FB_EnergyCounter;
+	fbCounterPV_6			: FB_EnergyCounter;
+	fbCounterPV_7			: FB_EnergyCounter;
+	fbCounterPV_8			: FB_EnergyCounter;
+
+
+	fbCounterPV_total			: FB_EnergyCounter;
+
+END_VAR
+VAR PERSISTENT
+	lrCounterPV_1	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV_2	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV_3	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV_4	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV_5	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV_6	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV_7	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV_8	: LREAL;						//{#lynus.ag#()}
+	lrCounterPV		: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+fbPV1_1(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.1.130', 
+	arrUnitID_Inverter:= , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+fbPV1_1.arrUnitID_Inverter[1] := 6;
+fbPV1_1.arrUnitID_Inverter[2] := 7;
+fbPV1_1.arrUnitID_Inverter[3] := 8;
+
+
+fbPV1_2(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.1.131', 
+	arrUnitID_Inverter:= , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+fbPV1_2.arrUnitID_Inverter[1] := 1;
+fbPV1_2.arrUnitID_Inverter[2] := 2;
+fbPV1_2.arrUnitID_Inverter[3] := 3;
+fbPV1_2.arrUnitID_Inverter[4] := 4;
+fbPV1_2.arrUnitID_Inverter[5] := 5;
+
+lrPowerPV_1 := fbPV1_2.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_2 := fbPV1_2.arrDataSymo10[2].lrPowerAcInverter;
+lrPowerPV_3 := fbPV1_2.arrDataSymo10[3].lrPowerAcInverter;
+lrPowerPV_4 := fbPV1_2.arrDataSymo10[4].lrPowerAcInverter;
+lrPowerPV_5 := fbPV1_2.arrDataSymo10[5].lrPowerAcInverter;
+lrPowerPV_6 := fbPV1_1.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_7 := fbPV1_1.arrDataSymo10[2].lrPowerAcInverter;
+lrPowerPV_8 := fbPV1_1.arrDataSymo10[3].lrPowerAcInverter;
+	
+
+
+lrPowerPV := lrPowerPV_1 + lrPowerPV_2 + lrPowerPV_3 + lrPowerPV_4 + lrPowerPV_5 + lrPowerPV_6 + lrPowerPV_7 + lrPowerPV_8;
+
+
+// kWh Counters
+
+fbCounterPV_1(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_1, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_1.lrTotalCounterEnergy_Consumption > lrCounterPV_1 THEN  	
+	lrCounterPV_1 := fbCounterPV_1.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_2(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_2, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_2.lrTotalCounterEnergy_Consumption > lrCounterPV_2 THEN  	
+	lrCounterPV_2 := fbCounterPV_2.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_3(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_3, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_3.lrTotalCounterEnergy_Consumption > lrCounterPV_3 THEN  	
+	lrCounterPV_3 := fbCounterPV_3.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_4(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_4, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_4.lrTotalCounterEnergy_Consumption > lrCounterPV_4 THEN  	
+	lrCounterPV_4 := fbCounterPV_4.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_5(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_5, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_5.lrTotalCounterEnergy_Consumption > lrCounterPV_5 THEN  	
+	lrCounterPV_5 := fbCounterPV_5.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_6(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_6, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_6.lrTotalCounterEnergy_Consumption > lrCounterPV_6 THEN  	
+	lrCounterPV_6 := fbCounterPV_6.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_7(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_7, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_7.lrTotalCounterEnergy_Consumption > lrCounterPV_7 THEN  	
+	lrCounterPV_7 := fbCounterPV_7.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_8(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV_8, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_8.lrTotalCounterEnergy_Consumption > lrCounterPV_8 THEN  	
+	lrCounterPV_8 := fbCounterPV_8.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounterPV_total(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounterPV_total.lrTotalCounterEnergy_Consumption > lrCounterPV THEN  	
+	lrCounterPV := fbCounterPV_total.lrTotalCounterEnergy_Consumption;
+END_IF 
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="446" Count="1" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="365" Count="6" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="374" Count="1" />
+      <LineId Id="445" Count="0" />
+      <LineId Id="376" Count="11" />
+      <LineId Id="390" Count="1" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="395" Count="6" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="154" Count="8" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="165" Count="1" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="168" Count="12" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="183" Count="12" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="196" Count="12" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="210" Count="12" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="224" Count="12" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="238" Count="12" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="252" Count="12" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="266" Count="12" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="448" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

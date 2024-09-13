@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      margin: 0;
+      font-family: monospace;
+      -webkit-print-color-adjust: exact;
+      color: #1a1a1a;
+    }
+
+    .sheet {
+      margin: 0;
+      overflow: hidden;
+      position: relative;
+      box-sizing: border-box;
+      page-break-after: always;
+      width: 210mm;
+      padding: 15mm;
+      position: relative;
+    }
+
+    @media screen {
+      body {
+        background: #e0e0e0;
+      }
+
+      .sheet {
+        background: white;
+        box-shadow: 0 0.5mm 2mm rgba(0, 0, 0, 0.3);
+        margin: 5mm auto;
+      }
+    }
+
+    @media print {
+      body {
+        width: 210mm;
+      }
+    }
+
+    th {
+      background-color: #dfdfdf;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #dfdfdf;
+    }
+
+    th,
+    td {
+      text-align: right;
+      padding: 4px;
+    }
+
+    tr.divider > td {
+      border-bottom: 1px solid #dfdfdf;
+    }
+
+    tr.divider-top > td {
+      border-top: 1px solid #dfdfdf;
+    }
+
+    tr.summary > td {
+      border-bottom: double #dfdfdf;
+    }
+
+    td:first-child,
+    th:first-child {
+      text-align: left;
+    }
+
+    tr.title > td {
+      font-weight: bold;
+    }
+  </style>
+
+  <body>
+    {{$report := .Report}}
+    <div class="sheet">
+      <div style="display: flex; align-items: center; justify-content: center">
+        <h1 style="text-align: center">{{.Name}}</h1>
+        <div style="flex: 1"></div>
+        <div style="text-align: right">
+          {{.Address.Street}}<br />
+          {{.Address.City}}<br />
+          {{.Address.Country}}
+        </div>
+      </div>
+      <div>
+        <span>
+          <th>
+            {{.Start.Format "02/01/2006 15:04"}} - {{.End.Format "02/01/2006 15:04"}}
+          </th>
+        </span>
+      </div>
+      <table style="margin-top: 48px; width: 100%">
+        <thead>
+          <tr>
+            <th>Production</th>
+            <th>Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              {{if eq $report.Meta.Zev.Titles.Photovoltaik ""}} Photovoltaik
+              {{else}} {{$report.Meta.Zev.Titles.Photovoltaik}} {{end}}
+            </td>
+            <td>{{round .Production.Internal.Total}}</td>
+          </tr>
+          <tr>
+            <td>&emsp;Low tariff</td>
+            <td>{{round .Production.Internal.Low}}</td>
+          </tr>
+          <tr class="divider">
+            <td>&emsp;High tariff</td>
+            <td>{{round .Production.Internal.High}}</td>
+          </tr>
+          <tr>
+            <td>
+              {{if eq $report.Meta.Zev.Titles.Grid ""}} Grid {{else}}
+              {{$report.Meta.Zev.Titles.Grid}} {{end}}
+            </td>
+            <td>{{round .Production.External.Total}}</td>
+          </tr>
+          <tr>
+            <td>&emsp;Low tariff</td>
+            <td>{{round .Production.External.Low}}</td>
+          </tr>
+          <tr class="divider">
+            <td>&emsp;High tariff</td>
+            <td>{{round .Production.External.High}}</td>
+          </tr>
+          <tr>
+            <td>Total</td>
+            <td>{{round .Production.Total}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <table style="margin-top: 48px">
+        <thead>
+          <tr>
+            <th>Consumption</th>
+            <th>Difference</th>
+            <th>Price ({{$report.Currency}})</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range $key, $val := .Consumption.Consumers}}
+          <tr>
+            <td>{{$key}}<br /><small>{{$val.MeteringID}}</small></td>
+            <td>{{round $val.Total}}</td>
+            <td>{{round $val.TotalPrice}}</td>
+          </tr>
+          <tr>
+            <td>
+              &emsp; {{if eq $report.Meta.Zev.Titles.Photovoltaik ""}}
+              Photovoltaik {{else}} {{$report.Meta.Zev.Titles.Photovoltaik}}
+              {{end}}
+            </td>
+            <td>{{round $val.Internal.Total}}</td>
+            <td>{{round $val.Internal.TotalPrice}}</td>
+          </tr>
+          <tr>
+            <td>&emsp;&emsp;Low Tariff <small>(1-5:10.9.5)</small></td>
+            <td>{{round $val.Internal.Low}}</td>
+            <td>{{round $val.Internal.LowPrice}}</td>
+          </tr>
+          <tr>
+            <td>&emsp;&emsp;High Tariff <small>(1-5:10.9.4)</small></td>
+            <td>{{round $val.Internal.High}}</td>
+            <td>{{round $val.Internal.HighPrice}}</td>
+          </tr>
+          <tr>
+            <td>
+              &emsp; {{if eq $report.Meta.Zev.Titles.Grid ""}} Grid {{else}}
+              {{$report.Meta.Zev.Titles.Grid}} {{end}}
+            </td>
+            <td>{{round $val.External.Total}}</td>
+            <td>{{round $val.External.TotalPrice}}</td>
+          </tr>
+          <tr>
+            <td>&emsp;&emsp;Low Tariff <small>(1-5:1.9.2)</small></td>
+            <td>{{round $val.External.Low}}</td>
+            <td>{{round $val.External.LowPrice}}</td>
+          </tr>
+          <tr>
+            <td>&emsp;&emsp;High Tariff <small>(1-5:1.9.1)</small></td>
+            <td>{{round $val.External.High}}</td>
+            <td>{{round $val.External.HighPrice}}</td>
+          </tr>
+          {{end}}
+          <tr class="divider-top">
+            <td><b>Total</b></td>
+            <td><b>{{round .Consumption.Total}}</b></td>
+            <td><b>{{round .Consumption.TotalPrice}}</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

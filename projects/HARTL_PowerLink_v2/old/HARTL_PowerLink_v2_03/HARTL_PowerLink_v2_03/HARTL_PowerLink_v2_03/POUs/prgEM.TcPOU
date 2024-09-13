@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgEM" Id="{3dc4cc04-aac0-4135-8866-9b92abf24d27}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+	fbEM1Counter	: FB_EnergyCounter;
+	fbEM2			: FB_EM_Beckhoff_KL3403;
+	fbEM2Counter	: FB_EnergyCounter;
+	fbEM3			: FB_EM_Beckhoff_KL3403;
+	fbEM3Counter	: FB_EnergyCounter;
+	fbEM4			: FB_EM_Beckhoff_KL3403;
+	fbEM4Counter	: FB_EnergyCounter;
+	lrPowerEM1		: LREAL;						//{#lynus.ag#()}
+	lrPowerEM2		: LREAL;						//{#lynus.ag#()}
+	lrPowerEM3		: LREAL;						//{#lynus.ag#()}
+	lrPowerEM4		: LREAL;						//{#lynus.ag#()}
+	lr_InputVoltage_L1N		: LREAL;						//{#lynus.ag#()}
+	lr_InputVoltage_L2N		: LREAL;						//{#lynus.ag#()}
+	lr_InputVoltage_L3N		: LREAL;						//{#lynus.ag#()}
+	lr_InputVoltage_L1L2	: LREAL;						//{#lynus.ag#()}
+	lr_InputVoltage_L2L3	: LREAL;						//{#lynus.ag#()}
+	lr_InputVoltage_L3L1	: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterEM1	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM2	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM3	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM4	: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbKBusState(uiKBusState_OUT=> );
+
+// Base Connection
+
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 64, 
+	uiCurrentTransformerRatioL2:= 64, 
+	uiCurrentTransformerRatioL3:= 64, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM1 := fbEM1.stDataEMPower.lrPowerTotal;
+lr_InputVoltage_L1N := fbEM1.stDataEMPower.lrVoltageL1N;
+lr_InputVoltage_L2N := fbEM1.stDataEMPower.lrVoltageL2N;
+lr_InputVoltage_L3N := fbEM1.stDataEMPower.lrVoltageL3N;
+lr_InputVoltage_L1L2 := fbEM1.stDataEMPower.lrVoltageL1L2;
+lr_InputVoltage_L2L3 := fbEM1.stDataEMPower.lrVoltageL2L3;
+lr_InputVoltage_L3L1 := fbEM1.stDataEMPower.lrVoltageL3L1;
+
+fbEM1Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM1, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM1Counter.lrTotalCounterEnergy_Consumption > lrCounterEM1 THEN  	
+	lrCounterEM1 := fbEM1Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+// Output1, 3x400V 32A, CEE32
+
+fbEM2(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 35, 
+	uiCurrentTransformerRatioL2:= 35, 
+	uiCurrentTransformerRatioL3:= 35, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM2 := fbEM2.stDataEMPower.lrPowerTotal;	
+
+fbEM2Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM2, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM2Counter.lrTotalCounterEnergy_Consumption > lrCounterEM2 THEN  	
+	lrCounterEM2 := fbEM2Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// Output2, 3x400V 32A, CEE32
+
+fbEM3(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 35, 
+	uiCurrentTransformerRatioL2:= 35, 
+	uiCurrentTransformerRatioL3:= 35, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM3 := fbEM3.stDataEMPower.lrPowerTotal;	
+
+fbEM3Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM3, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM3Counter.lrTotalCounterEnergy_Consumption > lrCounterEM3 THEN  	
+	lrCounterEM3 := fbEM3Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// Output3, 3x400V 16A, CEE16
+
+fbEM4(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 35, 
+	uiCurrentTransformerRatioL2:= 35, 
+	uiCurrentTransformerRatioL3:= 35, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM4 := fbEM4.stDataEMPower.lrPowerTotal;	
+
+fbEM4Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM4, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM4Counter.lrTotalCounterEnergy_Consumption > lrCounterEM4 THEN  	
+	lrCounterEM4 := fbEM4Counter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="28" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="15" Count="12" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="262" Count="4" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="44" Count="12" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="71" Count="30" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="103" Count="32" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="137" Count="1" />
+      <LineId Id="202" Count="30" />
+      <LineId Id="136" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

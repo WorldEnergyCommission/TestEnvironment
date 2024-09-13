@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPV" Id="{52a4cf08-62d2-4b94-900b-2ea0759cae15}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV						: FB_SunSpec_PV_Inverter_T;
+	lrPowerPV					: LREAL;						//{#lynus.ag#()}
+	byErrorWarningPV			: BYTE;							//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterPV					: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// To-Do:
+// adopt FB Declaration, change to correct FB
+// adopt FB Definition, change to correct in/out Vars
+// correct lrPowerPV definition
+// correct lrCounterPV definition
+// correct byErrorWarningPV definition
+
+fbPV(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.1.35', 
+	byUnitID_Inverter:= 1, 
+	stDataSunSpec=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+lrPowerPV := fbPV.stDataEMPower_PV.lrPowerTotal;
+byErrorWarningPV := fbPV.stDataEMPower_PV.byErrorWarning;
+	
+IF fbPV.stDataEMCounter_PV.lrCounterEnergyT1_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPV.stDataEMCounter_PV.lrCounterEnergyT1_Production;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="124" Count="3" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="28" Count="6" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="121" Count="1" />
+      <LineId Id="101" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

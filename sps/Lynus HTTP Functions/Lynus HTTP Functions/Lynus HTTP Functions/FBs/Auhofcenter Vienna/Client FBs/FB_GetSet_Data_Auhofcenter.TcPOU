@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_GetSet_Data_Auhofcenter" Id="{95e32347-4e59-4bc9-8715-75aadd827765}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_GetSet_Data_Auhofcenter
+VAR_INPUT
+	bStart						: BOOL;															//Start the connection to the Service
+	bWriteRequest				: BOOL;															//Send a Write Request to the Server
+	bReadRequest				: BOOL;															//Send a Read Request to the Server
+	tDelayRequest				: TIME := T#15S;												//Timer for delay before start with the next read or write Request
+	sHostname					: STRING(255);													//Hostname or IP Adress from the Server
+	arrListOfVariables			: ARRAY[1..100] OF ST_ListOfVariables_Auhofcenter;				//List of Variables what the function must be send or write		
+END_VAR
+VAR_OUTPUT
+	bValidResult				: BOOL;															//Valid Result received from Server
+    bBusy						: BOOL;															//Function is Busy
+    bError						: BOOL;															//Error sucess
+	bDone						: BOOL;															//True after the decoding from the received Json File
+	bConnected					: BOOL;															//Connection to the Server
+	arrListOfVariabelsOut		: ARRAY[1..100] OF ST_ListOfVariables_Auhofcenter;				//Received Values form the Server after read or write command
+	hrErrorCode       			: HRESULT;														//Error Result from Http Client
+END_VAR
+VAR
+	fbHttpClientEnergyHttp		: FB_IotHttpClient;												//Http Client Function
+	fbHttpGet					: FB_HTTP_Get_Auhofcenter;										//Http Get Request to the Server
+	fbDecodeJson				: FB_Decode_Json_Auhofcenter;									//Function to decode the received Json File
+	timStartRequest				: TON;															//Timer to Start the Request
+	timDissableFunctions		: TON;															//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL		: TON;															//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	timReset24					: TON;															//timer disconnect every 24h
+	FPStartRequest				: R_TRIG;														//Internal positive Edge
+	FPDone						: R_TRIG;														//Internal positive Edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+	arrListOfVariablesInt		: ARRAY[1..100] OF ST_ListOfVariables_Auhofcenter;				//Internal List of Variables to compare it with received values after a write Request	
+	bErrorCheckValues			: BOOL;															//Error flag to check the values after a write Request
+	byLoopCheckValues			: BYTE;															//Loop to check teh values after a Write Request. Server sends the same values back when he has received succesfully
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 18.02.2021
+//Version : 1.0.0.0
+
+//With this Function is possible to send a HTTP Get Request to the System in the Auhofcenter Vienna
+//Its possible to send a Send Request. Here the Server deliver the actual Values.
+//On a Write Request we can send new Values to the Server.
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbHttpClientEnergyHttp.sHostName := sHostname;
+fbHttpClientEnergyHttp.tConnectionTimeout := tDelayRequest;
+
+IF NOT fbHttpClientEnergyHttp.bConfigured THEN 
+	fbHttpClientEnergyHttp.nHostPort:= 80;
+	fbHttpClientEnergyHttp.stTLS.bNoServerCertCheck:= FALSE;
+	fbHttpClientEnergyHttp.bKeepAlive := TRUE;
+	fbHttpClientEnergyHttp.tConnectionTimeout := T#10S;
+END_IF
+
+//Timer Disconnect to Server every 24H because somthing goes wrog with the loval http plc in the auhofcenter 
+timReset24(IN:= bStart AND NOT timReset24.Q, PT:= T#24H, Q=> , ET=> );		
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+	timStartRequest(IN:= fbHttpClientEnergyHttp.bConfigured AND bStart AND NOT timStartRequest.Q AND NOT timDissableFunctions.Q AND NOT timReset24.Q, PT:= tDelayRequest, Q=> , ET=> );
+		IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbHttpClientEnergyHttp.bConfigured)) THEN fbHttpGet.bSend := TRUE; END_IF
+
+IF timReset24.Q THEN fbHttpGet.bSend := FALSE; END_IF			
+		
+//Http Get Function
+fbHttpGet(
+	bWriteRequest:= bWriteRequest, 
+	bReadRequest:= bReadRequest, 
+	arrListOfVariables:= arrListOfVariables, 
+	bSend:= , 
+	tTimeOut:= T#20S,
+	fbClient:= fbHttpClientEnergyHttp, 
+	bValidResult=> bValidResult, 
+	bBusy=> bBusy, 
+	bError=> ,
+	byTypeOfLastRequest=> , 
+	sContent=> );
+
+//Copy the values form the actual Request in a internal Array to compare it with the received Values when the request was a Write Request
+IF fbHttpGet.bSend THEN arrListOfVariablesInt := arrListOfVariables; END_IF  
+	
+fbHttpGet.bSend := FALSE;
+	
+fbDecodeJson(
+	bExecute:= fbHttpGet.bValidResult, 
+	sContent:= fbHttpGet.sContent, 
+	arrListOfVariabels=> arrListOfVariabelsOut, 
+	bDone=> bDone, 
+	bError=> );
+
+FPDone(CLK:= bDone, Q=> );	
+	
+//Check after a write command if the Server has received the Values
+IF fbHttpGet.byTypeOfLastRequest = 1 AND FPDone.Q THEN
+	bErrorCheckValues := FALSE;
+		FOR byLoopCheckValues := 1 TO 100 BY 1 DO
+			IF arrListOfVariablesInt[byLoopCheckValues].sVariableName <> arrListOfVariabelsOut[byLoopCheckValues].sVariableName OR
+				arrListOfVariablesInt[byLoopCheckValues].sVariableValue <> arrListOfVariabelsOut[byLoopCheckValues].sVariableValue THEN
+					bErrorCheckValues := TRUE;
+			END_IF	 	
+		END_FOR 	
+END_IF  
+	
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q OR timReset24.Q THEN fbHttpClientEnergyHttp.Disconnect(); END_IF
+
+fbHttpClientEnergyHttp.Execute();
+
+//Connected
+bConnected := fbHttpClientEnergyHttp.bConnected;
+
+//Error
+IF fbHttpGet.bError OR fbDecodeJson.bError OR fbHttpClientEnergyHttp.bError OR bErrorCheckValues THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbHttpClientEnergyHttp.hrErrorCode;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GetSet_Data_Auhofcenter">
+      <LineId Id="16" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="224" Count="1" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="314" Count="6" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="25" Count="1" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="280" Count="1" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="497" Count="0" />
+      <LineId Id="499" Count="1" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="156" Count="4" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="161" Count="3" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="246" Count="2" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="192" Count="4" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="242" Count="2" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="420" Count="1" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="460" Count="2" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="47" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

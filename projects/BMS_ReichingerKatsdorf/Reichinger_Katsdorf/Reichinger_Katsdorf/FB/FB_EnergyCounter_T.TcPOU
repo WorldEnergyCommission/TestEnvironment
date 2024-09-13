@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_EnergyCounter_T" Id="{145d79ba-cd99-481c-bf43-0716c48a49b7}" SpecialFunc="None">
+    <Declaration><![CDATA[
+FUNCTION_BLOCK FB_EnergyCounter_T
+VAR_INPUT
+	byActiveTariff						: BYTE;													//Active Tariff
+	lrPowerInput						: LREAL;												//Input Power in kW
+END_VAR
+VAR_OUTPUT PERSISTENT
+	lrTotalCounterEnergy_Consumption	: LREAL;												//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production		: LREAL;												//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption		: LREAL;												//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption		: LREAL;												//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production		: LREAL;												//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production		: LREAL;												//Total counter for energy Tariff 2 production with unit kWh
+END_VAR
+VAR
+	arrPD								: ARRAY[1..6] OF FB_PersistentData_Number;				//Function to save persistent data
+	timSavePD							: TON;													//Timer to save the persistent Data when the Event Based Mode is active
+	timNewValue							: TON;													//Timer to copy every second a new power value
+	TaskInfo							: GETCURTASKINDEX;										//Function to get the Task Index
+	byWorkMode							: BYTE;													//Work Mode for calculation (1 = Production, 2 = Consumption)
+	udiCycleTime						: UDINT;												//Cycle Time
+	lrCyclesForSecond					: LREAL;												//Needed cycles for 1 Second
+	uiCounterConsumption				: UINT;													//Counter for Cycles in Consumption Mode
+	uiSecondsConsumption				: UINT;													//Elapses Seconds for Consumption
+	rHourConsumption					: REAL;													//Elapsed Hours for Consumption
+	uiCounterProduction					: UINT;													//Counter for Cycles in Production Mode
+	uiSecondsProduction					: UINT;													//Elapses Seconds for Production
+	rHourProduction						: REAL;													//Elapsed Hours for Production
+	lrPowerInput_Int					: LREAL;												//Input Power in kW
+	lrkW_Consumption_CP					: LREAL;												//Power to compare in Consumption Mode
+	lrkW_Production_CP					: LREAL;												//Powet to compare in Production Mode
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 16.11.2021
+//Version : 1.0.0.0
+
+//This function block can be used to count different Energy Counter
+//Positive Values mens comsumption
+//Negative Values means production 
+
+(*--------------------------------------------------------------------------Limits-----------------------------------------------------------------------------------*)
+
+byActiveTariff := LIMIT(1,byActiveTariff,2);
+
+(*---------------------------------------------------------------------------Logic-----------------------------------------------------------------------------------*)
+
+//Get Task Index
+TaskInfo(index=> );
+	//Cycle Time in ms
+	IF TwinCAT_SystemInfoVarList._TaskInfo[TaskInfo.index].CycleTime <> 0 THEN
+		udiCycleTime := TwinCAT_SystemInfoVarList._TaskInfo[TaskInfo.index].CycleTime / 10000;
+	END_IF
+
+//Cycles for 1 Second
+IF udiCycleTime > 0 THEN 
+	lrCyclesForSecond := (1 / UDINT_TO_LREAL(udiCycleTime)) * 1000; 
+END_IF
+
+//Timer to copy the new Value
+//Necessary becaue the rest of the logic can handly min every second a change on the power side
+timNewValue(IN:= NOT timNewValue.Q, PT:= T#1S, Q=> , ET=> );
+	IF timNewValue.Q THEN lrPowerInput_Int := lrPowerInput; END_IF
+
+IF lrCyclesForSecond <> 0 THEN
+
+	uiCounterConsumption := uiCounterConsumption + 1;
+		uiCounterProduction := uiCounterProduction + 1;
+	
+	//Calculate the Time	
+	IF uiCounterProduction >= lrCyclesForSecond THEN uiSecondsProduction := uiSecondsProduction + 1; uiCounterProduction := 0; END_IF
+		rHourProduction := UINT_TO_REAL(uiSecondsProduction) / 3600;
+	IF uiCounterConsumption >= lrCyclesForSecond THEN uiSecondsConsumption := uiSecondsConsumption + 1; uiCounterConsumption := 0; END_IF
+		rHourConsumption := UINT_TO_REAL(uiSecondsConsumption) / 3600;
+	
+	//Production
+	IF lrkW_Production_CP <> lrPowerInput_Int THEN
+		IF byWorkMode = 1 THEN 
+			//Production Tariff 1
+			IF byActiveTariff = 1 THEN 
+				lrCounterEnergyT1_Production := lrCounterEnergyT1_Production + ((lrkW_Production_CP * - 1) * rHourProduction); 
+					lrkW_Production_CP := lrPowerInput_Int;
+			END_IF
+			//Production Tariff 2
+			IF byActiveTariff = 2 THEN 
+				lrCounterEnergyT2_Production := lrCounterEnergyT2_Production + ((lrkW_Production_CP * - 1) * rHourProduction); 
+					lrkW_Production_CP := lrPowerInput_Int;
+			END_IF
+		ELSE
+			lrkW_Production_CP := 0;
+		END_IF
+				rHourProduction := 0; uiSecondsProduction := 0;  uiCounterProduction := 0;	
+	END_IF
+	
+	//Consumption
+	IF lrkW_Consumption_CP <> lrPowerInput_Int THEN
+		IF byWorkMode = 2 THEN  
+			//Consumption Tariff 1
+			IF byActiveTariff = 1 THEN 
+				lrCounterEnergyT1_Consumption := lrCounterEnergyT1_Consumption + (lrkW_Consumption_CP * rHourConsumption); 
+					lrkW_Consumption_CP := lrPowerInput_Int;
+			END_IF
+			//Consumption Tariff 2
+			IF byActiveTariff = 2 THEN 
+				lrCounterEnergyT2_Consumption := lrCounterEnergyT2_Consumption + (lrkW_Consumption_CP * rHourConsumption); 
+					lrkW_Consumption_CP := lrPowerInput_Int;
+			END_IF
+		ELSE
+			lrkW_Consumption_CP := 0;
+		END_IF
+				rHourConsumption := 0; uiSecondsConsumption := 0;  uiCounterConsumption := 0;	
+	END_IF
+
+END_IF
+
+//Total Consumption and Production
+lrTotalCounterEnergy_Consumption := lrCounterEnergyT1_Consumption + lrCounterEnergyT2_Consumption;
+	lrTotalCounterEnergy_Production := lrCounterEnergyT1_Production + lrCounterEnergyT2_Production;
+
+//Switch between the Work modes
+IF lrPowerInput_Int <= 0 THEN byWorkMode := 1; ELSE byWorkMode := 2; END_IF 
+	
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+//When the Event Based mode is active, save the Data only every 6h
+//When we have this Function Blocks in the plc code use the Mode "Power Fail" if the PLC System has this possibility
+timSavePD(IN:= GVL_Persistent_Data.bEventBasedActive AND NOT timSavePD.Q, PT:= T#6H, Q=> , ET=> );
+
+IF timSavePD.Q THEN
+	arrPD[1].lrValue := lrTotalCounterEnergy_Consumption;
+	arrPD[2].lrValue := lrTotalCounterEnergy_Production;
+	arrPD[3].lrValue := lrCounterEnergyT1_Consumption; 
+	arrPD[4].lrValue := lrCounterEnergyT2_Consumption;
+	arrPD[5].lrValue := lrCounterEnergyT1_Production;
+	arrPD[6].lrValue := lrCounterEnergyT2_Production;
+END_IF
+
+arrPD[1](lrValue:= , bEventBasedActive=> );
+arrPD[2](lrValue:= , bEventBasedActive=> );
+arrPD[3](lrValue:= , bEventBasedActive=> );
+arrPD[4](lrValue:= , bEventBasedActive=> );
+arrPD[5](lrValue:= , bEventBasedActive=> );
+arrPD[6](lrValue:= , bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EnergyCounter_T">
+      <LineId Id="233" Count="110" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

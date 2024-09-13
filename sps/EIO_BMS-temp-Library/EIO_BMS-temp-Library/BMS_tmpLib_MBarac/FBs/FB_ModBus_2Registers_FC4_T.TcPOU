@@ -1,0 +1,218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ModBus_2Registers_FC4_T" Id="{9a67a8d5-d423-4929-9fce-b957a4a37ac5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModBus_2Registers_FC4_T
+VAR_INPUT PERSISTENT
+	m_Enable					: BOOL;						//Enable the Fuctionblock and his logic
+	str_IPAdress				: STRING(15);				//IP Adress of the meter
+	w_Adress					: WORD;						//modbus adress
+	int_Divider					: INT;						//Devider of the received data
+	n_UnitID					: BYTE:=255;				// dentification number of a serial sub-network device. If a device is addressed directly via TCP/IP, this value must be 16#FF / 255
+	m_Float32Conversion			: BOOL;						// receives value in Float 32 / real format
+	m_LittleEndian				: BOOL;
+
+END_VAR
+VAR_OUTPUT
+	m_PollSuccessful			: BOOL;						//Poll succesfull		
+	r_ReceivedValue				: REAL;						//Received Value
+	udint_Error_ID				: UDINT;					// ERR ID FB_MBReadRegs
+END_VAR
+VAR
+	timer_Delay					: TON;						//Timer for Delay between Requests
+	timer_DelayStart			: TON;						//Timer to start the state machine with Delay after enabling or after the system ist restartet
+	timer_TimeOut				: TON;						//Timer for Timeout MB Read
+	iStateModbusRead			: INT;						//State machine for read out Data over Modbus RTU
+	fbMBRead_FC4				: FB_MBReadInputRegs  ;		//Modbus Read Function (FC4)
+	ftrig_PEnable				: f_trig;					//Internal positive Edge
+	iStateModbusError			: INT;						//State machine for error out Data over Modbus TCP/IP	
+	FPError_FC4				: R_TRIG;					//Internal positive Edge
+	arrBuffer_FC4				: ARRAY[1..2] OF WORD;		//Buffer with Data from FC4
+	timer_Connection_ok			: TON;
+	int_Data_Received			: INT;
+	m_MBTCPError				: BOOL;
+	int_Data_Received_old		: INT;
+	timer_Connection_ok_TOF	: TOF;
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	usintSign					: USINT;						// converstion dword to real	
+	intExponent					: INT;							// converstion dword to real
+	realMantisse				: REAL;							// converstion dword to real
+	m_Poll_ok: BOOL;
+	timer_Wait: Ton;
+	int_TimeoutError: INT;
+	int_FC4Error: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+
+w_Adress := LIMIT(0,w_Adress,65535);
+int_Divider := LIMIT(1,int_Divider,32767);
+	
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timer_Delay(IN:= , PT:= T#50MS, Q=> , ET=> );
+
+//Timeout Timer is dissabled when the Init Step is aktiv or the function is not enabled
+IF iStateModbusRead = 0 OR NOT m_Enable THEN 
+	timer_Timeout.IN := FALSE; 
+END_IF
+timer_Timeout(IN:= , PT:= T#1S, Q=> , ET=> );
+
+//Enable with Delay that not all sockets have to be created at the same time
+timer_DelayStart(IN:= m_Enable, PT:= T#1S, Q=> , ET=> );
+ftrig_PEnable(CLK:= timer_DelayStart.Q, Q=> );
+
+IF ftrig_PEnable.Q AND iStateModbusRead = 0 THEN 
+	iStateModbusRead := 1; 
+END_IF		
+		
+//Not Enabled
+IF NOT m_Enable THEN 
+	iStateModbusRead := 0; 
+	iStateModbusError := 0; 
+END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step 
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC4.bExecute := FALSE;
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+	
+		iStateModbusRead := 1;
+	
+	1://read the required registers
+		//Start Read
+		fbMBRead_FC4.nQuantity := 2;
+		fbMBRead_FC4.nMBAddr := w_Adress;
+		fbMBRead_FC4.bExecute := TRUE;
+		fbMBRead_FC4.nUnitID := n_UnitID;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC4.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			// convert received data
+			IF m_Float32Conversion AND NOT m_LittleEndian THEN
+		//		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[1], wInputValue_2:= arrBuffer_FC4[2], eByteOrderForConvert:= eByteOrder.eLittleEndian , dwOutputValue=> );
+				fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[1], wInputValue_2:= arrBuffer_FC4[2], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+				(* Sign *)
+				usintSign:=BOOL_TO_USINT(fbConvertWordToDword.dwOutputValue.31);
+				(* Exponent *)
+				intExponent:=DWORD_TO_INT(SHR(fbConvertWordToDword.dwOutputValue,23) AND 16#FF);
+				(* Mantisse *)
+				realMantisse:=DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue AND 16#7FFFFF);
+				(* Result *)
+				r_ReceivedValue := LREAL_TO_REAL((EXPT((-1),usintSign) * (1+realMantisse/8388608) * EXPT(2,intExponent-127))/int_Divider);
+			ELSIF m_Float32Conversion AND m_LittleEndian THEN
+				fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[1], wInputValue_2:= arrBuffer_FC4[2], eByteOrderForConvert:= eByteOrder.eLittleEndian , dwOutputValue=> );
+				(* Sign *)
+				usintSign:=BOOL_TO_USINT(fbConvertWordToDword.dwOutputValue.31);
+				(* Exponent *)
+				intExponent:=DWORD_TO_INT(SHR(fbConvertWordToDword.dwOutputValue,23) AND 16#FF);
+				(* Mantisse *)
+				realMantisse:=DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue AND 16#7FFFFF);
+				(* Result *)
+				r_ReceivedValue := LREAL_TO_REAL((EXPT((-1),usintSign) * (1+realMantisse/8388608) * EXPT(2,intExponent-127))/int_Divider);
+			ELSE
+				fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[2], wInputValue_2:= arrBuffer_FC4[1], eByteOrderForConvert:= eByteOrder.eLittleEndian , dwOutputValue=> );
+				r_ReceivedValue := DINT_TO_REAL(fbConvertWordToDword.dwOutputValue)/int_Divider;
+			END_IF
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC4.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := 3;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC4.Q THEN 
+			iStateModbusError := 300;
+			int_FC4Error := int_FC4Error+1;
+		ELSIF timer_Timeout.Q THEN 
+			timer_Timeout.IN := FALSE; 	  	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	
+	3://Wait and go to step 1
+		//1 because 0 is the Init Step for Read
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 1;
+			timer_Wait.IN :=FALSE;
+		END_IF
+
+			
+		
+		//Error on Master, changes on Inputs or Timeout
+		IF timer_Timeout.Q THEN 
+			iStateModbusError := 300; 
+		END_IF
+	
+END_CASE
+
+(* wait timer*)
+
+timer_Wait(PT:=T#3S);
+
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+ 
+timer_Connection_ok			(In:=int_Data_Received<>int_Data_Received_old,PT:=T#10S);
+timer_Connection_ok_TOF		(In:=NOT(int_Data_Received<>int_Data_Received_old) AND int_Data_Received>3 ,PT:=T#20S);
+int_Data_Received_old:=int_Data_Received;
+m_PollSuccessful:=NOT timer_Connection_ok.Q AND timer_Connection_ok_TOF.Q ;
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC4(	sIPAddr:= str_IPAdress, 
+				nTCPPort:= 502,
+				cbLength:= SIZEOF(arrBuffer_FC4), 
+				pDestAddr:= ADR(arrBuffer_FC4), 
+				tTimeout:= T#10S,
+				nErrId => udint_Error_ID);
+
+FPError_FC4(CLK:= fbMBRead_FC4.  bError, Q=> );		
+
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		timer_Wait.IN :=TRUE;
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC4.bExecute := FALSE;
+		m_MBTCPError := TRUE; 		
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+				//Restart from new with the Read out part after an Error
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 0;	
+			iStateModbusError := 0;
+			timer_Wait.IN :=FALSE;
+			timer_Timeout.IN := FALSE;
+		END_IF		
+							
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ModBus_2Registers_FC4_T">
+      <LineId Id="472" Count="68" />
+      <LineId Id="684" Count="7" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="682" Count="0" />
+      <LineId Id="541" Count="81" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

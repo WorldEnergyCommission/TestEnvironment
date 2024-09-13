@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgCS" Id="{59551682-60c0-4b8c-b147-ae376642129b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbRTUMaster					: FB_KL6xxx_ModbusRTU_22B_Master;
+	byErrorwarningRTU			: BYTE;									//{#lynus.ag#()}
+	fbCS1						: FB_ECS_Schrack_EM_CionHome;			//{#lynus.ag#()}
+	fbCS2						: FB_ECS_Schrack_EM_CionHome;			//{#lynus.ag#()}
+	fbCS3						: FB_ECS_Schrack_EM_CionHome;			//{#lynus.ag#()}
+	bCarConnCS1					: BOOL;									//{#lynus.ag#()}
+	bCarConnCS2					: BOOL;									//{#lynus.ag#()}
+	bCarConnCS3					: BOOL;									//{#lynus.ag#()}
+	bOnEmergPowerOffCS1			: BOOL;									//{#lynus.ag#()}
+	bOnEmergPowerOffCS2			: BOOL;									//{#lynus.ag#()}
+	bOnEmergPowerOffCS3			: BOOL;									//{#lynus.ag#()}
+	bSOnEmergPowerOffCS1		: BOOL;									//{#lynus.ag#()}
+	bSOnEmergPowerOffCS2		: BOOL;									//{#lynus.ag#()}
+	bSOnEmergPowerOffCS3		: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS1			: BYTE;									//{#lynus.ag#()}
+	byErrorWarningCS2			: BYTE;									//{#lynus.ag#()}
+	byErrorWarningCS3			: BYTE;									//{#lynus.ag#()}
+	wCPStateCS1					: WORD;									//{#lynus.ag#()}
+	bChargingReleaseInavlidCS1	: BOOL;									//{#lynus.ag#()}
+	rChargingTimeInMinCS1		: REAL;									//{#lynus.ag#()}
+	wCPStateCS2					: WORD;									//{#lynus.ag#()}
+	bChargingReleaseInavlidCS2	: BOOL;									//{#lynus.ag#()}
+	rChargingTimeInMinCS2		: REAL;									//{#lynus.ag#()}
+	wCPStateCS3					: WORD;									//{#lynus.ag#()}
+	bChargingReleaseInavlidCS3	: BOOL;									//{#lynus.ag#()}
+	rChargingTimeInMinCS3		: REAL;									//{#lynus.ag#()}
+	byErrorCounter				: BYTE;									//{#lynus.ag#()}
+	FpErrror					: R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Power Data
+//Each CS has 14kW
+
+fbRTUMaster(
+	bConfigTerminal:= , 
+	uiKBusState_IN:= prgKNX.fbKBusState.uiKBusState_OUT, 
+	bBusy=> , 
+	byErrorWarning=> , 
+	byActualAdressInUse=> , 
+	diNrOfMBRTUMasterLine_OUT=> , 
+	eMessageMBRTUMaster=> , 
+	bTerminalIsConfigured=> );
+
+fbRTUMaster(
+	bConfigTerminal:= , 
+	bBusy=> , 
+	byErrorWarning=> , 
+	diNrOfMBRTUMasterLine_OUT=> , 
+	eMessageMBRTUMaster=> , 
+	bTerminalIsConfigured=> );
+
+byErrorwarningRTU := fbRTUMaster.byErrorWarning;
+
+FpErrror(CLK:= byErrorwarningRTU = 2, Q=> );
+	IF FpErrror.Q THEN byErrorCounter := byErrorCounter + 1; END_IF
+	
+//Garage 1 near Door	
+fbCS1.stSetupECS.bOnEmergPowerOff := bOnEmergPowerOffCS1;
+
+fbCS1(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byMBAdress:= 1, 
+	diNrOfMBRTUMasterLine_IN:= fbRTUMaster.diNrOfMBRTUMasterLine_OUT, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	stSetupECS:= , 
+	stDataECS=> , 
+	eSchrackErrors=> , 
+	diNrOfECS_OUT=> );
+
+wCPStateCS1:= fbCS1.wCPStateECS;
+	bChargingReleaseInavlidCS1 := fbCS1.bChargingReleaseInavlid;
+		rChargingTimeInMinCS1 := fbCS1.stDataECS.arrChargingTimeInMin[1];
+			byErrorWarningCS1 := fbCS1.stDataECS.byErrorWarning;
+				bCarConnCS1 := fbCS1.stDataECS.bCarConnected;
+					bSOnEmergPowerOffCS1 := fbCS1.stDataECS.bSOnEmergPowerOff;
+	
+//Between CS1	
+fbCS2.stSetupECS.bOnEmergPowerOff := bOnEmergPowerOffCS2;
+
+fbCS2(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byMBAdress:= 2, 
+	diNrOfMBRTUMasterLine_IN:= fbRTUMaster.diNrOfMBRTUMasterLine_OUT, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	stSetupECS:= , 
+	stDataECS=> , 
+	eSchrackErrors=> , 
+	diNrOfECS_OUT=> );
+
+wCPStateCS2:= fbCS2.wCPStateECS;
+	bChargingReleaseInavlidCS2 := fbCS2.bChargingReleaseInavlid;
+		rChargingTimeInMinCS2 := fbCS2.stDataECS.arrChargingTimeInMin[1];
+			byErrorWarningCS2 := fbCS2.stDataECS.byErrorWarning;
+				bCarConnCS2 := fbCS2.stDataECS.bCarConnected;
+					bSOnEmergPowerOffCS2 := fbCS2.stDataECS.bSOnEmergPowerOff;	
+	
+//Outdoor CS
+fbCS3.stSetupECS.bOnEmergPowerOff := bOnEmergPowerOffCS3;
+
+fbCS3(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byMBAdress:= 3, 
+	diNrOfMBRTUMasterLine_IN:= fbRTUMaster.diNrOfMBRTUMasterLine_OUT, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	stSetupECS:= , 
+	stDataECS=> , 
+	eSchrackErrors=> , 
+	diNrOfECS_OUT=> );
+	
+wCPStateCS3:= fbCS3.wCPStateECS;
+	bChargingReleaseInavlidCS3 := fbCS3.bChargingReleaseInavlid;
+		rChargingTimeInMinCS3 := fbCS3.stDataECS.arrChargingTimeInMin[1];
+			byErrorWarningCS3 := fbCS3.stDataECS.byErrorWarning;
+				bCarConnCS3 := fbCS3.stDataECS.bCarConnected;
+					bSOnEmergPowerOffCS3 := fbCS3.stDataECS.bSOnEmergPowerOff;	
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="178" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="365" Count="7" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="7" Count="5" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="236" Count="2" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="31" Count="8" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="203" Count="3" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="43" Count="8" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="209" Count="1" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="54" Count="9" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

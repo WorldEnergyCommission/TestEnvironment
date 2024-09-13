@@ -1,0 +1,1185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="PrgModbus" Id="{3bddbaec-11ed-4f66-a6e4-4d97e1b120d8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PrgModbus
+VAR
+	FB_Modbus: FB_ModBus_100Reg_once_FC3;
+	fb_MB_WatchDog:FB_MBWriteSingleCoil ;
+	fb_MB_Multi: FB_MBWriteRegs;
+
+	str_IP	:STRING(20);
+	
+	i: INT;
+	i_State: INT;
+	ton_Wait_time: Ton;
+	ton_TimeOut: ton;
+	w_Array_Received: ARRAY [0..450] OF WORD;
+
+	w_Array_Pol1_1: ARRAY [0..99] OF WORD;
+	m_Pol1_1_ok: BOOL;
+	w_Array_Pol1_2: ARRAY [0..99] OF WORD;
+	m_Pol1_2_ok: BOOL;
+	w_Array_Pol1_3: ARRAY [0..99] OF WORD;
+	m_Pol1_3_ok: BOOL;
+	w_Array_Pol1_4: ARRAY [0..99] OF WORD;
+	m_Pol1_4_ok: BOOL;
+	w_Array_Pol1_5: ARRAY [0..99] OF WORD;
+	m_Pol1_5_ok: BOOL;
+	w_Array_Pol1_6: ARRAY [0..99] OF WORD;
+	m_Pol1_6_ok: BOOL;	
+	int_Timeout: ARRAY [1..6] OF INT;
+	
+	real_EG_0_01_Testraum_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_02_Werkstatt_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_04_Buero1_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_05_Buero2_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_06_Leitung_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_07_Service_Annahme_Temp	: REAL;								//{#lynus.ag#()}
+	real_EG_0_08_Buero3_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_09_Buero4_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_10_Buero5_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_11_Buero6_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_12_Buero7_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_13_Buero8_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_14_Archiv_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_20_WC_Damen_Beh_Temp	: REAL;									//{#lynus.ag#()}
+	real_EG_0_23_CAD_Reserve_Temp	: REAL;									//{#lynus.ag#()}
+	real_EG_0_24_CAD_Temp	: REAL;											//{#lynus.ag#()}
+	real_EG_0_25_Reserve_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_26_Buero9_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_27_ErschliessungEGSued_Temp	: REAL;							//{#lynus.ag#()}
+	real_EG_0_27_Teekueche_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_28_Buero8_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_29_Buero10_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_30_Demo_Temp	: REAL;											//{#lynus.ag#()}
+	real_EG_0_31_Buero11_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_32_Buero12_GF_Temp	: REAL;									//{#lynus.ag#()}
+	real_EG_0_33_Buero13_GF_Temp	: REAL;									//{#lynus.ag#()}
+	real_EG_0_35_Buero14_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_36_Buero15_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_37_Buero16_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_39_Buero17_Temp	: REAL;										//{#lynus.ag#()}
+	real_EG_0_40_Besprechung_Temp	: REAL;									//{#lynus.ag#()}
+	real_EG_0_42_WC_Beh_Temp	: REAL;										//{#lynus.ag#()}
+	real_H_0_02_LagerPKE_Temp	: REAL;										//{#lynus.ag#()}
+	real_H_00_03_Buero_LagerPKE_Temp	: Real;								//{#lynus.ag#()}
+	real_OG1_1_01_Empfang_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_1_03_Buero1_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_1_04_Buero2_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_1_05_Buero3_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_1_06_Buero4_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_1_07_Buero_Besprechung_Temp	: REAL;							//{#lynus.ag#()}
+	real_OG1_1_1_08_Plotter_Temp	: REAL;									//{#lynus.ag#()}
+	real_OG1_1_04_WC_Herren_Temp	: REAL;									//{#lynus.ag#()}
+	real_OG1_Serverraum_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_01_Empfang_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_03_Lager_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_04_Buero1_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_05_Buero2_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_06_Buero3_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_07_Buero4_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_08_Buero5_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_09_Buero6_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_4_10_AufenthaltKueche_Temp	: Real;								//{#lynus.ag#()}
+	real_OG1_4_11_Besprechung_Temp	: REAL;									//{#lynus.ag#()}
+	real_OG1_4_14_WC_Damen_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_2_03_Buero2_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_2_04_Besprechung_Temp	: REAL;									//{#lynus.ag#()}
+	real_OG1_2_05_Server_VTOG2_Temp	: REAL;									//{#lynus.ag#()}
+	real_OG1_2_06_Buero3_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_2_07_Buero4_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_3_xx_Besprechung_Temp	: REAL;									//{#lynus.ag#()}
+	real_OG1_3_02_Buero1_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_3_03_Buero2_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_3_05_Server_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_3_06_Vorraum_WC_Temp	: REAL;									//{#lynus.ag#()}
+	real_OG1_3_09_Empfang_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_3_10_Buero3_Temp	: REAL;										//{#lynus.ag#()}
+	real_OG1_3_11_Buero4_Temp	: REAL;										//{#lynus.ag#()}
+	real_H01_VL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H01_RL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H02_VL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H02_RL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H03_VL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H03_RL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H04_VL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H04_RL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H05_VL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H05_RL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H06_VL_Temp	: REAL;												//{#lynus.ag#()}
+	real_H06_RL_Temp	: REAL;												//{#lynus.ag#()}
+	real_SP_Schneider_H01_Temp_HZG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H02_Temp_HZG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H03_Temp_HZG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H04_Temp_HZG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H05_Temp_HZG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H06_Temp_HZG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H01_Temp_KLG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H02_Temp_KLG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H03_Temp_KLG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H04_Temp_KLG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H05_Temp_KLG	: REAL;									//{#lynus.ag#()}
+	real_SP_Schneider_H06_Temp_KLG	: REAL;									//{#lynus.ag#()}
+	real_L01_ZUL_Temp	: REAL;												//{#lynus.ag#()}
+	real_L01_ABL_Temp	: REAL;												//{#lynus.ag#()}
+	real_L01_AUL_Temp	: REAL;												//{#lynus.ag#()}
+	real_L01_FOL_Temp	: REAL;												//{#lynus.ag#()}
+	real_L01_SE_ZUL_Temp	: REAL;											//{#lynus.ag#()}
+	real_L01_SW_Rot_WT	: REAL;												//{#lynus.ag#()}
+	real_L01_SW_E_HZ_Reg	: REAL;											//{#lynus.ag#()}
+	real_AT	: REAL;															//{#lynus.ag#()}
+	real_SP_EfficientIO_H01_Temp_HZG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H02_Temp_HZG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H03_Temp_HZG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H04_Temp_HZG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H05_Temp_HZG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H06_Temp_HZG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H01_Temp_KLG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H02_Temp_KLG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H03_Temp_KLG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H04_Temp_KLG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H05_Temp_KLG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H06_Temp_KLG	: Real;								//{#lynus.ag#()}
+	real_SP_EfficientIO_H01_Temp_HZG_received	: REAL;				
+	real_SP_EfficientIO_H02_Temp_HZG_received	: REAL;				
+	real_SP_EfficientIO_H03_Temp_HZG_received	: REAL;				
+	real_SP_EfficientIO_H04_Temp_HZG_received	: REAL;				
+	real_SP_EfficientIO_H05_Temp_HZG_received	: REAL;				
+	real_SP_EfficientIO_H06_Temp_HZG_received	: REAL;				
+	real_SP_EfficientIO_H01_Temp_KLG_received	: REAL;				
+	real_SP_EfficientIO_H02_Temp_KLG_received	: REAL;				
+	real_SP_EfficientIO_H03_Temp_KLG_received	: REAL;				
+	real_SP_EfficientIO_H04_Temp_KLG_received	: REAL;				
+	real_SP_EfficientIO_H05_Temp_KLG_received	: REAL;				
+	real_SP_EfficientIO_H06_Temp_KLG_received	: REAL;				
+	usint_Betriebsart_H01	: USINT;										//{#lynus.ag#()}
+	usint_Betriebsart_H02	: USINT;										//{#lynus.ag#()}
+	usint_Betriebsart_H03	: USINT;										//{#lynus.ag#()}
+	usint_Betriebsart_H04	: USINT;										//{#lynus.ag#()}
+	usint_Betriebsart_H05	: USINT;										//{#lynus.ag#()}
+	usint_Betriebsart_H06	: USINT;										//{#lynus.ag#()}
+	m_Watchdog	: BOOL;														//{#lynus.ag#()}
+	real_ZUL_errechnet_Schneider_Temp	: Real;								//{#lynus.ag#()}
+	real_ZUL_errechnet_EfficientIO_Temp	: Real;								//{#lynus.ag#()}
+	real_ZUL_errechnet_EfficientIO_Temp_received : REAL;
+	FB_Convert_Real_to_Word:		 FB_CV_REAL_FLOAT_TO_WORD;
+	f_trig_BussyWrite: f_trig;
+	intArray_WriteError				: ARRAY[1..3] OF INT;		//error counter for each write command
+	wArray_Data_To_Send				: ARRAY[1..40] OF WORD;		//word array to write 
+	TON_HeartBeat2: Ton;
+	TON_HeartBeat1: Ton;
+	mEnable: BOOL;
+	w_adress: WORD;
+	nUnitID: BYTE;
+	FB_2Reg :FB_ModBus_2Registers_FC3_T;
+
+	ton_Wait2_time: TON;
+	intArray_PollOk:  ARRAY [1..6] OF INT;
+	intArray_WriteOk:  ARRAY [1..3] OF INT;
+
+	m_Mode_Off_H01				: BOOL;									//{#lynus.ag#()}
+	m_Mode_Heating_H01			: BOOL;									//{#lynus.ag#()}
+	m_Mode_ReducedHeating_H01	: BOOL;									//{#lynus.ag#()}
+	m_Mode_Frost_H01			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Cooling_H01			: BOOL;									//{#lynus.ag#()}
+	m_Mode_ReducedCooling_H01	: BOOL;									//{#lynus.ag#()}
+
+	m_Mode_Off_H02				: BOOL;									//{#lynus.ag#()}
+	m_Mode_Heating_H02			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Frost_H02			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Cooling_H02			: BOOL;									//{#lynus.ag#()}
+
+	m_Mode_Off_H03				: BOOL;									//{#lynus.ag#()}
+	m_Mode_Heating_H03			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Frost_H03			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Cooling_H03			: BOOL;									//{#lynus.ag#()}
+
+	m_Mode_Off_H04				: BOOL;									//{#lynus.ag#()}
+	m_Mode_Heating_H04			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Frost_H04			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Cooling_H04			: BOOL;									//{#lynus.ag#()}
+
+	m_Mode_Off_H05				: BOOL;									//{#lynus.ag#()}
+	m_Mode_Heating_H05			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Frost_H05			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Cooling_H05			: BOOL;									//{#lynus.ag#()}
+
+	m_Mode_Off_H06				: BOOL;									//{#lynus.ag#()}
+	m_Mode_Heating_H06			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Frost_H06			: BOOL;									//{#lynus.ag#()}
+	m_Mode_Cooling_H06			: BOOL;									//{#lynus.ag#()}
+
+	
+	
+	int_HeartBeat					: INT;										//{#lynus.ag#()}
+	byte_ErrorWarning				: BYTE;										//{#lynus.ag#()}
+	m_EnergyOptimicingReady			: BOOL;										//{#lynus.ag#()}
+
+	real_Power_H01				:REAL;									//{#lynus.ag#()}
+	real_Power_H02				:REAL;									//{#lynus.ag#()}
+	real_Power_H03				:REAL;									//{#lynus.ag#()}
+	real_Power_H04				:REAL;									//{#lynus.ag#()}
+	real_Power_H05				:REAL;									//{#lynus.ag#()}
+	real_Power_H06				:REAL;									//{#lynus.ag#()}
+	
+	real_EnergyHeating_H01				:REAL;									//{#lynus.ag#()}
+	real_EnergyHeating_H02				:REAL;									//{#lynus.ag#()}
+	real_EnergyHeating_H03				:REAL;									//{#lynus.ag#()}
+	real_EnergyHeating_H04				:REAL;									//{#lynus.ag#()}
+	real_EnergyHeating_H05				:REAL;									//{#lynus.ag#()}
+	real_EnergyHeating_H06				:REAL;									//{#lynus.ag#()}
+
+	real_EnergyCooling_H01				:REAL;									//{#lynus.ag#()}
+	real_EnergyCooling_H02				:REAL;									//{#lynus.ag#()}
+	real_EnergyCooling_H03				:REAL;									//{#lynus.ag#()}
+	real_EnergyCooling_H04				:REAL;									//{#lynus.ag#()}
+	real_EnergyCooling_H05				:REAL;									//{#lynus.ag#()}
+	real_EnergyCooling_H06				:REAL;									//{#lynus.ag#()}
+	
+	real_Power_HeatPump1				:REAL;									//{#lynus.ag#()}
+	real_Power_HeatPump2				:REAL;									//{#lynus.ag#()}
+	
+	int_Count: INT;
+END_VAR
+VAR PERSISTENT
+	m_EnableHeartbeat: BOOL;												//{#lynus.ag#()}
+	m_Enbale_Write: BOOL:=TRUE;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// state maschine modbus
+(*
+FB_2Reg(
+	m_Enable:= mEnable , 
+	str_IPAdress:= '10.148.188.27', 
+	w_Adress:= w_adress, 
+	int_Divider:= 1, 
+	n_UnitID:= nUnitID, 
+	m_Float32Conversion:= , 
+	m_PollSuccessful=> , 
+	r_ReceivedValue=> , 
+	udint_Error_ID=> );
+*)
+
+CASE i_State OF
+	0: // wait state
+		ton_Wait_time.IN := TRUE;
+		IF ton_Wait_time.Q THEN
+			ton_Wait_time.IN :=FALSE;
+			i_State := 1;
+		END_IF
+	
+	
+	1: // Poll 1 Register 200 - 299
+		FB_Modbus.m_Enable := TRUE;
+		FB_Modbus.w_Adress := 199; //201;
+		FB_Modbus.usint_Quantity := 100;
+		
+		ton_TimeOut.IN := TRUE;
+		
+		// wait for received values
+		IF  FB_Modbus.m_PollSuccessful THEN
+			FB_Modbus.m_Enable := FALSE;
+			m_Pol1_1_ok := TRUE;			
+			w_Array_Pol1_1 := FB_Modbus.w_Array_Received;
+			FOR i:=0 TO FB_Modbus.usint_Quantity-1 BY 1 DO
+				w_Array_Received[200+i] := w_Array_Pol1_1[i];
+				w_Array_Pol1_1[i]:=0;
+			END_FOR
+			ton_TimeOut.IN := FALSE;
+			i_State := 2;
+		END_IF
+		IF ton_TimeOut.Q THEN
+			FB_Modbus.m_Enable := FALSE;
+			ton_TimeOut.IN := FALSE;
+			m_Pol1_1_ok := FALSE;			
+			int_Timeout[1] := int_Timeout[1]+1;
+			i_State := 2;
+		END_IF
+	
+	2: // wait one cycle
+		IF m_Pol1_1_ok THEN 
+			m_Pol1_1_ok := FALSE;
+			intArray_PollOk[1]:=intArray_PollOk[1]+1;
+		END_IF
+		i_State := 3;
+		
+	3: // Poll 2 Register 300 - 399
+		FB_Modbus.m_Enable := TRUE;
+		FB_Modbus.w_Adress := 299; //301;
+		FB_Modbus.usint_Quantity := 100;
+		
+		ton_TimeOut.IN := TRUE;
+		
+		// wait for received values
+		IF  FB_Modbus.m_PollSuccessful THEN
+			FB_Modbus.m_Enable := FALSE;
+			m_Pol1_2_ok := TRUE;
+			w_Array_Pol1_2 := FB_Modbus.w_Array_Received;
+			FOR i:=0 TO FB_Modbus.usint_Quantity-1 BY 1 DO
+				w_Array_Received[300+i] := w_Array_Pol1_2[i];
+				w_Array_Pol1_2[i]:=0;
+			END_FOR
+			ton_TimeOut.IN := FALSE;
+			i_State := 4;
+		END_IF
+		IF ton_TimeOut.Q THEN
+			FB_Modbus.m_Enable := FALSE;			
+			ton_TimeOut.IN := FALSE;
+			m_Pol1_2_ok := FALSE;
+			int_Timeout[2] := int_Timeout[2]+1;
+			i_State := 4;
+		END_IF		
+	
+	4: // wait one cycle
+		IF m_Pol1_2_ok THEN 
+			m_Pol1_2_ok := FALSE;
+			intArray_PollOk[2]:=intArray_PollOk[2]+1;
+		END_IF		
+		i_State := 5;
+		
+	5: // Poll 3 Register 400 - 426
+		FB_Modbus.m_Enable := TRUE;
+		FB_Modbus.w_Adress := 399; //401;
+		FB_Modbus.usint_Quantity := 28;
+		
+		ton_TimeOut.IN := TRUE;
+		
+		// wait for received values
+		IF  FB_Modbus.m_PollSuccessful THEN
+			FB_Modbus.m_Enable := FALSE;
+			m_Pol1_3_ok := TRUE;
+			w_Array_Pol1_3 := FB_Modbus.w_Array_Received;
+			FOR i:=0 TO FB_Modbus.usint_Quantity-1 BY 1 DO
+				w_Array_Received[400+i] := w_Array_Pol1_3[i];
+				w_Array_Pol1_3[i]:=0;
+			END_FOR			
+			ton_TimeOut.IN := FALSE;
+			i_State := 6;
+		END_IF
+		IF ton_TimeOut.Q THEN
+			FB_Modbus.m_Enable := FALSE;		
+			ton_TimeOut.IN := FALSE;
+			m_Pol1_3_ok := FALSE;
+			int_Timeout[3] := int_Timeout[3]+1;
+			i_State := 6;
+		END_IF		
+
+	6: // wait one cycle
+		IF m_Pol1_3_ok THEN 
+			m_Pol1_3_ok := FALSE;
+			intArray_PollOk[3]:=intArray_PollOk[3]+1;
+		END_IF		
+		i_State := 7;
+		
+	7: // Poll 4 Register 432 - 436
+		FB_Modbus.m_Enable := TRUE;
+		FB_Modbus.w_Adress := 431; 
+		FB_Modbus.usint_Quantity := 4;
+		
+		ton_TimeOut.IN := TRUE;
+		
+		// wait for received values
+		IF  FB_Modbus.m_PollSuccessful THEN
+			FB_Modbus.m_Enable := FALSE;
+			m_Pol1_4_ok := TRUE;
+			w_Array_Pol1_4 := FB_Modbus.w_Array_Received;
+			FOR i:=0 TO FB_Modbus.usint_Quantity-1 BY 1 DO
+				w_Array_Received[432+i] := w_Array_Pol1_4[i];
+				w_Array_Pol1_4[i]:=0;
+			END_FOR			
+			ton_TimeOut.IN := FALSE;
+			i_State := 8;
+		END_IF
+		IF ton_TimeOut.Q THEN
+			FB_Modbus.m_Enable := FALSE;		
+			ton_TimeOut.IN := FALSE;
+			m_Pol1_4_ok := FALSE;
+			int_Timeout[4] := int_Timeout[4]+1;
+			i_State := 8;
+		END_IF		
+		
+	8: // wait one cycle
+		IF m_Pol1_4_ok THEN 
+			m_Pol1_4_ok := FALSE;
+			intArray_PollOk[4]:=intArray_PollOk[4]+1;
+		END_IF		
+		i_State := 9;
+		
+	9: // Poll 5 Register 1 - 99
+		FB_Modbus.m_Enable := TRUE;
+		FB_Modbus.w_Adress := 0; 
+		FB_Modbus.usint_Quantity := 100;
+		
+		ton_TimeOut.IN := TRUE;
+		
+		// wait for received values
+		IF  FB_Modbus.m_PollSuccessful THEN
+			FB_Modbus.m_Enable := FALSE;
+			m_Pol1_5_ok := TRUE;
+			w_Array_Pol1_5 := FB_Modbus.w_Array_Received;
+			FOR i:=0 TO FB_Modbus.usint_Quantity-1 BY 1 DO
+				w_Array_Received[0+i] := w_Array_Pol1_5[i];
+				w_Array_Pol1_5[i]:=0;
+			END_FOR
+			ton_TimeOut.IN := FALSE;
+			i_State := 10;
+		END_IF
+		IF ton_TimeOut.Q THEN
+			FB_Modbus.m_Enable := FALSE;			
+			ton_TimeOut.IN := FALSE;
+			m_Pol1_5_ok := FALSE;
+			int_Timeout[5] := int_Timeout[5]+1;
+			i_State := 10;
+		END_IF		
+	
+	10: // wait one cycle
+		IF m_Pol1_5_ok THEN 
+			m_Pol1_5_ok := FALSE;
+			intArray_PollOk[5]:=intArray_PollOk[5]+1;
+		END_IF		
+		i_State := 11;
+
+	11: // Poll 6 Register 100 - 126
+		FB_Modbus.m_Enable := TRUE;
+		FB_Modbus.w_Adress := 100; 
+		FB_Modbus.usint_Quantity := 26;
+		
+		ton_TimeOut.IN := TRUE;
+		
+		// wait for received values
+		IF  FB_Modbus.m_PollSuccessful THEN
+			FB_Modbus.m_Enable := FALSE;
+			m_Pol1_6_ok := TRUE;
+			w_Array_Pol1_6 := FB_Modbus.w_Array_Received;
+			FOR i:=0 TO FB_Modbus.usint_Quantity-1 BY 1 DO
+				w_Array_Received[99+i] := w_Array_Pol1_6[i];
+				w_Array_Pol1_6[i]:=0;
+			END_FOR
+			ton_TimeOut.IN := FALSE;
+			i_State := 12;
+		END_IF
+		IF ton_TimeOut.Q THEN
+			FB_Modbus.m_Enable := FALSE;			
+			ton_TimeOut.IN := FALSE;
+			m_Pol1_6_ok := FALSE;
+			int_Timeout[6] := int_Timeout[6]+1;
+			i_State := 12;
+		END_IF		
+	
+	12: // wait one cycle
+		IF m_Pol1_6_ok THEN 
+			m_Pol1_6_ok := FALSE;
+			intArray_PollOk[6]:=intArray_PollOk[6]+1;
+		END_IF		
+		i_State := 18;
+	
+	18: // wait timer
+		ton_Wait2_time.IN := TRUE;
+		IF ton_Wait2_time.Q THEN
+			ton_Wait2_time.IN :=FALSE;
+			i_State :=19;
+		END_IF
+
+	19: // wait one cycle and prepare data
+		IF m_Enbale_Write THEN
+			// convert data for write
+
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H01_Temp_HZG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[1] ,
+										wOutputValue_2 => wArray_Data_To_Send[2]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H02_Temp_HZG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[3] ,
+										wOutputValue_2 => wArray_Data_To_Send[4]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H03_Temp_HZG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[5] ,
+										wOutputValue_2 => wArray_Data_To_Send[6]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H04_Temp_HZG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[7] ,
+										wOutputValue_2 => wArray_Data_To_Send[8]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H05_Temp_HZG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[9] ,
+										wOutputValue_2 => wArray_Data_To_Send[10]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H06_Temp_HZG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[11] ,
+										wOutputValue_2 => wArray_Data_To_Send[12]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H01_Temp_KLG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[13] ,
+										wOutputValue_2 => wArray_Data_To_Send[14]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H02_Temp_KLG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[15] ,
+										wOutputValue_2 => wArray_Data_To_Send[16]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H03_Temp_KLG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[17] ,
+										wOutputValue_2 => wArray_Data_To_Send[18]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H04_Temp_KLG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[19] ,
+										wOutputValue_2 => wArray_Data_To_Send[20]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H05_Temp_KLG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[21] ,
+										wOutputValue_2 => wArray_Data_To_Send[22]);	
+			FB_Convert_Real_to_Word(	rInputValue:= real_SP_EfficientIO_H06_Temp_KLG,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[23] ,
+										wOutputValue_2 => wArray_Data_To_Send[24]);			
+			FB_Convert_Real_to_Word(	rInputValue:= real_ZUL_errechnet_EfficientIO_Temp,
+										eByteOrderForConvert := 1 ,
+										wOutputValue_1 => wArray_Data_To_Send[25] ,
+										wOutputValue_2 => wArray_Data_To_Send[26]);
+
+			i_State := 20;
+		ELSE	// Write not enabled
+			i_State := 0;
+		END_IF
+
+	20: // write1 / Reg 398-421 
+		
+		fb_MB_Multi.bExecute := TRUE;
+		fb_MB_Multi.nMBAddr := 397;
+		fb_MB_Multi.nQuantity := 24;
+		fb_MB_Multi.cbLength := WORD_TO_UDINT(fb_MB_Multi.nQuantity*2);
+		fb_MB_Multi.pSrcAddr := ADR(wArray_Data_To_Send[1]);
+		
+		ton_TimeOut.IN := TRUE;
+		// wait for write successfull
+		f_trig_BussyWrite (CLK := fb_MB_Multi.bBusy);
+		
+		IF f_trig_BussyWrite.Q OR ton_TimeOut.Q THEN
+			fb_MB_Multi.bExecute := FALSE;
+			ton_TimeOut.IN := FALSE;
+			IF NOT fb_MB_Multi.bError THEN
+				intArray_WriteOk[1] := intArray_WriteOk[1]+1;
+				i_State := i_State+1;
+			ELSIF fb_MB_Multi.bError OR ton_TimeOut.Q THEN
+				intArray_WriteError[1] := intArray_WriteError[1]+1;
+				i_State := i_State+1;
+			END_IF
+		END_IF
+		
+	21: // wait state
+		ton_Wait_time.IN := TRUE;
+		IF ton_Wait_time.Q THEN
+			ton_Wait_time.IN :=FALSE;
+			i_State := 30;
+		END_IF	
+
+	30: // write2 / Reg 434 
+		
+		fb_MB_Multi.bExecute := TRUE;
+		fb_MB_Multi.nMBAddr := 433;
+		fb_MB_Multi.nQuantity := 2;
+		fb_MB_Multi.cbLength := WORD_TO_UDINT(fb_MB_Multi.nQuantity*2);
+		fb_MB_Multi.pSrcAddr := ADR(wArray_Data_To_Send[25]);
+		
+		ton_TimeOut.IN := TRUE;
+		// wait for write successfull
+		f_trig_BussyWrite (CLK := fb_MB_Multi.bBusy);
+		
+		IF f_trig_BussyWrite.Q OR ton_TimeOut.Q THEN
+			fb_MB_Multi.bExecute := FALSE;
+			ton_TimeOut.IN := FALSE;
+			IF NOT fb_MB_Multi.bError THEN
+				intArray_WriteOk[2] := intArray_WriteOk[2]+1;
+				i_State := i_State+1;
+			ELSIF fb_MB_Multi.bError OR ton_TimeOut.Q THEN
+				intArray_WriteError[2] := intArray_WriteError[2]+1;
+				i_State := i_State+1;
+			END_IF
+		END_IF
+		
+	31: // wait state
+		ton_Wait_time.IN := TRUE;
+		IF ton_Wait_time.Q THEN
+			ton_Wait_time.IN :=FALSE;
+			i_State := 40;
+		END_IF
+	
+	40: // write single coil / Watchdog / Reg 429 
+
+		fb_MB_WatchDog.bExecute := TRUE;
+		fb_MB_WatchDog.nMBAddr := 429;
+		
+		IF m_Watchdog THEN
+			fb_MB_WatchDog.nValue := 16#FF00;
+		ELSE
+			fb_MB_WatchDog.nValue := 16#0000;
+		END_IF
+				
+		ton_TimeOut.IN := TRUE;
+		// wait for write successfull
+		f_trig_BussyWrite (CLK := fb_MB_WatchDog.bBusy);
+		
+		IF f_trig_BussyWrite.Q OR ton_TimeOut.Q THEN
+			fb_MB_WatchDog.bExecute := FALSE;
+			ton_TimeOut.IN := FALSE;
+			IF NOT fb_MB_WatchDog.bError THEN
+				intArray_WriteOk[3] := intArray_WriteOk[3]+1;
+				i_State := i_State+1;
+			ELSIF fb_MB_WatchDog.bError OR ton_TimeOut.Q THEN
+				intArray_WriteError[3] := intArray_WriteError[3]+1;
+				i_State := i_State+1;
+			END_IF
+		END_IF
+		
+	41: // wait state
+		ton_Wait_time.IN := TRUE;
+		IF ton_Wait_time.Q THEN
+			ton_Wait_time.IN :=FALSE;
+			i_State := 100;
+		END_IF
+
+
+
+	100: // wait one cycle and start from the beginning
+		i_State := 0;
+		
+		
+END_CASE
+
+
+IF m_EnableHeartbeat THEN
+	m_Enbale_Write :=TRUE;
+	IF TON_HeartBeat1.Q THEN
+		m_Watchdog:=1;		
+	ELSE
+		m_Watchdog:=0;		
+	END_IF
+ELSE
+	m_Enbale_Write :=FALSE;
+END_IF
+
+TON_HeartBeat1(	IN:= TRUE AND NOT TON_HeartBeat2.Q ,
+		PT:= T#15S,
+		Q=> );
+TON_HeartBeat2(	IN:= TON_HeartBeat1.Q,
+		PT:= T#15S);
+		
+		
+ton_Wait_time(PT:=T#500MS);
+ton_Wait2_time(PT:=T#2S);
+ton_TimeOut(PT:=T#10S);  // must be higher then t#5s because internal timeout timer
+str_IP := '10.148.188.27';
+
+FB_Modbus(
+	m_Enable:= , 
+	str_IPAdress:= str_IP, 
+	w_Adress:= , 
+	usint_Quantity:= ,
+	nUnitID := 1, 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+
+fb_MB_WatchDog(
+	sIPAddr:= str_IP, 
+	nTCPPort:= 502 , 
+	nUnitID:= 1, 
+	nMBAddr:= , 
+	nValue:= , 
+	bExecute:= , 
+	tTimeout:=  T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+	
+fb_MB_Multi(
+	sIPAddr:= str_IP, 
+	nTCPPort:= 502, 
+	nUnitID:= 1, 
+	nQuantity:= , 
+	nMBAddr:= , 
+	cbLength:= , 
+	pSrcAddr:= , 
+	bExecute:= , 
+	tTimeout:= T#5S , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+
+	
+// copy modbus data if poll is successfull	
+IF m_Pol1_1_ok THEN
+	real_EG_0_01_Testraum_Temp				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[200]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[201])); 
+	real_EG_0_02_Werkstatt_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[202]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[203])); 
+	real_EG_0_04_Buero1_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[204]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[205])); 
+	real_EG_0_05_Buero2_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[206]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[207])); 
+	real_EG_0_06_Leitung_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[208]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[209])); 
+	real_EG_0_07_Service_Annahme_Temp 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[210]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[211])); 
+	real_EG_0_08_Buero3_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[212]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[213])); 
+	real_EG_0_09_Buero4_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[214]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[215])); 
+	real_EG_0_10_Buero5_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[216]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[217])); 
+	real_EG_0_11_Buero6_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[218]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[219])); 
+	real_EG_0_12_Buero7_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[220]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[221])); 
+	real_EG_0_13_Buero8_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[222]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[223])); 
+	real_EG_0_14_Archiv_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[224]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[225])); 
+	real_EG_0_20_WC_Damen_Beh_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[226]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[227])); 
+	real_EG_0_23_CAD_Reserve_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[228]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[229])); 
+	real_EG_0_24_CAD_Temp 					:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[230]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[231])); 
+	real_EG_0_25_Reserve_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[232]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[233])); 
+	real_EG_0_26_Buero9_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[234]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[235])); 
+	real_EG_0_27_ErschliessungEGSued_Temp 	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[236]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[237])); 
+	real_EG_0_27_Teekueche_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[238]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[239])); 
+	real_EG_0_28_Buero8_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[240]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[241])); 
+	real_EG_0_29_Buero10_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[242]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[243])); 
+	real_EG_0_30_Demo_Temp 					:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[244]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[245])); 
+	real_EG_0_31_Buero11_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[246]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[247])); 
+	real_EG_0_32_Buero12_GF_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[248]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[249])); 
+	real_EG_0_33_Buero13_GF_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[250]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[251])); 
+	real_EG_0_35_Buero14_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[252]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[253])); 
+	real_EG_0_36_Buero15_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[254]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[255])); 
+	real_EG_0_37_Buero16_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[256]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[257])); 
+	real_EG_0_39_Buero17_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[258]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[259])); 
+	real_EG_0_40_Besprechung_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[260]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[261])); 
+	real_EG_0_42_WC_Beh_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[262]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[263])); 
+	real_H_0_02_LagerPKE_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[264]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[265])); 
+	real_H_00_03_Buero_LagerPKE_Temp 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[266]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[267])); 
+	real_OG1_1_01_Empfang_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[268]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[269])); 
+	real_OG1_1_03_Buero1_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[270]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[271])); 
+	real_OG1_1_04_Buero2_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[272]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[273])); 
+	real_OG1_1_05_Buero3_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[274]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[275])); 
+	real_OG1_1_06_Buero4_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[276]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[277])); 
+	real_OG1_1_07_Buero_Besprechung_Temp 	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[278]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[279])); 
+	real_OG1_1_1_08_Plotter_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[280]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[281])); 
+	real_OG1_1_04_WC_Herren_Temp			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[282]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[283])); 
+	real_OG1_Serverraum_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[284]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[285])); 
+	real_OG1_4_01_Empfang_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[286]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[287])); 
+	real_OG1_4_03_Lager_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[288]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[289])); 
+	real_OG1_4_04_Buero1_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[290]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[291])); 
+	real_OG1_4_05_Buero2_Temp				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[292]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[293])); 
+	real_OG1_4_06_Buero3_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[294]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[295])); 
+	real_OG1_4_07_Buero4_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[296]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[297])); 
+	real_OG1_4_08_Buero5_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[298]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[299])); 
+END_IF
+
+IF m_Pol1_2_ok THEN
+	real_OG1_4_09_Buero6_Temp				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[300]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[301])); 
+	real_OG1_4_10_AufenthaltKueche_Temp 	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[302]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[303])); 
+	real_OG1_4_11_Besprechung_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[304]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[305])); 
+	real_OG1_4_14_WC_Damen_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[306]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[307])); 
+	real_OG1_2_03_Buero2_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[308]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[309])); 
+	real_OG1_2_04_Besprechung_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[310]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[311])); 
+	real_OG1_2_05_Server_VTOG2_Temp 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[312]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[313])); 
+	real_OG1_2_06_Buero3_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[314]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[315])); 
+	real_OG1_2_07_Buero4_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[316]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[317])); 
+	real_OG1_3_xx_Besprechung_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[318]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[319])); 
+	real_OG1_3_02_Buero1_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[320]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[321])); 
+	real_OG1_3_03_Buero2_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[322]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[323])); 
+	real_OG1_3_05_Server_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[324]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[325])); 
+	real_OG1_3_06_Vorraum_WC_Temp 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[326]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[327])); 
+	real_OG1_3_09_Empfang_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[328]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[329])); 
+	real_OG1_3_10_Buero3_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[330]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[331])); 
+	real_OG1_3_11_Buero4_Temp 				:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[332]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[333])); 
+	real_H01_VL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[334]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[335])); 
+	real_H01_RL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[336]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[337])); 
+	real_H02_VL_Temp						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[338]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[339])); 
+	real_H02_RL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[340]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[341])); 
+	real_H03_VL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[342]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[343])); 
+	real_H03_RL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[344]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[345])); 
+	real_H04_VL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[346]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[347])); 
+	real_H04_RL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[348]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[349])); 
+	real_H05_VL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[350]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[351])); 
+	real_H05_RL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[352]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[353])); 
+	real_H06_VL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[354]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[355])); 
+	real_H06_RL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[356]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[357])); 
+	real_SP_Schneider_H01_Temp_HZG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[358]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[359])); 
+	real_SP_Schneider_H02_Temp_HZG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[360]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[361])); 
+	real_SP_Schneider_H03_Temp_HZG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[362]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[363])); 
+	real_SP_Schneider_H04_Temp_HZG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[364]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[365])); 
+	real_SP_Schneider_H05_Temp_HZG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[366]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[367])); 
+	real_SP_Schneider_H06_Temp_HZG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[368]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[369])); 
+	real_SP_Schneider_H01_Temp_KLG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[370]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[371])); 
+	real_SP_Schneider_H02_Temp_KLG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[372]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[373])); 
+	real_SP_Schneider_H03_Temp_KLG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[374]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[375])); 
+	real_SP_Schneider_H04_Temp_KLG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[376]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[377])); 
+	real_SP_Schneider_H05_Temp_KLG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[378]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[379])); 
+	real_SP_Schneider_H06_Temp_KLG 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[380]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[381])); 
+	real_L01_ZUL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[382]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[383])); 
+	real_L01_ABL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[384]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[385])); 
+	real_L01_AUL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[386]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[387])); 
+	real_L01_FOL_Temp 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[388]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[389])); 
+	real_L01_SE_ZUL_Temp 					:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[390]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[391])); 
+	real_L01_SW_Rot_WT 						:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[392]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[393])); 
+	real_L01_SW_E_HZ_Reg 					:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[394]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[395])); 
+	real_AT 								:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[396]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[397])); 
+	real_SP_EfficientIO_H01_Temp_HZG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[398]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[399])); 
+END_IF
+	
+IF m_Pol1_3_ok THEN
+	real_SP_EfficientIO_H02_Temp_HZG_received		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[400]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[401])); 
+	real_SP_EfficientIO_H03_Temp_HZG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[402]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[403])); 
+	real_SP_EfficientIO_H04_Temp_HZG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[404]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[405])); 
+	real_SP_EfficientIO_H05_Temp_HZG_received		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[406]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[407])); 
+	real_SP_EfficientIO_H06_Temp_HZG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[408]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[409])); 
+	real_SP_EfficientIO_H01_Temp_KLG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[410]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[411])); 
+	real_SP_EfficientIO_H02_Temp_KLG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[412]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[413])); 
+	real_SP_EfficientIO_H03_Temp_KLG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[414]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[415])); 
+	real_SP_EfficientIO_H04_Temp_KLG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[416]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[417])); 
+	real_SP_EfficientIO_H05_Temp_KLG_received		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[418]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[419])); 
+	real_SP_EfficientIO_H06_Temp_KLG_received 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[420]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[421])); 
+	usint_Betriebsart_H01					:=  WORD_TO_USINT(w_Array_Received[422]); 
+	usint_Betriebsart_H02 					:=  WORD_TO_USINT(w_Array_Received[423]); 
+	usint_Betriebsart_H03  					:=  WORD_TO_USINT(w_Array_Received[424]);
+	usint_Betriebsart_H04  					:=  WORD_TO_USINT(w_Array_Received[425]);
+	usint_Betriebsart_H05  					:=  WORD_TO_USINT(w_Array_Received[426]);
+	usint_Betriebsart_H06  					:=  WORD_TO_USINT(w_Array_Received[427]);
+//	m_Watchdog 								:=  w_Array_Received[430].0; 
+END_IF
+IF m_Pol1_4_ok THEN
+	real_ZUL_errechnet_Schneider_Temp 		:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[432]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[433])); 
+	real_ZUL_errechnet_EfficientIO_Temp_received 	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[434]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[435])); 
+END_IF
+
+IF m_Pol1_5_ok THEN
+	int_Count :=-1;
+	real_Power_H01 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[3+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[4+int_Count])); 
+	real_EnergyCooling_H01	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[5+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[6+int_Count])); 
+	real_EnergyHeating_H01	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[7+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[8+int_Count]));
+	int_Count :=7;
+	real_Power_H02 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[3+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[4+int_Count])); 
+	real_EnergyCooling_H02	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[5+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[6+int_Count])); 
+	real_EnergyHeating_H02	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[7+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[8+int_Count]));
+	int_Count :=15;
+	real_Power_H03 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[3+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[4+int_Count])); 
+	real_EnergyCooling_H03	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[5+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[6+int_Count])); 
+	real_EnergyHeating_H03	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[7+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[8+int_Count]));
+	int_Count :=23;
+	real_Power_H04 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[3+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[4+int_Count])); 
+	real_EnergyCooling_H04	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[5+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[6+int_Count])); 
+	real_EnergyHeating_H04	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[7+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[8+int_Count]));
+	int_Count :=31;
+	real_Power_H05 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[3+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[4+int_Count])); 
+	real_EnergyCooling_H05	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[5+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[6+int_Count])); 
+	real_EnergyHeating_H05	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[7+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[8+int_Count]));	
+	int_Count :=39;
+	real_Power_H06 			:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[3+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[4+int_Count])); 
+	real_EnergyCooling_H06	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[5+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[6+int_Count])); 
+	real_EnergyHeating_H06	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[7+int_Count]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[8+int_Count]));
+END_IF
+IF m_Pol1_6_ok THEN
+	real_Power_HeatPump1	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[105]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[106])); 
+	real_Power_HeatPump2	:=  F_DWORD_TO_FLOAT32(dwInput  :=  WORD_TO_DWORD(w_Array_Received[109]) + 16#10000 * WORD_TO_DWORD(w_Array_Received[110])); 
+END_IF
+
+m_Mode_Off_H01 				:= FALSE;
+m_Mode_Heating_H01			:= FALSE;
+m_Mode_Frost_H01			:= FALSE;
+m_Mode_Cooling_H01			:= FALSE;
+CASE usint_Betriebsart_H01 OF
+	0: m_Mode_Off_H01 				:= TRUE;
+	1,2: m_Mode_Heating_H01			:= TRUE;
+	3: m_Mode_Frost_H01				:= TRUE;
+	4,5: m_Mode_Cooling_H01			:= TRUE;
+END_CASE
+
+m_Mode_Off_H02 				:= FALSE;
+m_Mode_Heating_H02			:= FALSE;
+m_Mode_Frost_H02			:= FALSE;
+m_Mode_Cooling_H02			:= FALSE;
+CASE usint_Betriebsart_H02 OF
+	0: m_Mode_Off_H02 				:= TRUE;
+	1,2: m_Mode_Heating_H02			:= TRUE;
+	3: m_Mode_Frost_H02				:= TRUE;
+	4,5: m_Mode_Cooling_H02			:= TRUE;
+END_CASE
+
+m_Mode_Off_H03 				:= FALSE;
+m_Mode_Heating_H03			:= FALSE;
+m_Mode_Frost_H03			:= FALSE;
+m_Mode_Cooling_H03			:= FALSE;
+CASE usint_Betriebsart_H03 OF
+	0: m_Mode_Off_H03 				:= TRUE;
+	1,2: m_Mode_Heating_H03			:= TRUE;
+	3: m_Mode_Frost_H03				:= TRUE;
+	4,5: m_Mode_Cooling_H03			:= TRUE;
+END_CASE
+
+m_Mode_Off_H04 				:= FALSE;
+m_Mode_Heating_H04			:= FALSE;
+m_Mode_Frost_H04			:= FALSE;
+m_Mode_Cooling_H04			:= FALSE;
+CASE usint_Betriebsart_H04 OF
+	0: m_Mode_Off_H04 				:= TRUE;
+	1,2: m_Mode_Heating_H04			:= TRUE;
+	3: m_Mode_Frost_H04				:= TRUE;
+	4,5: m_Mode_Cooling_H04			:= TRUE;
+END_CASE
+
+m_Mode_Off_H05 				:= FALSE;
+m_Mode_Heating_H05			:= FALSE;
+m_Mode_Frost_H05			:= FALSE;
+m_Mode_Cooling_H05			:= FALSE;
+CASE usint_Betriebsart_H05 OF
+	0: m_Mode_Off_H05 				:= TRUE;
+	1,2: m_Mode_Heating_H05			:= TRUE;
+	3: m_Mode_Frost_H05				:= TRUE;
+	4,5: m_Mode_Cooling_H05			:= TRUE;
+END_CASE
+
+m_Mode_Off_H06 				:= FALSE;
+m_Mode_Heating_H06			:= FALSE;
+m_Mode_Frost_H06			:= FALSE;
+m_Mode_Cooling_H06			:= FALSE;
+CASE usint_Betriebsart_H06 OF
+	0: m_Mode_Off_H06 				:= TRUE;
+	1,2: m_Mode_Heating_H06			:= TRUE;
+	3: m_Mode_Frost_H06				:= TRUE;
+	4,5: m_Mode_Cooling_H06			:= TRUE;
+END_CASE
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="PrgModbus">
+      <LineId Id="29" Count="0" />
+      <LineId Id="1491" Count="0" />
+      <LineId Id="1494" Count="8" />
+      <LineId Id="1492" Count="1" />
+      <LineId Id="1821" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="36" Count="3" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="2066" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="1660" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="2151" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="2127" Count="1" />
+      <LineId Id="2131" Count="0" />
+      <LineId Id="2130" Count="0" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="80" Count="9" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="2067" Count="2" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="2070" Count="0" />
+      <LineId Id="92" Count="2" />
+      <LineId Id="1661" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="2150" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="2133" Count="2" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="2136" Count="0" />
+      <LineId Id="103" Count="11" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="2078" Count="2" />
+      <LineId Id="2077" Count="0" />
+      <LineId Id="2074" Count="0" />
+      <LineId Id="116" Count="2" />
+      <LineId Id="1662" Count="0" />
+      <LineId Id="119" Count="1" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="121" Count="1" />
+      <LineId Id="2142" Count="0" />
+      <LineId Id="2137" Count="4" />
+      <LineId Id="2081" Count="0" />
+      <LineId Id="2143" Count="0" />
+      <LineId Id="2085" Count="22" />
+      <LineId Id="2152" Count="0" />
+      <LineId Id="2109" Count="1" />
+      <LineId Id="2149" Count="0" />
+      <LineId Id="2144" Count="4" />
+      <LineId Id="2111" Count="1" />
+      <LineId Id="2875" Count="33" />
+      <LineId Id="2911" Count="31" />
+      <LineId Id="2909" Count="0" />
+      <LineId Id="2874" Count="0" />
+      <LineId Id="2082" Count="0" />
+      <LineId Id="2116" Count="0" />
+      <LineId Id="2119" Count="1" />
+      <LineId Id="2122" Count="0" />
+      <LineId Id="2121" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="757" Count="0" />
+      <LineId Id="762" Count="3" />
+      <LineId Id="761" Count="0" />
+      <LineId Id="767" Count="34" />
+      <LineId Id="758" Count="0" />
+      <LineId Id="803" Count="6" />
+      <LineId Id="802" Count="0" />
+      <LineId Id="1295" Count="2" />
+      <LineId Id="759" Count="0" />
+      <LineId Id="1298" Count="0" />
+      <LineId Id="760" Count="0" />
+      <LineId Id="445" Count="2" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="415" Count="1" />
+      <LineId Id="450" Count="2" />
+      <LineId Id="2165" Count="0" />
+      <LineId Id="2167" Count="0" />
+      <LineId Id="465" Count="1" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="2170" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="2176" Count="0" />
+      <LineId Id="2171" Count="4" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="2212" Count="0" />
+      <LineId Id="2215" Count="28" />
+      <LineId Id="2208" Count="0" />
+      <LineId Id="2245" Count="0" />
+      <LineId Id="2275" Count="0" />
+      <LineId Id="2277" Count="0" />
+      <LineId Id="2247" Count="1" />
+      <LineId Id="2252" Count="0" />
+      <LineId Id="2294" Count="4" />
+      <LineId Id="2293" Count="0" />
+      <LineId Id="2253" Count="21" />
+      <LineId Id="2207" Count="0" />
+      <LineId Id="2178" Count="1" />
+      <LineId Id="1291" Count="1" />
+      <LineId Id="2123" Count="1" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="1231" Count="2" />
+      <LineId Id="3474" Count="0" />
+      <LineId Id="1234" Count="2" />
+      <LineId Id="1238" Count="1" />
+      <LineId Id="3475" Count="1" />
+      <LineId Id="1241" Count="0" />
+      <LineId Id="1251" Count="0" />
+      <LineId Id="1242" Count="3" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="1246" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="2117" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="12" Count="4" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="17" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="1846" Count="10" />
+      <LineId Id="1842" Count="0" />
+      <LineId Id="1858" Count="0" />
+      <LineId Id="1863" Count="11" />
+      <LineId Id="1861" Count="0" />
+      <LineId Id="2155" Count="0" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="276" Count="1" />
+      <LineId Id="285" Count="49" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="342" Count="49" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="337" Count="1" />
+      <LineId Id="392" Count="17" />
+      <LineId Id="2125" Count="1" />
+      <LineId Id="410" Count="1" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="3190" Count="1" />
+      <LineId Id="3197" Count="0" />
+      <LineId Id="3195" Count="0" />
+      <LineId Id="3193" Count="0" />
+      <LineId Id="3196" Count="0" />
+      <LineId Id="3204" Count="2" />
+      <LineId Id="3203" Count="0" />
+      <LineId Id="3208" Count="2" />
+      <LineId Id="3207" Count="0" />
+      <LineId Id="3212" Count="2" />
+      <LineId Id="3211" Count="0" />
+      <LineId Id="3216" Count="2" />
+      <LineId Id="3215" Count="0" />
+      <LineId Id="3220" Count="2" />
+      <LineId Id="3219" Count="0" />
+      <LineId Id="3194" Count="0" />
+      <LineId Id="3192" Count="0" />
+      <LineId Id="3223" Count="0" />
+      <LineId Id="3228" Count="0" />
+      <LineId Id="3224" Count="0" />
+      <LineId Id="2562" Count="0" />
+      <LineId Id="2571" Count="1" />
+      <LineId Id="2574" Count="1" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="2564" Count="0" />
+      <LineId Id="2566" Count="0" />
+      <LineId Id="2568" Count="1" />
+      <LineId Id="2565" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="2576" Count="1" />
+      <LineId Id="2579" Count="1" />
+      <LineId Id="2582" Count="2" />
+      <LineId Id="2586" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="2590" Count="2" />
+      <LineId Id="2594" Count="1" />
+      <LineId Id="2597" Count="2" />
+      <LineId Id="2601" Count="1" />
+      <LineId Id="2589" Count="0" />
+      <LineId Id="2619" Count="0" />
+      <LineId Id="2606" Count="1" />
+      <LineId Id="2609" Count="1" />
+      <LineId Id="2612" Count="2" />
+      <LineId Id="2616" Count="1" />
+      <LineId Id="2605" Count="0" />
+      <LineId Id="2621" Count="0" />
+      <LineId Id="2624" Count="1" />
+      <LineId Id="2627" Count="1" />
+      <LineId Id="2630" Count="2" />
+      <LineId Id="2634" Count="1" />
+      <LineId Id="2622" Count="0" />
+      <LineId Id="2638" Count="2" />
+      <LineId Id="2642" Count="1" />
+      <LineId Id="2645" Count="3" />
+      <LineId Id="2650" Count="1" />
+      <LineId Id="2623" Count="0" />
+      <LineId Id="2620" Count="0" />
+      <LineId Id="2604" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

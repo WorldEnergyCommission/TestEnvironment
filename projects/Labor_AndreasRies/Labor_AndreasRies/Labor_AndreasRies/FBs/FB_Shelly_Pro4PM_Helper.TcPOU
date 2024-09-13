@@ -1,0 +1,432 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Shelly_Pro4PM_Helper" Id="{4417590e-f2a2-4c9a-bb25-3ef9df5b03a6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_Pro4PM_Helper
+VAR_INPUT
+	bSend			: BOOL;
+	bSetOnP1		: BOOL;
+	bSetOffP1		: BOOL;
+	bSetOnP2		: BOOL;
+	bSetOffP2		: BOOL;
+	bSetOnP3		: BOOL;
+	bSetOffP3		: BOOL;
+	bSetOnP4		: BOOL;
+	bSetOffP4		: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient		: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy			: BOOL;
+	bError			: BOOL;
+	bStateP1		: BOOL;
+	bStateP2		: BOOL;
+	bStateP3		: BOOL;
+	bStateP4		: BOOL;
+	lrapowerP1		: LREAL;
+	lrvoltageP1		: LREAL;
+	lraenergyP1		: LREAL;
+	lrapowerP2		: LREAL;
+	lrvoltageP2		: LREAL;
+	lraenergyP2		: LREAL;
+	lrapowerP3		: LREAL;
+	lrvoltageP3		: LREAL;
+	lraenergyP3		: LREAL;
+	lrapowerP4		: LREAL;
+	lrvoltageP4		: LREAL;
+	lraenergyP4		: LREAL;
+END_VAR
+
+VAR
+	fbRequestSwitch0	: FB_IotHttpRequest;
+	fbRequestSwitch1	: FB_IotHttpRequest;
+	fbRequestSwitch2	: FB_IotHttpRequest;
+	fbRequestSwitch3	: FB_IotHttpRequest;
+	fbJson				: FB_JsonDomParser;
+	nState				: UDINT;
+	RisingEdge			: R_TRIG;
+	RisingEdgeSetOnP1	: R_TRIG;
+	RisingEdgeSetOffP1	: R_TRIG;
+	RisingEdgeSetOnP2	: R_TRIG;
+	RisingEdgeSetOffP2	: R_TRIG;
+	RisingEdgeSetOnP3	: R_TRIG;
+	RisingEdgeSetOffP3	: R_TRIG;
+	RisingEdgeSetOnP4	: R_TRIG;
+	RisingEdgeSetOffP4	: R_TRIG;
+	timTimeout			: TON;
+	tTimeOut			: TIME := T#30S;
+	timTimeoutSwitch	: TON;
+	tTimeOutSwitch		: TIME := T#5S;
+	
+	bGetContentResult	: BOOL;
+	sContentS0			: STRING(511);
+	sContentS1			: STRING(511);
+	sContentS2			: STRING(511);
+	sContentS3			: STRING(511);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN 
+		nState := 0;
+		bBusy := FALSE;
+	END_IF
+	
+timTimeoutSwitch(IN:= bSetOnP1 OR bSetOffP1 OR bSetOnP2 OR bSetOffP2 OR bSetOnP3 OR bSetOffP3 OR bSetOnP4 OR bSetOffP4, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeoutSwitch.Q THEN 
+		bSetOnP1 := FALSE;
+		bSetOffP1 := FALSE;
+		bSetOnP2 := FALSE;
+		bSetOffP2 := FALSE;
+		bSetOnP3 := FALSE;
+		bSetOffP3 := FALSE;
+		bSetOnP4 := FALSE;
+		bSetOffP4 := FALSE;
+	END_IF
+
+RisingEdge(CLK:= bSend );
+RisingEdgeSetOnP1(CLK:= bSetOnP1 );
+RisingEdgeSetOffP1(CLK:= bSetOffP1 );
+RisingEdgeSetOnP2(CLK:= bSetOnP2 );
+RisingEdgeSetOffP2(CLK:= bSetOffP2 );
+RisingEdgeSetOnP3(CLK:= bSetOnP3 );
+RisingEdgeSetOffP3(CLK:= bSetOffP3 );
+RisingEdgeSetOnP4(CLK:= bSetOnP4 );
+RisingEdgeSetOffP4(CLK:= bSetOffP4 );
+
+CASE nState OF
+0:	
+	IF RisingEdge.Q THEN 
+		IF
+			fbRequestSwitch0.SendRequest(sUri:='/rpc/Switch.GetStatus?id=0', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) AND
+			fbRequestSwitch1.SendRequest(sUri:='/rpc/Switch.GetStatus?id=1', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) AND
+			fbRequestSwitch2.SendRequest(sUri:='/rpc/Switch.GetStatus?id=2', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) AND
+			fbRequestSwitch3.SendRequest(sUri:='/rpc/Switch.GetStatus?id=3', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			nState:= 1;
+			nReqCount:= nReqCount+1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOnP1.Q THEN 
+		IF
+			fbRequestSwitch0.SendRequest(sUri:='/rpc/Switch.Set?id=0&on=true', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOnP1 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOffP1.Q THEN 
+		IF
+			fbRequestSwitch0.SendRequest(sUri:='/rpc/Switch.Set?id=0&on=false', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOffP1 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOnP2.Q THEN 
+		IF
+			fbRequestSwitch1.SendRequest(sUri:='/rpc/Switch.Set?id=1&on=true', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOnP2 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOffP2.Q THEN 
+		IF
+			fbRequestSwitch1.SendRequest(sUri:='/rpc/Switch.Set?id=1&on=false', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOffP2 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOnP3.Q THEN 
+		IF
+			fbRequestSwitch2.SendRequest(sUri:='/rpc/Switch.Set?id=2&on=true', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOnP3 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOffP3.Q THEN 
+		IF
+			fbRequestSwitch2.SendRequest(sUri:='/rpc/Switch.Set?id=2&on=false', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOffP3 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOnP4.Q THEN 
+		IF
+			fbRequestSwitch3.SendRequest(sUri:='/rpc/Switch.Set?id=3&on=true', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOnP4 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+	IF RisingEdgeSetOffP4.Q THEN 
+		IF
+			fbRequestSwitch3.SendRequest(sUri:='/rpc/Switch.Set?id=3&on=false', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			bSetOffP4 := FALSE;
+			nState:= 1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+	
+1:
+	IF NOT fbRequestSwitch0.bBusy AND NOT fbRequestSwitch1.bBusy AND NOT fbRequestSwitch2.bBusy AND NOT fbRequestSwitch3.bBusy THEN
+		bError:= TRUE;
+		
+		IF NOT fbRequestSwitch0.bError THEN				 
+			bGetContentResult:= fbRequestSwitch0.GetContent(pContent:= ADR(sContentS0), nContentSize:= SIZEOF(sContentS0), bSetNullTermination:= TRUE);
+			IF fbRequestSwitch0.nStatusCode >= 200 AND fbRequestSwitch0.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestSwitch0.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'output')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'output');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsBool(jsonVal) THEN							
+							bStateP1:= fbJson.GetBool(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'apower');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrapowerP1:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrvoltageP1:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'aenergy');
+                        IF fbJson.HasMember(jsonVal, 'total') THEN
+                            jsonVal:= fbJson.FindMember(jsonVal, 'total');
+                            nValidResCount:= nValidResCount+1;
+                            IF fbJson.IsDouble(jsonVal) THEN
+                                lraenergyP1:= fbJson.GetDouble(jsonVal);
+                            END_IF
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+			END_IF
+		END_IF
+		
+		IF NOT fbRequestSwitch1.bError THEN				 
+			bGetContentResult:= fbRequestSwitch1.GetContent(pContent:= ADR(sContentS1), nContentSize:= SIZEOF(sContentS1), bSetNullTermination:= TRUE);
+			IF fbRequestSwitch1.nStatusCode >= 200 AND fbRequestSwitch1.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestSwitch1.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'output')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'output');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsBool(jsonVal) THEN							
+							bStateP2:= fbJson.GetBool(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'apower');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrapowerP2:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrvoltageP2:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'aenergy');
+                        IF fbJson.HasMember(jsonVal, 'total') THEN
+                            jsonVal:= fbJson.FindMember(jsonVal, 'total');
+                            nValidResCount:= nValidResCount+1;
+                            IF fbJson.IsDouble(jsonVal) THEN
+                                lraenergyP2:= fbJson.GetDouble(jsonVal);
+                            END_IF
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+			END_IF
+		END_IF
+		
+		IF NOT fbRequestSwitch2.bError THEN				 
+			bGetContentResult:= fbRequestSwitch2.GetContent(pContent:= ADR(sContentS2), nContentSize:= SIZEOF(sContentS2), bSetNullTermination:= TRUE);
+			IF fbRequestSwitch2.nStatusCode >= 200 AND fbRequestSwitch2.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestSwitch2.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'output')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'output');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsBool(jsonVal) THEN							
+							bStateP3:= fbJson.GetBool(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'apower');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrapowerP3:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrvoltageP3:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'aenergy');
+                        IF fbJson.HasMember(jsonVal, 'total') THEN
+                            jsonVal:= fbJson.FindMember(jsonVal, 'total');
+                            nValidResCount:= nValidResCount+1;
+                            IF fbJson.IsDouble(jsonVal) THEN
+                                lraenergyP3:= fbJson.GetDouble(jsonVal);
+                            END_IF
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+			END_IF
+		END_IF
+		
+		IF NOT fbRequestSwitch3.bError THEN				 
+			bGetContentResult:= fbRequestSwitch3.GetContent(pContent:= ADR(sContentS3), nContentSize:= SIZEOF(sContentS3), bSetNullTermination:= TRUE);
+			IF fbRequestSwitch3.nStatusCode >= 200 AND fbRequestSwitch3.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestSwitch3.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'output')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'output');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsBool(jsonVal) THEN							
+							bStateP4:= fbJson.GetBool(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'apower');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrapowerP4:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+						nValidResCount:= nValidResCount+1;					
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrvoltageP4:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'aenergy');
+                        IF fbJson.HasMember(jsonVal, 'total') THEN
+                            jsonVal:= fbJson.FindMember(jsonVal, 'total');
+                            nValidResCount:= nValidResCount+1;
+                            IF fbJson.IsDouble(jsonVal) THEN
+                                lraenergyP4:= fbJson.GetDouble(jsonVal);
+                            END_IF
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+			END_IF
+		END_IF
+		
+	nState:= 0;
+	bBusy:= FALSE;
+		IF bError THEN
+			nErrCount:= nErrCount+1;
+		END_IF
+	END_IF
+	
+END_CASE
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_Pro4PM_Helper">
+      <LineId Id="624" Count="4" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="633" Count="0" />
+      <LineId Id="635" Count="1" />
+      <LineId Id="639" Count="6" />
+      <LineId Id="637" Count="0" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="549" Count="0" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="60" Count="13" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="274" Count="1" />
+      <LineId Id="279" Count="1" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="282" Count="2" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="438" Count="3" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="442" Count="2" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="483" Count="17" />
+      <LineId Id="482" Count="0" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="509" Count="17" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="529" Count="17" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="74" Count="11" />
+      <LineId Id="446" Count="3" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="445" Count="0" />
+      <LineId Id="87" Count="31" />
+      <LineId Id="450" Count="3" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="120" Count="31" />
+      <LineId Id="459" Count="3" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="153" Count="31" />
+      <LineId Id="464" Count="3" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="186" Count="29" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

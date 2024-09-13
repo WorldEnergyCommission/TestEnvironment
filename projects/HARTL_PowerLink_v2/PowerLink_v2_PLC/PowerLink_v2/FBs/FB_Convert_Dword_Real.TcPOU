@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Convert_Dword_Real" Id="{32b70b60-020e-44fc-9c7d-5c9261e84c26}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Convert_Dword_Real
+VAR_INPUT
+	word_In_1:	WORD;
+	word_In_2:	WORD;
+	e_ByteOrderIn	: eByteOrder;						//Byte Format
+	
+END_VAR
+VAR_OUTPUT
+	real_Output	:REAL;
+END_VAR
+VAR
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	usintSign					: USINT;						// converstion dword to real	
+	intExponent					: INT;							// converstion dword to real
+	realMantisse				: REAL;							// converstion dword to real
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbConvertWordToDword(wInputValue_1:= word_In_1, wInputValue_2:= word_In_2, eByteOrderForConvert:= e_ByteOrderIn , dwOutputValue=> );
+(* Sign *)
+usintSign:=BOOL_TO_USINT(fbConvertWordToDword.dwOutputValue.31);
+(* Exponent *)
+intExponent:=DWORD_TO_INT(SHR(fbConvertWordToDword.dwOutputValue,23) AND 16#FF);
+(* Mantisse *)
+realMantisse:=DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue AND 16#7FFFFF);
+(* Result *)
+real_Output := LREAL_TO_REAL((EXPT((-1),usintSign) * (1+realMantisse/8388608) * EXPT(2,intExponent-127)));
+	]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Convert_Dword_Real">
+      <LineId Id="10" Count="8" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

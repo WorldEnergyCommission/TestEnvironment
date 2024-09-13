@@ -1,0 +1,314 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_AdsErrorText" Id="{bd698bb7-9211-487c-ad81-b58536fece40}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_AdsErrorText : STRING
+VAR_INPUT
+	nAdsError:UDINT;
+END_VAR
+VAR
+	sText:STRING(255);
+END_VAR
+
+(*
+ADS Return Codes
+
+Fehlernummern: 0x000..., 0x500..., 0x700..., 0x1000..., 0x274C...
+
+Global Error Codes
+
+Hex Dez Beschreibung 
+0x0 0 kein Fehler 
+0x1 1 Internal error 
+0x2 2 No Rtime 
+0x3 3 Allocation locked memory error 
+0x4 4 Insert mailbox error 
+0x5 5 Wrong receive HMSG 
+0x6 6 target port not found 
+0x7 7 target machine not found 
+0x8 8 Unknown command ID 
+0x9 9 Bad task ID 
+0xA 10 No IO 
+0xB 11 Unknown AMS command 
+0xC 12 Win 32 error 
+0xD 13 Port not connected 
+0xE 14 Invalid AMS length 
+0xF 15 Invalid AMS Net ID 
+0x10 16 Low Installation level 
+0x11 17 No debug available 
+0x12 18 Port disabled 
+0x13 19 Port already connected 
+0x14 20 AMS Sync Win32 error 
+0x15 21 AMS Sync Timeout 
+0x16 22 AMS Sync AMS error 
+0x17 23 AMS Sync no index map 
+0x18 24 Invalid AMS port 
+0x19 25 No memory 
+0x1A 26 TCP send error 
+0x1B 27 Host unreachable 
+
+ 
+
+Router Error Codes
+
+Hex Dez Fehlertyp Beschreibung 
+0x500 1280 Intern ROUTERERR_NOLOCKEDMEMORY
+Es konnte kein nicht auslagerbarer Speicher alloziert werden. 
+0x501  1281  Intern  ROUTERERR_RESIZEMEMORY
+Der Routerspeicher konnte nicht in seiner Größe verändert werden.  
+0x502  1282  Intern  ROUTERERR_MAILBOXFULL
+Die Mailbox eines AmsPorts hat die maximal mögliche Anzahl Einträge erreicht.
+Die aktuell gesendete Nachricht wurde verworfen.  
+0x503  1283  Intern  ROUTERERR_DEBUGBOXFULL
+Die Mailbox des Ams Debugger Ports  hat die maximal mögliche Anzahl Einträge erreicht.
+Die gesendete Nachricht wird nicht im Debug Monitor angezeigt.  
+0x504  1284  Intern  ROUTERERR_UNKNOWNPORTTYPE   
+0x505  1285  Intern  ROUTERERR_NOTINITIALIZED
+Router ist (noch) nicht initialisiert.  
+0x506  1286  Intern  ROUTERERR_PORTALREADYINUSE 
+Die gewünschte Portnummer ist schon vergeben.  
+0x507  1287  Intern  ROUTERERR_NOTREGISTERED 
+Ams Port ist nicht registriert.  
+0x508  1288  Intern  ROUTERERR_NOMOREQUEUES
+Die maximale Anzahl möglicher Ams Ports ist erreicht.  
+0x509  1289  Intern  ROUTERERR_INVALIDPORT   
+0x50A  1290  Intern  ROUTERERR_NOTACTIVATED 
+Der TwinCAT Router ist (noch) nicht aktiv.  
+
+ 
+
+General ADS Error Codes
+
+Hex Dez Beschreibung 
+0x700 1792 error class <device error> 
+0x701 1793 Service is not supported by server 
+0x702 1794 invalid index group 
+0x703 1795 invalid index offset 
+0x704 1796 reading/writing not permitted 
+0x705 1797  parameter size not correct 
+0x706 1798 invalid parameter value(s) 
+0x707 1799 device is not in a ready state 
+0x708 1800 device is busy 
+0x709 1801 invalid context (must be in Windows) 
+0x70A 1802 out of memory 
+0x70B 1803 invalid parameter value(s) 
+0x70C 1804 not found (files, ...) 
+0x70D 1805 syntax error in command or file 
+0x70E 1806 objects do not match 
+0x70F 1807 object already exists 
+0x710 1808 symbol not found 
+0x711 1809 symbol version invalid 
+0x712 1810 server is in invalid state 
+0x713 1811 AdsTransMode not supported 
+0x714 1812 Notification handle is invalid 
+0x715 1813 Notification client not registered 
+0x716 1814 no more notification handles 
+0x717 1815 size for watch too big 
+0x718 1816 device not initialized 
+0x719 1817 device has a timeout 
+0x71A 1818 query interface failed 
+0x71B 1819 wrong interface required 
+0x71C 1820 class ID is invalid 
+0x71D 1821 object ID is invalid 
+0x71E 1822 request is pending 
+0x71F 1823 request is aborted 
+0x720 1824 signal warning 
+0x721 1825 invalid array index 
+0x722 1826 symbol not active -> release handle and try again 
+0x723 1827 access denied 
+0x740 1856 Error class <client error> 
+0x741 1857 invalid parameter at service 
+0x742 1858 polling list is empty 
+0x743 1859 var connection already in use 
+0x744 1860 invoke ID in use 
+0x745 1861 timeout elapsed 
+0x746 1862 error in win32 subsystem 
+0x748 1864 ads port not opened 
+0x750 1872 internal error in ads sync 
+0x751 1873 hash table overflow 
+0x752 1874 key not found in hash 
+0x753 1875 no more symbols in cache 
+0x754 1876 invalid response received 
+0x755 1877 Sync port locked
+ADS-Client tries to send a ADS msg but another thread is still waiting for an ADS-response. 
+This error occurs only if no ADS-router is installed (please install royalty free TwinCAT-CP) 
+or the router does not know the remote ADS device (define the remote ADS partner ) 
+
+ 
+
+RTime Error Codes
+
+Hex Dez Fehlertyp Beschreibung 
+0x1000  4096  Intern  RTERR_INTERNAL 
+Interner fataler Fehler im TwinCAT Echtzeitsystem  
+0x1001  4097  Intern  RTERR_BADTIMERPERIODS
+Ungültiger Timerwert.  
+0x1002  4098  Intern  RTERR_INVALIDTASKPTR
+Task Pointer hat den ungültigen Wert NULL.  
+0x1003  4099  Intern  RTERR_INVALIDSTACKPTR
+Task Stack Pointer hat den ungültigen Wert NULL.  
+0x1004  4100  Intern  RTERR_PRIOEXISTS
+Die geforderte Taskpriorität ist schon vergeben.  
+0x1005  4101  Intern  RTERR_NOMORETCB
+Kein freier TCB (Task Control Block) mehr verfügbar. Maximale Anzahl von TCBs ist 64.  
+0x1006  4102  Intern  RTERR_NOMORESEMAS
+Keine freie Semaphore mehr verfügbar. Maximale Anzahl von Semaphoren ist 64.  
+0x1007  4103  Intern  RTERR_NOMOREQUEUES
+Keine freie Queue mehr verfügbar. Maximale Anzahl von Queues ist 64.  
+0x1008  4104  Intern  TwinCAT reserved.  
+0x1009  4105  Intern  TwinCAT reserved.  
+0x100A  4106  Intern  TwinCAT reserved.  
+0x100B  4107  Intern  TwinCAT reserved.  
+0x100C 4108  Intern  TwinCAT reserved.  
+0x100D 4109  Intern  RTERR_EXTIRQALREADYDEF
+Ein externer Synchronisierungsinterrupt ist schon angemeldet.  
+0x100E 4110  Intern  RTERR_EXTIRQNOTDEF
+Kein externer Synchronisierungsinterrupt angemeldet.  
+0x100F 4111  Intern  RTERR_EXTIRQINSTALLFAILED
+Anmelden des externen Synchronisierungsinterrupts ist fehlgeschlagen.  
+0x1010  4112  Intern  RTERR_IRQLNOTLESSOREQUAL
+Aufruf einer Dienstfunktion im falschen Kontext.  
+
+ 
+
+Socket Error Codes
+
+Hex Dez Beschreibung 
+0x274c 10060 A socket operation was attempted to an unreachable host 
+0x274d 10061 A connection attempt failed because the connected party did not properly respond after a period of time, 
+or established connection failed because connected host has failed to respond. 
+0x2751 10065 No connection could be made because the target machine actively refused it 
+    Weitere Socket Fehler-Codes finden Sie hier: Win32 Error Codes 
+
+*)]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE nAdsError OF
+	0	:		sText := 'kein Fehler';
+	1	:		sText := 'Internal error';
+	2	:		sText := 'No Rtime';
+	3	:		sText := 'Allocation locked memory error';
+	4	:		sText := 'Insert mailbox error';
+	5	:		sText := 'Wrong receive HMSG';
+	6	:		sText := 'target port not found';
+	7	:		sText := 'target machine not found';
+	8	:		sText := 'Unknown command ID';
+	9	:		sText := 'Bad task ID';
+	10	:		sText := 'No IO';
+	11	:		sText := 'Unknown AMS command';
+	12	:		sText := 'Win 32 error';
+	13	:		sText := 'Port not connected';
+	14	:		sText := 'Invalid AMS length';
+	15	:		sText := 'Invalid AMS Net ID';
+	16	:		sText := 'Low Installation level';
+	17	:		sText := 'No debug available';
+	18	:		sText := 'Port disabled';
+	19	:		sText := 'Port already connected';
+	20	:		sText := 'AMS Sync Win32 error';
+	21	:		sText := 'AMS Sync Timeout';
+	22	:		sText := 'AMS Sync AMS error';
+	23	:		sText := 'AMS Sync no index map';
+	24	:		sText := 'Invalid AMS port';
+	25	:		sText := 'No memory ';
+	26	:		sText := 'TCP send error ';
+	27	:		sText := 'Host unreachable';
+	1280	:		sText := 'Router: no locked memory ';
+	1282	:		sText := 'Router: mailbox full ';
+	1792	:		sText := 'error class <device error> ';
+	1793	:		sText := 'Service is not supported by server ';
+	1794	:		sText := 'invalid index group ';
+	1795	:		sText := 'invalid index offset ';
+	1796	:		sText := 'reading-writing not permitted ';
+	1797	:		sText:='parameter size not correct';
+	1798	:		sText := 'invalid parameter value ';
+	1799	:		sText := 'device is not in a ready state ';
+	1800	:		sText := 'device is busy ';
+	1801	:		sText := 'invalid context (must be in Windows) ';
+	1802	:		sText := 'out of memory';
+	1803	:		sText := 'invalid parameter value(s)';
+	1804	:		sText := 'not found (files, ...)';
+	1805	:		sText := 'syntax error in command or file';
+	1806	:		sText := 'objects do not match';
+	1807	:		sText := 'object already exists';
+	1808	:		sText := 'symbol not found';
+	1809	:		sText := 'symbol version invalid';
+	1810	:		sText := 'server is in invalid state';
+	1811	:		sText := 'AdsTransMode not supported';
+	1812	:		sText := 'Notification handle is invalid';
+	1813	:		sText := 'Notification client not registered';
+	1814	:		sText := 'no more notification handles';
+	1815	:		sText := 'size for watch too big';
+	1816	:		sText := 'device not initialized';
+	1817	:		sText := 'device has a timeout';
+	1818	:		sText := 'query interface failed';
+	1819	:		sText := 'wrong interface required';
+	1820	:		sText := 'class ID is invalid';
+	1821	:		sText := 'object ID is invalid';
+	1822	:		sText := 'request is pending';
+	1823	:		sText := 'request is aborted';
+	1824	:		sText := 'signal warning';
+	1825	:		sText := 'invalid array index';
+	1856	:		sText := 'Error class <client error>';
+	1857	:		sText := 'invalid parameter at service';
+	1858	:		sText := 'polling list is empty';
+	1859	:		sText := 'var connection already in use';
+	1860	:		sText := 'invoke ID in use';
+	1861	:		sText := 'timeout elapsed';
+	1862	:		sText := 'error in win32 subsystem';
+	1864	:		sText := 'ads port not opened';
+	1872	:		sText := 'internal error in ads sync';
+	1873	:		sText := 'hash table overflow';
+	1874	:		sText := 'key not found in hash';
+	1875	:		sText := 'no more symbols in cache';
+	1877	:		sText := 'Sync port locked: ADS-Client tries to send a ADS msg but another thread is still waiting for an ADS-response. This error occurs only if no ADS-router is installed or the router does not know the remote ADS device (define the remote ADS partner )';
+	10060	:		sText := 'A socket operation was attempted to an unreachable host';
+	10061	:		sText := 'A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.';
+	10065	:		sText := 'No connection could be made because the target machine actively refused it';
+
+(* FB_SmtpV2 *)
+	32778 	:	sText := 'Not connected';
+	32779 	:	sText := 'Sender expected';
+	32780 	:	sText := 'Recipients expected';
+	32781 	:	sText := 'Send FROM command failed';
+	32782 	:	sText := 'Send DATA command failed';
+	32783 	:	sText := 'Send mail header failed';
+	32784 	:	sText := 'Send mail body failed';
+	32785 	:	sText := 'Send "end of mail indicator" failed';
+	32786 	:	sText := 'Send "RCPT" command failed';
+	32787 	:	sText := 'Server Response got no username request';
+	32788 	:	sText := 'Server Response got no password request';
+	32789 	:	sText := 'Unable to create socket connection';
+	32790 	:	sText := 'Authentication type not supported by smtp server';
+	32791 	:	sText := 'Wrong username or password';
+	32792 	:	sText := 'Not supported';
+	32793 	:	sText := 'Invalid hostname';
+	32794 	:	sText := 'Unable to send attachment';
+	32795 	:	sText := 'File not found';
+	32796 	:	sText := 'Invalid Version (New SMTP Server with old SMTP PLC library)';
+	32797 	:	sText := 'Unable to connect (Connection error => sometimes wrong port or wrong server)';
+	32798 	:	sText := 'Unable to create socket';
+	32799 	:	sText := 'WSA startup failed';
+	32800 	:	sText := 'Invalid hostname';
+	32801 	:	sText := 'Unecpected response from server';
+	32802 	:	sText := 'Error while receiving data';
+	32803 	:	sText := 'No supported authentication methods found';
+	32804 	:	sText := 'Invalid parameter';
+	32928 	:	sText := 'Security interface not found';
+	32929 	:	sText := 'Unable to call security interface';
+	32930 	:	sText := 'Security initialization failed';
+	32932 	:	sText := 'Unable to create credentials';
+	32933 	:	sText := 'SSL-handshake failed';
+	32934 	:	sText := 'Invalid server credentials';
+	32935 	:	sText := 'Unable to verify server';
+	32936 	:	sText := 'Unable to encrypt message';
+	32937 	:	sText := 'Unable to decrypt message';
+
+
+	ELSE			sText := 'Error not defined';
+END_CASE;
+
+F_ADSerrorText := sText;]]></ST>
+    </Implementation>
+    <LineIds Name="F_AdsErrorText">
+      <LineId Id="179" Count="124" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

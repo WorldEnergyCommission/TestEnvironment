@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_XL1XXX_DI" Id="{2fd8c04b-6e28-43e5-9831-84ea8294e675}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_XL1XXX_DI
+VAR_INPUT
+	{attribute 'hide'}
+	bInvers							: BOOL;				//Invert the input signal
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bSignal							: BOOL;				//Signal from the terminal
+END_VAR
+VAR
+	bDataIn					AT%I*	: BOOL;				//Input data from the termianl 
+END_VAR
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.06.2021
+//Version : 1.0.0.0
+
+//With this fuction block its possible to read in a digital signal from a Beckhoff Digital Input terminal
+//Here we have the possibility to invert the input signal
+
+IF NOT bInvers THEN 
+	bSignal := bDataIn;
+ELSE
+	bSignal := NOT bDataIn;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_XL1XXX_DI">
+      <LineId Id="354" Count="2" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="361" Count="1" />
+      <LineId Id="360" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

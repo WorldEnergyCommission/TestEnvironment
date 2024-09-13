@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="ST_ECS_Output" Id="{88d53b8e-751c-4a39-8c0a-32a0d5946045}">
+    <Declaration><![CDATA[TYPE ST_ECS_Output :
+STRUCT
+	bOutput										: BOOL;										//Output charging station = Target power > 0
+	bOutputOnOff								: BOOL;										//Output charging station = Target power >= 100
+	bEnabled									: BOOL;										//{#lynus.ag#()} //Charging Station is enabled
+	bCarConnected								: BOOL;										//Car is connected with the charging station
+	bSOnEmergPowerOff							: BOOL;										//Shows the state of the bOnEmergPowerOff input from the setups
+	bSManualyOn									: BOOL;										//Shows the state of the bManualyOn input from the setups
+	byPriority									: BYTE; 									//Priority of the device if controlled via the EMS block = 1 2 3 (If 0 then this device does not exist for the EMS block)
+	bySManualyTargetPower						: BYTE;										//Shows the state of the byManualyTargetPower input from the setups
+	bySCSMinPower								: BYTE;										//{#lynus.ag#()} //Shows the state of the bySCMinPower input from the setups
+	byErrorWarning								: BYTE;										//Show if the function has a Error or a Warning
+	rMaxPower									: REAL; 									//Max. power from the charging Station with unit kW
+	rTargetPower								: REAL;										//{#lynus.ag#()} //Target power from 0% to +100%
+	rTargetChargeCurrent						: REAL;										//Target charge current for charging station with unit A
+	lrTotalCounterEnergy_Consumption			: LREAL;									//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production				: LREAL;									//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption				: LREAL;									//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption				: LREAL;									//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production				: LREAL;									//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production				: LREAL;									//Total counter for energy Tariff 2 production with unit kWh
+	lrTotalPower								: LREAL;									//Actual total power charging station with unit kW
+	lrTotalPowerConsumption						: LREAL;									//Consumption total charging station with unit kW
+	lrTotalPowerProduction						: LREAL;									//Production total charging station with unit kW
+	arrSocketStateECS							: ARRAY[1..4] OF WORD;						//Show the State from each socket of the Electric Charging station. (0= No information, 1= ECS is Free, 2= Car Connected, 3 = Car is charging)
+	arrSocketSOCCar								: ARRAY[1..4] OF DWORD;						//Actual SOC from the car of each socket
+	arrChargingTimeInMin						: ARRAY[1..4] OF REAL;						//Charging time from the car in minutes from each socket
+	arrSocketEnergySession						: ARRAY[1..4] OF LREAL;;					//Energy in kWh from the actual Session
+	arrSocketPower								: ARRAY[1..4] OF LREAL;;					//Power in kW from each socket
+	eMessage									: E_Message_ECS;							//Message from the ECS
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

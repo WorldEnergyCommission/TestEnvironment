@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Convert_Huawei_SmartLogger" Id="{2c78b450-4835-4023-b1fb-6021a53a064b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Convert_Huawei_SmartLogger
+VAR_INPUT
+	arrBuffer_FC3				: ARRAY[0..25] OF WORD;	
+	int_Poll_Counter			:INT;
+	
+END_VAR
+VAR_OUTPUT
+	lrPowerTotal			:LREAL;
+	lrReactivePowerTotal	:LREAL;
+	eOperatingStateInverter	:E_Huawei_SmartLogger_OperatingState;
+	
+	
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Copy Data AC Power
+
+lrPowerTotal := DINT_TO_LREAL(SHL(WORD_TO_DWORD(arrBuffer_FC3[0]),16) + WORD_TO_DWORD(arrBuffer_FC3[1]));
+lrReactivePowerTotal := DINT_TO_LREAL(SHL(WORD_TO_DWORD(arrBuffer_FC3[2]),16) + WORD_TO_DWORD(arrBuffer_FC3[3]));
+
+
+//Operating State	
+IF 			arrBuffer_FC3[9] = 16#0000 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Standby_initializing;
+	ELSIF 	arrBuffer_FC3[9] = 16#0001 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Standby_detecting_insulation_resistance;
+	ELSIF 	arrBuffer_FC3[9] = 16#0002 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Standby_detecting_irradiation;
+	ELSIF 	arrBuffer_FC3[9] = 16#0003 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Standby_gid_detecting;
+	ELSIF 	arrBuffer_FC3[9] = 16#0100 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Starting;
+	ELSIF 	arrBuffer_FC3[9] = 16#0200 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.On_grid_Off_grid_mode_running;
+	ELSIF 	arrBuffer_FC3[9] = 16#0201 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Grid_connection_power_limited_Off_mode_running_power_limited;
+	ELSIF 	arrBuffer_FC3[9] = 16#0202 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Grid_connection_selfderating_Off_mode_running_selfderating;
+	ELSIF 	arrBuffer_FC3[9] = 16#0203 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Off_grid_Running;
+	ELSIF 	arrBuffer_FC3[9] = 16#0300 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_fault;
+	ELSIF 	arrBuffer_FC3[9] = 16#0301 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_command;
+	ELSIF 	arrBuffer_FC3[9] = 16#0302 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_OVGR;
+	ELSIF 	arrBuffer_FC3[9] = 16#0303 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_communication_disconnected;
+	ELSIF 	arrBuffer_FC3[9] = 16#0304 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_power_limited	;
+	ELSIF 	arrBuffer_FC3[9] = 16#0305 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_manual_startup_required;
+	ELSIF 	arrBuffer_FC3[9] = 16#0306 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_DC_switches_disconnected;
+	ELSIF 	arrBuffer_FC3[9] = 16#0307 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_rapid_cutoff;
+	ELSIF 	arrBuffer_FC3[9] = 16#0308 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Shutdown_input_underpower;
+	ELSIF 	arrBuffer_FC3[9] = 16#0401 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Grid_scheduling_cosphi_P_curve;
+	ELSIF 	arrBuffer_FC3[9] = 16#0402 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Grid_scheduling_Q_U_curve;
+	ELSIF 	arrBuffer_FC3[9] = 16#0403 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Grid_scheduling_PF_U_curve;
+	ELSIF 	arrBuffer_FC3[9] = 16#0404 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Grid_scheduling_dry_contact;
+	ELSIF 	arrBuffer_FC3[9] = 16#0405 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Grid_scheduling_Q_P_curve;
+	ELSIF 	arrBuffer_FC3[9] = 16#0500 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Spotcheck_ready	;
+	ELSIF 	arrBuffer_FC3[9] = 16#0501 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Spotchecking;
+	ELSIF 	arrBuffer_FC3[9] = 16#0600 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Inspecting;
+	ELSIF 	arrBuffer_FC3[9] = 16#0700 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.AFCI_self_check;
+	ELSIF 	arrBuffer_FC3[9] = 16#0800 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.I_V_scanning;
+	ELSIF 	arrBuffer_FC3[9] = 16#0900 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.DC_input_detection;
+	ELSIF 	arrBuffer_FC3[9] = 16#0A00 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Running_off_grid_charging;
+	ELSIF 	arrBuffer_FC3[9] = 16#A000 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Standby_no_irradiation;
+	ELSIF 	arrBuffer_FC3[9] = 16#B000 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Communication_interrupt	;
+	ELSIF 	arrBuffer_FC3[9] = 16#C000 THEN eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Uploading;
+	ELSE 									eOperatingStateInverter := 	E_Huawei_SmartLogger_OperatingState.Unknown;
+END_IF
+
+	(*	0x0000 Standby: initializing
+		0x0001 Standby: detecting insulation resistance
+		0x0002 Standby: detecting irradiation
+		0x0003 Standby: drid detecting
+		0x0100 Starting
+		0x0200 On-grid (Off-grid mode: running)
+		0x0201 Grid connection: power limited (Off mode: running: power limited)
+		0x0202 Grid connection: selfderating (Off mode: running: selfderating)
+		0x0203 Off-grid Running
+		0x0300 Shutdown: fault
+		0x0301 Shutdown: command
+		0x0302 Shutdown: OVGR
+		0x0303 Shutdown: communication disconnected
+		0x0304 Shutdown: power limited
+		0x0305 Shutdown: manual startup required
+		0x0306 Shutdown: DC switches disconnected
+		0x0307 Shutdown: rapid cutoff
+		0x0308 Shutdown: input underpower
+		0x0401 Grid scheduling: cosφ-P curve
+		0x0402 Grid scheduling: Q-U curve
+		0x0403 Grid scheduling: PF-U curve
+		0x0404 Grid scheduling: dry contact
+		0x0405 Grid scheduling: Q-P curve
+		0x0500 Spotcheck ready
+		0x0501 Spotchecking
+		0x0600 Inspecting
+		0X0700 AFCI self check
+		0X0800 I-V scanning
+		0X0900 DC input detection
+		0X0A00 Running: off-grid charging
+		0xA000 Standby: no irradiation	
+		0xB000	Communication interrupt
+		0xC000	Uploading					*)
+		]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Convert_Huawei_SmartLogger">
+      <LineId Id="18" Count="6" />
+      <LineId Id="59" Count="67" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="142" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

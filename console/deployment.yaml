@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: console-certificate-store
+  namespace: lynus
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console
+  namespace: lynus
+  labels:
+    app: console
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: console
+  template:
+    metadata:
+      labels:
+        app: console
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: console
+          image: ghcr.io/efficientio/efficientio/console:TAG
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+          volumeMounts:
+            - mountPath: /certs
+              name: data
+          imagePullPolicy: Always
+      nodeSelector:
+        nodetype: large
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: console-certificate-store
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: console-lb
+  namespace: lynus
+  annotations:
+    service.beta.kubernetes.io/exoscale-loadbalancer-service-instancepool-id: "INSTANCEPOOL_ID"
+    service.beta.kubernetes.io/exoscale-loadbalancer-name: console-loadbalancer
+    service.beta.kubernetes.io/exoscale-loadbalancer-description: Loadbalancer hosted by exoscale for the console
+    service.beta.kubernetes.io/exoscale-loadbalancer-external: "true"
+spec:
+  selector:
+    app: console
+  ports:
+    - name: http
+      port: 80
+    - name: https
+      port: 443
+  type: LoadBalancer

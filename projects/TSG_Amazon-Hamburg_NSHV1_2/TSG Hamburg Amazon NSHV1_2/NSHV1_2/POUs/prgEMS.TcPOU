@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgEMS" Id="{261512bd-8f5b-42a4-b98c-ad0de23e9cba}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR
+	fbEMS1		: FB_EMS_V2;		//{#lynus.ag#()}
+	fbEMS2		: FB_EMS_V2;		//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Fuse Line
+fbEMS1.stNrOfEM_IN_ECS.diNrOfLine1 := prgUV.fbUV1_1.diNrOfEM_OUT;
+fbEMS1.stNrOfEM_IN_ECS.diNrOfLine2 := prgUV.fbUV1_2.diNrOfEM_OUT;
+fbEMS1.stNrOfEM_IN_ECS.diNrOfLine3 := prgUV.fbUV2_1.diNrOfEM_OUT;
+fbEMS1.stNrOfEM_IN_ECS.diNrOfLine4 := prgUV.fbUV2_2.diNrOfEM_OUT;
+fbEMS1.stNrOfEM_IN_ECS.diNrOfLine5 := prgUV.fbUV2_3.diNrOfEM_OUT;
+fbEMS1.stNrOfEM_IN_ECS.diNrOfLine6 := prgUV.fbUV2_4.diNrOfEM_OUT;
+
+fbEMS1(
+	bEnable:= , 
+	tDelayPwrCorrectionECS:= T#4S, 
+	stNrOfEM_IN_ECS:= , 
+	stSizeMainFuseCS:= , 
+	stSetupEMS:= , 
+	eOperationMode:= , 
+	eSpeedModeBackendController:= E_SpeedModeBackendController_EMS.eSlow, 
+	eSpeedModeLocalController:= E_SpeedModeLocalController_EMS.eSlow, 
+	bActivateHP:= , 
+	bControllingState:= , 
+	rHeartbeat:= , 
+	rErrorWarning:= , 
+	rEnergyOptReady:= , 
+	rNewBattPower:= , 
+	eMessageEMS=> , 
+	bStateEnable=> , 
+	bStateAllowChrgFromGrid=> , 
+	bMissingPowerData=> , 
+	bSurplusAvailable=> , 
+	bSEnableMainFuseFunc=> , 
+	byProgress=> , 
+	uiState_OUT=> , 
+	diNrOfEMS_OUT=> , 
+	arrMinPrioReached=> , 
+	arrMaxPrioReached=> );
+
+//Fuse Line
+fbEMS2.stNrOfEM_IN_ECS.diNrOfLine1 := prgUV.fbUV3_1.diNrOfEM_OUT;
+fbEMS2.stNrOfEM_IN_ECS.diNrOfLine2 := prgUV.fbUV3_2.diNrOfEM_OUT;
+fbEMS2.stNrOfEM_IN_ECS.diNrOfLine3 := prgUV.fbUV3_3.diNrOfEM_OUT;
+fbEMS2.stNrOfEM_IN_ECS.diNrOfLine4 := prgUV.fbUV3_4.diNrOfEM_OUT;
+	
+fbEMS2(
+	bEnable:= , 
+	tDelayPwrCorrectionECS:= T#4S, 
+	stNrOfEM_IN_ECS:= , 
+	stSizeMainFuseCS:= , 
+	stSetupEMS:= , 
+	eOperationMode:= , 
+	eSpeedModeBackendController:= E_SpeedModeBackendController_EMS.eSlow, 
+	eSpeedModeLocalController:= E_SpeedModeLocalController_EMS.eSlow, 
+	bActivateHP:= , 
+	bControllingState:= , 
+	rHeartbeat:= , 
+	rErrorWarning:= , 
+	rEnergyOptReady:= , 
+	rNewBattPower:= , 
+	eMessageEMS=> , 
+	bStateEnable=> , 
+	bStateAllowChrgFromGrid=> , 
+	bMissingPowerData=> , 
+	bSurplusAvailable=> , 
+	bSEnableMainFuseFunc=> , 
+	byProgress=> , 
+	uiState_OUT=> , 
+	diNrOfEMS_OUT=> , 
+	arrMinPrioReached=> , 
+	arrMaxPrioReached=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="62" Count="0" />
+      <LineId Id="64" Count="5" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="7" Count="24" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="84" Count="4" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="35" Count="24" />
+      <LineId Id="34" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

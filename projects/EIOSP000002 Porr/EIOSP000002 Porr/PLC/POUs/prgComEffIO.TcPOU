@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComEffIO
+VAR
+	fbCom		: FB_MqttCommunicator_V2;
+	int_PowerLinkNumber: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	strAuthkey := 'EIO08031879806',
+	sUserName:= , 			// see below
+	sUserPassword:= , 		// see below
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+
+
+prg_ReadDeviceName();
+IF prg_ReadDeviceName.sDeviceName = '' THEN
+	prg_ReadDeviceName.bStart := TRUE;
+END_IF
+
+// select user / pass according device name:
+ IF prg_ReadDeviceName.sDeviceName = 'EIOSP000002' THEN   // powerlink #1
+	fbCom.sUserName:= 'bcb65b49-8b4d-4022-904c-9936d016ff1c'; 
+	fbCom.sUserPassword:= 'd3bebec0-d67d-45ef-bae3-ebeb4a96c1a9';
+	prgEM.uiCurrentTransformerRatio_EM1	:= 300;
+	prgEM.uiCurrentTransformerRatio_EM2	:= 32;
+	prgEM.uiCurrentTransformerRatio_EM3	:= 32;
+	prgEM.uiCurrentTransformerRatio_EM4	:= 32;
+	prgEM.uiCurrentTransformerRatio_EM5	:= 32;
+	prgEM.uiCurrentTransformerRatio_EM6	:= 32;
+	prgEM.uiCurrentTransformerRatio_EM7	:= 32;
+	
+
+END_IF
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgComEffIO">
+      <LineId Id="8" Count="1" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="10" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="210" Count="2" />
+      <LineId Id="716" Count="5" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="56" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

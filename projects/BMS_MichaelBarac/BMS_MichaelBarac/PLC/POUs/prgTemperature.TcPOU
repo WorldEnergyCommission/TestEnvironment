@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgTemperature" Id="{32a15ab6-22ee-4507-9b12-3008b812f0ce}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgTemperature
+VAR
+// Kanal 1
+	fb_Config_1			: FB_KL320xConfig;
+	stInData_1   		AT%I*		: ST_KL320xInData;
+	stOutData_1		  	AT%Q*		: ST_KL320xOutData;
+// Kanal 2
+	fb_Config_2			: FB_KL320xConfig;
+	stInData_2   		AT%I*		: ST_KL320xInData;
+	stOutData_2  		AT%Q*		: ST_KL320xOutData;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	
+	
+fb_Config_1(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_1, 
+	stOutData:= stOutData_1);
+	
+fb_Config_2(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_2, 
+	stOutData:= stOutData_2);
+	
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgTemperature">
+      <LineId Id="15" Count="39" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prg5532Grid" Id="{4a3cc4e7-c116-4079-b915-bea6cd42d72d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prg5532Grid
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbGrid			: FB_EM_Beckhoff_KL3403;
+	lrPowerGrid		: LREAL;							//{#lynus.ag#()}
+	lrCounterGrid	: LREAL;							//{#lynus.ag#()}
+	lrVoltageGridL1	: LREAL;							//{#lynus.ag#()}
+	lrVoltageGridL2	: LREAL;							//{#lynus.ag#()}
+	lrVoltageGridL3	: LREAL;							//{#lynus.ag#()}
+	uint_BusState	: UINT;								//{#lynus.ag#()}
+	int_LiveCount:int;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//The mapping of this function must be linked with the K-Bus State in the E/A Part
+fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+				
+//The mapping of this function must be linked with the KL3403 in the E/A Part
+fbGrid(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,					//Invert power data when transformer are mounted upside down
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 		//Transformer ratio on the secondary side
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerGrid := fbGrid.stDataEMPower.lrPowerTotal;
+	lrCounterGrid := fbGrid.stDataEMCounter.lrTotalCounterEnergy_Consumption;
+		lrVoltageGridL1 := fbGrid.stDataEMPowerRealTime.lrVoltageL1N;
+				lrVoltageGridL2 := fbGrid.stDataEMPowerRealTime.lrVoltageL2N;
+					lrVoltageGridL3 := fbGrid.stDataEMPowerRealTime.lrVoltageL3N;
+
+
+uint_BusState := fbKbusState.uiKBusState_OUT;
+int_LiveCount:=int_LiveCount+1;]]></ST>
+    </Implementation>
+    <LineIds Name="prg5532Grid">
+      <LineId Id="11" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="14" Count="17" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="66" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

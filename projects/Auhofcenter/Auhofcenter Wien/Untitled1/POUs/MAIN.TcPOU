@@ -1,0 +1,833 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="MAIN" Id="{e8e91aa1-69b1-4906-ac0a-23cde2e15e44}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fbVarInfo						: FB_VarInfo;	
+	timStart						: TON;
+	timResetConnection				: TON;
+	byLPArr							: BYTE;
+	iState							: INT;	
+	uiErrorCounter					: UINT;
+	rHeartbeat						: REAL;			//{#lynus.ag#()}
+	rErrorWarning					: REAL;			//{#lynus.ag#()}
+	rSPOptReady						: REAL;			//{#lynus.ag#()}
+	FPStart							: R_TRIG;
+	FPDone							: R_TRIG;
+	FPError							: R_TRIG;
+	fbHttp							: FB_GetSet_Data_Auhofcenter;
+		
+	// Bauteil1
+	fbMonitor						: FB_SPOpt_Monitoring_extTime;
+	bSEnableOp						: BOOL;			//{#lynus.ag#()}
+	byHB							: BYTE;			//Watchdog
+	rNewTargetValue					: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	bPumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rAussentemperatur				: REAL;			//{#lynus.ag#()} //Aussentemperatur 
+	rUmfVorlaufPri					: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur primär
+	rUmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rUmfVorlaufSek					: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rUmfRuecklaufSek				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur sekundär
+	rRTMall_EG_Billa				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, vor Billa
+	rRTMall_EG_RichutngBT2			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Richtung Bauteil 2
+	rRTMall_EG_VorPost				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, vor Post
+	rRTMall_OG_VorTKMaxx			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 1. OG, vor TKMaxx
+	rRTMall_OG_VorStrasslSchaider	: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 1. OG, vor Strassl-Schaider
+	rRTMall_OG_Nordseitig			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 2. OG, Nordseitig
+	rRTMall_OG_Suedseitig			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 2. OG, Südseitig
+	
+	// Bauteil2
+	fbMonitorBT2					: FB_SPOpt_Monitoring_extTime;
+	bSEnableOpBT2					: BOOL;			//{#lynus.ag#()}
+	byBT2HB							: BYTE;			//Watchdog
+	bBT2PumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rBT2NewTargetValue				: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	rBT2UmfVorlaufSek				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rBT2UmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rBT2RTMall_EG_Nord				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Nord
+	rBT2RTMall_OG_Nord				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, Nord
+	rBT2RTMall_EG_Sued				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Sued
+	rBT2RTMall_OG_Sued				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, Sued
+	
+	// Bauteil3
+	fbMonitorBT3					: FB_SPOpt_Monitoring_extTime;
+	bSEnableOpBT3					: BOOL;			//{#lynus.ag#()}
+	byBT3HB							: BYTE;			//Watchdog
+	bBT3PumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rBT3NewTargetValue				: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	rBT3UmfVorlaufPri				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur primär
+	rBT3UmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rBT3UmfVorlaufSek				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rBT3UmfRuecklaufSek				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur sekundär
+	rBT3RTMall_EG_West				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, West
+	rBT3RTMall_OG_West				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, West
+	rBT3RTMall_EG_HK31				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, HK3.1
+	rBT3RTMall_EG_HK32				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, HK3.2
+	rBT3RTMall_OG_K33				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, K3.3
+	rBT3RTMall_OG_K34				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, K3.4
+	rBT3RTMall_OG_Ost				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, Ost
+	rBT3RTMall_EG_Ost				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Ost
+	rBT3RTMall_EG_HK35				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, HK3.5
+	rBT3RTMall_OG_HK37				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, HK3.7
+	
+	// Bauteil4
+	fbMonitorBT4					: FB_SPOpt_Monitoring_extTime;
+	bSEnableOpBT4					: BOOL;			//{#lynus.ag#()}
+	byBT4HB							: BYTE;			//Watchdog
+	bBT4PumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rBT4NewTargetValue				: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	rBT4UmfVorlaufPri				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur primär
+	rBT4UmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rBT4UmfVorlaufSek				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rBT4UmfRuecklaufSek				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur sekundär
+	rBT4RTMall_EG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG
+	rBT5RTMall_OG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG (BT5)
+	rBT6RTMall_OG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG (BT6)
+	rBT6RTMall_EG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG (BT6)
+
+	// Wurzelzaehler
+	lrBT1EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT1 Zaehlerstand	
+	rBT1EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT1 Momentanleistung
+	lrBT2EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT2 Zaehlerstand
+	rBT2EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT2 Momentanleistung
+	lrBT3EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT3 Zaehlerstand
+	rBT3EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT3 Momentanleistung
+	lrBT4EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT4 Zaehlerstand
+	rBT4EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT4 Momentanleistung
+
+	x: INT;
+	
+	bDissableExtHBBT1 : BOOL;			//{#lynus.ag#()}
+	bDissableExtHBBT2 : BOOL;			//{#lynus.ag#()}
+	bDissableExtHBBT3 : BOOL;			//{#lynus.ag#()}
+	bDissableExtHBBT4 : BOOL;			//{#lynus.ag#()}
+
+END_VAR
+VAR PERSISTENT
+	bEnableOp						: BOOL;			//{#lynus.ag#()}
+	bEnableOpBT2					: BOOL;			//{#lynus.ag#()}
+	bEnableOpBT3					: BOOL;			//{#lynus.ag#()}
+	bEnableOpBT4					: BOOL;			//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Search the Variabels for Lynus
+fbVarInfo(
+	bReadInfo:= , 
+	eTMCFile:= eSelectTMCFile.eDontUseTMCFile, 
+	eSavePositionTMCFile:= eSavePositionOnPLC.ePostionC, 
+	udiCounterFoundVariables=> , 
+	bError=> , 
+	bBusy=> , 
+	byProgress=> , 
+	udiErrorCodeOut=> , 
+	eErrorVarInfo_Out=> , 
+	sVarWithError=> );
+
+//Monitor
+fbMonitor(
+	bEnable:= bEnableOp, 
+	bDissableHB:= FALSE, 
+	tChangeHBIn:= T#1H, 
+	tChangeHBOut:= T#30S, 
+	rHeartbeat:= rHeartbeat, 
+	rErrorWarning:= rErrorWarning, 
+	rSPOptReady:= rSPOptReady,
+	bReadyOut=> , 
+	bDissableExtHB=> bDissableExtHBBT1, 
+	bSEnable=> bSEnableOp, 
+	rHeartbeatOut=> );
+
+//Monitor BT2
+fbMonitorBT2(
+	bEnable:= bEnableOpBT2, 
+	bDissableHB:= FALSE, 
+	tChangeHBIn:= T#1H, 
+	tChangeHBOut:= T#30S, 
+	rHeartbeat:= rHeartbeat, 
+	rErrorWarning:= rErrorWarning, 
+	rSPOptReady:= rSPOptReady,
+	bReadyOut=> , 
+	bDissableExtHB=> bDissableExtHBBT2, 
+	bSEnable=> bSEnableOpBT2, 
+	rHeartbeatOut=> );
+	
+//Monitor BT3
+fbMonitorBT3(
+	bEnable:= bEnableOpBT3, 
+	bDissableHB:= FALSE, 
+	tChangeHBIn:= T#1H, 
+	tChangeHBOut:= T#30S, 
+	rHeartbeat:= rHeartbeat, 
+	rErrorWarning:= rErrorWarning, 
+	rSPOptReady:= rSPOptReady,
+	bReadyOut=> , 
+	bDissableExtHB=> bDissableExtHBBT3, 
+	bSEnable=> bSEnableOpBT3, 
+	rHeartbeatOut=> );
+	
+//Monitor BT4
+fbMonitorBT4(
+	bEnable:= bEnableOpBT4, 
+	bDissableHB:= FALSE, 
+	tChangeHBIn:= T#1H, 
+	tChangeHBOut:= T#30S, 
+	rHeartbeat:= rHeartbeat, 
+	rErrorWarning:= rErrorWarning, 
+	rSPOptReady:= rSPOptReady,
+	bReadyOut=> , 
+	bDissableExtHB=> bDissableExtHBBT4, 
+	bSEnable=> bSEnableOpBT4, 
+	rHeartbeatOut=> );
+	
+//Read/Write Function to the Auhofcenter System	
+timStart(IN:= TRUE, PT:= T#5S, Q=> , ET=> );
+
+FPStart(CLK:= timStart.Q, Q=> );
+
+IF FPStart.Q THEN
+	iState := 1;	
+END_IF
+
+CASE iState OF
+
+	0://Stop
+		fbHttp.bStart := FALSE;
+
+	1://Read Values
+		fbHttp.bStart := TRUE;	
+			fbHttp.bReadRequest := TRUE;
+				fbHttp.bWriteRequest := FALSE;
+		
+		(* ----- Variablen Bauteil 1 ----- *)
+		//Aussentemperatur (Mittelwert aus 4 Messstellen)	
+		fbHttp.arrListOfVariables[1].bIsString := FALSE;
+			fbHttp.arrListOfVariables[1].sVariableName := 'DV100';	
+				fbHttp.arrListOfVariables[1].sVariableValue := '';	
+		//Umformer Vorlauftemperatur primär
+		fbHttp.arrListOfVariables[2].bIsString := FALSE;
+			fbHttp.arrListOfVariables[2].sVariableName := 'DV111';
+				fbHttp.arrListOfVariables[2].sVariableValue := '';	
+		//Umformer Rücklauftemperatur primär
+		fbHttp.arrListOfVariables[3].bIsString := FALSE;
+			fbHttp.arrListOfVariables[3].sVariableName := 'DV112';
+				fbHttp.arrListOfVariables[3].sVariableValue := '';
+		//Umformer Vorlauftemperatur sekundär
+		fbHttp.arrListOfVariables[4].bIsString := FALSE;
+			fbHttp.arrListOfVariables[4].sVariableName := 'DV113';
+				fbHttp.arrListOfVariables[4].sVariableValue := '';
+		//Umformer Rücklauftemperatur sekundär
+		fbHttp.arrListOfVariables[5].bIsString := FALSE;
+			fbHttp.arrListOfVariables[5].sVariableName := 'DV114';
+				fbHttp.arrListOfVariables[5].sVariableValue := '';	
+		//Raumtemperatur Mall EG, vor Billa
+		fbHttp.arrListOfVariables[6].bIsString := FALSE;
+			fbHttp.arrListOfVariables[6].sVariableName := 'DV121';
+				fbHttp.arrListOfVariables[6].sVariableValue := '';
+		//Raumtemperatur Mall EG, Richtung BT2
+		fbHttp.arrListOfVariables[7].bIsString := FALSE;
+			fbHttp.arrListOfVariables[7].sVariableName := 'DV122';
+				fbHttp.arrListOfVariables[7].sVariableValue := '';
+		//Raumtemperatur Mall EG, vor Post
+		fbHttp.arrListOfVariables[8].bIsString := FALSE;
+			fbHttp.arrListOfVariables[8].sVariableName := 'DV123';
+				fbHttp.arrListOfVariables[8].sVariableValue := '';
+		//Raumtemperatur Mall 1. OG, vor TKMaxx
+		fbHttp.arrListOfVariables[9].bIsString := FALSE;
+			fbHttp.arrListOfVariables[9].sVariableName := 'DV124';
+				fbHttp.arrListOfVariables[9].sVariableValue := '';
+		//Raumtemperatur Mall 1. OG, vor Strassl-Schaider
+		fbHttp.arrListOfVariables[10].bIsString := FALSE;
+			fbHttp.arrListOfVariables[10].sVariableName := 'DV125';
+				fbHttp.arrListOfVariables[10].sVariableValue := '';
+		//Raumtemperatur Mall 2. OG, Nordseitig
+		fbHttp.arrListOfVariables[11].bIsString := FALSE;
+			fbHttp.arrListOfVariables[11].sVariableName := 'DV126';
+				fbHttp.arrListOfVariables[11].sVariableValue := '';
+		//Raumtemperatur Mall 2. OG, Südseitig
+		fbHttp.arrListOfVariables[12].bIsString := FALSE;
+			fbHttp.arrListOfVariables[12].sVariableName := 'DV127';
+				fbHttp.arrListOfVariables[12].sVariableValue := '';
+		//Status Pumpe
+		fbHttp.arrListOfVariables[13].bIsString := FALSE;
+			fbHttp.arrListOfVariables[13].sVariableName := 'DV128';
+				fbHttp.arrListOfVariables[13].sVariableValue := '';
+		
+		(* ----- Variablen Bauteil 2 ----- *)
+		//Umformer Vorlauftemperatur sekundär	
+		fbHttp.arrListOfVariables[14].bIsString := FALSE;
+			fbHttp.arrListOfVariables[14].sVariableName := 'DV211';	
+				fbHttp.arrListOfVariables[14].sVariableValue := '';
+		//Umformer Rücklauftemperatur primär
+		fbHttp.arrListOfVariables[15].bIsString := FALSE;
+			fbHttp.arrListOfVariables[15].sVariableName := 'DV212';	
+				fbHttp.arrListOfVariables[15].sVariableValue := '';
+		//Raumtemperatur Mall EG, Nord
+		fbHttp.arrListOfVariables[16].bIsString := FALSE;
+			fbHttp.arrListOfVariables[16].sVariableName := 'DV221';	
+				fbHttp.arrListOfVariables[16].sVariableValue := '';
+		//Raumtemperatur Mall OG, Nord
+		fbHttp.arrListOfVariables[17].bIsString := FALSE;
+			fbHttp.arrListOfVariables[17].sVariableName := 'DV222';	
+				fbHttp.arrListOfVariables[17].sVariableValue := '';
+		//Raumtemperatur Mall EG, Süd
+		fbHttp.arrListOfVariables[18].bIsString := FALSE;
+			fbHttp.arrListOfVariables[18].sVariableName := 'DV223';	
+				fbHttp.arrListOfVariables[18].sVariableValue := '';
+		//Raumtemperatur Mall OG, Süd
+		fbHttp.arrListOfVariables[19].bIsString := FALSE;
+			fbHttp.arrListOfVariables[19].sVariableName := 'DV224';	
+				fbHttp.arrListOfVariables[19].sVariableValue := '';
+		//Heizung Aus/Ein (Hauptschalter)
+		fbHttp.arrListOfVariables[20].bIsString := FALSE;
+			fbHttp.arrListOfVariables[20].sVariableName := 'DV232';	
+				fbHttp.arrListOfVariables[20].sVariableValue := '';
+				
+		(* ----- Variablen Bauteil 3 ----- *)
+		//Umformer Vorlauftemperatur primär	
+		fbHttp.arrListOfVariables[21].bIsString := FALSE;
+			fbHttp.arrListOfVariables[21].sVariableName := 'DV311';	
+				fbHttp.arrListOfVariables[21].sVariableValue := '';
+		//Umformer Rücklauftemperatur primär
+		fbHttp.arrListOfVariables[22].bIsString := FALSE;
+			fbHttp.arrListOfVariables[22].sVariableName := 'DV312';	
+				fbHttp.arrListOfVariables[22].sVariableValue := '';
+		//Umformer Vorlauftemperatur sekundär
+		fbHttp.arrListOfVariables[23].bIsString := FALSE;
+			fbHttp.arrListOfVariables[23].sVariableName := 'DV313';	
+				fbHttp.arrListOfVariables[23].sVariableValue := '';
+		//Umformer Rücklauftemperatur sekundär
+		fbHttp.arrListOfVariables[24].bIsString := FALSE;
+			fbHttp.arrListOfVariables[24].sVariableName := 'DV314';	
+				fbHttp.arrListOfVariables[24].sVariableValue := '';
+		//Raumtemperatur Mall EG, West
+		fbHttp.arrListOfVariables[25].bIsString := FALSE;
+			fbHttp.arrListOfVariables[25].sVariableName := 'DV321';	
+				fbHttp.arrListOfVariables[25].sVariableValue := '';
+		//Raumtemperatur Mall OG, West
+		fbHttp.arrListOfVariables[26].bIsString := FALSE;
+			fbHttp.arrListOfVariables[26].sVariableName := 'DV322';	
+				fbHttp.arrListOfVariables[26].sVariableValue := '';
+		//Raumtemperatur Mall EG (HK3.1)
+		fbHttp.arrListOfVariables[27].bIsString := FALSE;
+			fbHttp.arrListOfVariables[27].sVariableName := 'DV323';	
+				fbHttp.arrListOfVariables[27].sVariableValue := '';
+		//Raumtemperatur Mall EG (HK3.2)
+		fbHttp.arrListOfVariables[28].bIsString := FALSE;
+			fbHttp.arrListOfVariables[28].sVariableName := 'DV324';	
+				fbHttp.arrListOfVariables[28].sVariableValue := '';
+		//Raumtemperatur Mall OG (K3.3)
+		fbHttp.arrListOfVariables[29].bIsString := FALSE;
+			fbHttp.arrListOfVariables[29].sVariableName := 'DV325';	
+				fbHttp.arrListOfVariables[29].sVariableValue := '';
+		//Raumtemperatur Mall OG (K3.4)
+		fbHttp.arrListOfVariables[30].bIsString := FALSE;
+			fbHttp.arrListOfVariables[30].sVariableName := 'DV326';	
+				fbHttp.arrListOfVariables[30].sVariableValue := '';
+		//Raumtemperatur Mall OG, Ost
+		fbHttp.arrListOfVariables[31].bIsString := FALSE;
+			fbHttp.arrListOfVariables[31].sVariableName := 'DV327';	
+				fbHttp.arrListOfVariables[31].sVariableValue := '';
+		//Raumtemperatur Mall EG, Ost
+		fbHttp.arrListOfVariables[32].bIsString := FALSE;
+			fbHttp.arrListOfVariables[32].sVariableName := 'DV328';	
+				fbHttp.arrListOfVariables[32].sVariableValue := '';
+		//Raumtemperatur Mall EG (HK3.5)
+		fbHttp.arrListOfVariables[33].bIsString := FALSE;
+			fbHttp.arrListOfVariables[33].sVariableName := 'DV329';	
+				fbHttp.arrListOfVariables[33].sVariableValue := '';
+		//Raumtemperatur Mall OG (K3.7)
+		fbHttp.arrListOfVariables[34].bIsString := FALSE;
+			fbHttp.arrListOfVariables[34].sVariableName := 'DV330';	
+				fbHttp.arrListOfVariables[34].sVariableValue := '';
+		//Heizung Aus/Ein (Hauptschalter)
+		fbHttp.arrListOfVariables[35].bIsString := FALSE;
+			fbHttp.arrListOfVariables[35].sVariableName := 'DV333';	
+				fbHttp.arrListOfVariables[35].sVariableValue := '';
+		
+		(* ----- Variablen Bauteil 4 ----- *)
+		//Umformer Vorlauftemperatur primär
+		fbHttp.arrListOfVariables[36].bIsString := FALSE;
+			fbHttp.arrListOfVariables[36].sVariableName := 'DV411';	
+				fbHttp.arrListOfVariables[36].sVariableValue := '';
+		//Umformer Rücklauftemperatur primär
+		fbHttp.arrListOfVariables[37].bIsString := FALSE;
+			fbHttp.arrListOfVariables[37].sVariableName := 'DV412';	
+				fbHttp.arrListOfVariables[37].sVariableValue := '';
+		//Umformer Vorlauftemperatur sekundär
+		fbHttp.arrListOfVariables[38].bIsString := FALSE;
+			fbHttp.arrListOfVariables[38].sVariableName := 'DV413';	
+				fbHttp.arrListOfVariables[38].sVariableValue := '';
+		//Umformer Rücklauftemperatur sekundär
+		fbHttp.arrListOfVariables[39].bIsString := FALSE;
+			fbHttp.arrListOfVariables[39].sVariableName := 'DV414';	
+				fbHttp.arrListOfVariables[39].sVariableValue := '';
+		//Raumtemperatur Mall EG
+		fbHttp.arrListOfVariables[40].bIsString := FALSE;
+			fbHttp.arrListOfVariables[40].sVariableName := 'DV421';	
+				fbHttp.arrListOfVariables[40].sVariableValue := '';
+		//BT5 Raumtemperatur Mall OG
+		fbHttp.arrListOfVariables[41].bIsString := FALSE;
+			fbHttp.arrListOfVariables[41].sVariableName := 'DV422';	
+				fbHttp.arrListOfVariables[41].sVariableValue := '';
+		//BT6 Raumtemperatur Mall OG
+		fbHttp.arrListOfVariables[42].bIsString := FALSE;
+			fbHttp.arrListOfVariables[42].sVariableName := 'DV423';	
+				fbHttp.arrListOfVariables[42].sVariableValue := '';
+		//BT6 Raumtemperatur Mall EG
+		fbHttp.arrListOfVariables[43].bIsString := FALSE;
+			fbHttp.arrListOfVariables[43].sVariableName := 'DV424';	
+				fbHttp.arrListOfVariables[43].sVariableValue := '';
+		//Heizung Aus/Ein (Hauptschalter)
+		fbHttp.arrListOfVariables[44].bIsString := FALSE;
+			fbHttp.arrListOfVariables[44].sVariableName := 'DV432';	
+				fbHttp.arrListOfVariables[44].sVariableValue := '';
+		
+		(* ----- Variablen Wurzelzaehler ----- *)
+		//BT1 Zaehlerstand
+		fbHttp.arrListOfVariables[45].bIsString := FALSE;
+			fbHttp.arrListOfVariables[45].sVariableName := 'DV510';	
+				fbHttp.arrListOfVariables[45].sVariableValue := '';
+		//BT1 Momentanleistung
+		fbHttp.arrListOfVariables[46].bIsString := FALSE;
+			fbHttp.arrListOfVariables[46].sVariableName := 'DV511';	
+				fbHttp.arrListOfVariables[46].sVariableValue := '';
+		//BT2 Zaehlerstand
+		fbHttp.arrListOfVariables[47].bIsString := FALSE;
+			fbHttp.arrListOfVariables[47].sVariableName := 'DV520';	
+				fbHttp.arrListOfVariables[47].sVariableValue := '';
+		//BT2 Momentanleistung
+		fbHttp.arrListOfVariables[48].bIsString := FALSE;
+			fbHttp.arrListOfVariables[48].sVariableName := 'DV521';	
+				fbHttp.arrListOfVariables[48].sVariableValue := '';
+		//BT3 Zaehlerstand
+		fbHttp.arrListOfVariables[49].bIsString := FALSE;
+			fbHttp.arrListOfVariables[49].sVariableName := 'DV530';	
+				fbHttp.arrListOfVariables[49].sVariableValue := '';
+		//BT3 Momentanleistung
+		fbHttp.arrListOfVariables[50].bIsString := FALSE;
+			fbHttp.arrListOfVariables[50].sVariableName := 'DV531';	
+				fbHttp.arrListOfVariables[50].sVariableValue := '';
+		//BT4 Zaehlerstand
+		fbHttp.arrListOfVariables[51].bIsString := FALSE;
+			fbHttp.arrListOfVariables[51].sVariableName := 'DV540';	
+				fbHttp.arrListOfVariables[51].sVariableValue := '';
+		//BT4 Momentanleistung
+		fbHttp.arrListOfVariables[52].bIsString := FALSE;
+			fbHttp.arrListOfVariables[52].sVariableName := 'DV541';	
+				fbHttp.arrListOfVariables[52].sVariableValue := '';
+
+	
+		IF FPDone.Q THEN 
+			iState := 2; 
+				//Auf Lynus Variablen mappen
+				(* ----- Variablen Bauteil 1 ----- *)
+				rAussentemperatur := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[1].sVariableValue);
+				rUmfVorlaufPri := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[2].sVariableValue);
+				rUmfRuecklaufPri := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[3].sVariableValue);
+				rUmfVorlaufSek := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[4].sVariableValue);
+				rUmfRuecklaufSek := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[5].sVariableValue);
+				rRTMall_EG_Billa := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[6].sVariableValue);
+				rRTMall_EG_RichutngBT2 := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[7].sVariableValue);
+				rRTMall_EG_VorPost := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[8].sVariableValue);
+				rRTMall_OG_VorTKMaxx := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[9].sVariableValue);
+				rRTMall_OG_VorStrasslSchaider := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[10].sVariableValue);
+				rRTMall_OG_Nordseitig := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[11].sVariableValue);
+				rRTMall_OG_Suedseitig := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[12].sVariableValue);
+				bPumpenState := DINT_TO_BOOL(STRING_TO_DINT(fbHttp.arrListOfVariabelsOut[13].sVariableValue));
+				
+				(* ----- Variablen Bauteil 2 ----- *)
+				rBT2UmfVorlaufSek := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[14].sVariableValue);
+				rBT2UmfRuecklaufPri := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[15].sVariableValue);
+				rBT2RTMall_EG_Nord := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[16].sVariableValue);
+				rBT2RTMall_OG_Nord := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[17].sVariableValue);
+				rBT2RTMall_EG_Sued := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[18].sVariableValue);
+				rBT2RTMall_OG_Sued := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[19].sVariableValue);
+				bBT2PumpenState := DINT_TO_BOOL(STRING_TO_DINT(fbHttp.arrListOfVariabelsOut[20].sVariableValue));
+				
+				(* ----- Variablen Bauteil 3 ----- *)
+				rBT3UmfVorlaufPri := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[21].sVariableValue);
+				rBT3UmfRuecklaufPri := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[22].sVariableValue);
+				rBT3UmfVorlaufSek := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[23].sVariableValue);
+				rBT3UmfRuecklaufSek := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[24].sVariableValue);
+				rBT3RTMall_EG_West := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[25].sVariableValue);
+				rBT3RTMall_OG_West := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[26].sVariableValue);
+				rBT3RTMall_EG_HK31 := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[27].sVariableValue);
+				rBT3RTMall_EG_HK32 := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[28].sVariableValue);
+				rBT3RTMall_OG_K33 := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[29].sVariableValue);
+				rBT3RTMall_OG_K34 := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[30].sVariableValue);
+				rBT3RTMall_OG_Ost := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[31].sVariableValue);
+				rBT3RTMall_EG_Ost := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[32].sVariableValue);
+				rBT3RTMall_EG_HK35 := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[33].sVariableValue);
+				rBT3RTMall_OG_HK37 := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[34].sVariableValue);
+				bBT3PumpenState := DINT_TO_BOOL(STRING_TO_DINT(fbHttp.arrListOfVariabelsOut[35].sVariableValue));
+				
+				(* ----- Variablen Bauteil 4 ----- *)
+				rBT4UmfVorlaufPri := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[36].sVariableValue);
+				rBT4UmfRuecklaufPri := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[37].sVariableValue);
+				rBT4UmfVorlaufSek := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[38].sVariableValue);
+				rBT4UmfRuecklaufSek := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[39].sVariableValue);
+				rBT4RTMall_EG := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[40].sVariableValue);
+				rBT5RTMall_OG := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[41].sVariableValue);
+				rBT6RTMall_OG := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[42].sVariableValue);
+				rBT6RTMall_EG := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[43].sVariableValue);
+				bBT4PumpenState := DINT_TO_BOOL(STRING_TO_DINT(fbHttp.arrListOfVariabelsOut[44].sVariableValue));
+				
+				(* ----- Wurzelzaehler ----- *)
+				lrBT1EM_Counter_kWh := STRING_TO_LREAL(fbHttp.arrListOfVariabelsOut[45].sVariableValue);				
+				rBT1EM_Power_kW := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[46].sVariableValue);
+				lrBT2EM_Counter_kWh := STRING_TO_LREAL(fbHttp.arrListOfVariabelsOut[47].sVariableValue);				
+				rBT2EM_Power_kW := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[48].sVariableValue);
+				lrBT3EM_Counter_kWh := STRING_TO_LREAL(fbHttp.arrListOfVariabelsOut[49].sVariableValue);				
+				rBT3EM_Power_kW := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[50].sVariableValue);
+				lrBT4EM_Counter_kWh := STRING_TO_LREAL(fbHttp.arrListOfVariabelsOut[51].sVariableValue);				
+				rBT4EM_Power_kW := STRING_TO_REAL(fbHttp.arrListOfVariabelsOut[52].sVariableValue);
+		
+		END_IF
+			IF FPError.Q THEN iState := 300; END_IF
+		
+	2://Write Values
+	
+		// clear array
+		FOR byLPArr := 1 TO 100 BY 1 DO
+			fbHttp.arrListOfVariables[byLPArr].bIsString := FALSE;
+			fbHttp.arrListOfVariables[byLPArr].sVariableName := '';	
+			fbHttp.arrListOfVariables[byLPArr].sVariableValue := '';	
+		END_FOR
+		
+		IF fbMonitor.bDissableExtHB THEN byHB := 0; END_IF
+		IF fbMonitorBT2.bDissableExtHB THEN byBT2HB := 0; END_IF
+		IF fbMonitorBT3.bDissableExtHB THEN byBT3HB := 0; END_IF
+		IF fbMonitorBT4.bDissableExtHB THEN byBT4HB := 0; END_IF
+	
+		fbHttp.bStart := TRUE;	
+			fbHttp.bReadRequest := FALSE;
+					fbHttp.bWriteRequest := TRUE;
+					
+		(* ----- Variablen Bauteil 1 ----- *)
+		//Watchdog
+		fbHttp.arrListOfVariables[1].bIsString := FALSE;
+			fbHttp.arrListOfVariables[1].sVariableName := 'DV131';
+				fbHttp.arrListOfVariables[1].sVariableValue := REAL_TO_STRING(BYTE_TO_REAL(byHB));		
+		//Neuer Sollwert für den Vorlauf für die Regelung
+		rNewTargetValue := rNewTargetValue;
+		fbHttp.arrListOfVariables[2].bIsString := FALSE;
+			fbHttp.arrListOfVariables[2].sVariableName := 'DV133';
+				fbHttp.arrListOfVariables[2].sVariableValue := REAL_TO_STRING(rNewTargetValue);	
+		
+		(* ----- Variablen Bauteil 2 ----- *)
+		//Watchdog
+		fbHttp.arrListOfVariables[3].bIsString := FALSE;
+			fbHttp.arrListOfVariables[3].sVariableName := 'DV231';
+				fbHttp.arrListOfVariables[3].sVariableValue := REAL_TO_STRING(BYTE_TO_REAL(byBT2HB));		
+		//Neuer Sollwert für den Vorlauf für die Regelung
+		rBT2NewTargetValue := rBT2NewTargetValue;
+		fbHttp.arrListOfVariables[4].bIsString := FALSE;
+			fbHttp.arrListOfVariables[4].sVariableName := 'DV233';
+				fbHttp.arrListOfVariables[4].sVariableValue := REAL_TO_STRING(rBT2NewTargetValue);	
+		
+		(* ----- Variablen Bauteil 3 ----- *)
+		//Watchdog
+		fbHttp.arrListOfVariables[5].bIsString := FALSE;
+			fbHttp.arrListOfVariables[5].sVariableName := 'DV331';
+				fbHttp.arrListOfVariables[5].sVariableValue := REAL_TO_STRING(BYTE_TO_REAL(byBT3HB));		
+		//Neuer Sollwert für den Vorlauf für die Regelung
+		rBT3NewTargetValue := rBT3NewTargetValue;
+		fbHttp.arrListOfVariables[6].bIsString := FALSE;
+			fbHttp.arrListOfVariables[6].sVariableName := 'DV333';
+				fbHttp.arrListOfVariables[6].sVariableValue := REAL_TO_STRING(rBT3NewTargetValue);	
+		
+		(* ----- Variablen Bauteil 4 ----- *)
+		//Watchdog
+		fbHttp.arrListOfVariables[7].bIsString := FALSE;
+			fbHttp.arrListOfVariables[7].sVariableName := 'DV431';
+				fbHttp.arrListOfVariables[7].sVariableValue := REAL_TO_STRING(BYTE_TO_REAL(byBT4HB));		
+		//Neuer Sollwert für den Vorlauf für die Regelung
+		rBT4NewTargetValue := rBT4NewTargetValue;
+		fbHttp.arrListOfVariables[8].bIsString := FALSE;
+			fbHttp.arrListOfVariables[8].sVariableName := 'DV433';
+				fbHttp.arrListOfVariables[8].sVariableValue := REAL_TO_STRING(rBT4NewTargetValue);	
+	
+// zusätzliche Variablen laut Markus 23.12.2022 für Heizung schaltern
+		// DV132
+		x:=9;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV132';
+		fbHttp.arrListOfVariables[x].sVariableValue := '1';	
+		// DV232
+		x:=10;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV232';
+		fbHttp.arrListOfVariables[x].sVariableValue := '1';
+		// DV332
+		x:=11;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV332';
+		fbHttp.arrListOfVariables[x].sVariableValue := '1';
+		// DV432
+		x:=12;
+		fbHttp.arrListOfVariables[x].bIsString := FALSE;
+		fbHttp.arrListOfVariables[x].sVariableName := 'DV432';
+		fbHttp.arrListOfVariables[x].sVariableValue := '1';	
+				
+		IF FPDone.Q THEN 
+			iState := 1; 
+				IF NOT fbMonitor.bDissableExtHB THEN byHB := byHB + 1; END_IF
+				IF NOT fbMonitorBT2.bDissableExtHB THEN byBT2HB := byBT2HB + 1; END_IF
+				IF NOT fbMonitorBT3.bDissableExtHB THEN byBT3HB := byBT3HB + 1; END_IF
+				IF NOT fbMonitorBT4.bDissableExtHB THEN byBT4HB := byBT4HB + 1; END_IF
+		END_IF
+			IF FPError.Q THEN 
+				iState := 300; 
+					IF NOT fbMonitor.bDissableExtHB THEN byHB := byHB + 1; END_IF
+					IF NOT fbMonitorBT2.bDissableExtHB THEN byBT2HB := byBT2HB + 1; END_IF
+					IF NOT fbMonitorBT3.bDissableExtHB THEN byBT3HB := byBT3HB + 1; END_IF
+					IF NOT fbMonitorBT4.bDissableExtHB THEN byBT4HB := byBT4HB + 1; END_IF
+			END_IF
+			
+		IF byHB > 1 THEN byHB := 0; END_IF
+		IF byBT2HB > 1 THEN byBT2HB := 0; END_IF
+		IF byBT3HB > 1 THEN byBT3HB := 0; END_IF
+		IF byBT4HB > 1 THEN byBT4HB := 0; END_IF
+			
+	300://Error
+		uiErrorCounter := uiErrorCounter + 1;
+			iState := 1; 
+			
+END_CASE
+
+fbHttp(
+	bStart:= , 
+	bWriteRequest:= , 
+	bReadRequest:= , 
+	tDelayRequest:= T#10S, 
+	sHostname:= '172.24.17.110', 
+	arrListOfVariables:= , 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	arrListOfVariabelsOut=> , 
+	hrErrorCode=> );
+	
+FPDone(CLK:= fbHttp.bDone, Q=> );
+	FPError(CLK:= fbHttp.bError, Q=> );
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="87" Count="0" />
+      <LineId Id="90" Count="9" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="322" Count="4" />
+      <LineId Id="333" Count="1" />
+      <LineId Id="329" Count="3" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="803" Count="12" />
+      <LineId Id="802" Count="0" />
+      <LineId Id="820" Count="0" />
+      <LineId Id="822" Count="11" />
+      <LineId Id="821" Count="0" />
+      <LineId Id="834" Count="0" />
+      <LineId Id="836" Count="11" />
+      <LineId Id="835" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="105" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="16" Count="2" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="8" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="36" Count="2" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="39" Count="2" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="111" Count="1" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="120" Count="2" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="124" Count="2" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="128" Count="2" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="132" Count="2" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="136" Count="2" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="140" Count="2" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="144" Count="2" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="148" Count="2" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="217" Count="2" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="502" Count="4" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="509" Count="2" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="513" Count="2" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="517" Count="2" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="521" Count="2" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="525" Count="2" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="529" Count="2" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="543" Count="4" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="551" Count="2" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="555" Count="2" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="559" Count="2" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="563" Count="2" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="567" Count="2" />
+      <LineId Id="566" Count="0" />
+      <LineId Id="571" Count="2" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="575" Count="2" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="579" Count="2" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="583" Count="2" />
+      <LineId Id="582" Count="0" />
+      <LineId Id="587" Count="2" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="591" Count="2" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="595" Count="2" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="599" Count="2" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="602" Count="2" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="620" Count="4" />
+      <LineId Id="549" Count="0" />
+      <LineId Id="629" Count="2" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="633" Count="2" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="637" Count="2" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="644" Count="2" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="648" Count="2" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="652" Count="2" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="656" Count="2" />
+      <LineId Id="655" Count="0" />
+      <LineId Id="660" Count="2" />
+      <LineId Id="659" Count="0" />
+      <LineId Id="625" Count="0" />
+      <LineId Id="870" Count="3" />
+      <LineId Id="626" Count="0" />
+      <LineId Id="875" Count="2" />
+      <LineId Id="874" Count="0" />
+      <LineId Id="879" Count="6" />
+      <LineId Id="878" Count="0" />
+      <LineId Id="887" Count="6" />
+      <LineId Id="886" Count="0" />
+      <LineId Id="895" Count="6" />
+      <LineId Id="894" Count="0" />
+      <LineId Id="1372" Count="0" />
+      <LineId Id="1438" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="366" Count="11" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="674" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="538" Count="4" />
+      <LineId Id="536" Count="1" />
+      <LineId Id="1248" Count="0" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="607" Count="12" />
+      <LineId Id="605" Count="1" />
+      <LineId Id="1249" Count="0" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="665" Count="6" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="1250" Count="0" />
+      <LineId Id="903" Count="0" />
+      <LineId Id="905" Count="7" />
+      <LineId Id="1470" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="1014" Count="1" />
+      <LineId Id="1017" Count="3" />
+      <LineId Id="1016" Count="0" />
+      <LineId Id="1021" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="848" Count="2" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="47" Count="2" />
+      <LineId Id="675" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="51" Count="2" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="57" Count="2" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="677" Count="8" />
+      <LineId Id="676" Count="0" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="689" Count="8" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="700" Count="8" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="709" Count="0" />
+      <LineId Id="1124" Count="0" />
+      <LineId Id="1127" Count="0" />
+      <LineId Id="1135" Count="0" />
+      <LineId Id="1129" Count="3" />
+      <LineId Id="1137" Count="0" />
+      <LineId Id="1133" Count="1" />
+      <LineId Id="1126" Count="0" />
+      <LineId Id="1138" Count="3" />
+      <LineId Id="1125" Count="0" />
+      <LineId Id="1142" Count="3" />
+      <LineId Id="1123" Count="0" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="340" Count="1" />
+      <LineId Id="851" Count="2" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="344" Count="1" />
+      <LineId Id="855" Count="1" />
+      <LineId Id="854" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="857" Count="2" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="65" Count="3" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="252" Count="11" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="177" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

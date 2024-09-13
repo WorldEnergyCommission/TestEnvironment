@@ -1,0 +1,272 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_EM_Beckhoff_EL3443" Id="{6b8da059-d417-4628-9ca0-80c4e627b5a5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EM_Beckhoff_EL3443
+VAR_INPUT
+	bEnable							: BOOL;											//Enable the function
+ 	bInvers_CH1						: BOOL;											//Invert the Output data from Channel 1 
+	bInvers_CH2						: BOOL;											//Invert the Output data from Channel 2 
+	bInvers_CH3						: BOOL;											//Invert the Output data from Channel 3
+	uiCurrentTransformerRatio		: UINT;											//Current Transformer Ratio  
+	nSlaveAddr						: UINT;											//EtherCat Slave ID	
+ 	stEL3443_IO 						: MDP5001_341_7CD731EE;
+END_VAR
+VAR_OUTPUT
+   	pDpmData 						: POINTER TO ARRAY[1..20] OF UDINT;
+	stDataEMPower					: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data) 
+	stDataEMCounter					: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data) 
+	stDataEMPowerRealTime			: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime)
+	stDataEMCounterRealTime			: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime) 
+END_VAR
+VAR
+	fbEM							: FB_ElectricMeter;								//Electric Meter Function
+	fbEnergyCounter					: FB_EnergyCounter;								//FB energy Counter, because the KL3403 has no nice logic for the Energy value
+	fbEL3443DPM 					: FB_EL3443_DPM;
+	
+	fb_WriteCOE_EL3443	:FB_Coe_EL3443;	
+	m_COE_Done: BOOL;
+	uiCurrentTransformerRatio_old		: UINT;											//Current Transformer Ratio  
+	f_trig_Busy: f_trig;
+
+	
+	timDissableFunctions			: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL			: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	timSetCounterValues				: TON;											//Timer to set the counter values from the KL3403 Function to the EM Function
+	arrPD							: ARRAY[1..7] OF FB_PersistentData_Number;		//Function to save persistent data
+	byWaitInStep					: BYTE;											//Wait in Step before start to clean data on PLC
+	iStateGVLData					: INT;											//State machine to handle the data on the GVL
+	diCounterForGVL					: DINT;											//Counter to clean old data on GVL
+	real_Multiplier_CH1: REAL;
+	real_Multiplier_CH2: REAL;
+	real_Multiplier_CH3: REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner
+//Company : EfficientIO
+//Date : xx.09.2023
+//Version : 1.0.0.0
+
+
+//With this function is possible to read out all Information from a EL3446
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+IF timResetConnectionOnGVL.Q THEN 
+	Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; 
+END_IF
+IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN 
+	timDissableFunctions.IN := TRUE; 
+ELSE 
+	timDissableFunctions.IN := FALSE; 
+END_IF  
+timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+// limit inputs
+uiCurrentTransformerRatio	 := LIMIT (1,uiCurrentTransformerRatio,10000);
+
+
+(*----------------------------------------------------------------------------------------EL3446 Communication----------------------------------------------------------------------------------------------*)
+// write CoE values for phase selector
+
+IF 	NOT m_COE_Done OR 	uiCurrentTransformerRatio <> uiCurrentTransformerRatio_old THEN
+	fb_WriteCOE_EL3443.m_start := TRUE;
+	m_COE_Done := TRUE;
+	 uiCurrentTransformerRatio_old := uiCurrentTransformerRatio;
+END_IF
+f_trig_Busy(CLK := fb_WriteCOE_EL3443.m_Busy );
+IF f_trig_Busy.Q AND (fb_WriteCOE_EL3443.m_CoE_Write_done OR fb_WriteCOE_EL3443.m_Error) THEN 
+	fb_WriteCOE_EL3443.m_start := FALSE;
+END_IF
+
+fb_WriteCOE_EL3443(
+	m_start:= , 
+	nSlaveAddr:= nSlaveAddr, 
+	uiCurrentTransformerRatio:= uiCurrentTransformerRatio, 
+	m_Busy=> , 
+	m_CoE_Write_done=> , 
+	m_Error=> , 
+	udint_GetAMSNetID_Error=> , 
+	udint_WriteCoE_Error=> );
+
+
+
+fbEL3443DPM(
+	bEnable:= TRUE, 
+	stEL3443_IO:= stEL3443_IO , 
+	stStatusTotal=> , 
+	stStatusPhase_L1=> , 
+	stStatusPhase_L2=> , 
+	stStatusPhase_L3=> , 
+	stVariantValues=> , 
+	pDpmData=> pDpmData, 
+	bError=> );
+
+
+
+
+
+
+//Invert the Output data, because it is possible that the current transformers have been mounted in different mounting positions.
+IF NOT bInvers_CH1 THEN
+	real_Multiplier_CH1 := 1;
+ELSE
+	real_Multiplier_CH1 := -1;
+END_IF
+IF NOT bInvers_CH2 THEN
+	real_Multiplier_CH2 := 1;
+ELSE
+	real_Multiplier_CH2 := -1;
+END_IF
+IF NOT bInvers_CH3 THEN
+	real_Multiplier_CH3 := 1;
+ELSE
+	real_Multiplier_CH3 := -1;
+END_IF
+
+
+//Function
+fbEM(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= FALSE, 
+	bWriteWithDelay:= TRUE, 
+	bPowerDataInvers:= FALSE,
+	bReadOutDataDone:= timSetCounterValues.Q,
+	iTimeReadOutInterval:= 0, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= fbEnergyCounter.lrTotalCounterEnergy_Consumption,
+	lrTotalCounterEnergy_Production:= fbEnergyCounter.lrTotalCounterEnergy_Production, 
+	lrCounterEnergyT1_Consumption:= fbEnergyCounter.lrCounterEnergyT1_Consumption,
+	lrCounterEnergyT2_Consumption:= fbEnergyCounter.lrCounterEnergyT2_Consumption,
+	lrCounterEnergyT1_Production:= fbEnergyCounter.lrCounterEnergyT1_Production, 
+	lrCounterEnergyT2_Production:= fbEnergyCounter.lrCounterEnergyT2_Production, 
+	lrCurrentL1:=  REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Basic_Current ),
+	lrVoltageL1N:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Basic_Voltage), 
+	lrVoltageL1L2:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Basic_Voltage * 1.73), 
+	lrPowerL1:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Power_Active_Power * real_Multiplier_CH1), 
+	lrCurrentL2:=  REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Basic_Current),
+	lrVoltageL2N:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Basic_Voltage), 
+	lrVoltageL2L3:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Basic_Voltage * 1.73), 
+	lrPowerL2:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Power_Active_Power  * real_Multiplier_CH2),	
+	lrCurrentL3:=  REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Basic_Current),
+	lrVoltageL3N:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Basic_Voltage), 
+	lrVoltageL3L1:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Basic_Voltage * 1.73), 
+	lrPowerL3:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Power_Active_Power * real_Multiplier_CH3),	
+
+	lrPowerTotal:= fbEM.lrPowerL1+fbEM.lrPowerL2+fbEM.lrPowerL3, 
+	lrFrequency:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Basic_Frequency), 
+ 	lrApparentPowerTotal:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Power_Apparent_Power + fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Power_Apparent_Power + fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Power_Apparent_Power) ,
+	lrReactivePowerTotal:= REAL_TO_LREAL(fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Power_Reactive_Power + fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Power_Reactive_Power + fbEL3443DPM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Power_Reactive_Power) , 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> stDataEMPowerRealTime, 
+	stDataEMOutPowerDelay=> stDataEMPower, 
+	stDataEMOutCounter=> stDataEMCounterRealTime,
+	stDataEMOutCounterDelay=> stDataEMCounter,
+	bReadOutMeter=> );
+(*----------------------------------------------------------------------------------------Energy Counter Function----------------------------------------------------------------------------------------------*)
+
+fbEnergyCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= (fbEM.lrPowerTotal) / 1000, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+(*----------------------------------------------------------------------------------------Electric Meter Function----------------------------------------------------------------------------------------------*)
+
+//Error
+IF timDissableFunctions.Q THEN 
+	fbEM.bWarning := TRUE; 
+	fbEM.iWarningCode := 0; 
+ELSE 
+	fbEM.bWarning := FALSE; 
+END_IF 
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN 
+	fbEM.bError := TRUE; 
+ELSE 
+	fbEM.bError := FALSE; 
+END_IF
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN 
+	fbEM.iErrorCode := 1;
+ELSE 
+	fbEM.iErrorCode := 0;
+END_IF
+
+timSetCounterValues(IN:= bEnable AND NOT timSetCounterValues.Q, PT:= T#2S, Q=> , ET=> );		
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EM_Beckhoff_EL3443">
+      <LineId Id="774" Count="3" />
+      <LineId Id="1065" Count="0" />
+      <LineId Id="1064" Count="0" />
+      <LineId Id="779" Count="0" />
+      <LineId Id="781" Count="4" />
+      <LineId Id="807" Count="7" />
+      <LineId Id="1414" Count="1" />
+      <LineId Id="815" Count="0" />
+      <LineId Id="1416" Count="3" />
+      <LineId Id="816" Count="0" />
+      <LineId Id="1656" Count="0" />
+      <LineId Id="1659" Count="0" />
+      <LineId Id="1668" Count="0" />
+      <LineId Id="1658" Count="0" />
+      <LineId Id="817" Count="1" />
+      <LineId Id="2057" Count="1" />
+      <LineId Id="2061" Count="0" />
+      <LineId Id="2063" Count="2" />
+      <LineId Id="2071" Count="4" />
+      <LineId Id="2090" Count="8" />
+      <LineId Id="2089" Count="0" />
+      <LineId Id="2088" Count="0" />
+      <LineId Id="2055" Count="1" />
+      <LineId Id="2000" Count="8" />
+      <LineId Id="1998" Count="1" />
+      <LineId Id="1493" Count="0" />
+      <LineId Id="1424" Count="1" />
+      <LineId Id="830" Count="3" />
+      <LineId Id="1674" Count="0" />
+      <LineId Id="849" Count="0" />
+      <LineId Id="1677" Count="0" />
+      <LineId Id="1675" Count="0" />
+      <LineId Id="1723" Count="3" />
+      <LineId Id="1722" Count="0" />
+      <LineId Id="1728" Count="3" />
+      <LineId Id="1727" Count="0" />
+      <LineId Id="1742" Count="0" />
+      <LineId Id="1747" Count="0" />
+      <LineId Id="1678" Count="20" />
+      <LineId Id="2009" Count="2" />
+      <LineId Id="1699" Count="0" />
+      <LineId Id="2014" Count="4" />
+      <LineId Id="1707" Count="8" />
+      <LineId Id="850" Count="0" />
+      <LineId Id="887" Count="1" />
+      <LineId Id="891" Count="8" />
+      <LineId Id="901" Count="3" />
+      <LineId Id="1756" Count="4" />
+      <LineId Id="905" Count="0" />
+      <LineId Id="907" Count="4" />
+      <LineId Id="1761" Count="0" />
+      <LineId Id="912" Count="0" />
+      <LineId Id="1762" Count="0" />
+      <LineId Id="913" Count="3" />
+      <LineId Id="1126" Count="0" />
+      <LineId Id="1651" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

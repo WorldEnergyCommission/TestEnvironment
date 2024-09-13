@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgEMS" Id="{f667781f-595d-4eff-b3c8-2f21a9024d62}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR
+	// Q1, 3x400V 32A, CEE32
+	fbQ1						: FB_Light;
+	bQ1On						: BOOL;						//{#lynus.ag#()}
+	bQ1Off						: BOOL;						//{#lynus.ag#()}
+	bQ1State	AT%Q*			: BOOL;						//{#lynus.ag#()}
+	// Q2, 3x400V 32A, CEE32
+	fbQ2						: FB_Light;
+	bQ2On						: BOOL;						//{#lynus.ag#()}
+	bQ2Off						: BOOL;						//{#lynus.ag#()}
+	bQ2State	AT%Q*			: BOOL;						//{#lynus.ag#()}
+	// Q3, 3x400V 16A, CEE16
+	fbQ3						: FB_Light;	
+	bQ3On						: BOOL;						//{#lynus.ag#()}
+	bQ3Off						: BOOL;						//{#lynus.ag#()}
+	bQ3State	AT%Q*			: BOOL;						//{#lynus.ag#()}
+	// Q4, 3x400V 16A, CEE16, EV Charging
+	fbQ4						: FB_Light;
+	bQ4On						: BOOL;						//{#lynus.ag#()}
+	bQ4Off						: BOOL;						//{#lynus.ag#()}
+	bQ4State	AT%Q*			: BOOL;						//{#lynus.ag#()}
+	
+	// Automatic PV-Inverter Shutdown
+	fbNFS_PV					: FB_WeeklyTimeSwitch;
+	fbCalcSunriseSunset   		: FB_CalcSunriseSunset;
+	todSunrise            		: TOD;
+	todSunset             		: TOD;
+END_VAR
+VAR PERSISTENT
+	bEnableNFS_PV				: BOOL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// To-Do:
+// adopt Longitude and Latitude
+// set bEdgeOn and bEdgeOff to correct Q Variables
+
+
+// Output Controls
+fbQ1(bOn:=bQ1On, bOff:=bQ1Off, bLight=>bQ1State);
+fbQ2(bOn:=bQ2On, bOff:=bQ2Off, bLight=>bQ2State);
+fbQ3(bOn:=bQ3On, bOff:=bQ3Off, bLight=>bQ3State);
+fbQ4(bOn:=bQ4On, bOff:=bQ4Off, bLight=>bQ4State);
+
+// Sunrise, Sunset calc
+IF prgSystemTime.bSystemTimeValid THEN
+
+	fbCalcSunriseSunset(
+		fDegreeOfLongitude := 11.5820,   (* Longitude of Munich, Lochhausen *)
+        fDegreeOfLatitude := 48.1351,   (* Latitude of Munich, Lochhausen *)
+    	fReferenceMeridian := 15.0,  (* Central European Time *)
+        dCurrentDate := DT_TO_DATE(prgSystemTime.dtSystemTime),
+        todSunrise => todSunrise,
+        todSunset => todSunset);
+END_IF
+
+// Automatic PV-Inverter Shutdown
+IF prgSystemTime.bSystemTimeValid THEN
+	fbNFS_PV(
+		bEnable:=bEnableNFS_PV, 
+		tCurrentDateTime:=prgSystemTime.dtSystemTime, 
+		tSwitchOnTime:=todSunrise, 
+		tSwitchOffTime:=todSunset, 
+		bSunday:=TRUE, 
+		bMonday:=TRUE, 
+		bTuesday:=TRUE, 
+		bWednesday:=TRUE, 
+		bThursday:=TRUE, 
+		bFriday:=TRUE, 
+		bSaturday:=TRUE,
+		bEdgeOn=> ,
+		bEdgeOff=> );
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="80" Count="0" />
+      <LineId Id="82" Count="2" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="44" Count="11" />
+      <LineId Id="57" Count="2" />
+      <LineId Id="61" Count="13" />
+      <LineId Id="43" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

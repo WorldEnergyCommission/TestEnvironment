@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_OBC_GVL" Id="{f13dec49-6958-48ae-88f7-15d2bf00f81e}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_OBC_GVL :
+STRUCT
+	//Data from the big consumer to the GVL to other functions.
+	{attribute 'hide'}
+	bEnabled									: BOOL;										//Big consumer is enabled
+	{attribute 'hide'}
+	bIsControllable 							: BOOL;										//Big Consumer is controllable  
+	{attribute 'hide'}
+	byErrorWarning								: BYTE;										//Show if the function has a Error or a Warning
+	{attribute 'hide'}
+	byPriority									: BYTE; 									//Priority of the device if controlled via the EMS block => 1 2 3 (If 0 then this device does not exist for the EMS block)
+	{attribute 'hide'}
+	lrPower										: LREAL;									//Actual power big consumer with unit kW
+	{attribute 'hide'}
+	lrPowerConsumption							: LREAL;									//Consumption big consumer with unit kW
+	{attribute 'hide'}
+	lrPowerProduction							: LREAL;									//Production big consumer with unit kW
+	{attribute 'hide'}
+	rMaxPower									: REAL; 									//Max. power from the big consumer with unit kW
+	//Data from the EMS function to the GVL to the big consumer function.
+	{attribute 'hide'}
+	rTargetPowerEMS								: REAL;										//Target power from 0% to +100% from the EMS function
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Valve_Control_MPC_HCO_DO" Id="{4e4bdebe-cae2-48df-898d-73b139215a93}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Valve_Control_MPC_HCO_DO
+VAR_INPUT PERSISTENT
+	bEnable								: BOOL;												//Enable or dissable the function
+	diNrOfTempS_IN_FlowTemp				: DINT;												//Number of the Temperature Sensor for incoming temperature data. (Temperature Sensor for the Flow Temperature)
+	diNrOfTempS_IN_ReturnTemp			: DINT;												//Number of the Temperature Sensor for incoming temperature data. (Temperature Sensor for the Return Temperature)
+	diNrOfTempS_IN_RoomTemp				: DINT;												//Number of the Temperature Sensor for incoming temperature data. (Temperature Sensor for the Room Temperature)
+END_VAR
+VAR_OUTPUT
+	stDataValveControlOut				: ST_Valve_Control_Output;							//{#lynus.ag#()} //Valve Control output data
+	byErrorWarning						: BYTE;												//{#lynus.ag#()} //Shows the Error and Warning State from the Backend Service
+	byMPCReady							: BYTE;												//{#lynus.ag#()} //Shows if the MPC service is ready or not.
+	byNewValvePosition					: BYTE;												//{#lynus.ag#()} //The new valve positon from the Lynus Backend Service
+	diNrOfValveControl_OUT				: DINT;												//Active Number from the Valve Controling for using on other functions
+	rFlowTemperatureRoom				: REAL;												//{#lynus.ag#()} //Shows the actual Flow temperature from the Heating Circuit
+	rReturnTemperatureRoom				: REAL;												//{#lynus.ag#()} //Shows the actual Return temperature from the Heating Circuit
+	rActualRoomTemperature				: REAL;												//{#lynus.ag#()} //Shows the actual Room temperature
+	rNewRoomTemperature					: REAL;												//{#lynus.ag#()} //Shows the new Room Temperture for the next hour
+	rHeartbeat							: REAL;												//{#lynus.ag#()} //Heartbeat from the Backend Service
+	rNewSetTemperature					: REAL;												//{#lynus.ag#()} //New Set Temperatur on witch the Valve is switching on and off
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbValveControl						: FB_Valve_Control;									//Function for Valve controll
+	{attribute 'hide'}
+	fbNumberDevice						: FB_NumberOfDevice;								//Function block to calcualte the number of the Device
+	fbDOOnOffValve						: FB_XL2XXX_DO;										//Digital Output to swtich the valve on and off
+	{attribute 'hide'}
+	timDissableFunctions				: TON;												//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL				: TON;												//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD								: ARRAY[1..4] OF FB_PersistentData_Number;			//Function to save persistent data 
+	{attribute 'hide'}
+	byWaitInStep						: BYTE;												//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData						: INT;												//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diCounterForGVL						: DINT;												//Counter to clean old data on GVL
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 21.07.2021
+//Version : 1.0.0.0
+
+//With this function its possible to control a floor heating valve or radiator valve.
+//The signal is sending to a digital output terminal.
+//The Backend is connected with this Function to optimize the regulation of the valve 
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfTempS_IN_FlowTemp := LIMIT(0,diNrOfTempS_IN_FlowTemp,Constants_Sensors.diMaxNumberOfTemperatureSensors);
+	diNrOfTempS_IN_ReturnTemp := LIMIT(0,diNrOfTempS_IN_ReturnTemp,Constants_Sensors.diMaxNumberOfTemperatureSensors);
+		diNrOfTempS_IN_RoomTemp := LIMIT(0,diNrOfTempS_IN_RoomTemp,Constants_Sensors.diMaxNumberOfTemperatureSensors);
+
+(*-------------------------------------------------------------Calcualte the number of valve control---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfValveControls, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfValveControls, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfValveControl_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfValveControls := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfValveControls := diNrOfValveControl_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------Error-Warning----------------------------------------------------------------------------*)				
+			
+IF timDissableFunctions.Q OR byErrorWarning = 1 THEN fbValveControl.bWarning := TRUE; ELSE fbValveControl.bWarning := FALSE; END_IF 	
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfValveControls > Constants_Energy.diMaxNumberOfValveControls OR byErrorWarning = 2 OR 
+		(Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_FlowTemp].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_FlowTemp].byErrorWarning = 2) OR	
+			(Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_ReturnTemp].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_ReturnTemp].byErrorWarning = 2) OR	
+				(Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_RoomTemp].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_RoomTemp].byErrorWarning = 2) THEN
+					fbValveControl.bError := TRUE; 
+	ELSE 
+					fbValveControl.bError := FALSE; 
+	END_IF 
+		//Warning Codes
+		IF byErrorWarning = 1 THEN fbValveControl.iWarningCode := 1;
+		ELSIF timDissableFunctions.Q THEN fbValveControl.iWarningCode := 0;
+		END_IF
+		//Error Code
+		IF byErrorWarning = 2 THEN fbValveControl.iErrorCode := 2;
+		ELSIF Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_FlowTemp].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_FlowTemp].byErrorWarning = 2 THEN fbValveControl.iErrorCode := 3;
+		ELSIF Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_ReturnTemp].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_ReturnTemp].byErrorWarning = 2 THEN fbValveControl.iErrorCode := 3;
+		ELSIF Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_RoomTemp].bEnabled AND Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_RoomTemp].byErrorWarning = 2 THEN fbValveControl.iErrorCode := 3; 	
+		ELSIF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfValveControls > Constants_Energy.diMaxNumberOfValveControls THEN fbValveControl.iErrorCode := 1;
+		END_IF   
+		
+fbValveControl(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bWriteWithDelay:= TRUE, 
+	bWorkOnlyLocal:= FALSE, 
+	rActualRoomTemperature:= Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_RoomTemp].rTemperature, 
+	bError:= , 
+	bWarning:= , 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	tTimDelayOutput:= T#5S, 
+	byMPCReady:= byMPCReady, 
+	byNewValvePosition:= byNewValvePosition, 
+	rNewSetTemperature:= rNewSetTemperature, 
+	rHeartbeat:= rHeartbeat, 
+	stDataValveControlOut=> , 
+	stDataValveControlOutDelay=> stDataValveControlOut);
+	
+(*-------------------------------------------------------------------------Output----------------------------------------------------------------------*)
+
+//Send this data to the cloud service
+rFlowTemperatureRoom := Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_FlowTemp].rTemperature;
+	rReturnTemperatureRoom := Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_ReturnTemp].rTemperature;
+		rActualRoomTemperature := Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_IN_RoomTemp].rTemperature; 
+
+//Send the valve signal to the Digital output
+fbDOOnOffValve(bInvers:= FALSE, bSignal:= fbValveControl.stDataValveControlOut.bValvePos);	
+
+(*-----------------------------------------------------------Handle data to Global structure for the valve controling-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataValveControls[diCounterForGVL].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataValveControls[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataValveControls[diCounterForGVL].bValvePos := FALSE;
+		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfValveControls);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Energy.diMaxNumberOfValveControls THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfValveControl_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataValveControls[diNrOfValveControl_OUT].bEnabled := fbValveControl.stDataValveControlOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataValveControls[diNrOfValveControl_OUT].byErrorWarning := fbValveControl.stDataValveControlOut.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataValveControls[diNrOfValveControl_OUT].bValvePos := fbValveControl.stDataValveControlOut.bValvePos;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= DINT_TO_LREAL(diNrOfTempS_IN_FlowTemp), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfTempS_IN_ReturnTemp), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfTempS_IN_RoomTemp), bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Valve_Control_MPC_HCO_DO">
+      <LineId Id="52" Count="2" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="69" Count="3" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="62" Count="3" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="79" Count="18" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="99" Count="1" />
+      <LineId Id="238" Count="4" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="119" Count="1" />
+      <LineId Id="188" Count="1" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="193" Count="2" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="196" Count="2" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="37" Count="14" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="110" Count="1" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="141" Count="16" />
+      <LineId Id="160" Count="8" />
+      <LineId Id="174" Count="1" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="181" Count="4" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="186" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

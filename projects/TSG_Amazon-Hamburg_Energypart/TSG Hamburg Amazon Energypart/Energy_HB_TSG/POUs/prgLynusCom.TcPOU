@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgLynusCom" Id="{383ca695-4bbf-4213-9a92-fe555ff7f8d2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgLynusCom
+VAR
+	fbCom			: FB_MqttCommunicator;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	sUserName:= 'dfe33df1-2501-4272-bd20-2a3c4ced1b25', 
+	sUserPassword:= '551afed8-2412-4c45-bca2-67e0714027a0', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionC, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgLynusCom">
+      <LineId Id="10" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

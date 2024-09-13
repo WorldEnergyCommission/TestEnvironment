@@ -1,0 +1,59 @@
+<div class="box">
+    <div class="flex box-content">
+        <div class="width-30 image">
+            <img src="assets/icons/cs-aggregated-charged-energy.svg" alt="E-ladesäulen energie" />
+        </div>
+        <div class="width-70 flex flex-column center">
+            <p class="mb-2" [style.color]="userData?.colors?.default" [style.font-size]="titleFontSize">E-ladesäulen</p>
+            <div class="flex mb-2">
+                <div class="width-50">
+                    <p [style.color]="userData?.colors?.default" [style.font-size]="textFontSize">
+                        Heute geladen
+                    </p>
+                    <p class="highlighted-text default-text-transform" [style.color]="userData?.colors?.secondary"
+                        [style.font-size]="numberFontSize">
+                        {{today}} kWh
+                    </p>
+                </div>
+                <div class="width-50">
+                    <p [style.color]="userData?.colors?.default" [style.font-size]="textFontSize">
+                        Reichweite
+                    </p>
+                    <p class="highlighted-text default-text-transform" [style.color]="userData?.colors?.secondary"
+                        [style.font-size]="numberFontSize">
+                        {{today * getRatio()}} km
+                    </p>
+                </div>
+            </div>
+            <div class="flex mb-2">
+                <div class="width-50">
+                    <p [style.color]="userData?.colors?.default" [style.font-size]="textFontSize">
+                        Insgesamt geladen
+                    </p>
+                    <p class="highlighted-text default-text-transform" [style.color]="userData?.colors?.secondary"
+                        [style.font-size]="numberFontSize">
+                        {{overall}} kWh
+                    </p>
+                </div>
+                <div class="width-50">
+                    <p [style.color]="userData?.colors?.default" [style.font-size]="textFontSize">
+                        Insgesamte Reichweite
+                    </p>
+                    <p class="highlighted-text default-text-transform" [style.color]="userData?.colors?.secondary"
+                        [style.font-size]="numberFontSize">
+                        {{overall * getRatio()}} km
+                    </p>
+                </div>
+            </div>
+            <div class="flex">
+                <p class="mr-2" [style.color]="userData?.colors?.default" [style.font-size]="textFontSize">
+                    Information:
+                </p>
+                <p class=" highlighted-text default-text-transform" [style.color]="userData?.colors?.secondary"
+                    [style.font-size]="textFontSize">
+                    1kWh = {{getRatio()}} km
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

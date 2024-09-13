@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_PV_Output" Id="{af5ba08a-b30e-41d4-a280-2e6400d64948}">
+    <Declaration><![CDATA[TYPE ST_PV_Output :
+STRUCT
+	bEnabled									: BOOL;									//Pv function is enabled
+	byErrorWarning								: BYTE;									//Show if the function has a Error or a Warning
+	lrTotalCounterEnergy_Consumption			: LREAL;								//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production				: LREAL;								//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption				: LREAL;								//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption				: LREAL;								//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production				: LREAL;								//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production				: LREAL;								//Total counter for energy Tariff 2 production with unit kWh
+	lrPower										: LREAL;								//{#lynus.ag#()} //Pv power with unit kW
+	lrPowerConsumption							: LREAL;								//Consumption pv with unit kW
+	lrPowerProduction							: LREAL;								//Production pv with unit kW
+	eMessage									: E_Message_PV;							//Message from the PV
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

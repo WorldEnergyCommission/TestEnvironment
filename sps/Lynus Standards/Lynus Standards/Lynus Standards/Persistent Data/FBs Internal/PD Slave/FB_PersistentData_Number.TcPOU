@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_PersistentData_Number" Id="{f91ba806-8a12-4798-ac7d-49bb87781087}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_PersistentData_Number
+VAR_INPUT
+	{attribute 'hide'}
+	lrValue								: LREAL;				//Actual Input Value
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bEventBasedActive					: BOOL;					//Event based saving is active
+END_VAR
+VAR
+	lrValue_CP							: LREAL;				//Value to compare the input Value
+	fbTaskIndex							: GETCURTASKINDEX;		//Get the Task index
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 15.02.2021
+//Version : 1.0.0.0
+
+//With this Function we can check if the Value on the Input of the Function ha changed an chan start to saving the persistent Data in Event Based Mode
+//Work only with Number Fromat
+
+//---------------------------------------------------------------Logic to start the save process---------------------------------------------------------------------------------------
+
+bEventBasedActive := GVL_Persistent_Data.bEventBasedActive;
+
+//After Restart the System set the Variables direct to actual value because they are loadet from the card
+fbTaskIndex(index=> );
+	IF TwinCAT_SystemInfoVarList._TaskInfo[fbTaskIndex.index].FirstCycle THEN lrValue_CP := lrValue; END_IF
+
+IF NOT GVL_Persistent_Data.bBusy AND bEventBasedActive AND lrValue <> lrValue_CP THEN
+	GVL_Persistent_Data.bSaveData := TRUE;
+		lrValue_CP := lrValue;
+END_IF  ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PersistentData_Number">
+      <LineId Id="19" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="128" Count="1" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="131" Count="1" />
+      <LineId Id="130" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

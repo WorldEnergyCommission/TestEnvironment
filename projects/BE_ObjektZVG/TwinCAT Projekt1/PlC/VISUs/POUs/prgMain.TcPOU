@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgMain" Id="{9e015174-fc58-41d6-96df-19d2772e1e2f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMain
+VAR
+//	intLiveCount			: INT;				//{#lynus.ag#()}
+	intArray  AT%MB0        :ARRAY[0..255] OF INT;		//Modbus Adress list for GLT (writing from GLT to Efficient IO)
+														// --> output from Efficient IO to GLT in GVL.mb_Input_Registers
+	
+	TON_HeartBeat1: TON;
+	TON_HeartBeat2: TON;
+	real_RoomTemperature_409: REAL;			//{#lynus.ag#()}
+	real_RoomTemperature_210: REAL;			//{#lynus.ag#()}
+	bool_Mode_Zone_East_Off: BOOL;			//{#lynus.ag#()}
+	bool_Mode_Zone_East_Cooling: BOOL;		//{#lynus.ag#()}
+	bool_Mode_Zone_East_Heating: BOOL;		//{#lynus.ag#()}
+	int_Mode_Zone_East: INT;				//{#lynus.ag#()}
+	real_SupplyTempEast: REAL;				//{#lynus.ag#()}
+	real_RoomTemperature_404: REAL;			//{#lynus.ag#()}
+	real_RoomTemperature_204: REAL;			//{#lynus.ag#()}
+	bool_Mode_Zone_West_Off: BOOL;			//{#lynus.ag#()}
+	bool_Mode_Zone_West_Cooling: BOOL;		//{#lynus.ag#()}
+	bool_Mode_Zone_West_Heating: BOOL;		//{#lynus.ag#()}
+	int_Mode_Zone_West: INT;				//{#lynus.ag#()}
+	real_SupplyTempWest: REAL;				//{#lynus.ag#()}
+	real_RoomTemperature_Meeting6OG: REAL;	//{#lynus.ag#()}
+	real_RoomTemperature_DinningRoomSmall: REAL;	//{#lynus.ag#()}
+	real_RoomTemperature_DinningRoom: REAL;	//{#lynus.ag#()}
+	bool_Mode_Zone_West2_Off: BOOL;			//{#lynus.ag#()}
+	bool_Mode_Zone_West2_Cooling: BOOL;		//{#lynus.ag#()}
+	bool_Mode_Zone_West2_Heating: BOOL;		//{#lynus.ag#()}
+	int_Mode_Zone_West2: INT;				//{#lynus.ag#()}
+	real_SupplyTempWest2: REAL;				//{#lynus.ag#()}
+	bool_SPHeartBeat: BOOL;					//{#lynus.ag#()}
+	byte_SPErrorWarning:BYTE;				//{#lynus.ag#()}
+	bool_SPREady: BOOL;						//{#lynus.ag#()}
+	r_trig1: R_trig;
+	f_trig1: f_trig;
+	ton_HB_Check: Ton;
+	
+	real_AverageRoomTemp: REAL;				//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bool_EnableHeartbeat		:BOOL;		//{#lynus.ag#()}
+	bool_Enable_ZoneWest		:BOOL;		//{#lynus.ag#()}
+	bool_Enable_ZoneEast		:BOOL;		//{#lynus.ag#()}
+	bool_Enable_ZoneWest2		:BOOL;		//{#lynus.ag#()}
+	real_Setpoint_ZoneWest		:REAL;		//{#lynus.ag#()}
+	real_Setpoint_ZoneEast		:REAL;		//{#lynus.ag#()}
+	real_Setpoint2_ZoneWest		:REAL;		//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner
+//Company : Efficient IO
+//Date : 12.10.2022
+//Version : 0.0.1.1
+
+// Heartbeat Bit 0 changing every 30s
+// MB Adress 12288 where the GLT writes into, MB Adress 32768 where the GLT reads with function code 4
+// The Heartbeat will only get sent to the GLT, when the received enable bit is high and the 1m received HB from the SetPoint Optimizer is good
+
+
+//The SP HeartBeat get checked for the rising and falling edge, if no change within 5m then the Heartbeat to the GLT gets canceled					
+r_trig1(CLK:=bool_SPHeartBeat);
+f_trig1(CLK:=bool_SPHeartBeat);
+
+ton_HB_Check(	In:=NOT (r_trig1.Q OR f_trig1.Q),
+				PT:=T#5M);							// timer gets reset with every falling/rising edge of the HB bit from the Setpointoptimizer
+				
+IF bool_EnableHeartbeat AND NOT ton_HB_Check.q THEN
+	IF TON_HeartBeat1.Q THEN
+		intArray[0]:=1;		// not used, see GVL.mb_Input_Registers
+		GVL.mb_Input_Registers[0]:=1;
+	ELSE
+		intArray[0]:=0;		// not used, see GVL.mb_Input_Registers
+		GVL.mb_Input_Registers[0]:=0;
+	END_IF
+END_IF
+TON_HeartBeat1(	IN:= TRUE AND NOT TON_HeartBeat2.Q ,
+		PT:= T#30S,
+		Q=> );
+TON_HeartBeat2(	IN:= TON_HeartBeat1.Q,
+		PT:= T#30S);
+		
+// MB Adress 12298
+real_RoomTemperature_409 	:= INT_TO_REAL (intArray[10])/10;
+// MB Adress 12299
+real_RoomTemperature_210 	:= INT_TO_REAL (intArray[11])/10;
+// MB Adress 12300
+CASE intArray[12] OF
+	0:	
+		bool_Mode_Zone_East_Off		:=TRUE;
+		bool_Mode_Zone_East_Cooling	:=FALSE;
+		bool_Mode_Zone_East_Heating	:=FALSE;
+	1:	
+		bool_Mode_Zone_East_Off		:=FALSE;
+		bool_Mode_Zone_East_Cooling	:=TRUE;
+		bool_Mode_Zone_East_Heating	:=FALSE;
+	2:	
+		bool_Mode_Zone_East_Off		:=FALSE;
+		bool_Mode_Zone_East_Cooling	:=FALSE;
+		bool_Mode_Zone_East_Heating	:=TRUE;
+END_CASE
+int_Mode_Zone_East	:=intArray[12];
+// MB Adress 12301
+real_SupplyTempEast			:= INT_TO_REAL (intArray[13])/10;
+// MB Adress 12302
+real_RoomTemperature_404 	:= INT_TO_REAL (intArray[14])/10;
+// MB Adress 12303
+real_RoomTemperature_204 	:= INT_TO_REAL (intArray[15])/10;
+// MB Adress 12304
+CASE intArray[16] OF
+	0:	
+		bool_Mode_Zone_West_Off		:=TRUE;
+		bool_Mode_Zone_West_Cooling	:=FALSE;
+		bool_Mode_Zone_West_Heating	:=FALSE;
+	1:	
+		bool_Mode_Zone_West_Off		:=FALSE;
+		bool_Mode_Zone_West_Cooling	:=TRUE;
+		bool_Mode_Zone_West_Heating	:=FALSE;
+	2:	
+		bool_Mode_Zone_West_Off		:=FALSE;
+		bool_Mode_Zone_West_Cooling	:=FALSE;
+		bool_Mode_Zone_West_Heating	:=TRUE;
+END_CASE
+int_Mode_Zone_West	:=intArray[16];
+// MB Adress 12305
+real_SupplyTempWest						:= INT_TO_REAL (intArray[17])/10;	
+// MB Adress 12306
+real_RoomTemperature_Meeting6OG 		:= INT_TO_REAL (intArray[18])/10;
+// MB Adress 12307
+real_RoomTemperature_DinningRoomSmall	:= INT_TO_REAL (intArray[19])/10;
+// MB Adress 12308
+real_RoomTemperature_DinningRoom		:= INT_TO_REAL (intArray[20])/10;
+// MB Adress 12309
+CASE intArray[21] OF
+	0:	
+		bool_Mode_Zone_West2_Off		:=TRUE;
+		bool_Mode_Zone_West2_Cooling	:=FALSE;
+		bool_Mode_Zone_West2_Heating	:=FALSE;
+	1:	
+		bool_Mode_Zone_West2_Off		:=FALSE;
+		bool_Mode_Zone_West2_Cooling	:=TRUE;
+		bool_Mode_Zone_West2_Heating	:=FALSE;
+	2:	
+		bool_Mode_Zone_West2_Off		:=FALSE;
+		bool_Mode_Zone_West2_Cooling	:=FALSE;
+		bool_Mode_Zone_West2_Heating	:=TRUE;
+END_CASE
+int_Mode_Zone_West2	:=intArray[21];
+// MB Adress 12310
+real_SupplyTempWest2 	:= INT_TO_REAL (intArray[22])/10;		
+
+
+// received setpoints from AI
+// MB Adress 12488-12490
+
+intArray[200] := REAL_TO_INT(real_Setpoint_ZoneEast*10); 	// not used, see GVL.mb_Input_Registers
+intArray[201] := REAL_TO_INT(real_Setpoint_ZoneWest*10); 	// not used, see GVL.mb_Input_Registers
+intArray[202] := REAL_TO_INT(real_Setpoint2_ZoneWest*10); 	// not used, see GVL.mb_Input_Registers
+
+gvl.mb_Input_Registers[1]:=intArray[200];
+gvl.mb_Input_Registers[2]:=intArray[201];
+gvl.mb_Input_Registers[3]:=intArray[202];
+
+
+real_AverageRoomTemp := (real_RoomTemperature_409 + real_RoomTemperature_210 + real_RoomTemperature_404 + real_RoomTemperature_204 + real_RoomTemperature_Meeting6OG + real_RoomTemperature_DinningRoomSmall + real_RoomTemperature_DinningRoom) / 7;
+
+// enable bit for each zone
+IF bool_Enable_ZoneWest AND NOT ton_HB_Check.q THEN
+	IF TON_HeartBeat1.Q THEN
+		GVL.mb_Input_Registers[4]:=1;
+	ELSE
+		GVL.mb_Input_Registers[4]:=0;
+	END_IF
+END_IF
+IF bool_Enable_ZoneEast AND NOT ton_HB_Check.q THEN
+	IF TON_HeartBeat1.Q THEN
+		GVL.mb_Input_Registers[5]:=1;
+	ELSE
+		GVL.mb_Input_Registers[5]:=0;
+	END_IF
+END_IF
+IF bool_Enable_ZoneWest2 AND NOT ton_HB_Check.q THEN
+	IF TON_HeartBeat1.Q THEN
+		GVL.mb_Input_Registers[6]:=1;
+	ELSE
+		GVL.mb_Input_Registers[6]:=0;
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMain">
+      <LineId Id="234" Count="3" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="381" Count="1" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="33" Count="3" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="73" Count="1" />
+      <LineId Id="82" Count="7" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="95" Count="13" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="124" Count="12" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="172" Count="2" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="434" Count="1" />
+      <LineId Id="438" Count="1" />
+      <LineId Id="441" Count="1" />
+      <LineId Id="444" Count="1" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="446" Count="12" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="433" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

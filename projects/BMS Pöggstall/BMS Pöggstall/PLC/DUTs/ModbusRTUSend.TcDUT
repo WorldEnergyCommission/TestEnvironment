@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ModbusRTUSend" Id="{f3980c01-7fda-4940-9687-7f5fb9596ca3}">
+    <Declaration><![CDATA[TYPE ModbusRTUSend :
+STRUCT
+	byteClientSlaveID	:BYTE;
+	uintStartAddress	:UINT;
+//	uintNoOfWords		:UINT;
+	mError				:BOOL;
+	udintErrorID		:MODBUS_ERRORS;
+//	udintBytesReceived	:UDINT;
+	timerErrorTimer		:TON;
+	timerOKTimer		:TON;
+	wSendBuffer			: WORD;
+//	udintReceiveBufferAddress	:UDINT;
+	strErrorMessage		:STRING(50);
+	udintCommErrorCounter		:UDINT;
+	udintCommSuccessCounter		:UDINT;
+	timeTimeForRequest	:TIME;
+	mRequestActive		:BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

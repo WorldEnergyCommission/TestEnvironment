@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgContactors" Id="{1949098f-84a9-40d0-8925-05e3dd3088cb}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgContactors
+VAR
+	bCircle6On				: BOOL;						//{#lynus.ag#()}
+	bCircle6Off				: BOOL;						//{#lynus.ag#()}
+	bCircle7On				: BOOL;						//{#lynus.ag#()}
+	bCircle7Off				: BOOL;						//{#lynus.ag#()}
+	bCircle6Switch	AT%Q*	: BOOL;						//{#lynus.ag#()}
+	bCircle7Switch	AT%Q*	: BOOL;						//{#lynus.ag#()}
+	fbCircle6				: FB_Light;
+	fbCircle7				: FB_Light;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCircle6(bOn:=bCircle6On, bOff:=bCircle6Off, bLight=>bCircle6Switch);
+
+fbCircle7(bOn:=bCircle7On, bOff:=bCircle7Off, bLight=>bCircle7Switch);]]></ST>
+    </Implementation>
+    <LineIds Name="prgContactors">
+      <LineId Id="5" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

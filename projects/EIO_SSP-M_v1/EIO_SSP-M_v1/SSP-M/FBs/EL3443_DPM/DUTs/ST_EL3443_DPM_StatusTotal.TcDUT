@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_EL3443_DPM_StatusTotal" Id="{0a4095de-d353-4417-bdaa-3248407a762b}">
+    <Declaration><![CDATA[TYPE ST_EL3443_DPM_StatusTotal :
+STRUCT
+    bStatus_System_State : BOOL;                         //System State - Overall system state (as a logical disjunction of voltage guard errors, phase sequence, overvoltage, overcurrent and frequency guard errors)
+    bStatus_Grid_Direction : BOOL;                       //Grid Direction - Phase sequence L1 - L2 - L3 correctly detected (with clockwise 3-phase mains)
+    bStatus_Frequency_Guard_Warning : BOOL;              //Frequency Guard Warning - A warning limit of the frequency monitor has been breached.
+    bStatus_Frequency_Guard_Error : BOOL;                //Frequency Guard Error - An error limit of the frequency monitor has been breached.
+    bStatus_Neutral_Current_Guard_Warning : BOOL;        //Neutral Current Guard Warning - A warning limit of the neutral conductor current monitor has been breached.
+    bStatus_Neutral_Current_Guard_Error : BOOL;          //Neutral Current Guard Error - An error limit of the neutral conductor current monitor has been breached.
+    bStatus_Active_Power_Guard_Warning : BOOL;           //Active Power Guard Warning - A warning limit of the active power monitor has been breached.
+    bStatus_Active_Power_Guard_Error : BOOL;             //Active Power Guard Error - An error limit of the active power monitor has been breached.
+    bStatus_Apparent_Power_Guard_Warning : BOOL;         //Apparent Power Guard Warning - A warning limit of the apparent power monitor has been breached.
+    bStatus_Apparent_Power_Guard_Error : BOOL;           //Apparent Power Guard Error - An error limit of the apparent power monitor has been breached.
+    bStatus_Power_Quality_Guard_Warning : BOOL;          //Power Quality Guard Warning - A warning limit of the PQF monitor has been breached.
+    bStatus_Power_Quality_Guard_Error : BOOL;            //Power Quality Guard Error - An error limit of the PQF monitor has been breached.
+    bStatus_TxPDO_State : BOOL;                          //TxPDO State - TRUE for general error
+    bStatus_TxPDO_Toggle : BOOL;                         //TxPDO Toggle - The TxPDO toggle is toggled by the slave when the data of the associated TxPDO is updated.
+    fStatus_Power_Quality_Factor : REAL;                 //Power Quality Factor - Analog value of the voltage quality between 1.0 and 0 (see basic function principles - Power Quality Factor)
+END_STRUCT                                              
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

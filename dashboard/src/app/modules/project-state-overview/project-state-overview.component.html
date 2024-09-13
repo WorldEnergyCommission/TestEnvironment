@@ -1,0 +1,29 @@
+<div class="box">
+    <div class="flex box-content" [style.color]="userData?.colors?.default" [style.font-size]="fontSize">
+        <div class="columns">
+            <div class="project-total">
+                <div [style.color]="userData?.colors?.secondary" [style.font-size]="highlightedNumberFontSize">
+                    {{state.total}}</div>
+                <div>projekte</div>
+                <div>gesamt</div>
+            </div>
+
+            <div class="state">
+                <div class="flex">
+                    <div class="margin-right green">{{state.noErrors}}</div>
+                    <div>Fehlerfrei</div>
+                </div>
+
+                <div class="flex">
+                    <div class="margin-right yellow">{{state.warnings}}</div>
+                    <div>Aktives ereignis</div>
+                </div>
+
+                <div class="flex">
+                    <div class="margin-right red">{{state.errors}}</div>
+                    <div>Einschreiten erforderlich</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

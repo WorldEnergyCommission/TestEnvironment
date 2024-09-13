@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_VarInfo_ErrorCodes" Id="{ac7de963-931e-4fac-acec-f6ee2c0aedc4}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_VarInfo_ErrorCodes
+VAR_INPUT
+	{attribute 'hide'}
+	bErrorADS				: BOOL;											//Error ADS function
+	{attribute 'hide'}
+	bErrorIntern			: BOOL;											//Other Error
+	{attribute 'hide'}
+	udiErrorCodeADS			: UDINT;										//Error Code ADS function
+	{attribute 'hide'}
+	udiErrorCodesIntern		: UDINT;										//Error code from other errors
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	udiErrorCodeADS_Out		: UDINT;										//ADS return code
+	{attribute 'hide'}
+	bError					: BOOL;											//Error flag
+	eErrorVarInfo_Out		: eErrorVarInfo;								//Enum with Error from the Var Info function
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 01.04.2020
+//Version : 1.0.0.0
+
+//With this function its possible to give out a Error return code from the ads or the internal codes from the read variable info function
+//Directly from the ads
+IF bErrorIntern OR bErrorADS THEN bError := TRUE; ELSE bError := FALSE; END_IF
+	IF bErrorADS THEN udiErrorCodeADS_Out := udiErrorCodeADS; ELSE udiErrorCodeADS_Out := 0; END_IF
+
+//Internal error codes from Var Info
+IF bErrorIntern AND udiErrorCodesIntern = 1 THEN eErrorVarInfo_Out := eErrorVarInfo.eArraySizeError; 
+ELSIF bErrorIntern AND udiErrorCodesIntern = 2 THEN eErrorVarInfo_Out := eErrorVarInfo.eTimoutError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 3 THEN eErrorVarInfo_Out := eErrorVarInfo.eCommentLenghtError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 4 THEN eErrorVarInfo_Out := eErrorVarInfo.eCommentDescriptionError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 5 THEN eErrorVarInfo_Out := eErrorVarInfo.eSymbolTypeError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 6 THEN eErrorVarInfo_Out := eErrorVarInfo.eSymbolNameToLongError; 
+ELSIF bErrorIntern AND udiErrorCodesIntern = 7 THEN eErrorVarInfo_Out := eErrorVarInfo.eReadWriteFunctionToMuch; 
+ELSIF bErrorIntern AND udiErrorCodesIntern = 8 THEN eErrorVarInfo_Out := eErrorVarInfo.eVarInfoFunctionToMuch;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 9 THEN eErrorVarInfo_Out := eErrorVarInfo.eSendReceiveFunctionToMuch; 
+ELSIF bErrorIntern AND udiErrorCodesIntern = 10 THEN eErrorVarInfo_Out := eErrorVarInfo.eMoreReadWriteFuctionsAsSymbols;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 11 THEN eErrorVarInfo_Out := eErrorVarInfo.eNoTMCFileSelected;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 12 THEN eErrorVarInfo_Out := eErrorVarInfo.eArrayWithNoStandartDatatype; 
+ELSIF bErrorIntern AND udiErrorCodesIntern = 13 THEN eErrorVarInfo_Out := eErrorVarInfo.eSymbolNotFoundInTMCFile; 
+ELSIF bErrorIntern AND udiErrorCodesIntern = 14 THEN eErrorVarInfo_Out := eErrorVarInfo.eSymbolNameWithSubItemIsToLong;	
+ELSIF bErrorIntern AND udiErrorCodesIntern = 15 THEN eErrorVarInfo_Out := eErrorVarInfo.eToMuchSubItemsInSymbol;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 16 THEN eErrorVarInfo_Out := eErrorVarInfo.eToMuchSymbols;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 17 THEN eErrorVarInfo_Out := eErrorVarInfo.eSubItemsInfoError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 18 THEN eErrorVarInfo_Out := eErrorVarInfo.eNoSendReceiveFunction;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 19 THEN eErrorVarInfo_Out := eErrorVarInfo.eNoReadWriteFunction;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 20 THEN eErrorVarInfo_Out := eErrorVarInfo.eNoSymbolsFound;	
+//Internal error codes from Parse Function	
+ELSIF bErrorIntern AND udiErrorCodesIntern = 100 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileTimoutError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 101 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileContentOfSymbolIsToBig;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 102 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileSymbolNameToLongError;	
+ELSIF bErrorIntern AND udiErrorCodesIntern = 103 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileToMuchSubItemsInOneSymbol;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 104 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileSubItemNameToLongError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 105 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileErrorWhenOpeningTheFile;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 106 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileErrorWhenReadingTheFile;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 107 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileErrorWhenClosingTheFile;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 108 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileToMuchNoStandartDatatypes;	
+ELSIF bErrorIntern AND udiErrorCodesIntern = 109 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileEnumNameToLongError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 110 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileEnumIndexToMuchSizes;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 111 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileArraySizeError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 112 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileStringSizeError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 113 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileCheckPositionError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 114 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileSearchPositionError;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 115 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileMissingSubItems;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 116 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileFunctionblockAccessNotAllowed;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 117 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileToMuchSubItemsInOtherSubItems;
+ELSIF bErrorIntern AND udiErrorCodesIntern = 118 THEN eErrorVarInfo_Out := eErrorVarInfo.eTMCFileArrayWithNoStandartDatatype;
+ELSE
+	eErrorVarInfo_Out := eErrorVarInfo.eNoError;	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VarInfo_ErrorCodes">
+      <LineId Id="118" Count="2" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="73" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="79" Count="3" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="276" Count="1" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="340" Count="2" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="195" Count="17" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="78" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

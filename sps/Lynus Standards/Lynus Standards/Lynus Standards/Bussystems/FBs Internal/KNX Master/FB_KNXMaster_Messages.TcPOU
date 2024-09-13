@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_KNXMaster_Messages" Id="{90e2af8f-b020-42c6-be60-056a507644db}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_KNXMaster_Messages
+VAR_INPUT
+	{attribute 'hide'}
+	bErrorKNX							: BOOL;						//Error from the Mbus Function
+	{attribute 'hide'}
+	bErrorIntern						: BOOL;						//Internal Error
+	{attribute 'hide'}
+	bWarning							: BOOL;						//Warning from the RTU Function
+	{attribute 'hide'}
+	iWarningCode						: INT;						//Warning Code
+	{attribute 'hide'}
+	iErrorCode							: INT;						//Error Code		
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	byErrorWarning						: BYTE;						//Error Warning State
+	eMessageKNXMaster					: E_Message_KNXMaster;		//Message from the KNX Master Function
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 24.08.2021
+//Version : 1.0.0.0
+
+//With this Funciton is possible to handel the Error and Warning Codes from the KNX Master.
+
+//Warnings
+IF bWarning AND iWarningCode = 0 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eNoConnectionToBackend;
+END_IF
+
+//Intern Errors
+IF bErrorIntern AND iErrorCode = 1 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eTooMuchKNXMasters;
+END_IF
+//KNX Errors
+IF bErrorKNX AND iErrorCode = 1 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Phys_Addr;
+ELSIF bErrorKNX AND iErrorCode = 2 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Group_Addr;
+ELSIF bErrorKNX AND iErrorCode = 3 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Group_Len;
+ELSIF bErrorKNX AND iErrorCode = 4 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_No_Filter;
+ELSIF bErrorKNX AND iErrorCode = 10 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Firmware;
+ELSIF bErrorKNX AND iErrorCode = 11 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Mode;
+ELSIF bErrorKNX AND iErrorCode = 12 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_Mode;
+ELSIF bErrorKNX AND iErrorCode = 14 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Firmware_B1_Necessary;
+ELSIF bErrorKNX AND iErrorCode = 15 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Firmware_B3_Necessary;
+ELSIF bErrorKNX AND iErrorCode = 20 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWrong_KNX_Data_Len;
+ELSIF bErrorKNX AND iErrorCode = 21 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_KNX_Service_Not_Support;
+ELSIF bErrorKNX AND iErrorCode = 30 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eKL6301_TP_Toggle_Error;
+ELSIF bErrorKNX AND iErrorCode = 31 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eTime_Out;
+ELSIF bErrorKNX AND iErrorCode = 32 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eKL6301_No_Response_from_Terminal;
+ELSIF bErrorKNX AND iErrorCode = 40 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_Send_8Bit_Wrong_Scaling_Mode;
+ELSIF bErrorKNX AND iErrorCode = 100 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_KNX_Phy_Addr_Not_Support;
+ELSIF bErrorKNX AND iErrorCode = 101 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_KNX_Write_Data;
+ELSIF bErrorKNX AND iErrorCode = 102 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eMonitor_Mode_Len_Is_Not_Ok_Must_0;
+ELSIF bErrorKNX AND iErrorCode = 103 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eMonitor_Mode_Addr_Is_Not_Ok_Must_0;
+ELSIF bErrorKNX AND iErrorCode = 104 THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eWatchdog_Error_No_Send;
+ELSIF bErrorKNX AND iErrorCode = 16#0BBB THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_KNX_No_Ack;
+ELSIF bErrorKNX AND iErrorCode = 16#FAFB THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_KNX_No_Com_To_TP;
+ELSIF bErrorKNX AND iErrorCode = 16#0FCC THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_TP_Temp_Warning;
+ELSIF bErrorKNX AND iErrorCode = 16#17CC THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_TP_Protocol_Error;
+ELSIF bErrorKNX AND iErrorCode = 16#27CC THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_TP_Transmitter_Error;
+ELSIF bErrorKNX AND iErrorCode = 16#47CC THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_TP_Receive_Error;
+ELSIF bErrorKNX AND iErrorCode = 16#87CC THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eError_TP_Slave_Collision;
+END_IF 
+
+IF bWarning THEN 
+	byErrorWarning := 1;
+END_IF	
+	IF bErrorKNX OR bErrorIntern THEN
+		byErrorWarning := 2;
+	END_IF
+
+//All ok
+IF NOT bErrorKNX AND NOT bErrorIntern AND NOT bWarning THEN
+	eMessageKNXMaster := E_Message_KNXMaster.eAllOk;
+		byErrorWarning := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_KNXMaster_Messages">
+      <LineId Id="88" Count="2" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="91" Count="1" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="202" Count="1" />
+      <LineId Id="109" Count="1" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="161" Count="2" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="164" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Get_Data_Energy_Surstoffi" Id="{5d418349-c80f-436a-814a-020fe7718d3e}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_Get_Data_Energy_Surstoffi
+VAR_INPUT
+	bStart						: BOOL;															//Start the connection to the Service
+	sHostname					: STRING(255);													//Hostname or IP Adress from the Energy Service			
+END_VAR
+VAR_OUTPUT
+	bValidResult				: BOOL;															//Valid Result received from Server
+    bBusy						: BOOL;															//Function is Busy
+    bError						: BOOL;															//Error sucess
+	hrErrorCode       			: HRESULT;														//Error Result from Http Client
+	arrValuesEnergy				: ARRAY[0..9] OF ST_Values_Energy_Surstoffi;					//Datapoints with Value in a array
+END_VAR
+VAR
+	fbHttpClientEnergyHttp		: FB_IotHttpClient :=(tConnectionTimeout:=T#15S);				//Http Client Function
+	fbHttpGet					: FB_HTTP_Get_Energy_Surstoffi;									//Http Get Request to the Energy Service
+	fbJson						: FB_Decode_Json_Energy;										//Deconde received Json
+	timStartRequest				: TON;															//Timer to Start the Request
+	timDissableFunctions		: TON;															//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL		: TON;															//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	FPStartRequest				: R_TRIG;														//Internal positive Edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 18.02.2021
+//Version : 1.0.0.0
+
+//With this Function is possible to send a HTTP Get Request to the System in the Surstoffi Area how save the Modbus Energy Data and the Solar Log Energy Data
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+IF NOT fbHttpClientEnergyHttp.bConfigured THEN 
+	fbHttpClientEnergyHttp.sHostName := sHostname;
+    fbHttpClientEnergyHttp.nHostPort:= 8086;
+	fbHttpClientEnergyHttp.stTLS.bNoServerCertCheck:= FALSE;
+END_IF
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+	timStartRequest(IN:= bStart AND NOT timStartRequest.Q AND NOT timDissableFunctions.Q, PT:= T#30S, Q=> , ET=> );
+		IF (timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy) THEN fbHttpGet.bSend := TRUE; END_IF
+
+//Http Get Function
+fbHttpGet(
+	bSend:= , 
+	tTimeOut:= T#20S,
+	fbClient:= fbHttpClientEnergyHttp, 
+	bValidResult=> bValidResult, 
+	bBusy=> bBusy, 
+	bError=> , 
+	sContent=> );
+
+fbHttpGet.bSend := FALSE;
+	
+//Decode Json
+fbJson(
+	bStart:= bStart AND NOT timDissableFunctions.Q,
+	bExecute:= bValidResult, 
+	sContent:= fbHttpGet.sContent, 
+	bDone=> , 
+	bError=> , 
+	arrValuesEnergy=> arrValuesEnergy);
+
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q THEN fbHttpClientEnergyHttp.Disconnect(); END_IF
+
+fbHttpClientEnergyHttp.Execute();
+
+//Error
+IF fbHttpGet.bError OR fbJson.bError OR fbHttpClientEnergyHttp.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbHttpClientEnergyHttp.hrErrorCode;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Get_Data_Energy_Surstoffi">
+      <LineId Id="16" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="138" Count="6" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="25" Count="6" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="33" Count="1" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="38" Count="3" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="42" Count="3" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="80" Count="3" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="47" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

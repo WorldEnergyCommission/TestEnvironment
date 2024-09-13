@@ -1,0 +1,560 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ECS_Alfen_Monitoring" Id="{5cd4d295-a4f7-4024-8bb0-3c9a9a2b6b62}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ECS_Alfen_Monitoring
+VAR_INPUT PERSISTENT
+	bEnable										: BOOL;																			//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	byUnitID_Socket1							: BYTE;																			//Unit ID for Socket 1
+	byUnitID_Socket2							: BYTE;																			//Unit ID for Socket 2
+	byNumberOfSockets							: BYTE;																			//Give information about the number of sockets. (max 2,  min 1)
+	byNumberOfConnectionWire					: BYTE;																			//Give a information about the Number of Connection Wires to the charging station. (max 2,  min 1)
+	sIPAdress									: STRING(15);																	//IP Adress from the Alfen charging station
+END_VAR
+VAR_OUTPUT
+	stDataECS									: ST_ECS_Output;																//{#lynus.ag#()} //Electric charging station output data
+	lrTotalPowerECSRealTime						: LREAL;																		//Total Electric Power in kW read out directly from the Charging station. (Real time)
+	diNrOfECS_OUT								: DINT;
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbCS										: FB_ElectricChargingStation;													//Function block for electric charging station
+	{attribute 'hide'}
+	fbNumberDevice								: FB_NumberOfDevice;															//Function block to calcualte the number of the Device
+	
+	fbMBRead_FC3								: FB_MBReadRegs;																//Modbus Read Function (FC3)
+	{attribute 'hide'}
+	fbConvertWordToByte							: FB_CV_WORD_TO_BYTE;															//Convert Word To Byte
+	{attribute 'hide'}
+	fbConvertDwordToWord						: FB_CV_DWORD_TO_WORD;															//Convert Dword to Word
+	{attribute 'hide'}
+	fbConvertWordToDword						: FB_CV_WORD_TO_DWORD;															//Convert Word to Dword
+	{attribute 'hide'}
+	fbConvertWordToUlint						: FB_CV_WORD_TO_ULINT;															//Convert Word to ULINT
+	{attribute 'hide'}
+	timDelay									: TON;																			//Timer for Delay between Requests
+	{attribute 'hide'}
+	timTimeout									: TON;																			//Timer for Timeout
+	{attribute 'hide'}
+	timChTimeSocket1							: TON;																			//Charging Time for socket 1
+	{attribute 'hide'}
+	timChTimeSocket2							: TON;																			//Charging Time for socket 2
+	{attribute 'hide'}
+	timDelayStart								: TON;																			//Timer to start the state machine with Daley after enabling or after the system ist restartet
+	{attribute 'hide'}
+	FPError_FC_3								: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPEnable									: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	stConvertFloat								: ST_UN_FLOAT_CONVERT_DWORD_REAL;												//Convert float
+	{attribute 'hide'}
+	stConvertFloat2								: ST_UN_FLOAT_CONVERT_ULINT_LREAL;												//Convert float
+	{attribute 'hide'}
+	arrPD										: ARRAY[1..5] OF FB_PersistentData_Number;										//Function to save persistent data
+	{attribute 'hide'}
+	fbPDString									: FB_PersistentData_String;														//Function to save persistent string data
+	{attribute 'hide'}
+	arrBuffer_FC3								: ARRAY[1..5] OF WORD;															//Buffer with Data from FC3
+	{attribute 'hide'}
+	arrMode3State								: ARRAY[1..2] OF STRING(2);														//Mode 3 State
+	{attribute 'hide'}
+	bErrorCS									: BOOL;																			//Error State from the charging station
+	{attribute 'hide'}
+	bMBTCPError									: BOOL;																			//Modbus TCP Function Error
+	{attribute 'hide'}
+	bySocketInProgress							: BYTE;																			//Shows the Socket in Progress when we have more then 1 Socket																		
+	{attribute 'hide'}
+	byWaitInStep								: BYTE;																			//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateModbusRead							: INT;																			//State machine for read out Data over Modbus RTU
+	{attribute 'hide'}
+	iStateModbusError							: INT;																			//State machine for error out Data over Modbus RTU	
+	{attribute 'hide'}
+	iStateModbus_CP								: INT;																			//Variable to compare the state machine variable to set or reset the timeout timer
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption_S1			: LREAL;																		//Energy Counter Consumption in Wh Socket 1
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption_S2			: LREAL;																		//Energy Counter Consumption in Wh Socket 2
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production_S1			: LREAL;																		//Energy Counter Production in Wh Socket 1
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production_S2			: LREAL;																		//Energy Counter Production in Wh Socket 2
+	{attribute 'hide'}
+	rPowerECS_S1								: REAL;																			//Power from the ECS in W Socket 1
+	{attribute 'hide'}
+	rPowerECS_S2								: REAL;																			//Power from the ECS in W Socket 2
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 24.03.2022
+//Version : 1.0.0.0
+
+//Data Monitoring Alfen Charging station
+
+//Versions that are supported : 2.3 Date : 30.10.2020
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+
+byNumberOfSockets := LIMIT(1,byNumberOfSockets,2);
+	byNumberOfConnectionWire := LIMIT(1,byNumberOfConnectionWire,2);
+		byUnitID_Socket1 := LIMIT(1,byUnitID_Socket1,1);
+			byUnitID_Socket2 := LIMIT(2,byUnitID_Socket2,2);
+
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+//Energy meter input data for cs Function block
+fbCS.lrCounterEnergyT1_Consumption := lrTotalCounterEnergy_Consumption_S1 + lrTotalCounterEnergy_Consumption_S2;
+fbCS.lrCounterEnergyT2_Consumption := 0;
+fbCS.lrCounterEnergyT1_Production := lrTotalCounterEnergy_Production_S1 + lrTotalCounterEnergy_Production_S2;
+fbCS.lrCounterEnergyT2_Production := 0;
+fbCS.lrTotalCounterEnergy_Consumption := lrTotalCounterEnergy_Consumption_S1 + lrTotalCounterEnergy_Consumption_S2;
+fbCS.lrTotalCounterEnergy_Production := lrTotalCounterEnergy_Production_S1 + lrTotalCounterEnergy_Production_S2;
+	fbCS.lrTotalPowerECS := rPowerECS_S1 + rPowerECS_S2;
+//Energy Session Input data
+fbCS.bCalculateEnergySession := TRUE;
+fbCS.arrSocketPowerECS[1] := rPowerECS_S1;
+fbCS.arrSocketPowerECS[2] := rPowerECS_S2;
+fbCS.arrSocketPowerECS[3] := 0;
+fbCS.arrSocketPowerECS[4] := 0;
+fbCS.arrSocketEnergySession[1] := lrTotalCounterEnergy_Consumption_S1;
+fbCS.arrSocketEnergySession[2] := lrTotalCounterEnergy_Consumption_S2;
+fbCS.arrSocketEnergySession[3] := 0;
+fbCS.arrSocketEnergySession[4] := 0;
+
+(*-------------------------------------------------------------Calcualte the number of ECS---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricChargingStations, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfECS_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := diNrOfECS_OUT;	
+END_IF
+		
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timDelay(IN:= , PT:= T#350MS, Q=> , ET=> );
+
+//Timer for Timeout in Statemachine
+IF (iStateModbusRead > 0 AND iStateModbusRead <= 5 AND iStateModbusRead = iStateModbus_CP) THEN
+		timTimeout.IN := TRUE;
+ELSE	
+		timTimeout.IN := FALSE;
+END_IF
+	//Timeout Timer is dissabled when the Init Step is aktiv or the function is not enabled
+	IF iStateModbusRead = 0 OR NOT bEnable THEN timTimeout.IN := FALSE; END_IF
+		timTimeout(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Enable with Delay that not all sockets have to be created at the same time
+timDelayStart(IN:= bEnable, PT:= T#20MS * diNrOfECS_OUT, Q=> , ET=> );
+	FPEnable(CLK:= timDelayStart.Q, Q=> );
+
+IF FPEnable.Q AND iStateModbusRead = 0 THEN iStateModbusRead := 1; bySocketInProgress := 1; END_IF		
+		
+//Not Enabled
+IF NOT bEnable THEN iStateModbusRead := 0; iStateModbusError := 0; END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step 
+		iStateModbus_CP := 0;
+			timDelay.IN := FALSE;
+				fbMBRead_FC3.bExecute := FALSE;
+					bySocketInProgress := 0;
+						rPowerECS_S1 := 0;	
+							rPowerECS_S2 := 0;	
+		arrMode3State[1] := ''; arrMode3State[2] := '';
+	
+	1://Energy Data kWh. Delivered Sum (Register 374)
+		iStateModbus_CP := iStateModbusRead;
+
+		//Start Read
+		fbMBRead_FC3.nQuantity := 4;
+			fbMBRead_FC3.nMBAddr := 374;
+				fbMBRead_FC3.bExecute := TRUE;
+					IF bySocketInProgress = 1 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket1;
+					ELSIF bySocketInProgress = 2 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket2; 
+					END_IF
+			
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//Power Data in kW
+			fbConvertWordToUlint(wInputValue_1:= arrBuffer_FC3[1], wInputValue_2:= arrBuffer_FC3[2], wInputValue_3:= arrBuffer_FC3[3], wInputValue_4:= arrBuffer_FC3[4], eByteOrderForConvert:= eByteOrder.eBigEndian, uliOutputValue =>);
+				stConvertFloat2.uliRawValue := fbConvertWordToUlint.uliOutputValue;
+					IF bySocketInProgress = 1 THEN
+						lrTotalCounterEnergy_Consumption_S1 := stConvertFloat2.lrValueFloat;
+					ELSIF bySocketInProgress = 2 THEN	
+						lrTotalCounterEnergy_Consumption_S2 := stConvertFloat2.lrValueFloat;
+					END_IF
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 2;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF	
+		
+	2://Read Out the mode 3 State from the charging station (Register 1201)
+		iStateModbus_CP := iStateModbusRead;
+			
+		//Start Read
+		fbMBRead_FC3.nQuantity := 5;
+			fbMBRead_FC3.nMBAddr := 1201;
+				fbMBRead_FC3.bExecute := TRUE;
+					IF bySocketInProgress = 1 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket1;
+					ELSIF bySocketInProgress = 2 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket2; 
+					END_IF
+			
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//Mode 3 state
+			fbConvertWordToByte(wInputValue:= arrBuffer_FC3[1], eByteOrderForConvert:= eByteOrder.eBigEndian, byOutputValue_1=> , byOutputValue_2=> );	
+				bySocketInProgress := LIMIT(1,bySocketInProgress,2);
+					IF fbConvertWordToByte.byOutputValue_1 = 16#41 AND fbConvertWordToByte.byOutputValue_2 = 16#00 THEN arrMode3State[bySocketInProgress] := 'A';
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#42 AND fbConvertWordToByte.byOutputValue_2 = 16#31 THEN arrMode3State[bySocketInProgress] := 'B1';
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#42 AND fbConvertWordToByte.byOutputValue_2 = 16#32 THEN arrMode3State[bySocketInProgress] := 'B2';  			
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#43 AND fbConvertWordToByte.byOutputValue_2 = 16#31 THEN arrMode3State[bySocketInProgress] := 'C1';
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#43 AND fbConvertWordToByte.byOutputValue_2 = 16#32 THEN arrMode3State[bySocketInProgress] := 'C2';
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#44 AND fbConvertWordToByte.byOutputValue_2 = 16#31 THEN arrMode3State[bySocketInProgress] := 'D1';
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#44 AND fbConvertWordToByte.byOutputValue_2 = 16#32 THEN arrMode3State[bySocketInProgress] := 'D2';
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#45 AND fbConvertWordToByte.byOutputValue_2 = 16#00 THEN arrMode3State[bySocketInProgress] := 'E';
+					ELSIF fbConvertWordToByte.byOutputValue_1 = 16#46 AND fbConvertWordToByte.byOutputValue_2 = 16#00 THEN arrMode3State[bySocketInProgress] := 'F';
+					END_IF
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 3;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+	3://Power Data in W (Register 344)
+		iStateModbus_CP := iStateModbusRead;
+
+		//Start Read
+		fbMBRead_FC3.nQuantity := 2;
+			fbMBRead_FC3.nMBAddr := 344;
+				fbMBRead_FC3.bExecute := TRUE;
+					IF bySocketInProgress = 1 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket1;
+					ELSIF bySocketInProgress = 2 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket2; 
+					END_IF
+			
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//Power Data in kW
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[1], wInputValue_2:= arrBuffer_FC3[2], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue =>);
+				stConvertFloat.dwRawValue := fbConvertWordToDword.dwOutputValue;
+					IF bySocketInProgress = 1 THEN 
+						rPowerECS_S1 := stConvertFloat.rValueFloat;
+					ELSIF bySocketInProgress = 2 THEN
+						rPowerECS_S2 := stConvertFloat.rValueFloat;
+					END_IF
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 4;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+	
+	4://Energy Data kWh. Consumed Sum (Register 390)
+		iStateModbus_CP := iStateModbusRead;
+
+		//Start Read
+		fbMBRead_FC3.nQuantity := 4;
+			fbMBRead_FC3.nMBAddr := 390;
+				fbMBRead_FC3.bExecute := TRUE;
+					IF bySocketInProgress = 1 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket1;
+					ELSIF bySocketInProgress = 2 THEN fbMBRead_FC3.nUnitID := byUnitID_Socket2; 
+					END_IF
+			
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//Power Data in kW
+			fbConvertWordToUlint(wInputValue_1:= arrBuffer_FC3[1], wInputValue_2:= arrBuffer_FC3[2], wInputValue_3:= arrBuffer_FC3[3], wInputValue_4:= arrBuffer_FC3[4], eByteOrderForConvert:= eByteOrder.eBigEndian, uliOutputValue =>);
+				stConvertFloat2.uliRawValue := fbConvertWordToUlint.uliOutputValue;
+					IF bySocketInProgress = 1 THEN 
+						lrTotalCounterEnergy_Production_S1 := stConvertFloat2.lrValueFloat;
+					ELSIF bySocketInProgress = 2 THEN
+						lrTotalCounterEnergy_Production_S2 := stConvertFloat2.lrValueFloat;
+					END_IF
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 5;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF	
+	
+	5://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+		
+		iStateModbusRead := 1;
+			
+		bMBTCPError := FALSE;
+	
+		IF byNumberOfSockets > 1 THEN 
+			bySocketInProgress := bySocketInProgress + 1;
+		END_IF
+			IF bySocketInProgress > 2 THEN bySocketInProgress := 1; END_IF
+		
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q THEN 
+				iStateModbusError := 300;	 
+			END_IF
+	
+END_CASE
+
+//When we have only 1 connector set the mode 3 state from connector 2 to State A.
+IF byNumberOfSockets = 1 THEN arrMode3State[2] := 'A'; END_IF 
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+ 
+IF arrMode3State[1] = 'F' OR arrMode3State[2] = 'F' THEN bErrorCS := TRUE; ELSE bErrorCS := FALSE; END_IF  
+ 
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS > Constants_Energy.diMaxNumberOfElectricChargingStations OR bErrorCS OR bMBTCPError THEN 
+		fbCS.bError := TRUE;
+	ELSE 
+		fbCS.bError := FALSE;
+			fbCS.iErrorCode := 0;
+	END_IF
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS > Constants_Energy.diMaxNumberOfElectricChargingStations THEN fbCS.iErrorCode := 1;
+ELSIF bErrorCS OR bMBTCPError THEN fbCS.iErrorCode := 0; END_IF
+
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+
+//Car connected to the ECS  
+IF arrMode3State[1] = 'B1' OR arrMode3State[1] = 'B2' OR arrMode3State[1] = 'C1' OR arrMode3State[1] = 'C2' OR arrMode3State[1] = 'D1' OR arrMode3State[1] = 'D2' OR
+	 arrMode3State[2] = 'B1' OR arrMode3State[2] = 'B2' OR arrMode3State[2] = 'C1' OR arrMode3State[2] = 'C2' OR arrMode3State[2] = 'D1' OR arrMode3State[2] = 'D2' THEN 
+		fbCS.bCarConnected := TRUE; 
+ELSE 
+		fbCS.bCarConnected := FALSE; 
+END_IF 
+
+//Min Current
+IF byNumberOfSockets <> 1 AND byNumberOfConnectionWire = 1 THEN fbCS.rMinCurrent := 12; ELSE fbCS.rMinCurrent := 6; END_IF
+
+//Charging time
+IF arrMode3State[1] = 'C2' OR arrMode3State[1] = 'D2' THEN timChTimeSocket1.IN := TRUE; ELSE timChTimeSocket1.IN := FALSE; END_IF
+IF arrMode3State[2] = 'C2' OR arrMode3State[2] = 'D2' THEN timChTimeSocket2.IN := TRUE; ELSE timChTimeSocket2.IN := FALSE; END_IF  
+
+IF timChTimeSocket1.IN THEN fbCS.arrSocketChargingTimeInput[1] := TIME_TO_REAL(timChTimeSocket1.ET) / 60000; END_IF
+IF timChTimeSocket2.IN THEN fbCS.arrSocketChargingTimeInput[2] := TIME_TO_REAL(timChTimeSocket2.ET) / 60000; END_IF
+fbCS.arrSocketChargingTimeInput[3] := 0;
+fbCS.arrSocketChargingTimeInput[4] := 0;
+
+timChTimeSocket1(IN:= , PT:= T#24H, Q=> , ET=> );
+timChTimeSocket2(IN:= , PT:= T#24H, Q=> , ET=> );
+
+//Mode 3 State
+fbCS.arrSocketMode3StateECS[1] := arrMode3State[1];
+fbCS.arrSocketMode3StateECS[2] := arrMode3State[2];
+fbCS.arrSocketMode3StateECS[3] := '';
+fbCS.arrSocketMode3StateECS[4] := '';
+
+//SOC Car
+fbCS.arrSOCCar[1] := 0;
+fbCS.arrSOCCar[2] := 0;
+fbCS.arrSOCCar[3] := 0;
+fbCS.arrSOCCar[4] := 0;
+
+//Functionblock ECS
+fbCS.stSetupECS.rMaxPower := 1;
+
+fbCS(
+	bEnable:= bEnable , 
+	bError:= ,
+	bWarning := ,
+	bEPOIsActive:= , 
+	bExternalLock:= ,
+	bCarConnected:= , 
+	bWriteWithDelay:= TRUE, 
+	bCalculateEnergySession:= ,
+	iErrorCode:= , 
+	iWarningCode:= , 
+	arrSocketChargingTimeInput:= ,
+	arrSOCCar:= , 
+	dwBatterySOC:= 100, 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrTotalPowerECS:= , 
+	arrSocketEnergySession:= ,
+	rTargetPower:= 100, 
+	rSupplyVoltage:= 692, 
+	rMinCurrent:= , 
+	tTimDelayOutput:= T#5S, 
+	tDelayError:= T#5S,
+	arrSocketMode3StateECS:= ,
+	arrSocketPowerECS:= ,
+	stSetupECS:= , 
+	stDataECSOut=> , 
+	stDataECSOutDelay=> stDataECS);
+
+//Real time Power for Output
+lrTotalPowerECSRealTime := fbCS.stDataECSOut.lrTotalPower;
+	
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+			timDelay.IN := FALSE;
+				fbMBRead_FC3.bExecute := FALSE;
+					bMBTCPError := TRUE; 		
+						//Restart from new with the Read out part after an Error
+						iStateModbusRead := 1;	
+							iStateModbusError := 0;
+						
+END_CASE
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(sIPAddr:= sIPAdress, nTCPPort:= 502,cbLength:= SIZEOF(arrBuffer_FC3), pDestAddr:= ADR(arrBuffer_FC3), tTimeout:= T#5S );
+	FPError_FC_3(CLK:= fbMBRead_FC3.bError, Q=> );
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BYTE_TO_LREAL(byUnitID_Socket1), bEventBasedActive=> );
+arrPD[3](lrValue:= BYTE_TO_LREAL(byUnitID_Socket2), bEventBasedActive=> );
+arrPD[4](lrValue:= BYTE_TO_LREAL(byNumberOfSockets), bEventBasedActive=> );
+arrPD[5](lrValue:= BYTE_TO_LREAL(byNumberOfConnectionWire), bEventBasedActive=> );
+fbPDString(sText:= sIPAdress, bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ECS_Alfen_Monitoring">
+      <LineId Id="2738" Count="4" />
+      <LineId Id="2748" Count="11" />
+      <LineId Id="2762" Count="3" />
+      <LineId Id="3564" Count="0" />
+      <LineId Id="3874" Count="0" />
+      <LineId Id="3716" Count="5" />
+      <LineId Id="3563" Count="0" />
+      <LineId Id="3875" Count="3" />
+      <LineId Id="3885" Count="0" />
+      <LineId Id="4605" Count="1" />
+      <LineId Id="3886" Count="2" />
+      <LineId Id="4413" Count="0" />
+      <LineId Id="4418" Count="19" />
+      <LineId Id="4414" Count="0" />
+      <LineId Id="3562" Count="0" />
+      <LineId Id="2816" Count="0" />
+      <LineId Id="2818" Count="0" />
+      <LineId Id="2821" Count="4" />
+      <LineId Id="2827" Count="8" />
+      <LineId Id="3558" Count="1" />
+      <LineId Id="3557" Count="0" />
+      <LineId Id="2836" Count="11" />
+      <LineId Id="3714" Count="0" />
+      <LineId Id="3730" Count="0" />
+      <LineId Id="4061" Count="0" />
+      <LineId Id="2849" Count="0" />
+      <LineId Id="4609" Count="31" />
+      <LineId Id="4607" Count="1" />
+      <LineId Id="2850" Count="1" />
+      <LineId Id="2855" Count="36" />
+      <LineId Id="3598" Count="0" />
+      <LineId Id="3600" Count="0" />
+      <LineId Id="3603" Count="13" />
+      <LineId Id="3628" Count="0" />
+      <LineId Id="3642" Count="0" />
+      <LineId Id="3731" Count="0" />
+      <LineId Id="3643" Count="0" />
+      <LineId Id="3732" Count="2" />
+      <LineId Id="3629" Count="8" />
+      <LineId Id="3602" Count="0" />
+      <LineId Id="3601" Count="0" />
+      <LineId Id="3646" Count="0" />
+      <LineId Id="3687" Count="16" />
+      <LineId Id="3749" Count="3" />
+      <LineId Id="3743" Count="0" />
+      <LineId Id="3705" Count="8" />
+      <LineId Id="3648" Count="0" />
+      <LineId Id="3644" Count="0" />
+      <LineId Id="2892" Count="3" />
+      <LineId Id="2898" Count="0" />
+      <LineId Id="4604" Count="0" />
+      <LineId Id="4603" Count="0" />
+      <LineId Id="4643" Count="2" />
+      <LineId Id="4641" Count="1" />
+      <LineId Id="2899" Count="2" />
+      <LineId Id="2903" Count="9" />
+      <LineId Id="2914" Count="12" />
+      <LineId Id="2934" Count="0" />
+      <LineId Id="2952" Count="12" />
+      <LineId Id="3889" Count="3" />
+      <LineId Id="3894" Count="0" />
+      <LineId Id="3893" Count="0" />
+      <LineId Id="3572" Count="0" />
+      <LineId Id="2970" Count="0" />
+      <LineId Id="3575" Count="1" />
+      <LineId Id="3904" Count="5" />
+      <LineId Id="3911" Count="3" />
+      <LineId Id="2971" Count="1" />
+      <LineId Id="4521" Count="0" />
+      <LineId Id="4520" Count="0" />
+      <LineId Id="2973" Count="7" />
+      <LineId Id="3723" Count="0" />
+      <LineId Id="2981" Count="11" />
+      <LineId Id="3722" Count="0" />
+      <LineId Id="2993" Count="3" />
+      <LineId Id="3255" Count="0" />
+      <LineId Id="3565" Count="0" />
+      <LineId Id="3871" Count="0" />
+      <LineId Id="2997" Count="2" />
+      <LineId Id="4181" Count="2" />
+      <LineId Id="3000" Count="0" />
+      <LineId Id="3047" Count="0" />
+      <LineId Id="3050" Count="7" />
+      <LineId Id="3059" Count="2" />
+      <LineId Id="3063" Count="6" />
+      <LineId Id="3073" Count="0" />
+      <LineId Id="3138" Count="2" />
+      <LineId Id="3153" Count="4" />
+      <LineId Id="1079" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

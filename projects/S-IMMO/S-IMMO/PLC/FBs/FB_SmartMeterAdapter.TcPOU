@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_SmartMeterAdapter" Id="{d57c30b1-4be1-4d1c-b1ee-e812b6f08702}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SmartMeterAdapter
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME;		//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+END_VAR
+
+VAR_IN_OUT
+END_VAR
+
+VAR_OUTPUT
+	bValidResult		: BOOL;							//Valid Result received from Server
+    bBusy				: BOOL;							//Function is Busy
+    bError				: BOOL;							//Error sucess
+	bDone				: BOOL;							//True after the decoding from the received Json File
+	bConnected			: BOOL;							//Connection to the Server
+	lrenergy_consumption: LREAL;
+	lrenergy_production: LREAL;
+	lrreactive_energy_consumption: LREAL;
+	lrreactive_energy_production: LREAL;
+	lrpower_consumption: LREAL;
+	lrpower_production: LREAL;
+	lrreactive_power_consumption: LREAL;
+	lrreactive_power_production: LREAL;
+	lrpower_total		: LREAL;
+	hrErrorCode       	: HRESULT;						//Error Result from Http Client
+END_VAR
+
+VAR
+	fbClient			: FB_IotHttpClient;
+	fbHttpGet			: FB_SmartMeterAdapter_Helper;
+	timStartRequest		: TON;							//Timer to Start the Request
+	FPStartRequest		: R_TRIG;						//Internal positive Edge
+	FPDone				: R_TRIG;						//Internal positive Edge
+	FNStart				: F_TRIG;						//Internal negative Edge
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := T#30S;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := TRUE;
+	fbClient.tConnectionTimeout := T#30S;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+	timStartRequest(IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, PT:= tDelayRequest, Q=> , ET=> );
+		IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured)) THEN fbHttpGet.bSend := TRUE; END_IF
+
+				
+//Http Get Function
+fbHttpGet(
+	lrenergy_consumption => lrenergy_consumption,
+	lrenergy_production => lrenergy_production,
+	lrreactive_energy_consumption => lrreactive_energy_consumption,
+	lrreactive_energy_production => lrreactive_energy_production,
+	lrpower_consumption => lrpower_consumption,
+	lrpower_production => lrpower_production,
+	lrreactive_power_consumption => lrreactive_power_consumption,
+	lrreactive_power_production => lrreactive_power_production,
+	lrpower_total => lrpower_total,
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> );
+
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+
+fbClient.Execute();
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbClient.hrErrorCode;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SmartMeterAdapter">
+      <LineId Id="49" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="320" Count="6" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="60" Count="8" />
+      <LineId Id="405" Count="7" />
+      <LineId Id="81" Count="4" />
+      <LineId Id="90" Count="4" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="101" Count="2" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

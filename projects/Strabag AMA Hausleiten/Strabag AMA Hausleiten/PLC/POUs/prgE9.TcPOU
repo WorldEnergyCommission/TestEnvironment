@@ -1,0 +1,589 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgE9" Id="{ded2e15b-e0fe-49a5-a52a-37de718b51d3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgE9
+VAR
+	FB_Read_MB :FB_ModBus_100Registers_FC3;
+	m_Enable: BOOL;
+	str_IP: STRING(15):= '192.168.8.3';
+	word_Adress: WORD;
+	usint_Quantity: USINT;
+	byte_slaveID: BYTE;
+	
+	lr_Bitumentank_1_Freq 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_L1N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_L2N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_L3N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_L1L2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_L2L3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_L3L1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_I1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_I2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_I3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_N 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_S 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_P 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_Q 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_1_PF 			: LREAL;		//{#lynus.ag#()}
+	
+	lr_Bitumentank_2_Freq 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_L1N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_L2N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_L3N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_L1L2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_L2L3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_L3L1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_I1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_I2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_I3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_N 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_S 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_P 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_Q 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_2_PF 			: LREAL;		//{#lynus.ag#()}
+	
+	lr_Bitumentank_3_Freq 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_L1N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_L2N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_L3N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_L1L2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_L2L3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_L3L1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_I1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_I2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_I3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_N 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_S 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_P 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_Q 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_3_PF 			: LREAL;		//{#lynus.ag#()}
+	
+	lr_Bitumentank_4_Freq 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_L1N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_L2N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_L3N 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_L1L2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_L2L3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_L3L1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_I1 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_I2 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_I3 			: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_N 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_S 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_P 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_Q 				: LREAL;		//{#lynus.ag#()}
+	lr_Bitumentank_4_PF 			: LREAL;		//{#lynus.ag#()}
+	
+	lr_Bitumenfuellpumpe_1_Freq 	: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_L1N 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_L2N 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_L3N 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_L1L2 	: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_L2L3 	: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_L3L1		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_I1 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_I2 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_I3 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_N 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_S 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_P 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_Q 		: LREAL;		//{#lynus.ag#()}
+	lr_Bitumenfuellpumpe_1_PF 		: LREAL;		//{#lynus.ag#()}
+
+	lr_Dosierpumpe_1_Freq 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_L1N 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_L2N 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_L3N 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_L1L2 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_L2L3 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_L3L1 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_I1 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_I2 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_I3 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_N 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_S 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_P 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_Q 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_1_PF 			: LREAL;		//{#lynus.ag#()}
+
+	lr_Dosierpumpe_2_Freq 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_L1N 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_L2N 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_L3N 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_L1L2 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_L2L3 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_L3L1 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_I1 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_I2 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_I3 			: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_N 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_S 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_P 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_Q 				: LREAL;		//{#lynus.ag#()}
+	lr_Dosierpumpe_2_PF 			: LREAL;		//{#lynus.ag#()}
+	
+	m_Bitumenfuellpumpe_1	 		: BOOL;			//{#lynus.ag#()}
+	
+	FB_Read_Socomec_I61 	: FB_Socomec_I61;
+	FB_Read_Socomec_I31 	: FB_Socomec_I31;
+	FB_Read_Socomec_IO10	: FB_Socomec_IO10;
+	i_State_ModbusCall: INT;				
+	ton_TimeOutState: ton;
+	tof_TimeOut_Active: tof;
+	i_State_ModbusCall_old: INT;
+	int_errorCount: INT;
+	m_TimeOutActive: BOOL;					//{#lynus.ag#()}
+	i_State_ErrorActive: INT;				//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE i_State_ModbusCall OF
+	0: 	// wait state
+		i_State_ModbusCall := 10;
+	
+	10:	// first Modbus Poll Call
+		FB_Read_Socomec_I61.m_Start := TRUE;
+		FB_Read_Socomec_I61.byte_slaveID := 26;
+		FB_Read_Socomec_I61.w_Adress := 18442;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	11: // wait for received data
+		FB_Read_Socomec_I61.m_Start := FALSE;
+		IF FB_Read_Socomec_I61.iStateModbusRead = 30 THEN
+			lr_Bitumentank_4_Freq	:=		FB_Read_Socomec_I61.lr_Freq_Hz	;	
+			lr_Bitumentank_4_L1N	:=		FB_Read_Socomec_I61.lr_L1N_V	;	
+			lr_Bitumentank_4_L2N	:=		FB_Read_Socomec_I61.lr_L2N_V	;	
+			lr_Bitumentank_4_L3N	:=		FB_Read_Socomec_I61.lr_L3N_V	;	
+			lr_Bitumentank_4_L1L2	:=		FB_Read_Socomec_I61.lr_L1L2_V	;	
+			lr_Bitumentank_4_L2L3	:=		FB_Read_Socomec_I61.lr_L2L3_V	;	
+			lr_Bitumentank_4_L3L1	:=		FB_Read_Socomec_I61.lr_L3L1_V	;	
+			lr_Bitumentank_4_I1		:=		FB_Read_Socomec_I61.lr_I1_A		;	
+			lr_Bitumentank_4_I2		:=		FB_Read_Socomec_I61.lr_I2_A		;	
+			lr_Bitumentank_4_I3		:=		FB_Read_Socomec_I61.lr_I3_A		;	
+			lr_Bitumentank_4_N		:=		FB_Read_Socomec_I61.lr_N_A		;	
+			lr_Bitumentank_4_P		:=		FB_Read_Socomec_I61.lr_P_kW		;	
+			lr_Bitumentank_4_Q		:=		FB_Read_Socomec_I61.lr_Q_kVAr	;	
+			lr_Bitumentank_4_S		:=		FB_Read_Socomec_I61.lr_S_kVA	;	
+			lr_Bitumentank_4_PF		:=		FB_Read_Socomec_I61.lr_PF		;		
+			
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_I61.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	12: // wait for FB_Read_Socomec_I61 to be in state 0
+		IF FB_Read_Socomec_I61.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+
+	20:	// next Modbus Poll Call
+		FB_Read_Socomec_I61.m_Start := TRUE;
+		FB_Read_Socomec_I61.byte_slaveID := 27;
+		FB_Read_Socomec_I61.w_Adress := 18442;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	21: // wait for received data
+		FB_Read_Socomec_I61.m_Start := FALSE;
+		IF FB_Read_Socomec_I61.iStateModbusRead = 30 THEN
+			lr_Dosierpumpe_1_Freq		:=		FB_Read_Socomec_I61.lr_Freq_Hz	;	
+			lr_Dosierpumpe_1_L1N		:=		FB_Read_Socomec_I61.lr_L1N_V	;	
+			lr_Dosierpumpe_1_L2N		:=		FB_Read_Socomec_I61.lr_L2N_V	;	
+			lr_Dosierpumpe_1_L3N		:=		FB_Read_Socomec_I61.lr_L3N_V	;	
+			lr_Dosierpumpe_1_L1L2		:=		FB_Read_Socomec_I61.lr_L1L2_V	;	
+			lr_Dosierpumpe_1_L2L3		:=		FB_Read_Socomec_I61.lr_L2L3_V	;	
+			lr_Dosierpumpe_1_L3L1		:=		FB_Read_Socomec_I61.lr_L3L1_V	;	
+			lr_Dosierpumpe_1_I1			:=		FB_Read_Socomec_I61.lr_I1_A		;	
+			lr_Dosierpumpe_1_I2			:=		FB_Read_Socomec_I61.lr_I2_A		;	
+			lr_Dosierpumpe_1_I3			:=		FB_Read_Socomec_I61.lr_I3_A		;	
+			lr_Dosierpumpe_1_N			:=		FB_Read_Socomec_I61.lr_N_A		;	
+			lr_Dosierpumpe_1_P			:=		FB_Read_Socomec_I61.lr_P_kW		;	
+			lr_Dosierpumpe_1_Q			:=		FB_Read_Socomec_I61.lr_Q_kVAr	;	
+			lr_Dosierpumpe_1_S			:=		FB_Read_Socomec_I61.lr_S_kVA	;	
+			lr_Dosierpumpe_1_PF			:=		FB_Read_Socomec_I61.lr_PF		;		
+			
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_I61.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	22: // wait for FB_Read_Socomec_I61 to be in state 0
+		IF FB_Read_Socomec_I61.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+	
+	30:	// next Modbus Poll Call
+		FB_Read_Socomec_I61.m_Start := TRUE;
+		FB_Read_Socomec_I61.byte_slaveID := 26;
+		FB_Read_Socomec_I61.w_Adress := 20490;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	31: // wait for received data
+		FB_Read_Socomec_I61.m_Start := FALSE;
+		IF FB_Read_Socomec_I61.iStateModbusRead = 30 THEN
+			lr_Bitumenfuellpumpe_1_Freq		:=		FB_Read_Socomec_I61.lr_Freq_Hz	;	
+			lr_Bitumenfuellpumpe_1_L1N		:=		FB_Read_Socomec_I61.lr_L1N_V	;	
+			lr_Bitumenfuellpumpe_1_L2N		:=		FB_Read_Socomec_I61.lr_L2N_V	;	
+			lr_Bitumenfuellpumpe_1_L3N		:=		FB_Read_Socomec_I61.lr_L3N_V	;	
+			lr_Bitumenfuellpumpe_1_L1L2		:=		FB_Read_Socomec_I61.lr_L1L2_V	;	
+			lr_Bitumenfuellpumpe_1_L2L3		:=		FB_Read_Socomec_I61.lr_L2L3_V	;	
+			lr_Bitumenfuellpumpe_1_L3L1		:=		FB_Read_Socomec_I61.lr_L3L1_V	;	
+			lr_Bitumenfuellpumpe_1_I1		:=		FB_Read_Socomec_I61.lr_I1_A		;	
+			lr_Bitumenfuellpumpe_1_I2		:=		FB_Read_Socomec_I61.lr_I2_A		;	
+			lr_Bitumenfuellpumpe_1_I3		:=		FB_Read_Socomec_I61.lr_I3_A		;	
+			lr_Bitumenfuellpumpe_1_N		:=		FB_Read_Socomec_I61.lr_N_A		;	
+			lr_Bitumenfuellpumpe_1_P		:=		FB_Read_Socomec_I61.lr_P_kW		;	
+			lr_Bitumenfuellpumpe_1_Q		:=		FB_Read_Socomec_I61.lr_Q_kVAr	;	
+			lr_Bitumenfuellpumpe_1_S		:=		FB_Read_Socomec_I61.lr_S_kVA	;	
+			lr_Bitumenfuellpumpe_1_PF		:=		FB_Read_Socomec_I61.lr_PF		;		
+			
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_I61.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	32: // wait for FB_Read_Socomec_I61 to be in state 0
+		IF FB_Read_Socomec_I61.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+	
+	40:	// next Modbus Poll Call
+		FB_Read_Socomec_I61.m_Start := TRUE;
+		FB_Read_Socomec_I61.byte_slaveID := 27;
+		FB_Read_Socomec_I61.w_Adress := 20490;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	41: // wait for received data
+		FB_Read_Socomec_I61.m_Start := FALSE;
+		IF FB_Read_Socomec_I61.iStateModbusRead = 30 THEN
+			lr_Dosierpumpe_2_Freq	:=		FB_Read_Socomec_I61.lr_Freq_Hz	;	
+			lr_Dosierpumpe_2_L1N	:=		FB_Read_Socomec_I61.lr_L1N_V	;	
+			lr_Dosierpumpe_2_L2N	:=		FB_Read_Socomec_I61.lr_L2N_V	;	
+			lr_Dosierpumpe_2_L3N	:=		FB_Read_Socomec_I61.lr_L3N_V	;	
+			lr_Dosierpumpe_2_L1L2	:=		FB_Read_Socomec_I61.lr_L1L2_V	;	
+			lr_Dosierpumpe_2_L2L3	:=		FB_Read_Socomec_I61.lr_L2L3_V	;	
+			lr_Dosierpumpe_2_L3L1	:=		FB_Read_Socomec_I61.lr_L3L1_V	;	
+			lr_Dosierpumpe_2_I1		:=		FB_Read_Socomec_I61.lr_I1_A		;	
+			lr_Dosierpumpe_2_I2		:=		FB_Read_Socomec_I61.lr_I2_A		;	
+			lr_Dosierpumpe_2_I3		:=		FB_Read_Socomec_I61.lr_I3_A		;	
+			lr_Dosierpumpe_2_N		:=		FB_Read_Socomec_I61.lr_N_A		;	
+			lr_Dosierpumpe_2_P		:=		FB_Read_Socomec_I61.lr_P_kW		;	
+			lr_Dosierpumpe_2_Q		:=		FB_Read_Socomec_I61.lr_Q_kVAr	;	
+			lr_Dosierpumpe_2_S		:=		FB_Read_Socomec_I61.lr_S_kVA	;	
+			lr_Dosierpumpe_2_PF		:=		FB_Read_Socomec_I61.lr_PF		;		
+			
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_I61.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	42: // wait for FB_Read_Socomec_I61 to be in state 0
+		IF FB_Read_Socomec_I61.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+
+	50:	// next Modbus Poll Call		first IO10 call
+		FB_Read_Socomec_IO10.m_Start := TRUE;
+		FB_Read_Socomec_IO10.byte_slaveID := 28;
+		FB_Read_Socomec_IO10.w_Adress := 11520;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	51: // wait for received data
+		FB_Read_Socomec_IO10.m_Start := FALSE;
+		IF FB_Read_Socomec_IO10.iStateModbusRead = 30 THEN
+			m_Bitumenfuellpumpe_1 := FB_Read_Socomec_IO10.m_Input_Active;		
+				
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_IO10.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	52: // wait for FB_Read_Socomec_IO10 to be in state 0
+		IF FB_Read_Socomec_IO10.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+		
+	60:	// next Modbus Poll Call
+		FB_Read_Socomec_I31.m_Start := TRUE;
+		FB_Read_Socomec_I31.byte_slaveID := 23;
+		FB_Read_Socomec_I31.w_Adress := 18442;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	61: // wait for received data
+		FB_Read_Socomec_I31.m_Start := FALSE;
+		IF FB_Read_Socomec_I31.iStateModbusRead = 30 THEN
+			lr_Bitumentank_1_Freq	:=		FB_Read_Socomec_I31.lr_Freq_Hz	;	
+			lr_Bitumentank_1_L1N	:=		FB_Read_Socomec_I31.lr_L1N_V	;	
+			lr_Bitumentank_1_L2N	:=		FB_Read_Socomec_I31.lr_L2N_V	;	
+			lr_Bitumentank_1_L3N	:=		FB_Read_Socomec_I31.lr_L3N_V	;	
+			lr_Bitumentank_1_L1L2	:=		FB_Read_Socomec_I31.lr_L1L2_V	;	
+			lr_Bitumentank_1_L2L3	:=		FB_Read_Socomec_I31.lr_L2L3_V	;	
+			lr_Bitumentank_1_L3L1	:=		FB_Read_Socomec_I31.lr_L3L1_V	;	
+			lr_Bitumentank_1_I1		:=		FB_Read_Socomec_I31.lr_I1_A		;	
+			lr_Bitumentank_1_I2		:=		FB_Read_Socomec_I31.lr_I2_A		;	
+			lr_Bitumentank_1_I3		:=		FB_Read_Socomec_I31.lr_I3_A		;	
+			lr_Bitumentank_1_N		:=		FB_Read_Socomec_I31.lr_N_A		;	
+			lr_Bitumentank_1_P		:=		FB_Read_Socomec_I31.lr_P_kW		;	
+			lr_Bitumentank_1_Q		:=		FB_Read_Socomec_I31.lr_Q_kVAr	;	
+			lr_Bitumentank_1_S		:=		FB_Read_Socomec_I31.lr_S_kVA	;	
+			lr_Bitumentank_1_PF		:=		FB_Read_Socomec_I31.lr_PF		;		
+			
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_I31.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	62: // wait for FB_Read_Socomec_I31 to be in state 0
+		IF FB_Read_Socomec_I31.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+		
+	70:	// next Modbus Poll Call
+		FB_Read_Socomec_I31.m_Start := TRUE;
+		FB_Read_Socomec_I31.byte_slaveID := 24;
+		FB_Read_Socomec_I31.w_Adress := 18442;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	71: // wait for received data
+		FB_Read_Socomec_I31.m_Start := FALSE;
+		IF FB_Read_Socomec_I31.iStateModbusRead = 30 THEN
+			lr_Bitumentank_2_Freq	:=		FB_Read_Socomec_I31.lr_Freq_Hz	;	
+			lr_Bitumentank_2_L1N	:=		FB_Read_Socomec_I31.lr_L1N_V	;	
+			lr_Bitumentank_2_L2N	:=		FB_Read_Socomec_I31.lr_L2N_V	;	
+			lr_Bitumentank_2_L3N	:=		FB_Read_Socomec_I31.lr_L3N_V	;	
+			lr_Bitumentank_2_L1L2	:=		FB_Read_Socomec_I31.lr_L1L2_V	;	
+			lr_Bitumentank_2_L2L3	:=		FB_Read_Socomec_I31.lr_L2L3_V	;	
+			lr_Bitumentank_2_L3L1	:=		FB_Read_Socomec_I31.lr_L3L1_V	;	
+			lr_Bitumentank_2_I1		:=		FB_Read_Socomec_I31.lr_I1_A		;	
+			lr_Bitumentank_2_I2		:=		FB_Read_Socomec_I31.lr_I2_A		;	
+			lr_Bitumentank_2_I3		:=		FB_Read_Socomec_I31.lr_I3_A		;	
+			lr_Bitumentank_2_N		:=		FB_Read_Socomec_I31.lr_N_A		;	
+			lr_Bitumentank_2_P		:=		FB_Read_Socomec_I31.lr_P_kW		;	
+			lr_Bitumentank_2_Q		:=		FB_Read_Socomec_I31.lr_Q_kVAr	;	
+			lr_Bitumentank_2_S		:=		FB_Read_Socomec_I31.lr_S_kVA	;	
+			lr_Bitumentank_2_PF		:=		FB_Read_Socomec_I31.lr_PF		;		
+			
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_I31.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	72: // wait for FB_Read_Socomec_I31 to be in state 0
+		IF FB_Read_Socomec_I31.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+		
+	80:	// next Modbus Poll Call
+		FB_Read_Socomec_I31.m_Start := TRUE;
+		FB_Read_Socomec_I31.byte_slaveID := 25;
+		FB_Read_Socomec_I31.w_Adress := 18442;
+		i_State_ModbusCall := i_State_ModbusCall + 1;
+	
+	81: // wait for received data
+		FB_Read_Socomec_I31.m_Start := FALSE;
+		IF FB_Read_Socomec_I31.iStateModbusRead = 30 THEN
+			lr_Bitumentank_3_Freq	:=		FB_Read_Socomec_I31.lr_Freq_Hz	;	
+			lr_Bitumentank_3_L1N	:=		FB_Read_Socomec_I31.lr_L1N_V	;	
+			lr_Bitumentank_3_L2N	:=		FB_Read_Socomec_I31.lr_L2N_V	;	
+			lr_Bitumentank_3_L3N	:=		FB_Read_Socomec_I31.lr_L3N_V	;	
+			lr_Bitumentank_3_L1L2	:=		FB_Read_Socomec_I31.lr_L1L2_V	;	
+			lr_Bitumentank_3_L2L3	:=		FB_Read_Socomec_I31.lr_L2L3_V	;	
+			lr_Bitumentank_3_L3L1	:=		FB_Read_Socomec_I31.lr_L3L1_V	;	
+			lr_Bitumentank_3_I1		:=		FB_Read_Socomec_I31.lr_I1_A		;	
+			lr_Bitumentank_3_I2		:=		FB_Read_Socomec_I31.lr_I2_A		;	
+			lr_Bitumentank_3_I3		:=		FB_Read_Socomec_I31.lr_I3_A		;	
+			lr_Bitumentank_3_N		:=		FB_Read_Socomec_I31.lr_N_A		;	
+			lr_Bitumentank_3_P		:=		FB_Read_Socomec_I31.lr_P_kW		;	
+			lr_Bitumentank_3_Q		:=		FB_Read_Socomec_I31.lr_Q_kVAr	;	
+			lr_Bitumentank_3_S		:=		FB_Read_Socomec_I31.lr_S_kVA	;	
+			lr_Bitumentank_3_PF		:=		FB_Read_Socomec_I31.lr_PF		;		
+			
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF            
+		IF FB_Read_Socomec_I31.iStateModbusError = 300 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall +1;
+		END_IF
+	
+	82: // wait for FB_Read_Socomec_I31 to be in state 0
+		IF FB_Read_Socomec_I31.iStateModbusRead = 0 OR ton_TimeOutState.Q THEN
+			i_State_ModbusCall := i_State_ModbusCall + 8;
+		END_IF
+		
+	90: 
+		i_State_ModbusCall := 0;
+		
+END_CASE
+
+ton_TimeOutState(	IN:= i_State_ModbusCall = i_State_ModbusCall_old, 
+					PT:= T#30S, 
+					Q=> , 
+					ET=> );
+
+i_State_ModbusCall_old := i_State_ModbusCall; 
+
+IF ton_TimeOutState.Q THEN
+//	i_State_ModbusCall := 0;
+	int_errorCount := int_errorCount  + 1; 
+END_IF
+
+
+tof_TimeOut_Active(	IN:= ton_TimeOutState.Q, 
+					PT:=	T#5S , 
+					Q=> m_TimeOutActive, 
+					ET=> );
+IF tof_TimeOut_Active.Q THEN
+	 i_State_ErrorActive := i_State_ModbusCall; 
+END_IF
+
+
+FB_Read_Socomec_I61(
+	m_Start:= , 
+	str_IPAdress:= str_IP , 
+	w_Adress:= , 
+	uint_port:= , 
+	byte_slaveID:= , 
+	m_PollSuccessful=> , 
+	lr_Freq_Hz=> , 
+	lr_L1N_V=> , 
+	lr_L2N_V=> , 
+	lr_L3N_V=> , 
+	lr_L1L2_V=> , 
+	lr_L2L3_V=> , 
+	lr_L3L1_V=> , 
+	lr_I1_A=> , 
+	lr_I2_A=> , 
+	lr_I3_A=> , 
+	lr_N_A=> , 
+	lr_P_kW=> , 
+	lr_Q_kVAr=> , 
+	lr_S_kVA=> , 
+	lr_PF=> , 
+	udint_Error_ID=> );
+	
+FB_Read_Socomec_I31(
+	m_Start:= , 
+	str_IPAdress:= str_IP , 
+	w_Adress:= , 
+	uint_port:= , 
+	byte_slaveID:= , 
+	m_PollSuccessful=> , 
+	lr_Freq_Hz=> , 
+	lr_L1N_V=> , 
+	lr_L2N_V=> , 
+	lr_L3N_V=> , 
+	lr_L1L2_V=> , 
+	lr_L2L3_V=> , 
+	lr_L3L1_V=> , 
+	lr_I1_A=> , 
+	lr_I2_A=> , 
+	lr_I3_A=> , 
+	lr_N_A=> , 
+	lr_P_kW=> , 
+	lr_Q_kVAr=> , 
+	lr_S_kVA=> , 
+	lr_PF=> , 
+	udint_Error_ID=> );
+
+FB_Read_Socomec_IO10(
+	m_Start:= , 
+	str_IPAdress:= str_IP , 
+	w_Adress:= , 
+	uint_port:= , 
+	byte_slaveID:= , 
+	m_PollSuccessful=> , 
+	m_Input_Active=> , 
+	udint_Error_ID=> );	
+
+FB_Read_MB(
+	m_Enable:= m_Enable, 
+	str_IPAdress:= str_IP,
+	w_Adress:= word_Adress, 
+	usint_Quantity:= usint_Quantity, 
+	byte_slaveID:=byte_slaveID,
+	uint_port := ,
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgE9">
+      <LineId Id="14" Count="0" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="473" Count="7" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="485" Count="13" />
+      <LineId Id="482" Count="0" />
+      <LineId Id="505" Count="1" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="507" Count="2" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="512" Count="1" />
+      <LineId Id="548" Count="9" />
+      <LineId Id="583" Count="0" />
+      <LineId Id="694" Count="1" />
+      <LineId Id="692" Count="1" />
+      <LineId Id="690" Count="1" />
+      <LineId Id="688" Count="1" />
+      <LineId Id="686" Count="1" />
+      <LineId Id="684" Count="1" />
+      <LineId Id="596" Count="0" />
+      <LineId Id="572" Count="10" />
+      <LineId Id="467" Count="1" />
+      <LineId Id="631" Count="33" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="701" Count="34" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="871" Count="0" />
+      <LineId Id="1059" Count="19" />
+      <LineId Id="872" Count="0" />
+      <LineId Id="1393" Count="0" />
+      <LineId Id="1395" Count="33" />
+      <LineId Id="1394" Count="0" />
+      <LineId Id="1429" Count="0" />
+      <LineId Id="1431" Count="33" />
+      <LineId Id="1430" Count="0" />
+      <LineId Id="1465" Count="0" />
+      <LineId Id="1467" Count="33" />
+      <LineId Id="1466" Count="0" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="1501" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="1210" Count="2" />
+      <LineId Id="1214" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="1215" Count="2" />
+      <LineId Id="1219" Count="0" />
+      <LineId Id="1218" Count="0" />
+      <LineId Id="1224" Count="1" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="1228" Count="2" />
+      <LineId Id="1227" Count="0" />
+      <LineId Id="1232" Count="0" />
+      <LineId Id="1226" Count="0" />
+      <LineId Id="1234" Count="0" />
+      <LineId Id="1233" Count="0" />
+      <LineId Id="423" Count="21" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="1321" Count="0" />
+      <LineId Id="1323" Count="21" />
+      <LineId Id="1322" Count="0" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="1050" Count="7" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="449" Count="10" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

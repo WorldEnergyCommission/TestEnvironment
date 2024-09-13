@@ -1,0 +1,573 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_EM2289" Id="{da49bfa1-5ed6-47ce-b62b-138514c74e92}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EM2289
+VAR_INPUT PERSISTENT
+	m_Enable					: BOOL;						//Enable the Fuctionblock and his logic
+	str_IPAdress				: STRING(15);				//IP Adress of the meter
+END_VAR
+VAR_OUTPUT
+	real_RealPower_kW				: REAL;					// Real power in W
+	real_RealPowerL1_kW				: REAL;					// Real power in W
+	real_RealPowerL2_kW				: REAL;					// Real power in W
+	real_RealPowerL3_kW				: REAL;					// Real power in W
+	real_ReactivePower_kVAr			: REAL;					// Reactive power in VAr
+	real_ApparentPower_kVA			: REAL;					// Apparent power in VA
+	real_Frequency_Hz				: REAL;					// Frequency in Hz
+	real_VoltageL1N_V				: REAL;					//  Voltage L1-N in V 
+	real_VoltageL2N_V				: REAL;					//  Voltage L2-N in V 
+	real_VoltageL3N_V				: REAL;					//  Voltage L3-N in V 
+	real_VoltageL1L2_V				: REAL;					//  Voltage L1-L2 in V 
+	real_VoltageL2L3_V				: REAL;					//  Voltage L2-L3 in V 
+	real_VoltageL3L1_V				: REAL;					//  Voltage L3-L1 in V 
+	real_CurrentL1_A				: REAL;					//  Current L1 in A
+	real_CurrentL2_A				: REAL;					//  Current L2 in A
+	real_CurrentL3_A				: REAL;					//  Current L3 in A
+	real_EnergyTotal_Import_Wh		: REAL;					// Energy total in Wh
+	real_EnergyTotal_Export_Wh		: REAL;					// Energy total in Wh
+	real_EnergyTotal_ExportT1_Wh	: REAL;					// Energy total in Wh
+	real_EnergyTotal_ExportT2_Wh	: REAL;					// Energy total in Wh
+	m_PollSuccessful				: BOOL;					// Poll succesfull		
+	udint_Error_ID					: UDINT;				// ERR ID FB_MBReadRegs
+END_VAR
+VAR
+	{attribute 'hide'}
+	w_Adress					: WORD;						//modbus adress
+	{attribute 'hide'}
+	usint_Quantity				: USINT;					//Number of Words to get polled, max 100
+	{attribute 'hide'}
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	{attribute 'hide'}
+	usintSign					: USINT;						// converstion dword to real	
+	{attribute 'hide'}
+	intExponent					: INT;							// converstion dword to real
+	{attribute 'hide'}
+	realMantisse				: REAL;							// converstion dword to real
+	{attribute 'hide'}
+	timer_Delay					: TON;						//Timer for Delay between Requests
+	{attribute 'hide'}
+	timer_DelayStart			: TON;						//Timer to start the state machine with Delay after enabling or after the system ist restartet
+	{attribute 'hide'}
+	timer_TimeOut				: TON;						//Timer for Timeout MB Read
+	{attribute 'hide'}
+	iStateModbusRead			: INT;						//State machine for read out Data over Modbus RTU
+	{attribute 'hide'}
+	fbMBRead_FC4				: FB_MBReadInputRegs  ;		//Modbus Read Function (FC4)
+	{attribute 'hide'}
+	ftrig_PEnable				: f_trig;					//Internal positive Edge
+	{attribute 'hide'}
+	iStateModbusError			: INT;						//State machine for error out Data over Modbus TCP/IP	
+	{attribute 'hide'}
+	FPError_FC_4				: R_TRIG;					//Internal positive Edge
+	{attribute 'hide'}
+	arrBuffer_FC4				: ARRAY[0..100] OF WORD;		//Buffer with Data from FC4
+	{attribute 'hide'}
+	timer_Connection_ok			: TON;
+	{attribute 'hide'}
+	int_Data_Received			: INT;
+	{attribute 'hide'}
+	m_MBTCPError				: BOOL;
+	{attribute 'hide'}
+	int_Data_Received_old		: INT;
+	{attribute 'hide'}
+	timer_Connection_ok_TOF	: TOF;
+	{attribute 'hide'}
+	m_Poll_ok: BOOL;
+	{attribute 'hide'}
+	timer_Wait: Ton;
+	{attribute 'hide'}
+	int_TimeoutError: INT;
+	{attribute 'hide'}
+	int_FC4Error: INT;
+	{attribute 'hide'}
+	i: INT;
+	{attribute 'hide'}
+	x: INT;
+	sint_Exponent: SINT;
+	real_EnergyFactor: REAL;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// v0.1 by Stefan Lackner 20230327
+// not tested 
+// reads out GMC Instruments EM2289   
+
+
+(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+w_Adress := LIMIT(0,w_Adress,65000);
+usint_Quantity := LIMIT(1,usint_Quantity,100);
+	
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timer_Delay(IN:= , PT:= T#50MS, Q=> , ET=> );
+
+//Timeout Timer is dissabled when the Init Step is aktiv or the function is not enabled
+IF iStateModbusRead = 0 OR NOT m_Enable THEN 
+	timer_Timeout.IN := FALSE; 
+END_IF
+timer_Timeout(IN:= , PT:= T#1S, Q=> , ET=> );
+
+//Enable with Delay that not all sockets have to be created at the same time
+timer_DelayStart(IN:= m_Enable, PT:= T#1S, Q=> , ET=> );
+ftrig_PEnable(CLK:= timer_DelayStart.Q, Q=> );
+
+IF ftrig_PEnable.Q AND iStateModbusRead = 0 THEN 
+	iStateModbusRead := 1; 
+END_IF		
+		
+//Not Enabled
+IF NOT m_Enable THEN 
+	iStateModbusRead := 0; 
+	iStateModbusError := 0; 
+END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step 
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC4.bExecute := FALSE;
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+		iStateModbusRead := iStateModbusRead+1;
+
+	1: // clean the array  Poll 1
+		FOR i:=0 TO 100 BY 1 DO
+			arrBuffer_FC4[i] := 0;
+		END_FOR
+		w_Adress := 0;
+		usint_Quantity := 13; 
+		iStateModbusRead := iStateModbusRead+1;
+		
+	2://read the required registers
+		//Start Read Poll 1
+		fbMBRead_FC4.nQuantity := usint_Quantity;
+		fbMBRead_FC4.nMBAddr := w_Adress;
+		fbMBRead_FC4.bExecute := TRUE;
+		fbMBRead_FC4.nUnitID := 1;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC4.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC4.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := iStateModbusRead+1;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q THEN 
+			iStateModbusError := 300;
+			int_FC4Error := int_FC4Error+1;
+		ELSIF timer_Timeout.Q THEN  
+			timer_Timeout.IN := FALSE; 	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	3: // convert data Poll 1
+		sint_Exponent := WORD_TO_SINT (arrBuffer_FC4[12]);
+		real_VoltageL1L2_V := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[0])* EXPT (10,sint_Exponent));
+		real_VoltageL2L3_V := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[1])* EXPT (10,sint_Exponent));
+		real_VoltageL3L1_V := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[2])* EXPT (10,sint_Exponent));
+		real_VoltageL1N_V :=  LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[4])* EXPT (10,sint_Exponent));
+		real_VoltageL2N_V :=  LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[5])* EXPT (10,sint_Exponent));
+		real_VoltageL3N_V :=  LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[6])* EXPT (10,sint_Exponent));
+		real_Frequency_Hz := WORD_TO_REAL(arrBuffer_FC4[11])/100;
+		// go to next step
+		iStateModbusRead := iStateModbusRead+1;
+	
+	4://Wait and go to next step
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := iStateModbusRead+1;
+			timer_Wait.IN :=FALSE;
+		END_IF
+
+	5: // clean the array  Poll 2
+		FOR i:=0 TO 100 BY 1 DO
+			arrBuffer_FC4[i] := 0;
+		END_FOR
+		w_Adress := 100;
+		usint_Quantity := 9; 
+		iStateModbusRead := iStateModbusRead+1;
+		
+	6://read the required registers
+		//Start Read  Poll 2
+		fbMBRead_FC4.nQuantity := usint_Quantity;
+		fbMBRead_FC4.nMBAddr := w_Adress;
+		fbMBRead_FC4.bExecute := TRUE;
+		fbMBRead_FC4.nUnitID := 1;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC4.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC4.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := iStateModbusRead+1;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q THEN 
+			iStateModbusError := 300;
+			int_FC4Error := int_FC4Error+1;
+		ELSIF timer_Timeout.Q THEN  
+			timer_Timeout.IN := FALSE; 	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	7: // convert data Poll 2
+		sint_Exponent := WORD_TO_SINT (arrBuffer_FC4[8]);
+		real_CurrentL1_A := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[0])* EXPT (10,sint_Exponent));
+		real_CurrentL2_A := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[1])* EXPT (10,sint_Exponent));
+		real_CurrentL3_A := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[2])* EXPT (10,sint_Exponent));
+		
+		// go to next step
+		iStateModbusRead := iStateModbusRead+1;
+			
+		//Error on Master, changes on Inputs or Timeout
+		IF timer_Timeout.Q THEN 
+			iStateModbusError := 300; 
+		END_IF
+		
+	8://Wait and go to next step
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := iStateModbusRead+1;
+			timer_Wait.IN :=FALSE;
+		END_IF
+
+	9: // clean the array  Poll 3
+		FOR i:=0 TO 100 BY 1 DO
+			arrBuffer_FC4[i] := 0;
+		END_FOR
+		w_Adress := 200;
+		usint_Quantity := 13; 
+		iStateModbusRead := iStateModbusRead+1;
+		
+	10://read the required registers
+		//Start Read  Poll 3
+		fbMBRead_FC4.nQuantity := usint_Quantity;
+		fbMBRead_FC4.nMBAddr := w_Adress;
+		fbMBRead_FC4.bExecute := TRUE;
+		fbMBRead_FC4.nUnitID := 1;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC4.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC4.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := iStateModbusRead+1;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q THEN 
+			iStateModbusError := 300;
+			int_FC4Error := int_FC4Error+1;
+		ELSIF timer_Timeout.Q THEN  
+			timer_Timeout.IN := FALSE; 	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	11: // convert data Poll 3
+		sint_Exponent := WORD_TO_SINT (arrBuffer_FC4[12]);
+		real_RealPowerL1_kW := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[0])* EXPT (10,sint_Exponent)/1000);
+		real_RealPowerL2_kW := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[1])* EXPT (10,sint_Exponent)/1000);
+		real_RealPowerL3_kW := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[2])* EXPT (10,sint_Exponent)/1000);
+		real_RealPower_kW := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[3])* EXPT (10,sint_Exponent)/1000);
+		real_RealPowerL1_kW := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[0])* EXPT (10,sint_Exponent)/1000);
+		real_ReactivePower_kVAr := LREAL_TO_REAL(WORD_TO_REAL(arrBuffer_FC4[7])* EXPT (10,sint_Exponent)/1000);
+		
+		IF (real_RealPower_kW*real_RealPower_kW + real_ReactivePower_kVAr*real_ReactivePower_kVAr) <>0 THEN 
+			real_ApparentPower_kVA := SQRT(ABS(real_RealPower_kW*real_RealPower_kW + real_ReactivePower_kVAr*real_ReactivePower_kVAr));	
+		ELSE
+	 		real_ApparentPower_kVA :=0;
+		END_IF
+		
+		
+		// go to next step
+		iStateModbusRead := iStateModbusRead+1;
+			
+		//Error on Master, changes on Inputs or Timeout
+		IF timer_Timeout.Q THEN 
+			iStateModbusError := 300; 
+		END_IF
+		
+	12://Wait and go to next step
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := iStateModbusRead+1;
+			timer_Wait.IN :=FALSE;
+		END_IF
+
+	13: // clean the array  Poll 4
+		FOR i:=0 TO 100 BY 1 DO
+			arrBuffer_FC4[i] := 0;
+		END_FOR
+		w_Adress := 300;
+		usint_Quantity := 10; 
+		iStateModbusRead := iStateModbusRead+1;
+		
+	14://read the required registers
+		//Start Read  Poll 4
+		fbMBRead_FC4.nQuantity := usint_Quantity;
+		fbMBRead_FC4.nMBAddr := w_Adress;
+		fbMBRead_FC4.bExecute := TRUE;
+		fbMBRead_FC4.nUnitID := 1;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC4.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC4.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := iStateModbusRead+1;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q THEN 
+			iStateModbusError := 300;
+			int_FC4Error := int_FC4Error+1;
+		ELSIF timer_Timeout.Q THEN  
+			timer_Timeout.IN := FALSE; 	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	15: // convert data Poll 4
+		// energy factor
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[8], wInputValue_2:= arrBuffer_FC4[9], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+		real_EnergyFactor := DWORD_TO_REAL (fbConvertWordToDword.dwOutputValue);
+				
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[0], wInputValue_2:= arrBuffer_FC4[1], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+		real_EnergyTotal_Import_Wh := DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue) * real_EnergyFactor;
+		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[2], wInputValue_2:= arrBuffer_FC4[3], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+		real_EnergyTotal_Export_Wh := DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue) * real_EnergyFactor;
+	
+		// go to next step
+		iStateModbusRead := iStateModbusRead+1;
+			
+		//Error on Master, changes on Inputs or Timeout
+		IF timer_Timeout.Q THEN 
+			iStateModbusError := 300; 
+		END_IF		
+
+	16://Wait and go to next step
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := iStateModbusRead+1;
+			timer_Wait.IN :=FALSE;
+		END_IF
+
+	17: // clean the array  Poll 5
+		FOR i:=0 TO 100 BY 1 DO
+			arrBuffer_FC4[i] := 0;
+		END_FOR
+		w_Adress := 600;
+		usint_Quantity := 10; 
+		iStateModbusRead := iStateModbusRead+1;
+		
+	18://read the required registers
+		//Start Read  Poll 5
+		fbMBRead_FC4.nQuantity := usint_Quantity;
+		fbMBRead_FC4.nMBAddr := w_Adress;
+		fbMBRead_FC4.bExecute := TRUE;
+		fbMBRead_FC4.nUnitID := 1;
+		timer_Timeout.IN := TRUE;
+		IF fbMBRead_FC4.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			
+			//Go to Next Step
+			timer_Timeout.IN := FALSE;
+			fbMBRead_FC4.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := iStateModbusRead+1;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q THEN 
+			iStateModbusError := 300;
+			int_FC4Error := int_FC4Error+1;
+		ELSIF timer_Timeout.Q THEN  
+			timer_Timeout.IN := FALSE; 	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	19: // convert data Poll 5
+		// energy factor
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[8], wInputValue_2:= arrBuffer_FC4[9], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+		real_EnergyFactor := DWORD_TO_REAL (fbConvertWordToDword.dwOutputValue);
+				
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[2], wInputValue_2:= arrBuffer_FC4[3], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+		real_EnergyTotal_ExportT1_Wh := DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue) * real_EnergyFactor;
+		
+		fbConvertWordToDword(wInputValue_1:= arrBuffer_FC4[6], wInputValue_2:= arrBuffer_FC4[7], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+		real_EnergyTotal_ExportT2_Wh := DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue) * real_EnergyFactor;
+				
+		// go to next step
+		iStateModbusRead := iStateModbusRead+1;
+			
+		//Error on Master, changes on Inputs or Timeout
+		IF timer_Timeout.Q THEN 
+			iStateModbusError := 300; 
+		END_IF		
+
+	20://Wait and go to next step
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 1;
+			timer_Wait.IN :=FALSE;
+		END_IF
+	
+END_CASE
+
+(* wait timer*)
+
+timer_Wait(PT:=T#1S);
+
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+ 
+timer_Connection_ok			(In:=int_Data_Received<>int_Data_Received_old,PT:=T#10S);
+timer_Connection_ok_TOF		(In:=NOT(int_Data_Received<>int_Data_Received_old) AND int_Data_Received>3 ,PT:=T#20S);
+int_Data_Received_old:=int_Data_Received;
+m_PollSuccessful:=NOT timer_Connection_ok.Q AND timer_Connection_ok_TOF.Q ;
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC4(	sIPAddr:= str_IPAdress, 
+				nTCPPort:= 502,
+				cbLength:= SIZEOF(arrBuffer_FC4), 
+				pDestAddr:= ADR(arrBuffer_FC4), 
+				tTimeout:= T#10S,
+				nErrId => udint_Error_ID);
+
+FPError_FC_4(CLK:= fbMBRead_FC4.bError, Q=> );		
+
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		timer_Wait.IN :=TRUE;
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC4.bExecute := FALSE;
+		m_MBTCPError := TRUE; 		
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+				//Restart from new with the Read out part after an Error
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 0;	
+			iStateModbusError := 0;
+			timer_Wait.IN :=FALSE;
+			timer_Timeout.IN := FALSE;
+		END_IF		
+							
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EM2289">
+      <LineId Id="814" Count="5" />
+      <LineId Id="822" Count="40" />
+      <LineId Id="1116" Count="1" />
+      <LineId Id="863" Count="18" />
+      <LineId Id="884" Count="18" />
+      <LineId Id="1122" Count="0" />
+      <LineId Id="1127" Count="1" />
+      <LineId Id="1121" Count="0" />
+      <LineId Id="1129" Count="1" />
+      <LineId Id="1284" Count="0" />
+      <LineId Id="1282" Count="0" />
+      <LineId Id="1131" Count="0" />
+      <LineId Id="1283" Count="0" />
+      <LineId Id="1053" Count="1" />
+      <LineId Id="1056" Count="4" />
+      <LineId Id="1333" Count="6" />
+      <LineId Id="1332" Count="0" />
+      <LineId Id="1340" Count="0" />
+      <LineId Id="1286" Count="38" />
+      <LineId Id="1329" Count="2" />
+      <LineId Id="1061" Count="0" />
+      <LineId Id="1064" Count="3" />
+      <LineId Id="1405" Count="0" />
+      <LineId Id="1341" Count="51" />
+      <LineId Id="1689" Count="2" />
+      <LineId Id="1393" Count="1" />
+      <LineId Id="1688" Count="0" />
+      <LineId Id="1395" Count="0" />
+      <LineId Id="1408" Count="2" />
+      <LineId Id="1412" Count="0" />
+      <LineId Id="1411" Count="0" />
+      <LineId Id="1407" Count="0" />
+      <LineId Id="1396" Count="8" />
+      <LineId Id="1413" Count="50" />
+      <LineId Id="1502" Count="0" />
+      <LineId Id="1501" Count="0" />
+      <LineId Id="1504" Count="1" />
+      <LineId Id="1483" Count="0" />
+      <LineId Id="1490" Count="0" />
+      <LineId Id="1472" Count="0" />
+      <LineId Id="1508" Count="1" />
+      <LineId Id="1473" Count="1" />
+      <LineId Id="1476" Count="4" />
+      <LineId Id="1068" Count="0" />
+      <LineId Id="1532" Count="61" />
+      <LineId Id="1595" Count="6" />
+      <LineId Id="1531" Count="0" />
+      <LineId Id="1517" Count="0" />
+      <LineId Id="1511" Count="4" />
+      <LineId Id="1069" Count="45" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

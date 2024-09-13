@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgCS9" Id="{2f386172-18e8-4d9a-b5dc-fc02cf8acbba}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS9
+VAR					
+	fbAlfen2					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen3					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen6					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen7					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen10					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+
+	byErrorWarningUV1_2			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_2		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_2				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_2					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_2			: LREAL;											//{#lynus.ag#()}
+	
+	byErrorWarningUV1_3			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_3		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_3				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_3					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_3		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_3			: LREAL;											//{#lynus.ag#()}
+	
+	byErrorWarningUV1_6			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_6		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_6				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_6					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_6		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_6			: LREAL;											//{#lynus.ag#()}
+	
+	byErrorWarningUV1_7			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_7		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_7				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_7					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_7		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_7			: LREAL;											//{#lynus.ag#()}
+	
+	byErrorWarningUV1_10		: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_10	: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_10				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_10				: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_10		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_10			: LREAL;											//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*---------------------------------------------CS2-----------------------------------------------------------*)
+
+fbAlfen2(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 5, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS1.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.92', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+		byErrorWarningUV1_2 := fbAlfen2.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_2 := fbAlfen2.stDataECS.arrChargingTimeInMin[1];;
+				lrPowerUV1_2 := fbAlfen2.stDataECS.lrTotalPower;	
+					wStateUV1_2 := fbAlfen2.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_2 := fbAlfen2.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_2 := fbAlfen2.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS3-----------------------------------------------------------*)	
+
+fbAlfen3(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 5, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS1.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.93', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+		byErrorWarningUV1_3 := fbAlfen3.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_3 := fbAlfen3.stDataECS.arrChargingTimeInMin[1];	
+				lrPowerUV1_3 := fbAlfen3.stDataECS.lrTotalPower;	
+					wStateUV1_3 := fbAlfen3.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_3 := fbAlfen3.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_3 := fbAlfen3.stDataECS.lrTotalCounterEnergy_Consumption;	
+	
+(*---------------------------------------------CS6-----------------------------------------------------------*)	
+
+fbAlfen6(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 5, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS1.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.96', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+		byErrorWarningUV1_6 := fbAlfen6.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_6 := fbAlfen6.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_6 := fbAlfen6.stDataECS.lrTotalPower;	
+					wStateUV1_6 := fbAlfen6.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_6 := fbAlfen6.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_6 := fbAlfen6.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS7-----------------------------------------------------------*)	
+
+fbAlfen7(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 5, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS1.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.97', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+		byErrorWarningUV1_7 := fbAlfen7.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_7 := fbAlfen7.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_7 := fbAlfen7.stDataECS.lrTotalPower;	
+					wStateUV1_7 := fbAlfen7.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_7 := fbAlfen7.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_7 := fbAlfen7.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS10-----------------------------------------------------------*)	
+
+fbAlfen10(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 6, 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS1.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.100', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+		byErrorWarningUV1_10 := fbAlfen10.stDataECS.byErrorWarning;	
+			rChargingTimeInMinUV1_10 := fbAlfen10.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_10 := fbAlfen10.stDataECS.lrTotalPower;	
+					wStateUV1_10 := fbAlfen10.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_10 := fbAlfen10.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_10 := fbAlfen10.stDataECS.lrTotalCounterEnergy_Consumption;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS9">
+      <LineId Id="166" Count="0" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="481" Count="12" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="189" Count="8" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="496" Count="12" />
+      <LineId Id="495" Count="0" />
+      <LineId Id="219" Count="6" />
+      <LineId Id="286" Count="1" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="511" Count="12" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="310" Count="7" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="526" Count="12" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="340" Count="5" />
+      <LineId Id="406" Count="1" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="541" Count="12" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="429" Count="5" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

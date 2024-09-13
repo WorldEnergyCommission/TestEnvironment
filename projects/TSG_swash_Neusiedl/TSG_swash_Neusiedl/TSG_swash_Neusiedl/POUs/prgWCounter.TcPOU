@@ -1,0 +1,364 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgWCounter" Id="{ded5ce68-461c-45f1-8c38-3e3dd0144038}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgWCounter
+VAR
+	fbMBusKL6781 : FB_MBUSKL6781;
+	stComIn    AT %I*	:	ST_KL6781inData22B;
+	stComOut   AT %Q*	:	ST_KL6781outData22B;
+	stCom				:	ST_MBUS_Communication;
+	fb_Mbus_11				: 	FB_MBUS_General_Water;
+	fb_Mbus_12				: 	FB_MBUS_General_Water;
+	fb_Mbus_13				: 	FB_MBUS_General_Water;
+	fb_Mbus_14				: 	FB_MBUS_General_Water;
+	fb_Mbus_15				: 	FB_MBUS_General_Water;
+	fb_Mbus_16				: 	FB_MBUS_General_Water;
+	fb_Mbus_17				: 	FB_MBUS_General_Water;
+	fbmbusScan	: FB_MBUS_Scan;
+	m_StartScan: BOOL;
+	FB_ChangeAdress : FB_MBUS_ChangeAdr;
+	lr_Water_Zisterne_Entnahme					: LREAL;						//{#lynus.ag#()}
+	lr_Water_Frisch_Noteinspeisung				: LREAL;						//{#lynus.ag#()}
+	lr_Water_Frischwasser_SB					: LREAL;						//{#lynus.ag#()}
+	lr_Water_Innenreinigung						: LREAL;						//{#lynus.ag#()}
+	lr_Water_Frisch_Absperrung_PO				: LREAL;						//{#lynus.ag#()}
+	lr_Water_Absperrung_Zisterne				: LREAL;						//{#lynus.ag#()}
+	lr_Water_FW_Zulauf_Zisterne					: LREAL;						//{#lynus.ag#()}
+			
+	m_Done			: BOOL;
+	
+END_VAR
+VAR PERSISTENT
+	lr_Water_Zisterne_Entnahme_LD				: LREAL;						//{#lynus.ag#()}
+	lr_Water_Frisch_Noteinspeisung_LD			: LREAL;						//{#lynus.ag#()}
+	lr_Water_Frischwasser_SB_LD					: LREAL;						//{#lynus.ag#()}
+	lr_Water_Innenreinigung_LD					: LREAL;						//{#lynus.ag#()}
+	lr_Water_Frisch_Absperrung_PO_LD			: LREAL;						//{#lynus.ag#()}
+	lr_Water_Absperrung_Zisterne_LD				: LREAL;						//{#lynus.ag#()}
+	lr_Water_FW_Zulauf_Zisterne_LD				: LREAL;						//{#lynus.ag#()}
+	
+	lr_Water_Zisterne_Entnahme_Old			: LREAL;						
+	lr_Water_Frisch_Noteinspeisung_Old		: LREAL;						
+	lr_Water_Frischwasser_SB_Old			: LREAL;						
+	lr_Water_Innenreinigung_Old				: LREAL;						
+	lr_Water_Frisch_Absperrung_PO_Old		: LREAL;						
+	lr_Water_Absperrung_Zisterne_Old		: LREAL;						
+	lr_Water_FW_Zulauf_Zisterne_Old			: LREAL;	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+	
+		
+
+	
+fbMBusKL6781(
+	usiRetries:= , 
+	bStart:= , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	stComIn:= stComIn, 
+	stComOut:= stComOut, 
+	stCom:= stCom);
+
+fb_Mbus_11(
+	usiAddress:= 11 , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= TRUE, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);
+	
+fb_Mbus_12(
+	usiAddress:= 12 , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= TRUE, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);
+	
+fb_Mbus_13(
+	usiAddress:= 13 , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= TRUE, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);	
+	
+fb_Mbus_14(
+	usiAddress:= 14 , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= TRUE, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);
+	
+fb_Mbus_15(
+	usiAddress:= 15 , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= TRUE, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);
+
+fb_Mbus_16(
+	usiAddress:= 16 , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= TRUE, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);
+
+fb_Mbus_17(
+	usiAddress:= 17 , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= TRUE, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);
+
+
+lr_Water_Frisch_Noteinspeisung	 			:= UDINT_TO_LREAL(LREAL_TO_UDINT((STRING_TO_LREAL(fb_Mbus_11.stVolume.sValue)*1000)))/1000;
+lr_Water_Frischwasser_SB	 				:= UDINT_TO_LREAL(LREAL_TO_UDINT((STRING_TO_LREAL(fb_Mbus_12.stVolume.sValue)*1000)))/1000;
+lr_Water_Innenreinigung						:= UDINT_TO_LREAL(LREAL_TO_UDINT((STRING_TO_LREAL(fb_Mbus_13.stVolume.sValue)*1000)))/1000;
+lr_Water_Frisch_Absperrung_PO		 		:= UDINT_TO_LREAL(LREAL_TO_UDINT((STRING_TO_LREAL(fb_Mbus_14.stVolume.sValue)*1000)))/1000;
+lr_Water_Zisterne_Entnahme	 				:= UDINT_TO_LREAL(LREAL_TO_UDINT((STRING_TO_LREAL(fb_Mbus_15.stVolume.sValue)*1000)))/1000;
+lr_Water_Absperrung_Zisterne				:= UDINT_TO_LREAL(LREAL_TO_UDINT((STRING_TO_LREAL(fb_Mbus_16.stVolume.sValue)*1000)))/1000;
+lr_Water_FW_Zulauf_Zisterne		 			:= UDINT_TO_LREAL(LREAL_TO_UDINT((STRING_TO_LREAL(fb_Mbus_17.stVolume.sValue)*1000)))/1000;
+
+
+	
+(* only required for commissioning the water meters	
+fbMBusScan(		bStart:= m_StartScan, 
+				bStop:= NOT m_StartScan, 
+				eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+				bDisabled:= , 
+				bBusy=> , 
+				bReady=> , 
+				bError=> , 
+				eError=> , 
+				usiAddress=> , 
+				usiCount=> , 
+				arrDevice=> , 
+				stCom:= stCom);
+
+FB_ChangeAdress(	usiAdrOld:= usi_Old, 
+					usiAdrNew:= usi_New, 
+					eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+					bStart:= m_Start_Change, 
+					bDisabled:= m_Disable_Change, 
+					bBusy=> , 
+					bReady=> , 
+					bError=> , 
+					eError=> , 
+					stCom:= stCom);
+*)
+
+// save every day at 23:59 the water counter and calculate the consumption of the last 24h
+
+
+// store water counters and calculate the consumtion of the last day
+
+prg_SystemTime ();
+IF prg_SystemTime.structSystemTime.wHour =23 AND prg_SystemTime.structSystemTime.wMinute=59 AND prg_SystemTime.structSystemTime.wSecond = 59 AND NOT m_Done THEN
+	
+	lr_Water_Zisterne_Entnahme_LD 		:= lr_Water_Zisterne_Entnahme - lr_Water_Zisterne_Entnahme_Old;
+	lr_Water_Frisch_Noteinspeisung_LD	:= lr_Water_Frisch_Noteinspeisung - lr_Water_Frisch_Noteinspeisung_Old;
+	lr_Water_Frischwasser_SB_LD			:= lr_Water_Frischwasser_SB - lr_Water_Frischwasser_SB_old;							
+	lr_Water_Innenreinigung_LD			:= lr_Water_Innenreinigung - lr_Water_Innenreinigung_Old;										
+	lr_Water_Frisch_Absperrung_PO_LD	:= lr_Water_Frisch_Absperrung_PO - lr_Water_Frisch_Absperrung_PO_Old;
+	lr_Water_Absperrung_Zisterne_LD  	:= lr_Water_Absperrung_Zisterne - lr_Water_Absperrung_Zisterne_old;
+	lr_Water_FW_Zulauf_Zisterne_LD		:= lr_Water_FW_Zulauf_Zisterne - lr_Water_FW_Zulauf_Zisterne_Old;
+	
+		
+	lr_Water_Zisterne_Entnahme_Old 		:= lr_Water_Zisterne_Entnahme;	
+	lr_Water_Frisch_Noteinspeisung_Old	:= lr_Water_Frisch_Noteinspeisung	;					
+	lr_Water_Frischwasser_SB_Old		:= lr_Water_Frischwasser_SB		;		
+	lr_Water_Innenreinigung_Old			:= lr_Water_Innenreinigung			;					
+	lr_Water_Frisch_Absperrung_PO_Old	:= lr_Water_Frisch_Absperrung_PO	;				
+	lr_Water_Absperrung_Zisterne_Old	:= lr_Water_Absperrung_Zisterne	;		
+	lr_Water_FW_Zulauf_Zisterne_Old		:= lr_Water_FW_Zulauf_Zisterne		;
+	m_Done := TRUE;
+END_IF
+
+IF prg_SystemTime.structSystemTime.wHour =0 AND prg_SystemTime.structSystemTime.wMinute=0 then 
+ 	m_Done := FALSE;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgWCounter">
+      <LineId Id="111" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="14" Count="9" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="487" Count="21" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="462" Count="21" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="510" Count="21" />
+      <LineId Id="485" Count="1" />
+      <LineId Id="532" Count="21" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="556" Count="21" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="581" Count="22" />
+      <LineId Id="579" Count="0" />
+      <LineId Id="604" Count="22" />
+      <LineId Id="580" Count="0" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="627" Count="0" />
+      <LineId Id="635" Count="4" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="27" Count="9" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="410" Count="1" />
+      <LineId Id="413" Count="7" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="674" Count="0" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="676" Count="2" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="722" Count="0" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="694" Count="1" />
+      <LineId Id="712" Count="4" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="709" Count="1" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="704" Count="4" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="718" Count="0" />
+      <LineId Id="682" Count="1" />
+      <LineId Id="719" Count="2" />
+      <LineId Id="675" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,503 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_TCPModbusRequest_Grid" Id="{777bfc3e-545b-43e6-a5bd-c6b4e67602e6}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TCPModbusRequest_Grid
+VAR_INPUT
+	b_Enable: BOOL;
+	str_IPAdress: STRING(15);
+	
+		
+END_VAR
+VAR_OUTPUT
+	b_MeterOnline: BOOL;
+	lreal_GridVoltage_L1L2_V: LREAL;
+	lreal_GridVoltage_L2L3_V: LREAL;
+	lreal_GridVoltage_L3L1_V: LREAL;
+	lreal_GridVoltage_L1_V: LREAL;
+	lreal_GridVoltage_L2_V: LREAL;
+	lreal_GridVoltage_L3_V: LREAL;
+	lreal_GridCurrent_L1_A: LREAL;
+	lreal_GridCurrent_L2_A: LREAL;
+	lreal_GridCurrent_L3_A: LREAL;
+	lreal_GridPower_kW: LREAL;
+	lreal_GridReactivePower_kVAr: LREAL;
+	lreal_GridPowerFactor: LREAL;
+	lreal_GridFrequency_Hz: LREAL;
+	lreal_GridEnergyDelivered_kWh: LREAL;
+	lreal_GridEnergySupllied_kWh: LREAL;
+END_VAR
+VAR
+	i_State:INT;
+	FB_SocketConnect : FB_SocketConnect;
+	hSocket : T_HSOCKET;
+	FB_SocketSend : FB_SocketSend;
+	FB_SocketReceive : FB_SocketReceive;
+	byteSendString : ARRAY[1..12] OF BYTE;
+	FB_CloseSockets: FB_SocketCloseAll;
+	
+	ton_TimeOut: Ton;
+	ton_WaitforReconnect: Ton;
+	ton_ConnectionEstablised: Ton;
+	time_ReconnectTime:TIME:=T#30M;
+	b_configured: BOOL;
+	byteReceiveString : ARRAY[1..200] OF BYTE;
+	FB_BYTE_TO_WORD_1 : FB_CV_BYTE_TO_WORD;
+	FB_BYTE_TO_WORD_2 : FB_CV_BYTE_TO_WORD;
+	FB_WORD_TO_INT : FB_CV_WORD_TO_INT;
+	ton_WaitforNetxtRequest: Ton;
+	ton_Wait: Ton;
+	int_SuccessCounter: INT;
+	int_ReconnectCounter: INT;
+	int_ErrorCount: INT;
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	fb_ConvertBytesToLreal		:fb_Convert4BytesToLreal;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+
+IF NOT b_Enable THEN			// go to state 0 if not enabled
+	i_State := 0;
+END_IF
+
+
+CASE i_State OF
+	0:	// wait for enable state
+		IF b_Enable THEN
+			i_State := 1;
+		END_IF
+		FB_SocketConnect.bExecute := FALSE;
+		FB_SocketSend.bExecute := FALSE;
+		FB_SocketSend.bExecute := FALSE;
+		ton_TimeOut.IN :=FALSE;	
+		ton_ConnectionEstablised.IN := FALSE;
+	
+
+	1: // check if configured
+		IF b_configured = FALSE THEN
+			// request FC3, Register 37100 16#90EC, 38 Words 
+			byteSendString[1] := 0;
+			byteSendString[2] := 1;
+			byteSendString[3] := 0;
+			byteSendString[4] := 0;
+			byteSendString[5] := 0;
+			byteSendString[6] := 6;
+			byteSendString[7] := 1;
+			byteSendString[8] := 3;
+			byteSendString[9] := 16#90;
+			byteSendString[10] := 16#EC;
+			byteSendString[11] := 0;
+			byteSendString[12] := 38;
+			b_configured := TRUE;
+		END_IF
+		i_State := i_State+1;
+		
+	2: // open socket
+		FB_SocketConnect.bExecute := TRUE;
+		ton_TimeOut.IN :=TRUE;
+		i_State := i_State+1;
+		
+	3: // wait for connection established	
+		IF NOT FB_SocketConnect.bBusy AND NOT FB_SocketConnect.bError THEN
+			ton_TimeOut.IN :=FALSE;
+			ton_ConnectionEstablised.IN := TRUE;
+			i_State := i_State+1;
+		ELSIF FB_SocketConnect.bError OR ton_TimeOut.Q THEN
+			ton_TimeOut.IN :=FALSE;
+			i_State := 100;
+		END_IF
+	
+	4: //connection established, request data
+		ton_Wait.IN := TRUE;
+		IF ton_Wait.Q THEN
+			FB_SocketSend.bExecute := TRUE;
+			ton_TimeOut.IN :=TRUE;
+			ton_Wait.IN := FALSE;
+			i_State := i_State+1;
+		END_IF
+	
+	5: // wait for request sent
+		IF NOT FB_SocketSend.bBusy AND NOT FB_SocketSend.bError THEN
+			ton_TimeOut.IN :=FALSE;
+			FB_SocketSend.bExecute := FALSE;
+			i_State := i_State+1;  
+		ELSIF FB_SocketSend.bError OR ton_TimeOut.Q THEN
+			FB_SocketSend.bExecute := FALSE;
+			ton_TimeOut.IN :=FALSE;
+			i_State := 100;
+		END_IF
+		
+	6: // wait for data
+		ton_Wait.IN := TRUE;
+		IF ton_Wait.Q THEN
+			FB_SocketReceive.bExecute := TRUE;
+			ton_Wait.IN := FALSE;
+			i_State := i_State+1; 
+		END_IF		 
+	
+	7:	
+		ton_Wait.IN := TRUE;
+		IF ton_Wait.Q THEN
+			ton_TimeOut.IN :=TRUE;
+			i_State := i_State+1; 
+		END_IF	
+	
+	8: // convert received data
+		IF NOT FB_SocketReceive.bBusy AND NOT FB_SocketReceive.bError THEN
+			int_SuccessCounter := int_SuccessCounter+1;
+			ton_TimeOut.IN :=FALSE;
+			FB_SocketReceive.bExecute := FALSE;
+	
+			FB_BYTE_TO_WORD_1(byInputValue_1 := byteReceiveString[10],byInputValue_2 := byteReceiveString[11], Ebyteorderforconvert := Ebyteorder.EBIGENDIAN, woutputvalue => );
+			IF WORD_TO_LREAL(FB_BYTE_TO_WORD_1.woutputvalue) = 0 THEN
+				b_MeterOnline :=FALSE;
+			ELSIF WORD_TO_LREAL(FB_BYTE_TO_WORD_1.woutputvalue) = 1 THEN
+				b_MeterOnline :=TRUE;
+			END_IF
+			
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[12], 
+									by_InputValue_2:= byteReceiveString[13], 
+									by_InputValue_3:= byteReceiveString[14], 
+									by_InputValue_4:= byteReceiveString[15], 
+									int_Divider:= 10, 
+									lreal_Output=> lreal_GridVoltage_L1_V );
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[16], 
+									by_InputValue_2:= byteReceiveString[17], 
+									by_InputValue_3:= byteReceiveString[18], 
+									by_InputValue_4:= byteReceiveString[19], 
+									int_Divider:= 10, 
+									lreal_Output=> lreal_GridVoltage_L2_V);
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[20], 
+									by_InputValue_2:= byteReceiveString[21], 
+									by_InputValue_3:= byteReceiveString[22], 
+									by_InputValue_4:= byteReceiveString[23], 
+									int_Divider:= 10, 
+									lreal_Output=> lreal_GridVoltage_L3_V);
+								
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[24], 
+									by_InputValue_2:= byteReceiveString[25], 
+									by_InputValue_3:= byteReceiveString[26], 
+									by_InputValue_4:= byteReceiveString[27], 
+									int_Divider:= 100, 
+									lreal_Output=> lreal_GridCurrent_L1_A );
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[24], 
+									by_InputValue_2:= byteReceiveString[25], 
+									by_InputValue_3:= byteReceiveString[26], 
+									by_InputValue_4:= byteReceiveString[27], 
+									int_Divider:= 100, 
+									lreal_Output=> lreal_GridCurrent_L1_A );
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[28], 
+									by_InputValue_2:= byteReceiveString[29], 
+									by_InputValue_3:= byteReceiveString[30], 
+									by_InputValue_4:= byteReceiveString[31], 
+									int_Divider:= 100, 
+									lreal_Output=> lreal_GridCurrent_L2_A );
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[32], 
+									by_InputValue_2:= byteReceiveString[33], 
+									by_InputValue_3:= byteReceiveString[34], 
+									by_InputValue_4:= byteReceiveString[35], 
+									int_Divider:= 100, 
+									lreal_Output=> lreal_GridCurrent_L3_A );
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[36], 
+									by_InputValue_2:= byteReceiveString[37], 
+									by_InputValue_3:= byteReceiveString[38], 
+									by_InputValue_4:= byteReceiveString[39], 
+									int_Divider:= 1000, 
+									lreal_Output=> lreal_GridPower_kW);
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[40], 
+									by_InputValue_2:= byteReceiveString[41], 
+									by_InputValue_3:= byteReceiveString[42], 
+									by_InputValue_4:= byteReceiveString[43], 
+									int_Divider:= 1000, 
+									lreal_Output=> lreal_GridReactivePower_kVAr);
+											
+			//FB_BYTE_TO_WORD_1(byInputValue_1 := byteReceiveString[44],byInputValue_2 := byteReceiveString[45], Ebyteorderforconvert := Ebyteorder.EbigENDIAN, woutputvalue => );
+			//lreal_GridPowerFactor := WORD_TO_LREAL(FB_BYTE_TO_WORD_1.woutputvalue)/1000;
+
+			lreal_GridPowerFactor := INT_TO_LREAL(WORD_TO_INT((SHL(BYTE_TO_WORD(byteReceiveString[44]),8) + BYTE_TO_WORD(byteReceiveString[45]))))/1000;
+
+
+		
+			FB_BYTE_TO_WORD_1(byInputValue_1 := byteReceiveString[46],byInputValue_2 := byteReceiveString[47], Ebyteorderforconvert := Ebyteorder.EbigENDIAN, woutputvalue => );
+			lreal_GridFrequency_Hz := WORD_TO_LREAL(FB_BYTE_TO_WORD_1.woutputvalue)/100;
+			
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[48], 
+									by_InputValue_2:= byteReceiveString[49], 
+									by_InputValue_3:= byteReceiveString[50], 
+									by_InputValue_4:= byteReceiveString[51], 
+									int_Divider:= 100, 
+									lreal_Output=> lreal_GridEnergyDelivered_kWh);
+									
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[52], 
+									by_InputValue_2:= byteReceiveString[53], 
+									by_InputValue_3:= byteReceiveString[54], 
+									by_InputValue_4:= byteReceiveString[55], 
+									int_Divider:= 100, 
+									lreal_Output=> lreal_GridEnergySupllied_kWh );
+			
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[62], 
+									by_InputValue_2:= byteReceiveString[63], 
+									by_InputValue_3:= byteReceiveString[64], 
+									by_InputValue_4:= byteReceiveString[65], 
+									int_Divider:= 10 , 
+									lreal_Output=> lreal_GridVoltage_L1L2_V);
+
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[66], 
+									by_InputValue_2:= byteReceiveString[67], 
+									by_InputValue_3:= byteReceiveString[68], 
+									by_InputValue_4:= byteReceiveString[69], 
+									int_Divider:= 10 , 
+									lreal_Output=> lreal_GridVoltage_L2L3_V);
+
+			fb_ConvertBytesToLreal(	by_InputValue_1:= byteReceiveString[70], 
+									by_InputValue_2:= byteReceiveString[71], 
+									by_InputValue_3:= byteReceiveString[72], 
+									by_InputValue_4:= byteReceiveString[73], 
+									int_Divider:= 10 , 
+									lreal_Output=> lreal_GridVoltage_L3L1_V);
+
+			i_State := i_State+1;
+		ELSIF FB_SocketSend.bError OR ton_TimeOut.Q THEN
+ 			FB_SocketReceive.bExecute := FALSE;
+			ton_TimeOut.IN :=FALSE;
+			i_State := 100;
+		END_IF
+	
+	9: // for for next request
+		ton_WaitforNetxtRequest.IN := TRUE;
+		IF NOT b_Enable THEN
+			ton_WaitforNetxtRequest.IN := FALSE;
+			i_State := 10;
+		END_IF
+		IF ton_WaitforNetxtRequest.Q THEN
+			ton_WaitforNetxtRequest.IN := FALSE;
+			i_State := 4;
+		END_IF
+		IF 	ton_ConnectionEstablised.Q THEN 
+			ton_WaitforNetxtRequest.IN := FALSE;
+			i_State := 10;
+		END_IF
+
+	10: // close sockets
+		FB_CloseSockets.bExecute := TRUE;
+		ton_TimeOut.IN :=TRUE;
+		i_State := i_State+1;
+		
+	11: // wait for sockets closed
+		
+		IF NOT FB_CloseSockets.bBusy THEN
+			int_ReconnectCounter := int_ReconnectCounter+1;
+			FB_CloseSockets.bExecute := FALSE;
+			i_State := 0;
+		ELSIF FB_CloseSockets.bError THEN
+			int_ReconnectCounter := int_ReconnectCounter+1;
+			FB_CloseSockets.bExecute := FALSE;
+			i_State := 0;
+		END_IF
+
+	100: // wait state for reconect
+		
+		FB_SocketConnect.bExecute := FALSE;
+		FB_SocketSend.bExecute := FALSE;
+		FB_SocketReceive.bExecute := FALSE;
+		ton_ConnectionEstablised.IN := FALSE;
+		ton_TimeOut.IN :=FALSE;
+		ton_WaitforReconnect.IN := TRUE;
+		IF ton_WaitforReconnect.Q THEN
+			int_ErrorCount := int_ErrorCount+1;
+			ton_WaitforReconnect.IN := FALSE;
+			i_State := 10;
+		END_IF
+	
+END_CASE
+
+
+
+FB_SocketConnect(
+	sSrvNetId := '',
+	sRemoteHost := str_IPAdress,
+	nRemotePort := 502,
+	bExecute := ,
+	tTimeout := T#1S,
+	bBusy =>,
+	bError =>,
+	nErrId =>,
+	hSocket => hSocket);
+	
+FB_SocketSend(
+	sSrvNetId:= '', 
+	hSocket:= hSocket, 
+	cbLen:= 12,
+	pSrc:= ADR( byteSendString ), 
+	bExecute:= , 
+	tTimeout:= T#3S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+	
+FB_SocketReceive(
+	sSrvNetId:= '', 
+	hSocket:= hSocket, 
+	cbLen:= 200, 
+	pDest:= ADR( byteReceiveString ), 
+	bExecute:= , 
+	tTimeout:= T#3S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> , 
+	nRecBytes=> );
+
+FB_CloseSockets(
+	sSrvNetId:= '', 
+	bExecute:= , 
+	tTimeout:= T#2S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+	
+ton_TimeOut(PT := T#5S);
+ton_WaitforReconnect(PT := T#10S);
+ton_ConnectionEstablised(pt := time_ReconnectTime);
+ton_WaitforNetxtRequest(PT:= T#10S);
+ton_Wait(PT:=T#2S);
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TCPModbusRequest_Grid">
+      <LineId Id="16" Count="1" />
+      <LineId Id="58" Count="2" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="73" Count="1" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="146" Count="2" />
+      <LineId Id="493" Count="11" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="149" Count="1" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="186" Count="1" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="283" Count="3" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="196" Count="1" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="287" Count="2" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="520" Count="118" />
+      <LineId Id="230" Count="3" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="314" Count="1" />
+      <LineId Id="317" Count="1" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="247" Count="1" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="263" Count="3" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="123" Count="1" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="93" Count="11" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="172" Count="8" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="205" Count="10" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="255" Count="5" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

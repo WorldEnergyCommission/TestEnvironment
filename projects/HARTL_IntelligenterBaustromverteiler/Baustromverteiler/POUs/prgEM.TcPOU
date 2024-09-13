@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgEM" Id="{3dc4cc04-aac0-4135-8866-9b92abf24d27}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+	fbEM1Counter	: FB_EnergyCounter;
+	fbEM2			: FB_EM_Beckhoff_KL3403;
+	fbEM2Counter	: FB_EnergyCounter;
+	fbEM3			: FB_EM_Beckhoff_KL3403;
+	fbEM3Counter	: FB_EnergyCounter;
+	fbC5Counter		: FB_EnergyCounter;
+	lrPowerEM1		: LREAL;						//{#lynus.ag#()}
+	lrPowerEM2		: LREAL;						//{#lynus.ag#()}
+	lrPowerEM3		: LREAL;						//{#lynus.ag#()}
+	lrPowerC5		: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterEM1	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM2	: LREAL;						//{#lynus.ag#()}
+	lrCounterEM3	: LREAL;						//{#lynus.ag#()}
+	lrCounterC5		: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbKBusState(uiKBusState_OUT=> );
+
+// Base Connection
+
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 64, 
+	uiCurrentTransformerRatioL2:= 64, 
+	uiCurrentTransformerRatioL3:= 64, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM1 := fbEM1.stDataEMPower.lrPowerTotal;	
+
+fbEM1Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM1, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM1Counter.lrTotalCounterEnergy_Consumption > lrCounterEM1 THEN  	
+	lrCounterEM1 := fbEM1Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// Circle6, 400V/32A
+
+fbEM2(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 35, 
+	uiCurrentTransformerRatioL2:= 35, 
+	uiCurrentTransformerRatioL3:= 35, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM2 := fbEM2.stDataEMPower.lrPowerTotal;	
+
+fbEM2Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM2, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM2Counter.lrTotalCounterEnergy_Consumption > lrCounterEM2 THEN  	
+	lrCounterEM2 := fbEM2Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// Circle7, 400V/32A
+
+fbEM3(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 100, 
+	uiCurrentTransformerRatioL2:= 100, 
+	uiCurrentTransformerRatioL3:= 100, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM3 := fbEM3.stDataEMPower.lrPowerTotal;	
+
+fbEM3Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerEM3, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEM3Counter.lrTotalCounterEnergy_Consumption > lrCounterEM3 THEN  	
+	lrCounterEM3 := fbEM3Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+// Circle5, 400V/16A
+
+IF lrPowerEM1 - (lrPowerEM2 + lrPowerEM3 + prgShelly1.lrPowerC1 + prgShelly1.lrPowerC2 + prgShelly2.lrPowerC3 + prgShelly2.lrPowerC4) >= 0 THEN  	
+	lrPowerC5 := lrPowerEM1 - (lrPowerEM2 + lrPowerEM3 + prgShelly1.lrPowerC1 + prgShelly1.lrPowerC2 + prgShelly2.lrPowerC3 + prgShelly2.lrPowerC4);
+	ELSE
+		lrPowerC5 := 0;
+END_IF
+
+fbC5Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerC5, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbC5Counter.lrTotalCounterEnergy_Consumption > lrCounterC5 THEN  	
+	lrCounterC5 := fbC5Counter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="28" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="15" Count="12" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="44" Count="12" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="69" Count="32" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="103" Count="32" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="137" Count="2" />
+      <LineId Id="173" Count="5" />
+      <LineId Id="157" Count="12" />
+      <LineId Id="136" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

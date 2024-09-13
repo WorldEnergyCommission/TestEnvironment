@@ -1,0 +1,1336 @@
+{
+    "AirLoopHVAC": {
+        "US 1": {
+            "availability_manager_list_name": "US 1 Availability Managers",
+            "branch_list_name": "US 1 Branches",
+            "demand_side_inlet_node_names": "US 1 Supply Path Inlet",
+            "demand_side_outlet_node_name": "US 1 Return Air Outlet",
+            "design_supply_air_flow_rate": "Autosize",
+            "supply_side_inlet_node_name": "US 1 Air Loop Inlet",
+            "supply_side_outlet_node_names": "US 1 Heating Coil Outlet"
+        }
+    },
+    "AirLoopHVAC:ControllerList": {
+        "US 1 OA System Controllers": {
+            "controller_1_name": "US 1 OA Controller",
+            "controller_1_object_type": "Controller:OutdoorAir"
+        }
+    },
+    "AirLoopHVAC:OutdoorAirSystem": {
+        "US 1 OA System": {
+            "controller_list_name": "US 1 OA System Controllers",
+            "outdoor_air_equipment_list_name": "US 1 OA System Equipment"
+        }
+    },
+    "AirLoopHVAC:OutdoorAirSystem:EquipmentList": {
+        "US 1 OA System Equipment": {
+            "component_1_name": "US 1 OA Mixing Box",
+            "component_1_object_type": "OutdoorAir:Mixer"
+        }
+    },
+    "AirLoopHVAC:ReturnPath": {
+        "US 1 Return Path": {
+            "components": [
+                {
+                    "component_name": "US 1 Zone Mixer",
+                    "component_object_type": "AirLoopHVAC:ZoneMixer"
+                }
+            ],
+            "return_air_path_outlet_node_name": "US 1 Return Air Outlet"
+        }
+    },
+    "AirLoopHVAC:SupplyPath": {
+        "US 1 Supply Path": {
+            "components": [
+                {
+                    "component_name": "US 1 Zone Splitter",
+                    "component_object_type": "AirLoopHVAC:ZoneSplitter"
+                }
+            ],
+            "supply_air_path_inlet_node_name": "US 1 Supply Path Inlet"
+        }
+    },
+    "AirLoopHVAC:UnitarySystem": {
+        "US 1 Unitary System": {
+            "air_inlet_node_name": "US 1 Mixed Air Outlet",
+            "air_outlet_node_name": "US 1 Heating Coil Outlet",
+            "control_type": "SetPoint",
+            "cooling_supply_air_flow_rate": "Autosize",
+            "cooling_supply_air_flow_rate_method": "SupplyAirFlowRate",
+            "dehumidification_control_type": "None",
+            "dx_heating_coil_sizing_ratio": 1.0,
+            "fan_placement": "BlowThrough",
+            "heating_coil_name": "US 1 Heating Coil",
+            "heating_coil_object_type": "Coil:Heating:Water",
+            "heating_supply_air_flow_rate": "Autosize",
+            "heating_supply_air_flow_rate_method": "SupplyAirFlowRate",
+            "latent_load_control": "SensibleOnlyLoadControl",
+            "maximum_outdoor_dry_bulb_temperature_for_supplemental_heater_operation": 21,
+            "maximum_supply_air_temperature": "Autosize",
+            "no_load_supply_air_flow_rate": "Autosize",
+            "no_load_supply_air_flow_rate_method": "SupplyAirFlowRate",
+            "supply_air_fan_operating_mode_schedule_name": "AlwaysOn",
+            "supply_fan_name": "US 1 Supply Fan",
+            "supply_fan_object_type": "Fan:OnOff"
+        }
+    },
+    "AirLoopHVAC:ZoneMixer": {
+        "US 1 Zone Mixer": {
+            "nodes": [
+                {
+                    "inlet_node_name": "ZONE ONE Return Outlet"
+                }
+            ],
+            "outlet_node_name": "US 1 Return Air Outlet"
+        }
+    },
+    "AirLoopHVAC:ZoneSplitter": {
+        "US 1 Zone Splitter": {
+            "inlet_node_name": "US 1 Supply Path Inlet",
+            "nodes": [
+                {
+                    "outlet_node_name": "ZONE ONE Zone Equip Inlet"
+                }
+            ]
+        }
+    },
+    "AirTerminal:SingleDuct:ConstantVolume:NoReheat": {
+        "ZONE ONE CV": {
+            "air_inlet_node_name": "ZONE ONE Zone Equip Inlet",
+            "air_outlet_node_name": "ZONE ONE Supply Inlet",
+            "maximum_air_flow_rate": "Autosize"
+        }
+    },
+    "AvailabilityManager:Scheduled": {
+        "US 1 Availability": {
+            "schedule_name": "AlwaysOn"
+        }
+    },
+    "AvailabilityManagerAssignmentList": {
+        "US 1 Availability Managers": {
+            "managers": [
+                {
+                    "availability_manager_name": "US 1 Availability",
+                    "availability_manager_object_type": "AvailabilityManager:Scheduled"
+                }
+            ]
+        }
+    },
+    "Boiler:HotWater": {
+        "Main Boiler": {
+            "boiler_flow_mode": "ConstantFlow",
+            "boiler_water_inlet_node_name": "Main Boiler HW Inlet",
+            "boiler_water_outlet_node_name": "Main Boiler HW Outlet",
+            "design_water_flow_rate": "Autosize",
+            "efficiency_curve_temperature_evaluation_variable": "LeavingBoiler",
+            "fuel_type": "NaturalGas",
+            "maximum_part_load_ratio": 1.1,
+            "minimum_part_load_ratio": 0.0,
+            "nominal_capacity": "Autosize",
+            "nominal_thermal_efficiency": 0.8,
+            "normalized_boiler_efficiency_curve_name": "Main Boiler Efficiency Curve",
+            "optimum_part_load_ratio": 1,
+            "parasitic_electric_load": 0,
+            "sizing_factor": 1,
+            "water_outlet_upper_temperature_limit": 100
+        }
+    },
+    "Branch": {
+        "Hot Water Loop HW Demand Bypass Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "Hot Water Loop HW Demand Bypass Inlet",
+                    "component_name": "Hot Water Loop HW Demand Side Bypass Pipe",
+                    "component_object_type": "Pipe:Adiabatic",
+                    "component_outlet_node_name": "Hot Water Loop HW Demand Bypass Outlet"
+                }
+            ]
+        },
+        "Hot Water Loop HW Demand Inlet Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "Hot Water Loop HW Demand Inlet",
+                    "component_name": "Hot Water Loop HW Demand Inlet Pipe",
+                    "component_object_type": "Pipe:Adiabatic",
+                    "component_outlet_node_name": "Hot Water Loop HW Demand Inlet Pipe Outlet"
+                }
+            ]
+        },
+        "Hot Water Loop HW Demand Outlet Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "Hot Water Loop HW Demand Outlet Pipe Inlet",
+                    "component_name": "Hot Water Loop HW Demand Outlet Pipe",
+                    "component_object_type": "Pipe:Adiabatic",
+                    "component_outlet_node_name": "Hot Water Loop HW Demand Outlet"
+                }
+            ]
+        },
+        "Hot Water Loop HW Supply Bypass Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "Hot Water Loop HW Supply Bypass Inlet",
+                    "component_name": "Hot Water Loop HW Supply Side Bypass Pipe",
+                    "component_object_type": "Pipe:Adiabatic",
+                    "component_outlet_node_name": "Hot Water Loop HW Supply Bypass Outlet"
+                }
+            ]
+        },
+        "Hot Water Loop HW Supply Inlet Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "Hot Water Loop HW Supply Inlet",
+                    "component_name": "Hot Water Loop HW Supply Pump",
+                    "component_object_type": "Pump:ConstantSpeed",
+                    "component_outlet_node_name": "Hot Water Loop HW Pump Outlet"
+                }
+            ]
+        },
+        "Hot Water Loop HW Supply Outlet Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "Hot Water Loop HW Supply Outlet Pipe Inlet",
+                    "component_name": "Hot Water Loop HW Supply Outlet Pipe",
+                    "component_object_type": "Pipe:Adiabatic",
+                    "component_outlet_node_name": "Hot Water Loop HW Supply Outlet"
+                }
+            ]
+        },
+        "Main Boiler HW Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "Main Boiler HW Inlet",
+                    "component_name": "Main Boiler",
+                    "component_object_type": "Boiler:HotWater",
+                    "component_outlet_node_name": "Main Boiler HW Outlet"
+                }
+            ]
+        },
+        "US 1 Heating Coil HW Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "US 1 Heating Coil HW Inlet",
+                    "component_name": "US 1 Heating Coil",
+                    "component_object_type": "Coil:Heating:Water",
+                    "component_outlet_node_name": "US 1 Heating Coil HW Outlet"
+                }
+            ]
+        },
+        "US 1 Main Branch": {
+            "components": [
+                {
+                    "component_inlet_node_name": "US 1 Air Loop Inlet",
+                    "component_name": "US 1 OA System",
+                    "component_object_type": "AirLoopHVAC:OutdoorAirSystem",
+                    "component_outlet_node_name": "US 1 Mixed Air Outlet"
+                },
+                {
+                    "component_inlet_node_name": "US 1 Mixed Air Outlet",
+                    "component_name": "US 1 Unitary System",
+                    "component_object_type": "AirLoopHVAC:UnitarySystem",
+                    "component_outlet_node_name": "US 1 Heating Coil Outlet"
+                }
+            ]
+        }
+    },
+    "BranchList": {
+        "Hot Water Loop HW Demand Side Branches": {
+            "branches": [
+                {
+                    "branch_name": "Hot Water Loop HW Demand Inlet Branch"
+                },
+                {
+                    "branch_name": "US 1 Heating Coil HW Branch"
+                },
+                {
+                    "branch_name": "Hot Water Loop HW Demand Bypass Branch"
+                },
+                {
+                    "branch_name": "Hot Water Loop HW Demand Outlet Branch"
+                }
+            ]
+        },
+        "Hot Water Loop HW Supply Side Branches": {
+            "branches": [
+                {
+                    "branch_name": "Hot Water Loop HW Supply Inlet Branch"
+                },
+                {
+                    "branch_name": "Main Boiler HW Branch"
+                },
+                {
+                    "branch_name": "Hot Water Loop HW Supply Bypass Branch"
+                },
+                {
+                    "branch_name": "Hot Water Loop HW Supply Outlet Branch"
+                }
+            ]
+        },
+        "US 1 Branches": {
+            "branches": [
+                {
+                    "branch_name": "US 1 Main Branch"
+                }
+            ]
+        }
+    },
+    "Building": {
+        "Simple One Zone (Wireframe DXF)": {
+            "loads_convergence_tolerance_value": 0.04,
+            "maximum_number_of_warmup_days": 30,
+            "minimum_number_of_warmup_days": 6,
+            "north_axis": 0,
+            "solar_distribution": "MinimalShadowing",
+            "temperature_convergence_tolerance_value": 0.004,
+            "terrain": "Suburbs"
+        }
+    },
+    "BuildingSurface:Detailed": {
+        "Zn001:Flr001": {
+            "construction_name": "FLOOR",
+            "number_of_vertices": 4,
+            "outside_boundary_condition": "Adiabatic",
+            "sun_exposure": "NoSun",
+            "surface_type": "Floor",
+            "vertices": [
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 0.0,
+                    "vertex_z_coordinate": 0.0
+                },
+                {
+                    "vertex_x_coordinate": 0.0,
+                    "vertex_y_coordinate": 0.0,
+                    "vertex_z_coordinate": 0.0
+                },
+                {
+                    "vertex_x_coordinate": 0.0,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 0.0
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 0.0
+                }
+            ],
+            "view_factor_to_ground": 1.0,
+            "wind_exposure": "NoWind",
+            "zone_name": "ZONE ONE"
+        },
+        "Zn001:Roof001": {
+            "construction_name": "ROOF31",
+            "number_of_vertices": 4,
+            "outside_boundary_condition": "Outdoors",
+            "sun_exposure": "SunExposed",
+            "surface_type": "Roof",
+            "vertices": [
+                {
+                    "vertex_x_coordinate": 0.0,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 4.572
+                },
+                {
+                    "vertex_x_coordinate": 0.0,
+                    "vertex_y_coordinate": 0.0,
+                    "vertex_z_coordinate": 4.572
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 0.0,
+                    "vertex_z_coordinate": 4.572
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 4.572
+                }
+            ],
+            "view_factor_to_ground": 0,
+            "wind_exposure": "WindExposed",
+            "zone_name": "ZONE ONE"
+        },
+        "Zn001:Wall001": {
+            "construction_name": "R13WALL",
+            "number_of_vertices": 4,
+            "outside_boundary_condition": "Outdoors",
+            "sun_exposure": "SunExposed",
+            "surface_type": "Wall",
+            "vertices": [
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 4.572
+                },
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 4.572
+                }
+            ],
+            "view_factor_to_ground": 0.5,
+            "wind_exposure": "WindExposed",
+            "zone_name": "ZONE ONE"
+        },
+        "Zn001:Wall002": {
+            "construction_name": "R13WALL",
+            "number_of_vertices": 4,
+            "outside_boundary_condition": "Outdoors",
+            "sun_exposure": "SunExposed",
+            "surface_type": "Wall",
+            "vertices": [
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 4.572
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 4.572
+                }
+            ],
+            "view_factor_to_ground": 0.5,
+            "wind_exposure": "WindExposed",
+            "zone_name": "ZONE ONE"
+        },
+        "Zn001:Wall003": {
+            "construction_name": "R13WALL",
+            "number_of_vertices": 4,
+            "outside_boundary_condition": "Outdoors",
+            "sun_exposure": "SunExposed",
+            "surface_type": "Wall",
+            "vertices": [
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 4.572
+                },
+                {
+                    "vertex_x_coordinate": 15.24,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 4.572
+                }
+            ],
+            "view_factor_to_ground": 0.5,
+            "wind_exposure": "WindExposed",
+            "zone_name": "ZONE ONE"
+        },
+        "Zn001:Wall004": {
+            "construction_name": "R13WALL",
+            "number_of_vertices": 4,
+            "outside_boundary_condition": "Outdoors",
+            "sun_exposure": "SunExposed",
+            "surface_type": "Wall",
+            "vertices": [
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 4.572
+                },
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 15.24,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 0
+                },
+                {
+                    "vertex_x_coordinate": 0,
+                    "vertex_y_coordinate": 0,
+                    "vertex_z_coordinate": 4.572
+                }
+            ],
+            "view_factor_to_ground": 0.5,
+            "wind_exposure": "WindExposed",
+            "zone_name": "ZONE ONE"
+        }
+    },
+    "Coil:Heating:Water": {
+        "US 1 Heating Coil": {
+            "air_inlet_node_name": "US 1 Supply Fan Outlet",
+            "air_outlet_node_name": "US 1 Heating Coil Outlet",
+            "availability_schedule_name": "AlwaysOn",
+            "maximum_water_flow_rate": "Autosize",
+            "performance_input_method": "UFactorTimesAreaAndDesignWaterFlowRate",
+            "rated_capacity": "Autosize",
+            "rated_inlet_air_temperature": 16.6,
+            "rated_inlet_water_temperature": 82.2,
+            "rated_outlet_air_temperature": 32.2,
+            "rated_outlet_water_temperature": 71.1,
+            "rated_ratio_for_air_and_water_convection": 0.5,
+            "u_factor_times_area_value": "Autosize",
+            "water_inlet_node_name": "US 1 Heating Coil HW Inlet",
+            "water_outlet_node_name": "US 1 Heating Coil HW Outlet"
+        }
+    },
+    "Connector:Mixer": {
+        "Hot Water Loop HW Demand Mixer": {
+            "branches": [
+                {
+                    "inlet_branch_name": "Hot Water Loop HW Demand Bypass Branch"
+                },
+                {
+                    "inlet_branch_name": "US 1 Heating Coil HW Branch"
+                }
+            ],
+            "outlet_branch_name": "Hot Water Loop HW Demand Outlet Branch"
+        },
+        "Hot Water Loop HW Supply Mixer": {
+            "branches": [
+                {
+                    "inlet_branch_name": "Main Boiler HW Branch"
+                },
+                {
+                    "inlet_branch_name": "Hot Water Loop HW Supply Bypass Branch"
+                }
+            ],
+            "outlet_branch_name": "Hot Water Loop HW Supply Outlet Branch"
+        }
+    },
+    "Connector:Splitter": {
+        "Hot Water Loop HW Demand Splitter": {
+            "branches": [
+                {
+                    "outlet_branch_name": "Hot Water Loop HW Demand Bypass Branch"
+                },
+                {
+                    "outlet_branch_name": "US 1 Heating Coil HW Branch"
+                }
+            ],
+            "inlet_branch_name": "Hot Water Loop HW Demand Inlet Branch"
+        },
+        "Hot Water Loop HW Supply Splitter": {
+            "branches": [
+                {
+                    "outlet_branch_name": "Main Boiler HW Branch"
+                },
+                {
+                    "outlet_branch_name": "Hot Water Loop HW Supply Bypass Branch"
+                }
+            ],
+            "inlet_branch_name": "Hot Water Loop HW Supply Inlet Branch"
+        }
+    },
+    "ConnectorList": {
+        "Hot Water Loop HW Demand Side Connectors": {
+            "connector_1_name": "Hot Water Loop HW Demand Splitter",
+            "connector_1_object_type": "Connector:Splitter",
+            "connector_2_name": "Hot Water Loop HW Demand Mixer",
+            "connector_2_object_type": "Connector:Mixer"
+        },
+        "Hot Water Loop HW Supply Side Connectors": {
+            "connector_1_name": "Hot Water Loop HW Supply Splitter",
+            "connector_1_object_type": "Connector:Splitter",
+            "connector_2_name": "Hot Water Loop HW Supply Mixer",
+            "connector_2_object_type": "Connector:Mixer"
+        }
+    },
+    "Construction": {
+        "FLOOR": {
+            "outside_layer": "C5 - 4 IN HW CONCRETE"
+        },
+        "R13WALL": {
+            "outside_layer": "R13LAYER"
+        },
+        "ROOF31": {
+            "outside_layer": "R31LAYER"
+        }
+    },
+    "Controller:OutdoorAir": {
+        "US 1 OA Controller": {
+            "actuator_node_name": "US 1 Outdoor Air Inlet",
+            "economizer_control_action_type": "ModulateFlow",
+            "economizer_control_type": "NoEconomizer",
+            "lockout_type": "NoLockout",
+            "maximum_outdoor_air_flow_rate": "Autosize",
+            "minimum_limit_type": "FixedMinimum",
+            "minimum_outdoor_air_flow_rate": "Autosize",
+            "mixed_air_node_name": "US 1 Mixed Air Outlet",
+            "relief_air_outlet_node_name": "US 1 Relief Air Outlet",
+            "return_air_node_name": "US 1 Air Loop Inlet",
+            "minimum_outdoor_air_schedule_name": "Min OA Sched"
+        }
+    },
+    "Curve:Quadratic": {
+        "Main Boiler Efficiency Curve": {
+            "coefficient1_constant": 0.97,
+            "coefficient2_x": 0.0633,
+            "coefficient3_x_2": -0.0333,
+            "maximum_value_of_x": 1.0,
+            "minimum_value_of_x": 0.0
+        }
+    },
+    "DesignSpecification:OutdoorAir": {
+        "SZ DSOA ZONE ONE": {
+            "outdoor_air_flow_per_person": 0.00944,
+            "outdoor_air_flow_per_zone": 0.0,
+            "outdoor_air_flow_per_zone_floor_area": 0.0,
+            "outdoor_air_method": "Flow/Person"
+        }
+    },
+    "DesignSpecification:ZoneAirDistribution": {
+        "SZ DSZAD ZONE ONE": {
+            "zone_air_distribution_effectiveness_in_cooling_mode": 1,
+            "zone_air_distribution_effectiveness_in_heating_mode": 1
+        }
+    },
+    "Exterior:Lights": {
+        "ExtLights": {
+            "control_option": "AstronomicalClock",
+            "design_level": 5250,
+            "end_use_subcategory": "Grounds Lights",
+            "schedule_name": "AlwaysOn"
+        }
+    },
+    "Fan:OnOff": {
+        "US 1 Supply Fan": {
+            "air_inlet_node_name": "US 1 Mixed Air Outlet",
+            "air_outlet_node_name": "US 1 Supply Fan Outlet",
+            "availability_schedule_name": "AlwaysOn",
+            "fan_total_efficiency": 0.7,
+            "maximum_flow_rate": "Autosize",
+            "motor_efficiency": 0.9,
+            "motor_in_airstream_fraction": 1,
+            "pressure_rise": 600
+        }
+    },
+    "GlobalGeometryRules": {
+        "GlobalGeometryRules 1": {
+            "coordinate_system": "World",
+            "starting_vertex_position": "UpperLeftCorner",
+            "vertex_entry_direction": "Counterclockwise"
+        }
+    },
+    "HeatBalanceAlgorithm": {
+        "HeatBalanceAlgorithm 1": {
+            "algorithm": "ConductionTransferFunction"
+        }
+    },
+    "Material": {
+        "C5 - 4 IN HW CONCRETE": {
+            "conductivity": 1.729577,
+            "density": 2242.585,
+            "roughness": "MediumRough",
+            "solar_absorptance": 0.65,
+            "specific_heat": 836.8,
+            "thermal_absorptance": 0.9,
+            "thickness": 0.1014984,
+            "visible_absorptance": 0.65
+        }
+    },
+    "Material:NoMass": {
+        "R13LAYER": {
+            "roughness": "Rough",
+            "solar_absorptance": 0.75,
+            "thermal_absorptance": 0.9,
+            "thermal_resistance": 2.290965,
+            "visible_absorptance": 0.75
+        },
+        "R31LAYER": {
+            "roughness": "Rough",
+            "solar_absorptance": 0.75,
+            "thermal_absorptance": 0.9,
+            "thermal_resistance": 5.456,
+            "visible_absorptance": 0.75
+        }
+    },
+    "NodeList": {
+        "Hot Water Loop HW Supply Setpoint Nodes": {
+            "nodes": [
+                {
+                    "node_name": "Main Boiler HW Outlet"
+                },
+                {
+                    "node_name": "Hot Water Loop HW Supply Outlet"
+                }
+            ]
+        }
+    },
+    "OutdoorAir:Mixer": {
+        "US 1 OA Mixing Box": {
+            "mixed_air_node_name": "US 1 Mixed Air Outlet",
+            "outdoor_air_stream_node_name": "US 1 Outdoor Air Inlet",
+            "relief_air_stream_node_name": "US 1 Relief Air Outlet",
+            "return_air_stream_node_name": "US 1 Air Loop Inlet"
+        }
+    },
+    "OutdoorAir:NodeList": {
+        "OutdoorAir:NodeList 1": {
+            "nodes": [
+                {
+                    "node_or_nodelist_name": "US 1 Outdoor Air Inlet"
+                }
+            ]
+        }
+    },
+    "Output:Constructions": {
+        "Output:Constructions 1": {
+            "details_type_1": "Constructions"
+        }
+    },
+    "Output:Meter:MeterFileOnly": {
+        "Output:Meter:MeterFileOnly 1": {
+            "key_name": "ExteriorLights:Electricity",
+            "reporting_frequency": "Hourly"
+        },
+        "Output:Meter:MeterFileOnly 2": {
+            "key_name": "EnergyTransfer:Building",
+            "reporting_frequency": "Hourly"
+        },
+        "Output:Meter:MeterFileOnly 3": {
+            "key_name": "EnergyTransfer:Facility",
+            "reporting_frequency": "Hourly"
+        }
+    },
+    "Output:Surfaces:Drawing": {
+        "Output:Surfaces:Drawing 1": {
+            "report_type": "DXF:WireFrame"
+        }
+    },
+    "Output:Table:SummaryReports": {
+        "Output:Table:SummaryReports 1": {
+            "reports": [
+                {
+                    "report_name": "AllSummary"
+                }
+            ]
+        }
+    },
+    "Output:Variable": {
+        "Output:Variable 1": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Site Outdoor Air Drybulb Temperature"
+        },
+        "Output:Variable 2": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Site Total Sky Cover"
+        },
+        "Output:Variable 3": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Site Opaque Sky Cover"
+        },
+        "Output:Variable 4": {
+            "key_value": "*",
+            "reporting_frequency": "Daily",
+            "variable_name": "Site Daylight Saving Time Status"
+        },
+        "Output:Variable 5": {
+            "key_value": "*",
+            "reporting_frequency": "Daily",
+            "variable_name": "Site Day Type Index"
+        },
+        "Output:Variable 6": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Zone Mean Air Temperature"
+        },
+        "Output:Variable 7": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Zone Total Internal Latent Gain Energy"
+        },
+        "Output:Variable 8": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Zone Mean Radiant Temperature"
+        },
+        "Output:Variable 9": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Zone Air Heat Balance Surface Convection Rate"
+        },
+        "Output:Variable 10": {
+            "key_value": "*",
+            "reporting_frequency": "Hourly",
+            "variable_name": "Zone Air Heat Balance Air Energy Storage Rate"
+        },
+        "Output:Variable 11": {
+            "key_value": "*",
+            "reporting_frequency": "Daily",
+            "variable_name": "Surface Inside Face Temperature"
+        },
+        "Output:Variable 12": {
+            "key_value": "*",
+            "reporting_frequency": "Daily",
+            "variable_name": "Surface Outside Face Temperature"
+        },
+        "Output:Variable 13": {
+            "key_value": "*",
+            "reporting_frequency": "Daily",
+            "variable_name": "Surface Inside Face Convection Heat Transfer Coefficient"
+        },
+        "Output:Variable 14": {
+            "key_value": "*",
+            "reporting_frequency": "Daily",
+            "variable_name": "Surface Outside Face Convection Heat Transfer Coefficient"
+        },
+        "Output:Variable 15": {
+            "key_value": "*",
+            "reporting_frequency": "Monthly",
+            "variable_name": "Other Equipment Total Heating Energy"
+        },
+        "Output:Variable 16": {
+            "key_value": "*",
+            "reporting_frequency": "Monthly",
+            "variable_name": "Zone Other Equipment Total Heating Energy"
+        }
+    },
+    "Output:VariableDictionary": {
+        "Output:VariableDictionary 1": {
+            "key_field": "IDF"
+        }
+    },
+    "OutputControl:Table:Style": {
+        "OutputControl:Table:Style 1": {
+            "column_separator": "All"
+        }
+    },
+    "People": {
+        "SPACE1-1 People 1": {
+            "activity_level_schedule_name": "ActSchd",
+            "fraction_radiant": 0.3,
+            "number_of_people": 50,
+            "number_of_people_calculation_method": "People",
+            "number_of_people_schedule_name": "OCCUPY-1",
+            "zone_or_zonelist_or_space_or_spacelist_name": "ZONE ONE"
+        }
+    },
+    "Pipe:Adiabatic": {
+        "Hot Water Loop HW Demand Inlet Pipe": {
+            "inlet_node_name": "Hot Water Loop HW Demand Inlet",
+            "outlet_node_name": "Hot Water Loop HW Demand Inlet Pipe Outlet"
+        },
+        "Hot Water Loop HW Demand Outlet Pipe": {
+            "inlet_node_name": "Hot Water Loop HW Demand Outlet Pipe Inlet",
+            "outlet_node_name": "Hot Water Loop HW Demand Outlet"
+        },
+        "Hot Water Loop HW Demand Side Bypass Pipe": {
+            "inlet_node_name": "Hot Water Loop HW Demand Bypass Inlet",
+            "outlet_node_name": "Hot Water Loop HW Demand Bypass Outlet"
+        },
+        "Hot Water Loop HW Supply Outlet Pipe": {
+            "inlet_node_name": "Hot Water Loop HW Supply Outlet Pipe Inlet",
+            "outlet_node_name": "Hot Water Loop HW Supply Outlet"
+        },
+        "Hot Water Loop HW Supply Side Bypass Pipe": {
+            "inlet_node_name": "Hot Water Loop HW Supply Bypass Inlet",
+            "outlet_node_name": "Hot Water Loop HW Supply Bypass Outlet"
+        }
+    },
+    "PlantEquipmentList": {
+        "Hot Water Loop All Equipment": {
+            "equipment": [
+                {
+                    "equipment_name": "Main Boiler",
+                    "equipment_object_type": "Boiler:HotWater"
+                }
+            ]
+        }
+    },
+    "PlantEquipmentOperation:HeatingLoad": {
+        "Hot Water Loop Operation All Hours": {
+            "load_range_1_lower_limit": 0,
+            "load_range_1_upper_limit": 1e+15,
+            "range_1_equipment_list_name": "Hot Water Loop All Equipment"
+        }
+    },
+    "PlantEquipmentOperationSchemes": {
+        "Hot Water Loop Operation": {
+            "control_scheme_1_name": "Hot Water Loop Operation All Hours",
+            "control_scheme_1_object_type": "PlantEquipmentOperation:HeatingLoad",
+            "control_scheme_1_schedule_name": "HVACTemplate-Always 1"
+        }
+    },
+    "PlantLoop": {
+        "Hot Water Loop Hot Water Loop": {
+            "demand_side_branch_list_name": "Hot Water Loop HW Demand Side Branches",
+            "demand_side_connector_list_name": "Hot Water Loop HW Demand Side Connectors",
+            "demand_side_inlet_node_name": "Hot Water Loop HW Demand Inlet",
+            "demand_side_outlet_node_name": "Hot Water Loop HW Demand Outlet",
+            "fluid_type": "Water",
+            "load_distribution_scheme": "SequentialLoad",
+            "loop_temperature_setpoint_node_name": "Hot Water Loop HW Supply Outlet",
+            "maximum_loop_flow_rate": "Autosize",
+            "maximum_loop_temperature": 100,
+            "minimum_loop_flow_rate": 0,
+            "minimum_loop_temperature": 10,
+            "plant_equipment_operation_scheme_name": "Hot Water Loop Operation",
+            "plant_loop_demand_calculation_scheme": "SingleSetpoint",
+            "plant_loop_volume": "Autocalculate",
+            "plant_side_branch_list_name": "Hot Water Loop HW Supply Side Branches",
+            "plant_side_connector_list_name": "Hot Water Loop HW Supply Side Connectors",
+            "plant_side_inlet_node_name": "Hot Water Loop HW Supply Inlet",
+            "plant_side_outlet_node_name": "Hot Water Loop HW Supply Outlet"
+        }
+    },
+    "Pump:ConstantSpeed": {
+        "Hot Water Loop HW Supply Pump": {
+            "design_flow_rate": "Autosize",
+            "design_power_consumption": "Autosize",
+            "design_pump_head": 179352,
+            "fraction_of_motor_inefficiencies_to_fluid_stream": 0,
+            "inlet_node_name": "Hot Water Loop HW Supply Inlet",
+            "motor_efficiency": 0.9,
+            "outlet_node_name": "Hot Water Loop HW Pump Outlet",
+            "pump_control_type": "Intermittent"
+        }
+    },
+    "RunPeriod": {
+        "Run Period 1": {
+            "apply_weekend_holiday_rule": "No",
+            "begin_day_of_month": 1,
+            "begin_month": 1,
+            "day_of_week_for_start_day": "Tuesday",
+            "end_day_of_month": 31,
+            "begin_year": 2018,
+            "end_year": 2018,
+            "end_month": 12,
+            "use_weather_file_daylight_saving_period": "Yes",
+            "use_weather_file_holidays_and_special_days": "Yes",
+            "use_weather_file_rain_indicators": "Yes",
+            "use_weather_file_snow_indicators": "Yes"
+        }
+    },
+    "Schedule:Compact": {
+        "Min OA Sched": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: AllDays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 0.5
+                }
+            ],
+            "schedule_type_limits_name": "Fraction"
+        },
+        "ActSchd": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: AllDays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 117.239997864
+                }
+            ],
+            "schedule_type_limits_name": "AnyNumber"
+        },
+        "OCCUPY-1": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: Alldays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 1
+                }
+            ],
+            "schedule_type_limits_name": "Fraction"
+        },
+        "HotWater-SetP": {
+          "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: Alldays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 80.0
+                }
+         ],
+            "schedule_type_limits_name": "AnyNumber"
+        },
+        "HVACTemplate-Always 1": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: AllDays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 1
+                }
+            ],
+            "schedule_type_limits_name": "HVACTemplate Any Number"
+        },
+        "HVACTemplate-Always 4": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: AllDays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 4
+                }
+            ],
+            "schedule_type_limits_name": "HVACTemplate Any Number"
+        },
+        "HVACTemplate-Always 82": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: AllDays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 82
+                }
+            ],
+            "schedule_type_limits_name": "HVACTemplate Any Number"
+        },
+        "clg-temp": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: AllDays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 25
+                }
+            ],
+            "schedule_type_limits_name": "AnyNumber"
+        },
+        "htg-temp": {
+            "data": [
+                {
+                    "field": "Through: 12/31"
+                },
+                {
+                    "field": "For: AllDays"
+                },
+                {
+                    "field": "Until: 24:00"
+                },
+                {
+                    "field": 15
+                }
+            ],
+            "schedule_type_limits_name": "AnyNumber"
+        }
+    },
+    "Schedule:Constant": {
+        "AlwaysOn": {
+            "hourly_value": 1.0,
+            "schedule_type_limits_name": "On/Off"
+        }
+    },
+    "ScheduleTypeLimits": {
+        "AnyNumber": {
+            "lower_limit_value": 0,
+            "numeric_type": "Continuous",
+            "upper_limit_value": 2000
+        },
+        "Fraction": {
+            "lower_limit_value": 0.0,
+            "numeric_type": "Continuous",
+            "upper_limit_value": 1.0
+        },
+        "HVACTemplate Any Number": {},
+        "On/Off": {
+            "lower_limit_value": 0,
+            "numeric_type": "Discrete",
+            "upper_limit_value": 1
+        }
+    },
+    "SetpointManager:MixedAir": {
+        "US 1 Cooling Coil Air Temp Manager": {
+            "control_variable": "Temperature",
+            "fan_inlet_node_name": "US 1 Mixed Air Outlet",
+            "fan_outlet_node_name": "US 1 Supply Fan Outlet",
+            "reference_setpoint_node_name": "US 1 Heating Coil Outlet",
+            "setpoint_node_or_nodelist_name": "US 1 Mixed Air Outlet"
+        }
+    },
+    "SetpointManager:Scheduled": {
+        "Hot Water Loop HW Temp Manager": {
+            "control_variable": "Temperature",
+            "schedule_name": "HotWater-SetP",
+            "setpoint_node_or_nodelist_name": "Hot Water Loop HW Supply Setpoint Nodes"
+        }
+    },
+    "SetpointManager:SingleZone:Cooling": {
+        "US 1 Economizer Supply Air Temp Manager": {
+            "control_variable": "Temperature",
+            "control_zone_name": "ZONE ONE",
+            "maximum_supply_air_temperature": 45,
+            "minimum_supply_air_temperature": 13,
+            "setpoint_node_or_nodelist_name": "US 1 Heating Coil Outlet",
+            "zone_inlet_node_name": "ZONE ONE Supply Inlet",
+            "zone_node_name": "ZONE ONE Zone Air Node"
+        }
+    },
+    "SimulationControl": {
+        "SimulationControl 1": {
+            "do_hvac_sizing_simulation_for_sizing_periods": "No",
+            "do_plant_sizing_calculation": "Yes",
+            "do_system_sizing_calculation": "Yes",
+            "do_zone_sizing_calculation": "Yes",
+            "maximum_number_of_hvac_sizing_simulation_passes": 1,
+            "run_simulation_for_sizing_periods": "No",
+            "run_simulation_for_weather_file_run_periods": "Yes"
+        }
+    },
+    "Site:Location": {
+        "Denver Centennial  Golden   N_CO_USA Design_Conditions": {
+            "elevation": 1829.0,
+            "latitude": 39.74,
+            "longitude": -105.18,
+            "time_zone": -7.0
+        }
+    },
+    "Sizing:Parameters": {
+        "Sizing:Parameters 1": {
+            "cooling_sizing_factor": 1,
+            "heating_sizing_factor": 1
+        }
+    },
+    "Sizing:Plant": {
+        "Sizing:Plant 1": {
+            "design_loop_exit_temperature": 82,
+            "loop_design_temperature_difference": 11,
+            "loop_type": "Heating",
+            "plant_or_condenser_loop_name": "Hot Water Loop Hot Water Loop"
+        }
+    },
+    "Sizing:System": {
+        "Sizing:System 1": {
+            "100_outdoor_air_in_cooling": "No",
+            "100_outdoor_air_in_heating": "No",
+            "airloop_name": "US 1",
+            "central_cooling_capacity_control_method": "OnOff",
+            "central_cooling_design_supply_air_humidity_ratio": 0.008,
+            "central_cooling_design_supply_air_temperature": 12.8,
+            "central_heating_design_supply_air_humidity_ratio": 0.008,
+            "central_heating_design_supply_air_temperature": 50,
+            "central_heating_maximum_system_air_flow_ratio": 1,
+            "cooling_design_capacity": "Autosize",
+            "cooling_design_capacity_method": "CoolingDesignCapacity",
+            "cooling_supply_air_flow_rate": 0,
+            "cooling_supply_air_flow_rate_method": "DesignDay",
+            "design_outdoor_air_flow_rate": "Autosize",
+            "heating_design_capacity": "Autosize",
+            "heating_design_capacity_method": "HeatingDesignCapacity",
+            "heating_supply_air_flow_rate": 0,
+            "heating_supply_air_flow_rate_method": "DesignDay",
+            "precool_design_humidity_ratio": 0.008,
+            "precool_design_temperature": 11,
+            "preheat_design_humidity_ratio": 0.008,
+            "preheat_design_temperature": 7,
+            "system_outdoor_air_method": "ZoneSum",
+            "type_of_load_to_size_on": "Sensible",
+            "type_of_zone_sum_to_use": "NonCoincident",
+            "zone_maximum_outdoor_air_fraction": 1.0
+        }
+    },
+    "Sizing:Zone": {
+        "Sizing:Zone 1": {
+            "cooling_design_air_flow_method": "DesignDay",
+            "cooling_design_air_flow_rate": 0,
+            "cooling_minimum_air_flow_fraction": 0,
+            "design_specification_outdoor_air_object_name": "SZ DSOA ZONE ONE",
+            "design_specification_zone_air_distribution_object_name": "SZ DSZAD ZONE ONE",
+            "heating_design_air_flow_method": "DesignDay",
+            "heating_design_air_flow_rate": 1,
+            "heating_maximum_air_flow_fraction": 1,
+            "zone_cooling_design_supply_air_humidity_ratio": 0.008,
+            "zone_cooling_design_supply_air_temperature": 12.8,
+            "zone_cooling_design_supply_air_temperature_difference": 11.11,
+            "zone_cooling_design_supply_air_temperature_input_method": "SupplyAirTemperature",
+            "zone_heating_design_supply_air_humidity_ratio": 0.008,
+            "zone_heating_design_supply_air_temperature": 50,
+            "zone_heating_design_supply_air_temperature_difference": 30,
+            "zone_heating_design_supply_air_temperature_input_method": "SupplyAirTemperature",
+            "zone_or_zonelist_name": "ZONE ONE"
+        }
+    },
+    "SizingPeriod:DesignDay": {
+        "Denver Centennial  Golden   N Ann Clg 1% Condns DB=>MWB": {
+            "barometric_pressure": 81198.0,
+            "daily_dry_bulb_temperature_range": 15.2,
+            "day_of_month": 21,
+            "day_type": "SummerDesignDay",
+            "daylight_saving_time_indicator": "No",
+            "humidity_condition_type": "WetBulb",
+            "maximum_dry_bulb_temperature": 32,
+            "month": 7,
+            "rain_indicator": "No",
+            "sky_clearness": 1.0,
+            "snow_indicator": "No",
+            "solar_model_indicator": "ASHRAEClearSky",
+            "wetbulb_or_dewpoint_at_maximum_dry_bulb": 15.5,
+            "wind_direction": 0,
+            "wind_speed": 4.9
+        },
+        "Denver Centennial  Golden   N Ann Htg 99% Condns DB": {
+            "barometric_pressure": 81198.0,
+            "daily_dry_bulb_temperature_range": 0.0,
+            "day_of_month": 21,
+            "day_type": "WinterDesignDay",
+            "daylight_saving_time_indicator": "No",
+            "humidity_condition_type": "WetBulb",
+            "maximum_dry_bulb_temperature": -15.5,
+            "month": 12,
+            "rain_indicator": "No",
+            "sky_clearness": 0.0,
+            "snow_indicator": "No",
+            "solar_model_indicator": "ASHRAEClearSky",
+            "wetbulb_or_dewpoint_at_maximum_dry_bulb": -15.5,
+            "wind_direction": 340,
+            "wind_speed": 3
+        }
+    },
+    "SurfaceConvectionAlgorithm:Inside": {
+        "SurfaceConvectionAlgorithm:Inside 1": {
+            "algorithm": "TARP"
+        }
+    },
+    "SurfaceConvectionAlgorithm:Outside": {
+        "SurfaceConvectionAlgorithm:Outside 1": {
+            "algorithm": "DOE-2"
+        }
+    },
+    "ThermostatSetpoint:DualSetpoint": {
+        "Zone1-Therm Dual SP Control": {
+            "cooling_setpoint_temperature_schedule_name": "clg-temp",
+            "heating_setpoint_temperature_schedule_name": "htg-temp"
+        }
+    },
+    "Timestep": {
+        "Timestep 1": {
+            "number_of_timesteps_per_hour": 4
+        }
+    },
+    "Version": {
+        "Version 1": {
+            "version_identifier": "23.1"
+        }
+    },
+    "Zone": {
+        "ZONE ONE": {
+            "ceiling_height": "Autocalculate",
+            "direction_of_relative_north": 0,
+            "multiplier": 1,
+            "type": 1,
+            "volume": "Autocalculate",
+            "x_origin": 0,
+            "y_origin": 0,
+            "z_origin": 0
+        }
+    },
+    "ZoneHVAC:AirDistributionUnit": {
+        "ZONE ONE ATU": {
+            "air_distribution_unit_outlet_node_name": "ZONE ONE Supply Inlet",
+            "air_terminal_name": "ZONE ONE CV",
+            "air_terminal_object_type": "AirTerminal:SingleDuct:ConstantVolume:NoReheat"
+        }
+    },
+    "ZoneHVAC:EquipmentConnections": {
+        "ZoneHVAC:EquipmentConnections 1": {
+            "zone_air_inlet_node_or_nodelist_name": "ZONE ONE Supply Inlet",
+            "zone_air_node_name": "ZONE ONE Zone Air Node",
+            "zone_conditioning_equipment_list_name": "ZONE ONE Equipment",
+            "zone_name": "ZONE ONE",
+            "zone_return_air_node_or_nodelist_name": "ZONE ONE Return Outlet"
+        }
+    },
+    "ZoneHVAC:EquipmentList": {
+        "ZONE ONE Equipment": {
+            "equipment": [
+                {
+                    "zone_equipment_cooling_sequence": 1,
+                    "zone_equipment_heating_or_no_load_sequence": 1,
+                    "zone_equipment_name": "ZONE ONE ATU",
+                    "zone_equipment_object_type": "ZoneHVAC:AirDistributionUnit"
+                }
+            ],
+            "load_distribution_scheme": "SequentialLoad"
+        }
+    },
+    "ZoneInfiltration:DesignFlowRate": {
+        "SPACE-infil": {
+            "constant_term_coefficient": 0,
+            "design_flow_rate": 0.0167,
+            "design_flow_rate_calculation_method": "Flow/Zone",
+            "schedule_name": "AlwaysOn",
+            "temperature_term_coefficient": 0,
+            "velocity_squared_term_coefficient": 0,
+            "velocity_term_coefficient": 0.2237,
+            "zone_or_zonelist_or_space_or_spacelist_name": "ZONE ONE"
+        }
+    }
+}

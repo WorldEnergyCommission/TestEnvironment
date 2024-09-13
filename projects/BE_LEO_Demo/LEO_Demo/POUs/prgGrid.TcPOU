@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgGrid" Id="{e97f05f6-61ec-48d7-bcc3-229afa55381d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR
+	lrGridPower	: LREAL; //{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[lrGridPower := prgEM.lrEMConsumption + prgCS.lrCSpower - prgPV.lrPVpower;]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,65 @@
+<ng-container [ngSwitch]="id">
+    <app-ws-average-room-temperature [id]="getId('ws-average-room-temperature')" *ngSwitchCase="'ws-average-room-temperature'" name="ws-average-room-temperature"
+        [userData]="userData" @carouselAnimation></app-ws-average-room-temperature>
+    <app-ws-average-room-humidity [id]="getId('ws-average-room-humidity')" *ngSwitchCase="'ws-average-room-humidity'" @carouselAnimation [userData]="userData"
+        name="ws-average-room-humidity">
+    </app-ws-average-room-humidity>
+    <app-ws-current-outdoor-temperature [id]="getId('ws-current-outdoor-temperature')" *ngSwitchCase="'ws-current-outdoor-temperature'" @carouselAnimation [userData]="userData" name="ws-current-outdoor-temperature">
+    </app-ws-current-outdoor-temperature>
+    <app-text-field [id]="getId('text-field')" *ngSwitchCase="'text-field'" @carouselAnimation [userData]="userData" name="text-field" [text]="module?.text_field">
+    </app-text-field>
+    <app-pv-aggregated-current-power [id]="getId('pv-aggregated-current-power')" name="pv-aggregated-current-power" *ngSwitchCase="'pv-aggregated-current-power'"
+        [userData]="userData" @carouselAnimation>
+    </app-pv-aggregated-current-power>
+    <app-pv-aggregated-current-power-symbolic [id]="getId('pv-aggregated-current-power-symbolic')" name="pv-aggregated-current-power-symbolic" *ngSwitchCase="'pv-aggregated-current-power-symbolic'"
+        [userData]="userData" @carouselAnimation>
+    </app-pv-aggregated-current-power-symbolic>
+    <app-pv-aggregated-produced-energy-last-three-days [id]="getId('pv-aggregated-produced-energy-last-three-days')" name="pv-aggregated-produced-energy-last-three-days" *ngSwitchCase="'pv-aggregated-produced-energy-last-three-days'"
+        [userData]="userData" @carouselAnimation>
+    </app-pv-aggregated-produced-energy-last-three-days>
+    <app-pv-aggregated-produced-energy-prediction-next-day [id]="getId('pv-aggregated-produced-energy-prediction-next-day')" *ngSwitchCase="'pv-aggregated-produced-energy-prediction-next-day'" name="pv-aggregated-produced-energy-prediction-next-day"
+        [userData]="userData" @carouselAnimation>
+    </app-pv-aggregated-produced-energy-prediction-next-day>
+    <app-ads [userData]="userData" *ngSwitchCase="'ad-component'" [ads]="module?.ads"></app-ads>
+    <app-pv-aggregated-carbon-savings [id]="getId('pv-aggregated-carbon-savings')" *ngSwitchCase="'pv-aggregated-carbon-savings'" name="pv-aggregated-carbon-savings" [userData]="userData"
+        @carouselAnimation>
+    </app-pv-aggregated-carbon-savings>
+    <app-pv-aggregated-carbon-savings-symbolic [id]="getId('pv-aggregated-carbon-savings-symbolic')" *ngSwitchCase="'pv-aggregated-carbon-savings-symbolic'" [userData]="userData" name="pv-aggregated-carbon-savings-symbolic"
+        @carouselAnimation></app-pv-aggregated-carbon-savings-symbolic>
+    <app-cs-aggregated-current-connected-cars [id]="getId('cs-aggregated-current-connected-cars')" *ngSwitchCase="'cs-aggregated-current-connected-cars'" name="cs-aggregated-current-connected-cars"
+        [userData]="userData" @carouselAnimation></app-cs-aggregated-current-connected-cars>
+    <app-cs-aggregated-charged-energy [id]="getId('cs-aggregated-charged-energy')" *ngSwitchCase="'cs-aggregated-charged-energy'" name="cs-aggregated-charged-energy"
+        [userData]="userData" @carouselAnimation>
+    </app-cs-aggregated-charged-energy>
+    <app-last-seven-days-chart [id]="getId('last-seven-days-chart')" *ngSwitchCase="'last-seven-days-chart'" name="last-seven-days-chart"
+        [userData]="userData" @carouselAnimation>
+    </app-last-seven-days-chart>
+    <app-last-seven-days-chart-sum [id]="getId('last-seven-days-chart-sum')" *ngSwitchCase="'last-seven-days-chart-sum'" name="last-seven-days-chart-sum"
+        [userData]="userData" @carouselAnimation>
+    </app-last-seven-days-chart-sum>
+    <app-rp-today-grid-consumption [id]="getId('rp-today-grid-consumption')" *ngSwitchCase="'rp-today-grid-consumption'" name="rp-today-grid-consumption"
+        [userData]="userData" @carouselAnimation>
+    </app-rp-today-grid-consumption>
+    <app-current-grid-power [id]="getId('current-energy')" *ngSwitchCase="'current-energy'" name="current-energy"
+        [userData]="userData" @carouselAnimation>
+    </app-current-grid-power>
+    <app-current-grid-power-sum [id]="getId('current-energy-sum')" *ngSwitchCase="'current-energy-sum'"
+        name="current-energy-sum" [userData]="userData" @carouselAnimation>
+    </app-current-grid-power-sum>
+    <app-project-state-overview [id]="getId('project-state-overview')" *ngSwitchCase="'project-state-overview'" @carouselAnimation [userData]="userData" name="project-state-overview">
+    </app-project-state-overview>
+    <app-today-overview [id]="getId('today-overview')" *ngSwitchCase="'today-overview'" name="today-overview"
+    [userData]="userData" @carouselAnimation>
+    </app-today-overview>
+    <app-today-overview-sum [id]="getId('today-overview-sum')" *ngSwitchCase="'today-overview-sum'"
+        name="today-overview-sum" [userData]="userData" @carouselAnimation>
+    </app-today-overview-sum>
+    <app-current-power [id]="getId('current-power')" *ngSwitchCase="'current-power'" name="current-power" [variable]="module?.variable ?? '' " 
+        [icon]="module?.icon ?? ''" [title]="module?.title ?? ''" [subtitle]="module?.subtitle ?? ''" [userData]="userData" @carouselAnimation>
+        [userData]="userData" @carouselAnimation>
+    </app-current-power>
+    <app-current-value [id]="getId('current-value')" *ngSwitchCase="'current-value'" name="current-value" [variable]="module?.variable ?? '' " 
+        [icon]="module?.icon ?? ''" [title]="module?.title ?? ''" [unit]="module?.unit ?? ''" [userData]="userData" @carouselAnimation>
+        [userData]="userData" @carouselAnimation>
+    </app-current-value>
+</ng-container>

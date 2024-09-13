@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgShelly" Id="{f6120397-4820-491d-a8dc-486c02f9638b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgShelly
+VAR
+	// Grid Objekt H 3-phase, 400V
+	fbGridObjectH					: FB_Shelly_3EM;
+	
+	lrPower_ObjectH_Total			: LREAL;			//{#lynus.ag#()}
+	lrPower_ObjectH_TotalkW			: LREAL;			//{#lynus.ag#()}
+	lrEnergy_ObjectH_Total			: LREAL;			//{#lynus.ag#()}
+	lrPower_ObjectH_L1				: LREAL;			//{#lynus.ag#()}
+	lrPower_ObjectH_L2				: LREAL;			//{#lynus.ag#()}
+	lrPower_ObjectH_L3				: LREAL;			//{#lynus.ag#()}
+	lrCurrent_ObjectH_L1			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_ObjectH_L2			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_ObjectH_L3			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_ObjectH_L1			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_ObjectH_L2			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_ObjectH_L3			: LREAL;			//{#lynus.ag#()}
+	lrEnergy_ObjectH_L1				: LREAL;			//{#lynus.ag#()}
+	lrEnergy_ObjectH_L2				: LREAL;			//{#lynus.ag#()}
+	lrEnergy_ObjectH_L3				: LREAL;			//{#lynus.ag#()}
+	
+	//21: zuleitung obergeschoss
+	
+	fbGridSupplyLevel1					: FB_Shelly_3EM;
+	
+	lrPower_SupplyLevel1_Total			: LREAL;			//{#lynus.ag#()}
+	lrPower_SupplyLevel1_TotalkW		: LREAL;			//{#lynus.ag#()}
+	lrEnergy_SupplyLevel1_Total			: LREAL;			//{#lynus.ag#()}
+	lrPower_SupplyLevel1_L1				: LREAL;			//{#lynus.ag#()}
+	lrPower_SupplyLevel1_L2				: LREAL;			//{#lynus.ag#()}
+	lrPower_SupplyLevel1_L3				: LREAL;			//{#lynus.ag#()}
+	lrCurrent_SupplyLevel1_L1			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_SupplyLevel1_L2			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_SupplyLevel1_L3			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_SupplyLevel1_L1			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_SupplyLevel1_L2			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_SupplyLevel1_L3			: LREAL;			//{#lynus.ag#()}
+	lrEnergy_SupplyLevel1_L1			: LREAL;			//{#lynus.ag#()}
+	lrEnergy_SupplyLevel1_L2			: LREAL;			//{#lynus.ag#()}
+	lrEnergy_SupplyLevel1_L3			: LREAL;			//{#lynus.ag#()}
+
+	
+	//22: Heating
+	
+	fbGridHeating					: FB_Shelly_3EM;
+	
+	lrPower_Heating_Total			: LREAL;			//{#lynus.ag#()}
+	lrPower_Heating_TotalkW			: LREAL;			//{#lynus.ag#()}
+	lrEnergy_Heating_Total			: LREAL;			//{#lynus.ag#()}
+	lrPower_Heating_L1				: LREAL;			//{#lynus.ag#()}
+	lrPower_Heating_L2				: LREAL;			//{#lynus.ag#()}
+	lrPower_Heating_L3				: LREAL;			//{#lynus.ag#()}
+	lrCurrent_Heating_L1			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_Heating_L2			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_Heating_L3			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_Heating_L1			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_Heating_L2			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_Heating_L3			: LREAL;			//{#lynus.ag#()}
+	lrEnergy_Heating_L1				: LREAL;			//{#lynus.ag#()}
+	lrEnergy_Heating_L2				: LREAL;			//{#lynus.ag#()}
+	lrEnergy_Heating_L3				: LREAL;			//{#lynus.ag#()}
+
+	// other
+	lrPower_ObjectH_RestkW			: LREAL;			//{#lynus.ag#()}
+	lrPower_SupplyLevel1_RestkW		: LREAL;			//{#lynus.ag#()}
+	
+END_VAR
+
+VAR PERSISTENT
+// trigger command execution
+	bEnable_GridObjectH				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_SupplyLevel1			: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Heating					: BOOL:=true;				//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	// Grid Objekt H 3-phase, 400V
+fbGridObjectH(
+	bStart:= bEnable_GridObjectH, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.0.20', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> lrPower_ObjectH_Total,
+	lrpowerL1=> lrPower_ObjectH_L1,
+	lrpowerL2=> lrPower_ObjectH_L2,
+	lrpowerL3=> lrPower_ObjectH_L3,
+	lrcurrentL1=> lrCurrent_ObjectH_L1,
+	lrcurrentL2=> lrCurrent_ObjectH_L2,
+	lrcurrentL3=> lrCurrent_ObjectH_L3,
+	lrvoltageL1=> lrVoltage_ObjectH_L1,
+	lrvoltageL2=> lrVoltage_ObjectH_L2,
+	lrvoltageL3=> lrVoltage_ObjectH_L3,
+	lrenergyL1=> lrEnergy_ObjectH_L1,
+	lrenergyL2=> lrEnergy_ObjectH_L2,
+	lrenergyL3=> lrEnergy_ObjectH_L3 );
+
+(* CTs are mounted the wrong way aroung*)	
+lrPower_ObjectH_Total	:=	lrPower_ObjectH_Total*(-1);
+lrPower_ObjectH_L1		:= 	lrPower_ObjectH_L1*(-1);
+lrPower_ObjectH_L2		:= 	lrPower_ObjectH_L2*(-1);
+lrPower_ObjectH_L3		:= 	lrPower_ObjectH_L3*(-1);
+lrEnergy_ObjectH_L1		:=	lrEnergy_ObjectH_L1*(-1);
+lrEnergy_ObjectH_L2		:=	lrEnergy_ObjectH_L2*(-1);
+lrEnergy_ObjectH_L3		:=	lrEnergy_ObjectH_L3*(-1);
+
+// re-calc to kW
+lrPower_ObjectH_TotalkW := lrPower_ObjectH_Total / 1000;
+// sum-up energy
+lrEnergy_ObjectH_Total :=  lrEnergy_ObjectH_L1 + lrEnergy_ObjectH_L2 + lrEnergy_ObjectH_L3;
+
+	// Supply Level 1 3-phase, 400V
+fbGridSupplyLevel1(
+	bStart:= bEnable_SupplyLevel1, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.0.21', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> lrPower_SupplyLevel1_Total,
+	lrpowerL1=> lrPower_SupplyLevel1_L1,
+	lrpowerL2=> lrPower_SupplyLevel1_L2,
+	lrpowerL3=> lrPower_SupplyLevel1_L3,
+	lrcurrentL1=> lrCurrent_SupplyLevel1_L1,
+	lrcurrentL2=> lrCurrent_SupplyLevel1_L2,
+	lrcurrentL3=> lrCurrent_SupplyLevel1_L3,
+	lrvoltageL1=> lrVoltage_SupplyLevel1_L1,
+	lrvoltageL2=> lrVoltage_SupplyLevel1_L2,
+	lrvoltageL3=> lrVoltage_SupplyLevel1_L3,
+	lrenergyL1=> lrEnergy_SupplyLevel1_L1,
+	lrenergyL2=> lrEnergy_SupplyLevel1_L2,
+	lrenergyL3=> lrEnergy_SupplyLevel1_L3 );
+
+(* CTs are mounted the wrong way aroung*)	
+lrPower_SupplyLevel1_Total	:=	lrPower_SupplyLevel1_Total*(-1);
+lrPower_SupplyLevel1_L1		:= 	lrPower_SupplyLevel1_L1*(-1);
+lrPower_SupplyLevel1_L2		:= 	lrPower_SupplyLevel1_L2*(-1);
+lrPower_SupplyLevel1_L3		:= 	lrPower_SupplyLevel1_L3*(-1);
+lrEnergy_SupplyLevel1_L1		:=	lrEnergy_SupplyLevel1_L1*(-1);
+lrEnergy_SupplyLevel1_L2		:=	lrEnergy_SupplyLevel1_L2*(-1);
+lrEnergy_SupplyLevel1_L3		:=	lrEnergy_SupplyLevel1_L3*(-1);
+
+// re-calc to kW
+lrPower_SupplyLevel1_TotalkW := lrPower_SupplyLevel1_Total / 1000;
+// sum-up energy
+lrEnergy_SupplyLevel1_Total :=  lrEnergy_SupplyLevel1_L1 + lrEnergy_SupplyLevel1_L2 + lrEnergy_SupplyLevel1_L3;
+
+	// Supply Level 1 3-phase, 400V
+fbGridHeating(
+	bStart:= bEnable_Heating, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.0.22', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> lrPower_Heating_Total,
+	lrpowerL1=> lrPower_Heating_L1,
+	lrpowerL2=> lrPower_Heating_L2,
+	lrpowerL3=> lrPower_Heating_L3,
+	lrcurrentL1=> lrCurrent_Heating_L1,
+	lrcurrentL2=> lrCurrent_Heating_L2,
+	lrcurrentL3=> lrCurrent_Heating_L3,
+	lrvoltageL1=> lrVoltage_Heating_L1,
+	lrvoltageL2=> lrVoltage_Heating_L2,
+	lrvoltageL3=> lrVoltage_Heating_L3,
+	lrenergyL1=> lrEnergy_Heating_L1,
+	lrenergyL2=> lrEnergy_Heating_L2,
+	lrenergyL3=> lrEnergy_Heating_L3 );
+
+(* CTs are mounted the wrong way aroung*)	
+lrPower_Heating_Total	:=	lrPower_Heating_Total*(-1);
+lrPower_Heating_L1		:= 	lrPower_Heating_L1*(-1);
+lrPower_Heating_L2		:= 	lrPower_Heating_L2*(-1);
+lrPower_Heating_L3		:= 	lrPower_Heating_L3*(-1);
+lrEnergy_Heating_L1		:=	lrEnergy_Heating_L1*(-1);
+lrEnergy_Heating_L2		:=	lrEnergy_Heating_L2*(-1);
+lrEnergy_Heating_L3		:=	lrEnergy_Heating_L3*(-1);
+
+// re-calc to kW
+lrPower_Heating_TotalkW := lrPower_Heating_Total / 1000;
+// sum-up energy
+lrEnergy_Heating_Total :=  lrEnergy_Heating_L1 + lrEnergy_Heating_L2 + lrEnergy_Heating_L3;
+
+
+// other
+lrPower_ObjectH_RestkW := lrPower_ObjectH_TotalkW - lrPower_SupplyLevel1_TotalkW;
+lrPower_SupplyLevel1_RestkW := lrPower_SupplyLevel1_TotalkW - lrPower_Heating_TotalkW;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgShelly">
+      <LineId Id="221" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="9" Count="20" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="548" Count="6" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="591" Count="32" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="625" Count="3" />
+      <LineId Id="652" Count="39" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="765" Count="0" />
+      <LineId Id="764" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="380" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

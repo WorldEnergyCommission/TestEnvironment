@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_BatteryInverter_Output" Id="{b5b8c80e-2172-4411-b743-a6439360c5ae}">
+    <Declaration><![CDATA[TYPE ST_BatteryInverter_Output :
+STRUCT
+	bEnabled						: BOOL;							//{#lynus.ag#()} //Battery inverter enabled
+	bOnOff							: BOOL;							//State from the battery inverter. On or Off
+	bWorkOnIslandMode				: BOOL;							//True when the inverter work in island mode
+	bStateReset						: BOOL;							//{#lynus.ag#()} //State of the Reset
+	byErrorWarning					: BYTE;							//Show if the function has a Error or a Warning
+	byPriority						: BYTE; 						//Priority of the device if controlled via the EMS block = 1 2 3 (If 0 then this device does not exist for the EMS block)	
+	rTargetPower					: REAL;							//{#lynus.ag#()} //Target Power from -100% to +100%
+	rMaxChargePower					: REAL; 						//Max. charge power battery inverter with unit kW
+	rMaxDischargePower				: REAL;							//Max. discharge power battery inverter with unit kW
+	lrPowerNormalMode				: LREAL;						//Power from the battery inverter when normal mode is active with unit kW
+	lrPowerOnIslandMode				: LREAL;						//Power from the battery inverter when island mode is active with unit kW
+	eMessage						: E_Message_BatteryInverter;	//Message from the Battery inverter
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

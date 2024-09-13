@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPV" Id="{28504d1a-b8d1-40da-92cd-df7f0a8ec2dd}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPVCounter1		: FB_EnergyCounter;
+	fbPVCounter2		: FB_EnergyCounter;
+	lrPowerPV1			: LREAL;				//{#lynus.ag#()}
+	lrPowerPV2			: LREAL;				//{#lynus.ag#()}
+	lrPowerPVTotal		: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV	: BYTE;					//{#lynus.ag#()}
+	FB_PV1:FB_TCPModbusRequest_PV;
+	FB_PV2:FB_TCPModbusRequest_PV;
+	lrVoltagePV1_L1L2_V		: LREAL;				//{#lynus.ag#()}
+	lrVoltagePV1_L2L3_V		: LREAL;				//{#lynus.ag#()}
+	lrVoltagePV1_L3L1_V		: LREAL;				//{#lynus.ag#()}
+	lrVoltagePV2_L1L2_V		: LREAL;				//{#lynus.ag#()}
+	lrVoltagePV2_L2L3_V		: LREAL;				//{#lynus.ag#()}
+	lrVoltagePV2_L3L1_V		: LREAL;				//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterPV1		: LREAL;					//{#lynus.ag#()}
+	lrCounterPV2		: LREAL;					//{#lynus.ag#()}
+	lrCounterPVTotal	: LREAL;					//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+FB_PV1	(	b_Enable:= TRUE, 
+			str_IPAdress:= '192.168.11.171', 
+			lreal_RealPower_kW=> lrPowerPV1,
+			lreal_Voltage_L1L2_V=> lrVoltagePV1_L1L2_V , 
+			lreal_Voltage_L2L3_V=> lrVoltagePV1_L2L3_V , 
+			lreal_Voltage_L3L1_V=> lrVoltagePV1_L3L1_V);
+
+
+fbPVCounter1(	byActiveTariff := 1,	
+				lrPowerInput := 0-lrPowerPV1,
+				lrTotalCounterEnergy_Production => lrCounterPV1);
+	
+
+FB_PV2	(	b_Enable:= TRUE, 
+			str_IPAdress:= '192.168.11.172', 
+			lreal_RealPower_kW=> lrPowerPV2,
+			lreal_Voltage_L1L2_V=> lrVoltagePV2_L1L2_V , 
+			lreal_Voltage_L2L3_V=> lrVoltagePV2_L2L3_V , 
+			lreal_Voltage_L3L1_V=> lrVoltagePV2_L3L1_V);
+
+fbPVCounter2(	byActiveTariff := 1,	
+				lrPowerInput := 0-lrPowerPV2,
+				lrTotalCounterEnergy_Production => lrCounterPV2);
+	
+lrPowerPVTotal := lrPowerPV1 + lrPowerPV2;
+lrCounterPVTotal := lrCounterPV1 + lrCounterPV2;]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="250" Count="0" />
+      <LineId Id="252" Count="2" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="256" Count="3" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="260" Count="3" />
+      <LineId Id="320" Count="1" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="264" Count="4" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="285" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

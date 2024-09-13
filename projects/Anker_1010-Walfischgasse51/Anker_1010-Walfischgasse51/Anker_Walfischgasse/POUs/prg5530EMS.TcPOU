@@ -1,0 +1,274 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prg5530EMS" Id="{432f92a1-1d3d-4843-ab20-2d2acbca4350}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prg5530EMS
+VAR
+	bQ1Switch	AT%Q*	: BOOL;								//{#lynus.ag#()}
+
+	FB_TimeSwitch_Coffee: FB_TimeSwitch_v2;
+	FB_TimeSwitch_AC: FB_TimeSwitch_v2;				// Shelly 7
+	FB_TimeSwitch_Vitrine: FB_TimeSwitch_v2;			// Shelly 6
+	FB_TimeSwitch_CoolingChamber: FB_TimeSwitch_v2;	// Shelly 4 + 5
+	FB_TimeSwitch_Outside: FB_TimeSwitch_v2;			// Shelly 11
+	FB_TimeSwitch_Boiler: FB_TimeSwitch_v2;			// Shelly 12 + 13 + 14
+
+	b_Coffee_Manual_On: BOOL;						//{#lynus.ag#()}
+	b_Coffee_Manual_Off: BOOL;						//{#lynus.ag#()}
+	b_AC_Manual_On: BOOL;							//{#lynus.ag#()}
+	b_AC_Manual_Off: BOOL;							//{#lynus.ag#()}
+	b_Vitrine_Manual_On: BOOL;						//{#lynus.ag#()}
+	b_Vitrine_Manual_Off: BOOL;						//{#lynus.ag#()}
+	b_CoolingChamber_Manual_On: BOOL;				//{#lynus.ag#()}
+	b_CoolingChamber_Manual_Off: BOOL;				//{#lynus.ag#()}
+	b_Outside_Manual_On: BOOL;						//{#lynus.ag#()}
+	b_Outside_Manual_Off: BOOL;						//{#lynus.ag#()}
+	b_Boiler_Manual_On: BOOL;						//{#lynus.ag#()}
+	b_Boiler_Manual_Off: BOOL;						//{#lynus.ag#()}
+	fbCalcSunriseSunset   		: FB_CalcSunriseSunset;
+	todSunrise            		: TOD;
+	todSunset             		: TOD;
+	fb_GetTimeZoneInfo	:FB_GetTimeZoneInformation;
+	b_firstCycle: BOOL;
+	RS_Outsidelight: RS;
+	r_trig_on: R_trig;
+	r_trig_off: R_trig;
+	b_Status_CoffeeMaschine: BOOL;					//{#lynus.ag#()}
+	m_STart: BOOL;
+END_VAR
+VAR PERSISTENT
+// opening hours
+	byte_MoFr_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Open_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Close_Hour	:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Close_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Open_Minute		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Close_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Close_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_So_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_So_Open_Minute		:BYTE;					//{#lynus.ag#()}
+	byte_So_Close_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_So_Close_Minute	:BYTE;					//{#lynus.ag#()}
+	
+// offset coffeemaschine in hours			
+	b_Enable_Control_Coffee		:BOOL;				//{#lynus.ag#()}
+	real_Coffee_Offset_Start	:REAL;				//{#lynus.ag#()}
+	real_Coffee_Offset_Stop		:REAL;				//{#lynus.ag#()}
+// offset AC in hours			
+	b_Enable_Control_AC			:BOOL;				//{#lynus.ag#()}
+	real_AC_Offset_Start		:REAL;				//{#lynus.ag#()}
+	real_AC_Offset_Stop			:REAL;				//{#lynus.ag#()}
+// offset Vitrine in hours			
+	b_Enable_Control_Vitrine	:BOOL;				//{#lynus.ag#()}
+	real_Vitrine_Offset_Start	:REAL;				//{#lynus.ag#()}
+	real_Vitrine_Offset_Stop	:REAL;				//{#lynus.ag#()}
+// offset CoolingChamber in hours			
+	b_Enable_Control_CoolingChamber	:BOOL;			//{#lynus.ag#()}
+	real_CoolingChamber_Offset_Start :REAL;			//{#lynus.ag#()}
+	real_CoolingChamber_Offset_Stop	:REAL;			//{#lynus.ag#()}
+// offset Outside in hours			
+	b_Enable_Control_Outside	:BOOL;				//{#lynus.ag#()}
+	real_Outside_Offset_Start	:REAL;				//{#lynus.ag#()}
+	real_Outside_Offset_Stop	:REAL;				//{#lynus.ag#()}
+// offset Boiler in hours			
+	b_Enable_Control_Boiler		:BOOL;				//{#lynus.ag#()}
+	real_Boiler_Offset_Start	:REAL;				//{#lynus.ag#()}
+	real_Boiler_Offset_Stop		:REAL;				//{#lynus.ag#()}
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FB_TimeSwitch_Coffee(
+	b_Enable:= b_Enable_Control_Coffee, 
+	b_StatusOn:= NOT bQ1Switch, 
+	structSystemTime:=prg_SystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Coffee_Offset_Start , 
+	real_Offset_Stop:= real_Coffee_Offset_Stop , 
+	b_On_Manual:= b_Coffee_Manual_On, 
+	b_Off_Manual:= b_Coffee_Manual_Off, 
+	b_Output_On=> , 
+	b_Error=> );
+IF NOT FB_TimeSwitch_Coffee.b_Output_On THEN
+	bQ1Switch := TRUE;
+ELSIF FB_TimeSwitch_Coffee.b_Output_On THEN
+	bQ1Switch := FALSE;
+END_IF
+b_Status_CoffeeMaschine := NOT bQ1Switch;
+
+FB_TimeSwitch_AC(
+	b_Enable:= b_Enable_Control_AC, 
+	b_StatusOn:= prg5530CON.fbShelly[7].bStateP1, 
+	structSystemTime:= prg_SystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_AC_Offset_Start , 
+	real_Offset_Stop:= real_AC_Offset_Stop , 
+	b_On_Manual:= b_AC_Manual_On, 
+	b_Off_Manual:= b_AC_Manual_Off, 
+	b_Output_On=> , 
+	b_Error=> );
+
+FB_TimeSwitch_Vitrine(
+	b_Enable:= b_Enable_Control_Vitrine, 
+	b_StatusOn:= prg5530CON.fbShelly[6].bStateP1, 
+	structSystemTime:= prg_SystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Vitrine_Offset_Start , 
+	real_Offset_Stop:= real_Vitrine_Offset_Stop , 
+	b_On_Manual:= b_Vitrine_Manual_On, 
+	b_Off_Manual:= b_Vitrine_Manual_Off, 
+	b_Output_On=> , 
+	b_Error=> );
+
+FB_TimeSwitch_CoolingChamber(
+	b_Enable:= b_Enable_Control_CoolingChamber, 
+	b_StatusOn:= prg5530CON.fbShelly[4].bStateP1 AND prg5530CON.fbShelly[5].bStateP1, 
+	structSystemTime:= prg_SystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_CoolingChamber_Offset_Start , 
+	real_Offset_Stop:= real_CoolingChamber_Offset_Stop , 
+	b_On_Manual:= b_CoolingChamber_Manual_On, 
+	b_Off_Manual:= b_CoolingChamber_Manual_Off, 
+	b_Output_On=> , 
+	b_Error=> );
+
+FB_TimeSwitch_Outside(
+	b_Enable:= b_Enable_Control_Outside, 
+	b_StatusOn:= prg5530CON.fbShelly[11].bStateP1, 
+	structSystemTime:= prg_SystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Outside_Offset_Start , 
+	real_Offset_Stop:= real_Outside_Offset_Stop , 
+	b_On_Manual:= b_Outside_Manual_On, 
+	b_Off_Manual:= b_Outside_Manual_Off, 
+	b_Output_On=> , 
+	b_Error=> );
+	
+// calculate sunset / sunrise
+// find out the time details
+fb_GetTimeZoneInfo(
+	sNetID:= '', 
+	bExecute:= prg_SystemTime.structSystemTime.wHour = 4 OR NOT b_firstCycle, 
+	tTimeout:= T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrID=> , 
+	tzID=> , 
+	tzInfo=> );
+b_firstCycle := TRUE;
+
+fbCalcSunriseSunset(
+	fDegreeOfLongitude := 16.3731,   (* Longitude of Vienna *)
+	fDegreeOfLatitude := 48.2083,   (* Latitude of Vienna*)
+	fReferenceMeridian := SEL( fb_GetTimeZoneInfo.tzID = eTimeZoneID_Daylight ,15,30),  (* Central European Time 15 Winter Timer / 30 Summer Time *)
+	dCurrentDate := DT_TO_DATE(SYSTEMTIME_TO_Dt (prg_SystemTime.structSystemTime)),
+	todSunrise => todSunrise,
+	todSunset => todSunset);
+
+r_trig_on (clk := FB_TimeSwitch_Outside.b_Output_On AND DT_TO_TOD(systemtime_to_dt(prg_SystemTime.structSystemTime))< (todSunrise +  T#1H) );
+r_trig_off (clk := NOT FB_TimeSwitch_Outside.b_Output_On);
+
+RS_Outsidelight(	Set := r_trig_on.Q OR ((todSunset - T#2H) =  DT_TO_TOD(systemtime_to_dt(prg_SystemTime.structSystemTime)) AND FB_TimeSwitch_Outside.b_Output_On) OR b_Outside_Manual_On ,
+					Reset1 := r_trig_off.Q OR ((todSunrise +  T#1H)= DT_TO_TOD(systemtime_to_dt(prg_SystemTime.structSystemTime))) OR b_Outside_Manual_Off,
+					Q1 => );	
+
+FB_TimeSwitch_Boiler(
+	b_Enable:= b_Enable_Control_Boiler, 
+	b_StatusOn:= prg5530CON.fbShelly[12].bStateP1 AND prg5530CON.fbShelly[13].bStateP1 AND prg5530CON.fbShelly[14].bStateP1, 
+	structSystemTime:= prg_SystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Boiler_Offset_Start , 
+	real_Offset_Stop:= real_Boiler_Offset_Stop , 
+	b_On_Manual:= b_Boiler_Manual_On, 
+	b_Off_Manual:= b_Boiler_Manual_Off, 
+	b_Output_On=> , 
+	b_Error=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="prg5530EMS">
+      <LineId Id="253" Count="25" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="279" Count="20" />
+      <LineId Id="236" Count="1" />
+      <LineId Id="300" Count="20" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="322" Count="20" />
+      <LineId Id="240" Count="1" />
+      <LineId Id="343" Count="43" />
+      <LineId Id="422" Count="2" />
+      <LineId Id="502" Count="2" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="400" Count="20" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

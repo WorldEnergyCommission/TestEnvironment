@@ -1,0 +1,529 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ElectricChargingStation" Id="{3cd14d52-46a3-470a-b240-df0134486efd}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_ElectricChargingStation
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable									: BOOL;									//Enable the Fuctionblock and his logic
+	{attribute 'hide'}
+	bError									: BOOL;									//Error Input charging station
+	{attribute 'hide'}
+	bWarning								: BOOL;									//Warning Input charging station
+	{attribute 'hide'}
+	bEPOIsActive							: BOOL;									//Emergency power operation is active
+	{attribute 'hide'}
+	bExternalLock							: BOOL;									//External lock (All functions are locked)
+	{attribute 'hide'}
+	bCarConnected							: BOOL;									//Feedback if the car is connected to the charging station
+	{attribute 'hide'}
+	bWriteWithDelay							: BOOL;									//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	bCalculateEnergySession					: BOOL;									//When its true then the Energy Session is calculatet by the diffference of arrEnergySession[] when we have a change. FALSE = Use direct the Input from arrEnergySession[]
+	{attribute 'hide'}
+	iErrorCode								: INT;									//Error Code from external ECS
+	{attribute 'hide'}
+	iWarningCode							: INT;									//Warning Code from external ECS
+	{attribute 'hide'}							
+	dwBatterySOC							: DWORD;								//Actual Battery SOC in %
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption		: LREAL;								//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production			: LREAL;								//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption			: LREAL;								//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption			: LREAL;								//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production			: LREAL;								//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production			: LREAL;								//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrTotalPowerECS							: LREAL;								//Input Value from the total power of the charging station with unit W
+	{attribute 'hide'}
+	rTargetPower							: REAL;									//Target power from 0% to +100%
+	{attribute 'hide'}
+	rSupplyVoltage							: REAL;									//Supply voltage of the charging station for current calculation
+	{attribute 'hide'}
+	rMinCurrent								: REAL;									//Min. current that must flow for the charging station to switch on (if the current falls below this value, the car will not accept charging)
+	{attribute 'hide'}
+	tTimDelayOutput							: TIME := T#5S;							//Delay Time to write some Data to the Output	
+	{attribute 'hide'}
+	tDelayError								: TIME := T#15S;						//Delay for Error
+	{attribute 'hide'}	
+	arrSocketMode3StateECS					: ARRAY[1..4] OF STRING(2);				//Mode 3 State Charging Station of each socket (A + E = ECS Ready or free, B1 + B2 + C1 + D1 = Car connected, C2 + D2 = Charging, F = Error)
+	{attribute 'hide'}	
+	arrSOCCar								: ARRAY[1..4] OF DWORD;					//SOC from the car from each socket. 0 - 100%
+	{attribute 'hide'}	
+	arrSocketChargingTimeInput				: ARRAY[1..4] OF REAL;					//Past charging time in min from each socket
+	{attribute 'hide'}	
+	arrSocketEnergySession					: ARRAY[1..4] OF LREAL;					//Input for Energy Session or total Energy Counter of each socket. Look at the Input bCalculateEnergySession. Wh
+	{attribute 'hide'}	
+	arrSocketPowerECS						: ARRAY[1..4] OF LREAL;					//Input Value from the power of each socket from the charging station with unit W
+	{attribute 'hide'}
+	stSetupECS								: ST_Setup_ECS;							//Setup charging station
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataECSOut							: ST_ECS_Output;						//Electric charging station output data
+	{attribute 'hide'}
+	stDataECSOutDelay						: ST_ECS_Output;						//Electric charging station output data with delay
+END_VAR
+VAR
+	FPEnable								: R_TRIG;								//Internal positive Edge
+	FNManualy								: F_TRIG;								//Internal negative edge
+	FNEnable								: F_TRIG;								//Internal negative Edge
+	timDelayOutputs							: TON;									//Timer to send Data with Delay to the outputs
+	timError								: TON;									//Timer to set the error
+	timSOCDissable							: TON;									//Delay to dissable the ECS when the battery SOC has reached the value to dissale
+	bMinCurrent								: BOOL;									//Current is fallen below min
+	rMaxCurrent								: REAL;									//Max current from the charging station
+	rPorcentOn								: REAL;									//Porcent value when the charging station switch on
+	FPMode3C2								: ARRAY[1..4] OF R_TRIG;				//Internal positive Edge
+	FPMode3D2								: ARRAY[1..4] OF R_TRIG;				//Internal positive Edge
+	arrEnergySession_Cmp					: ARRAY[1..4] OF LREAL;					//Total Energy Comsumption for calculation of the energy session
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 19.05.2021
+//Version : 1.0.0.0
+
+//This function block can be used to display the basic logic of a charging station.
+//The charging station can either be switched on manually, in which case the power specification is not observed
+//Otherwise the switching output of the charging station is set at 100% power setting
+//In the power default mode, the SOC of the battery must be between On and Off SOC and must have reached On SOC once
+//< Constants.byTargetOffPowerOnOffDevices the output is reset because of the hysteresis
+//This FB can be used for charging stations on/off and for those which can be controlled linearly.
+//Furthermore, the FB has an external blocking signal which switches off all functions as long as this is active.
+//In addition, the FB outputs the power specification in parallel as a current specification. Ratio between power and voltage
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+
+arrSOCCar[1] := LIMIT(0,arrSOCCar[1],100); arrSOCCar[2] := LIMIT(0,arrSOCCar[2],100); arrSOCCar[3] := LIMIT(0,arrSOCCar[3],100); arrSOCCar[4] := LIMIT(0,arrSOCCar[4],100);
+	dwBatterySOC := LIMIT(0,dwBatterySOC,100);
+		rTargetPower := LIMIT(0,rTargetPower,100);
+			stSetupECS.byManualyTargetPower := LIMIT(0,stSetupECS.byManualyTargetPower,100);
+				stSetupECS.rMaxPower := LIMIT(0,stSetupECS.rMaxPower,500);
+					stSetupECS.byCSMinPower := LIMIT(0,stSetupECS.byCSMinPower,100);	
+						arrSocketChargingTimeInput[1] := LIMIT(0,arrSocketChargingTimeInput[1],100000); arrSocketChargingTimeInput[2] := LIMIT(0,arrSocketChargingTimeInput[2],100000); arrSocketChargingTimeInput[3] := LIMIT(0,arrSocketChargingTimeInput[3],100000); arrSocketChargingTimeInput[4] := LIMIT(0,arrSocketChargingTimeInput[4],100000);
+							rSupplyVoltage := LIMIT(0,rSupplyVoltage,1000);
+							
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrTotalPowerECS := LIMIT(-999999999999999,lrTotalPowerECS,999999999999999);
+							arrSocketPowerECS[1] := LIMIT(-999999999999999,arrSocketPowerECS[1],999999999999999);
+								arrSocketPowerECS[2] := LIMIT(-999999999999999,arrSocketPowerECS[2],999999999999999);
+									arrSocketPowerECS[3] := LIMIT(-999999999999999,arrSocketPowerECS[3],999999999999999);
+										arrSocketPowerECS[4] := LIMIT(-999999999999999,arrSocketPowerECS[4],999999999999999);
+											IF IsFinite(F_LREAL(arrSocketEnergySession[1])) THEN arrSocketEnergySession[1] := LIMIT(0,arrSocketEnergySession[1],999999999999999); END_IF
+												IF IsFinite(F_LREAL(arrSocketEnergySession[2])) THEN arrSocketEnergySession[2] := LIMIT(0,arrSocketEnergySession[2],999999999999999); END_IF
+													IF IsFinite(F_LREAL(arrSocketEnergySession[3])) THEN arrSocketEnergySession[3] := LIMIT(0,arrSocketEnergySession[3],999999999999999); END_IF
+														IF IsFinite(F_LREAL(arrSocketEnergySession[4])) THEN arrSocketEnergySession[4] := LIMIT(0,arrSocketEnergySession[4],999999999999999); END_IF
+					
+IF stSetupECS.byDisableSOC > stSetupECS.byEnableSOC THEN stSetupECS.byEnableSOC := stSetupECS.byDisableSOC + 1; END_IF
+
+stSetupECS.byDisableSOC := LIMIT(0,stSetupECS.byDisableSOC,100);
+	stSetupECS.byEnableSOC := LIMIT(1,stSetupECS.byEnableSOC,100);
+
+(*---------------------------------------------------------------------------Enable----------------------------------------------------------------------------------*)
+
+stDataECSOut.bEnabled := bEnable;
+
+(*-----------------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)
+
+timError(IN:= bError, PT:= tDelayError, Q=> , ET=> );
+
+stDataECSOut.byErrorWarning := 0;
+	IF bWarning THEN stDataECSOut.byErrorWarning := 1; END_IF 
+	IF timError.Q THEN stDataECSOut.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF bExternalLock THEN stDataECSOut.eMessage := E_Message_ECS.eExternalLockActive;
+ELSIF stDataECSOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataECSOut.eMessage := E_Message_ECS.eNoConnectionToBackend;
+ELSIF stDataECSOut.byErrorWarning = 1 AND iWarningCode = 1 THEN stDataECSOut.eMessage := E_Message_ECS.eWarningECS;
+ELSIF stDataECSOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataECSOut.eMessage := E_Message_ECS.eErrorECS;
+ELSIF stDataECSOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataECSOut.eMessage := E_Message_ECS.eTooMuchECS;
+ELSE stDataECSOut.eMessage := E_Message_ECS.eNoMessage; 
+END_IF
+
+(*----------------------------------------------------------------------------Logic Part------------------------------------------------------------------------------------*)
+
+//Target power
+stDataECSOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT(rTargetPower * 100)) / 100;
+IF rTargetPower <= stSetupECS.byCSMinPower THEN stDataECSOut.rTargetPower := BYTE_TO_REAL(stSetupECS.byCSMinPower); END_IF 
+IF stSetupECS.bManualyOn THEN stDataECSOut.rTargetPower := BYTE_TO_REAL(stSetupECS.byManualyTargetPower); END_IF  
+
+//When the current is fallen below the minimum then the charging station is switching off
+//Calculate the max current for this charging station
+IF rSupplyVoltage > 0 THEN
+	rMaxCurrent := (stSetupECS.rMaxPower * 1000) / rSupplyVoltage;
+ELSE
+	rMaxCurrent := 0;
+END_IF
+	stDataECSOut.rTargetChargeCurrent := F_Scalvalue(x:= stDataECSOut.rTargetPower, x1:= 0, y1:= 0, x2:= 100, y2:= rMaxCurrent); 
+	
+IF rMaxCurrent = 0 THEN bMinCurrent := TRUE; ELSE bMinCurrent := FALSE; END_IF
+
+//Calculate the porcent value for the min current
+IF rMaxCurrent > 0 THEN
+	rPorcentOn := (100 * rMinCurrent) / rMaxCurrent;
+ELSE
+	rPorcentOn := 0;
+END_IF
+
+//Timer for SOC Dissable
+timSOCDissable(IN:= dwBatterySOC <= stSetupECS.byDisableSOC, PT:= T#30S, Q=> , ET=> );
+	
+//Switch Off
+FNManualy(CLK:= stSetupECS.bManualyOn, Q=> ); 
+
+IF NOT bEnable OR bMinCurrent OR bExternalLock OR stDataECSOut.byErrorWarning = 2 OR stDataECSOut.rTargetPower <= 0 OR timSOCDissable.Q OR (bEPOIsActive AND stSetupECS.bOnEmergPowerOff) OR FNManualy.Q THEN
+	stDataECSOut.bOutput := FALSE;
+END_IF
+
+//Switch On
+IF (bEnable AND NOT bExternalLock AND stDataECSOut.byErrorWarning <> 2 AND NOT bMinCurrent AND NOT bEPOIsActive AND stDataECSOut.rTargetPower > rPorcentOn AND dwBatterySOC >= stSetupECS.byEnableSOC) OR 
+	(bEnable AND NOT bExternalLock AND stDataECSOut.byErrorWarning <> 2 AND bEPOIsActive AND NOT bMinCurrent AND NOT stSetupECS.bOnEmergPowerOff AND stDataECSOut.rTargetPower > rPorcentOn AND dwBatterySOC >= stSetupECS.byEnableSOC) OR
+		(bEnable AND NOT bExternalLock AND NOT bMinCurrent AND stDataECSOut.byErrorWarning <> 2 AND stSetupECS.bManualyOn AND stDataECSOut.rTargetPower > rPorcentOn) THEN	
+			stDataECSOut.bOutput := TRUE;
+END_IF 
+
+//Use this Output to switch Charging station on and off without possibility to send a target power value (Not controllable)
+IF stDataECSOut.rTargetPower >= 100 AND stDataECSOut.bOutput THEN stDataECSOut.bOutputOnOff := TRUE; END_IF  
+IF stDataECSOut.rTargetPower < Constants_Energy.byTargetOffPowerForOnOffDevices OR NOT stDataECSOut.bOutput THEN stDataECSOut.bOutputOnOff := FALSE; END_IF  
+
+IF NOT stDataECSOut.bOutput THEN stDataECSOut.rTargetPower := 0; stDataECSOut.rTargetChargeCurrent := 0; END_IF 
+
+IF stDataECSOut.rTargetChargeCurrent < rMinCurrent AND stDataECSOut.bOutput THEN stDataECSOut.rTargetChargeCurrent := rMinCurrent; END_IF
+
+stDataECSOut.rTargetChargeCurrent := DINT_TO_REAL(REAL_TO_DINT(stDataECSOut.rTargetChargeCurrent * 100)) / 100;
+
+(*------------------------------------------------------------------Power data----------------------------------------------------------------------------------------------*)
+
+IF bEnable THEN
+	stDataECSOut.lrTotalPower:= LINT_TO_LREAL(LREAL_TO_LINT((lrTotalPowerECS / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataECSOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataECSOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataECSOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataECSOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataECSOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataECSOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF 
+				
+		IF stDataECSOut.lrTotalPower < 0 THEN
+				stDataECSOut.lrTotalPowerProduction := (stDataECSOut.lrTotalPower * - 1);
+				stDataECSOut.lrTotalPowerConsumption := 0;
+		ELSIF stDataECSOut.lrTotalPower > 0 THEN
+				stDataECSOut.lrTotalPowerProduction := 0;
+				stDataECSOut.lrTotalPowerConsumption := stDataECSOut.lrTotalPower;
+		ELSIF stDataECSOut.lrTotalPower = 0 THEN
+				stDataECSOut.lrTotalPowerProduction := 0;
+				stDataECSOut.lrTotalPowerConsumption := 0;
+		END_IF
+		
+		//Socket Power
+		stDataECSOut.arrSocketPower[1] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketPowerECS[1] / 1000) * 100)) / 100;
+			stDataECSOut.arrSocketPower[2] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketPowerECS[2] / 1000) * 100)) / 100;
+				stDataECSOut.arrSocketPower[3] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketPowerECS[3] / 1000) * 100)) / 100;
+					stDataECSOut.arrSocketPower[4] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketPowerECS[4] / 1000) * 100)) / 100;
+		
+ELSE
+	stDataECSOut.lrTotalPower := 0;
+		stDataECSOut.lrCounterEnergyT1_Consumption := 0;
+			stDataECSOut.lrCounterEnergyT2_Consumption := 0;
+				stDataECSOut.lrCounterEnergyT1_Production := 0;
+					stDataECSOut.lrCounterEnergyT2_Production := 0;
+						stDataECSOut.lrTotalPowerProduction := 0;
+							stDataECSOut.lrTotalPowerConsumption := 0;	
+								stDataECSOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataECSOut.lrTotalCounterEnergy_Production := 0;
+									
+	//Socket
+	stDataECSOut.arrSocketPower[1] := 0;
+			stDataECSOut.arrSocketPower[2] := 0;
+				stDataECSOut.arrSocketPower[3] := 0;
+					stDataECSOut.arrSocketPower[4] := 0;
+END_IF
+
+//Calcualte Energy from actual Session
+FPMode3C2[1](CLK:= arrSocketMode3StateECS[1] = 'C2', Q=> );
+	FPMode3D2[1](CLK:= arrSocketMode3StateECS[1] = 'D2', Q=> );
+		FPMode3C2[2](CLK:= arrSocketMode3StateECS[2] = 'C2', Q=> );
+			FPMode3D2[2](CLK:= arrSocketMode3StateECS[2] = 'D2', Q=> );
+				FPMode3C2[3](CLK:= arrSocketMode3StateECS[3] = 'C2', Q=> );
+					FPMode3D2[3](CLK:= arrSocketMode3StateECS[3] = 'D2', Q=> );
+						FPMode3C2[4](CLK:= arrSocketMode3StateECS[4] = 'C2', Q=> );
+							FPMode3D2[4](CLK:= arrSocketMode3StateECS[4] = 'D2', Q=> );
+			
+IF bCalculateEnergySession THEN 
+		//Socket 1
+		IF FPMode3C2[1].Q OR FPMode3D2[1].Q THEN
+			//Reset Counter when a new session is started
+			stDataECSOut.arrSocketEnergySession[1] := 0;
+				//Copy the Total Counter in kWh when a new session is started
+				IF IsFinite(F_LREAL(arrSocketEnergySession[1])) THEN
+					arrEnergySession_Cmp[1] := arrSocketEnergySession[1];
+				END_IF
+		END_IF
+			IF (arrEnergySession_Cmp[1] <> arrSocketEnergySession[1] AND IsFinite(F_LREAL(arrSocketEnergySession[1])) AND (arrSocketMode3StateECS[1] = 'C2' OR arrSocketMode3StateECS[1] = 'D2')) THEN
+				stDataECSOut.arrSocketEnergySession[1] := stDataECSOut.arrSocketEnergySession[1] + (arrSocketEnergySession[1] - arrEnergySession_Cmp[1]) / 1000;  
+					stDataECSOut.arrSocketEnergySession[1] := stDataECSOut.arrSocketEnergySession[1];
+						arrEnergySession_Cmp[1] := arrSocketEnergySession[1];		
+			END_IF
+		//Socket 2
+		IF FPMode3C2[2].Q OR FPMode3D2[2].Q THEN
+			//Reset Counter when a new session is started
+			stDataECSOut.arrSocketEnergySession[2] := 0;
+				//Copy the Total Counter in kWh when a new session is started
+				IF IsFinite(F_LREAL(arrSocketEnergySession[2])) THEN
+					arrEnergySession_Cmp[2] := arrSocketEnergySession[2];
+				END_IF
+		END_IF
+			IF (arrEnergySession_Cmp[2] <> arrSocketEnergySession[2] AND IsFinite(F_LREAL(arrSocketEnergySession[2])) AND (arrSocketMode3StateECS[2] = 'C2' OR arrSocketMode3StateECS[2] = 'D2')) THEN
+				stDataECSOut.arrSocketEnergySession[2] := stDataECSOut.arrSocketEnergySession[2] + (arrSocketEnergySession[2] - arrEnergySession_Cmp[2]) / 1000;  
+					stDataECSOut.arrSocketEnergySession[2] := stDataECSOut.arrSocketEnergySession[2];
+						arrEnergySession_Cmp[2] := arrSocketEnergySession[2];		
+			END_IF
+		//Socket 3
+		IF FPMode3C2[3].Q OR FPMode3D2[3].Q THEN
+			//Reset Counter when a new session is started
+			stDataECSOut.arrSocketEnergySession[3] := 0;
+				//Copy the Total Counter in kWh when a new session is started
+				IF IsFinite(F_LREAL(arrSocketEnergySession[3])) THEN
+					arrEnergySession_Cmp[3] := arrSocketEnergySession[3];
+				END_IF
+		END_IF
+			IF (arrEnergySession_Cmp[3] <> arrSocketEnergySession[3] AND IsFinite(F_LREAL(arrSocketEnergySession[3])) AND (arrSocketMode3StateECS[3] = 'C2' OR arrSocketMode3StateECS[3] = 'D2')) THEN
+				stDataECSOut.arrSocketEnergySession[3] := stDataECSOut.arrSocketEnergySession[3] + (arrSocketEnergySession[3] - arrEnergySession_Cmp[3]) / 1000;  
+					stDataECSOut.arrSocketEnergySession[3] := stDataECSOut.arrSocketEnergySession[3];
+						arrEnergySession_Cmp[3] := arrSocketEnergySession[3];		
+			END_IF
+		//Socket 4
+		IF FPMode3C2[4].Q OR FPMode3D2[4].Q THEN
+			//Reset Counter when a new session is started
+			stDataECSOut.arrSocketEnergySession[4] := 0;
+				//Copy the Total Counter in kWh when a new session is started
+				IF IsFinite(F_LREAL(arrSocketEnergySession[4])) THEN
+					arrEnergySession_Cmp[4] := arrSocketEnergySession[4];
+				END_IF
+		END_IF
+			IF (arrEnergySession_Cmp[4] <> arrSocketEnergySession[4] AND IsFinite(F_LREAL(arrSocketEnergySession[4])) AND (arrSocketMode3StateECS[4] = 'C2' OR arrSocketMode3StateECS[4] = 'D2')) THEN
+				stDataECSOut.arrSocketEnergySession[4] := stDataECSOut.arrSocketEnergySession[4] + (arrSocketEnergySession[4] - arrEnergySession_Cmp[4]) / 1000;  
+					stDataECSOut.arrSocketEnergySession[4] := stDataECSOut.arrSocketEnergySession[4];
+						arrEnergySession_Cmp[4] := arrSocketEnergySession[4];		
+			END_IF
+			
+		stDataECSOut.arrSocketEnergySession[1] := LINT_TO_LREAL(LREAL_TO_LINT(stDataECSOut.arrSocketEnergySession[1] * 1000)) / 1000;
+		stDataECSOut.arrSocketEnergySession[2] := LINT_TO_LREAL(LREAL_TO_LINT(stDataECSOut.arrSocketEnergySession[2] * 1000)) / 1000;
+		stDataECSOut.arrSocketEnergySession[3] := LINT_TO_LREAL(LREAL_TO_LINT(stDataECSOut.arrSocketEnergySession[3] * 1000)) / 1000;
+		stDataECSOut.arrSocketEnergySession[4] := LINT_TO_LREAL(LREAL_TO_LINT(stDataECSOut.arrSocketEnergySession[4] * 1000)) / 1000;
+			
+ELSE
+	IF IsFinite(F_LREAL(arrSocketEnergySession[1])) THEN stDataECSOut.arrSocketEnergySession[1] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketEnergySession[1] / 1000) * 1000)) / 1000; END_IF
+		IF IsFinite(F_LREAL(arrSocketEnergySession[2])) THEN stDataECSOut.arrSocketEnergySession[2] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketEnergySession[2] / 1000) * 1000)) / 1000; END_IF
+			IF IsFinite(F_LREAL(arrSocketEnergySession[3])) THEN stDataECSOut.arrSocketEnergySession[3] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketEnergySession[3] / 1000) * 1000)) / 1000; END_IF
+				IF IsFinite(F_LREAL(arrSocketEnergySession[4])) THEN stDataECSOut.arrSocketEnergySession[4] := LINT_TO_LREAL(LREAL_TO_LINT((arrSocketEnergySession[4] / 1000) * 1000)) / 1000; END_IF
+END_IF
+		
+(*---------------------------------------------------------------------------Outputs--------------------------------------------------------------------------------------*)
+
+stDataECSOut.byPriority := stSetupECS.byPriority;
+	stDataECSOut.rMaxPower := DINT_TO_REAL(REAL_TO_DINT(stSetupECS.rMaxPower * 100)) / 100;
+		stDataECSOut.bSOnEmergPowerOff := stSetupECS.bOnEmergPowerOff;
+			stDataECSOut.bSManualyOn := stSetupECS.bManualyOn;
+				stDataECSOut.bySManualyTargetPower := stSetupECS.byManualyTargetPower;
+					stDataECSOut.bySCSMinPower := stSetupECS.byCSMinPower;
+
+stDataECSOut.bCarConnected := bCarConnected;
+
+//Mode 3 State
+//Socket 1
+//No Value.
+IF arrSocketMode3StateECS[1] = '' OR arrSocketMode3StateECS[1] = 'F' OR NOT bEnable THEN
+	stDataECSOut.arrSocketStateECS[1] := 0;
+//ECS ready and Free	
+ELSIF arrSocketMode3StateECS[1] = 'A' OR arrSocketMode3StateECS[1] = 'E' THEN
+	stDataECSOut.arrSocketStateECS[1] := 1;
+//Car Connected
+ELSIF arrSocketMode3StateECS[1] = 'B1' OR arrSocketMode3StateECS[1] = 'B2' OR arrSocketMode3StateECS[1] = 'C1' OR arrSocketMode3StateECS[1] = 'D1' THEN
+	stDataECSOut.arrSocketStateECS[1] := 2;
+//Car Charging
+ELSIF arrSocketMode3StateECS[1] = 'C2' OR arrSocketMode3StateECS[1] = 'D2' THEN
+	stDataECSOut.arrSocketStateECS[1] := 3;
+END_IF
+//Socket 2
+//No Value.
+IF arrSocketMode3StateECS[2] = '' OR arrSocketMode3StateECS[2] = 'F' OR NOT bEnable THEN
+	stDataECSOut.arrSocketStateECS[2] := 0;
+//ECS ready and Free	
+ELSIF arrSocketMode3StateECS[2] = 'A' OR arrSocketMode3StateECS[2] = 'E' THEN
+	stDataECSOut.arrSocketStateECS[2] := 1;
+//Car Connected
+ELSIF arrSocketMode3StateECS[2] = 'B1' OR arrSocketMode3StateECS[2] = 'B2' OR arrSocketMode3StateECS[2] = 'C1' OR arrSocketMode3StateECS[2] = 'D1' THEN
+	stDataECSOut.arrSocketStateECS[2] := 2;
+//Car Charging
+ELSIF arrSocketMode3StateECS[2] = 'C2' OR arrSocketMode3StateECS[2] = 'D2' THEN
+	stDataECSOut.arrSocketStateECS[2] := 3;
+END_IF
+//Socket 3
+//No Value.
+IF arrSocketMode3StateECS[3] = '' OR arrSocketMode3StateECS[3] = 'F' OR NOT bEnable THEN
+	stDataECSOut.arrSocketStateECS[3] := 0;
+//ECS ready and Free	
+ELSIF arrSocketMode3StateECS[3] = 'A' OR arrSocketMode3StateECS[3] = 'E' THEN
+	stDataECSOut.arrSocketStateECS[3] := 1;
+//Car Connected
+ELSIF arrSocketMode3StateECS[3] = 'B1' OR arrSocketMode3StateECS[3] = 'B2' OR arrSocketMode3StateECS[3] = 'C1' OR arrSocketMode3StateECS[3] = 'D1' THEN
+	stDataECSOut.arrSocketStateECS[3] := 2;
+//Car Charging
+ELSIF arrSocketMode3StateECS[3] = 'C2' OR arrSocketMode3StateECS[3] = 'D2' THEN
+	stDataECSOut.arrSocketStateECS[3] := 3;
+END_IF
+//Socket 4
+//No Value.
+IF arrSocketMode3StateECS[4] = '' OR arrSocketMode3StateECS[4] = 'F' OR NOT bEnable THEN
+	stDataECSOut.arrSocketStateECS[4] := 0;
+//ECS ready and Free	
+ELSIF arrSocketMode3StateECS[4] = 'A' OR arrSocketMode3StateECS[4] = 'E' THEN
+	stDataECSOut.arrSocketStateECS[4] := 1;
+//Car Connected
+ELSIF arrSocketMode3StateECS[4] = 'B1' OR arrSocketMode3StateECS[4] = 'B2' OR arrSocketMode3StateECS[4] = 'C1' OR arrSocketMode3StateECS[4] = 'D1' THEN
+	stDataECSOut.arrSocketStateECS[4] := 2;
+//Car Charging
+ELSIF arrSocketMode3StateECS[4] = 'C2' OR arrSocketMode3StateECS[4] = 'D2' THEN
+	stDataECSOut.arrSocketStateECS[4] := 3;
+END_IF
+	
+IF bEnable THEN
+	stDataECSOut.arrSocketSOCCar[1] := arrSOCCar[1];
+	stDataECSOut.arrSocketSOCCar[2] := arrSOCCar[2];
+	stDataECSOut.arrSocketSOCCar[3] := arrSOCCar[3];
+	stDataECSOut.arrSocketSOCCar[4] := arrSOCCar[4];
+		stDataECSOut.arrChargingTimeInMin[1] := DINT_TO_REAL(REAL_TO_DINT(arrSocketChargingTimeInput[1] * 100)) / 100;
+		stDataECSOut.arrChargingTimeInMin[2] := DINT_TO_REAL(REAL_TO_DINT(arrSocketChargingTimeInput[2] * 100)) / 100;
+		stDataECSOut.arrChargingTimeInMin[3] := DINT_TO_REAL(REAL_TO_DINT(arrSocketChargingTimeInput[3] * 100)) / 100;
+		stDataECSOut.arrChargingTimeInMin[4] := DINT_TO_REAL(REAL_TO_DINT(arrSocketChargingTimeInput[4] * 100)) / 100;
+ELSE
+	stDataECSOut.arrSocketSOCCar[1] := 0;
+	stDataECSOut.arrSocketSOCCar[2] := 0;
+	stDataECSOut.arrSocketSOCCar[3] := 0;
+	stDataECSOut.arrSocketSOCCar[4] := 0;
+		stDataECSOut.arrChargingTimeInMin[1] := 0;
+		stDataECSOut.arrChargingTimeInMin[2] := 0;
+		stDataECSOut.arrChargingTimeInMin[3] := 0;
+		stDataECSOut.arrChargingTimeInMin[4] := 0;
+END_IF
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+		
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataECSOutDelay := stDataECSOut;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ElectricChargingStation">
+      <LineId Id="888" Count="31" />
+      <LineId Id="1503" Count="3" />
+      <LineId Id="1324" Count="0" />
+      <LineId Id="1409" Count="2" />
+      <LineId Id="920" Count="20" />
+      <LineId Id="1124" Count="0" />
+      <LineId Id="941" Count="28" />
+      <LineId Id="1197" Count="2" />
+      <LineId Id="970" Count="45" />
+      <LineId Id="1500" Count="2" />
+      <LineId Id="1507" Count="2" />
+      <LineId Id="1016" Count="10" />
+      <LineId Id="1512" Count="1" />
+      <LineId Id="1516" Count="2" />
+      <LineId Id="1514" Count="0" />
+      <LineId Id="1027" Count="0" />
+      <LineId Id="1294" Count="1" />
+      <LineId Id="1302" Count="1" />
+      <LineId Id="1412" Count="5" />
+      <LineId Id="1320" Count="0" />
+      <LineId Id="1319" Count="0" />
+      <LineId Id="1408" Count="0" />
+      <LineId Id="1296" Count="0" />
+      <LineId Id="1298" Count="0" />
+      <LineId Id="1304" Count="0" />
+      <LineId Id="1306" Count="0" />
+      <LineId Id="1616" Count="0" />
+      <LineId Id="1307" Count="0" />
+      <LineId Id="1617" Count="0" />
+      <LineId Id="1297" Count="0" />
+      <LineId Id="1308" Count="0" />
+      <LineId Id="1312" Count="0" />
+      <LineId Id="1797" Count="0" />
+      <LineId Id="1313" Count="0" />
+      <LineId Id="1311" Count="0" />
+      <LineId Id="1419" Count="4" />
+      <LineId Id="1618" Count="0" />
+      <LineId Id="1424" Count="0" />
+      <LineId Id="1619" Count="0" />
+      <LineId Id="1425" Count="0" />
+      <LineId Id="1799" Count="3" />
+      <LineId Id="1418" Count="0" />
+      <LineId Id="1430" Count="4" />
+      <LineId Id="1620" Count="0" />
+      <LineId Id="1435" Count="0" />
+      <LineId Id="1621" Count="0" />
+      <LineId Id="1436" Count="0" />
+      <LineId Id="1803" Count="3" />
+      <LineId Id="1429" Count="0" />
+      <LineId Id="1442" Count="4" />
+      <LineId Id="1623" Count="0" />
+      <LineId Id="1447" Count="0" />
+      <LineId Id="1624" Count="0" />
+      <LineId Id="1448" Count="0" />
+      <LineId Id="1807" Count="3" />
+      <LineId Id="1441" Count="0" />
+      <LineId Id="1708" Count="0" />
+      <LineId Id="1710" Count="3" />
+      <LineId Id="1709" Count="0" />
+      <LineId Id="1440" Count="0" />
+      <LineId Id="1322" Count="0" />
+      <LineId Id="1452" Count="2" />
+      <LineId Id="1323" Count="0" />
+      <LineId Id="1309" Count="0" />
+      <LineId Id="1029" Count="9" />
+      <LineId Id="1281" Count="0" />
+      <LineId Id="1280" Count="0" />
+      <LineId Id="1455" Count="0" />
+      <LineId Id="1282" Count="1" />
+      <LineId Id="1277" Count="0" />
+      <LineId Id="1285" Count="0" />
+      <LineId Id="1284" Count="0" />
+      <LineId Id="1286" Count="1" />
+      <LineId Id="1289" Count="0" />
+      <LineId Id="1288" Count="0" />
+      <LineId Id="1291" Count="1" />
+      <LineId Id="1290" Count="0" />
+      <LineId Id="1293" Count="0" />
+      <LineId Id="1459" Count="12" />
+      <LineId Id="1458" Count="0" />
+      <LineId Id="1473" Count="12" />
+      <LineId Id="1472" Count="0" />
+      <LineId Id="1487" Count="12" />
+      <LineId Id="1486" Count="0" />
+      <LineId Id="1039" Count="2" />
+      <LineId Id="1519" Count="2" />
+      <LineId Id="1042" Count="0" />
+      <LineId Id="1527" Count="2" />
+      <LineId Id="1043" Count="1" />
+      <LineId Id="1522" Count="2" />
+      <LineId Id="1045" Count="0" />
+      <LineId Id="1530" Count="2" />
+      <LineId Id="1046" Count="8" />
+      <LineId Id="687" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

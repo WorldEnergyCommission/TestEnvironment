@@ -1,0 +1,1379 @@
+{
+  "HeatingCircuitOptimization": {
+    "title": "Heating Circuit Optimization description",
+    "name": "HeatingCircuitOptimization",
+    "overview": "<div> This controller is designed for optimal temperature control in buildings. Every 15 minutes, the controller predicts the room temperature for the next six hours and calculates the optimal valve position to minimize energy consumption while keeping comfort high. The controller outputs the calculated valve position and a prediction for the room temperature, which can be mapped on the field device. <div style=\"text-align: center; margin-top: 10px\">The controller requires the following variables: <br>Flow and return temperature of the heating circuit <br>Room temperature <br>Valve position <br>Temperature of adjacent rooms <br>Location of the building <br>Set temperature</div> <div style=\"margin-top: 10px\">IMPORTANT: It is important that the current value of the valve position on the plc also corresponds to that sent to the MPC controller.</div> </div>",
+    "table": [
+      {
+        "name": "current_value_chart",
+        "description": "Shows the calculated valve position of the MPC Service for this area and the calculated room temperature of the MPC Service for this area for the next 6 hours. OR With Forecast, the data that is requested by the API is displayed 6 hours in advance. This data can be displayed the same for each area. Also the saved energy is updated once a day.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "Plus (Command Plus)",
+        "description": "In the MPC service, set the target temperature to 0.5°C higher.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "Minus (Command Minus)",
+        "description": "In the MPC service, set the target temperature to 0.5°C lower.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "Output field 1 (Actual Value Target Temperature)",
+        "description": "Shows the set target temperature. The respective set temperature is displayed here when switching between normal mode and lowering mode.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "Show event (HeatingActive)",
+        "description": "Indicates when the valve is controlled by the MPC service.",
+        "allowedValues": "251 = Red <br>Al other Values = No Light"
+      },
+      {
+        "name": "Show event (MPC Ready)",
+        "description": "Indicates whether the MPC controller is ready to control the valve on plc or not.",
+        "allowedValues": "251 = Green <br>Al other Values = No Light"
+      },
+      {
+        "name": "Input field 1 (Target Value Phase 1 ON Hours)",
+        "description": "Time setting when lowering mode should be active or not. Outside this time, the normal mode is active. Hours ON",
+        "allowedValues": "0-23"
+      },
+      {
+        "name": "Input field 2 (Target Value Phase 1 OFF Hours)",
+        "description": "Time setting when lowering mode should be active or not. Outside this time, the normal mode is active. Hours OFF",
+        "allowedValues": "0-23"
+      },
+      {
+        "name": "Input field 3 (Target Value Phase 1 ON Minutes)",
+        "description": "Time setting when lowering mode should be active or not. Outside this time, the normal mode is active. Minutes ON",
+        "allowedValues": "0-59"
+      },
+      {
+        "name": "Input field 4 (Target Value Phase 1 OFF Minutes)",
+        "description": "Time setting when lowering mode should be active or not. Outside this time, the normal mode is active. Minutes OFF",
+        "allowedValues": "0-59"
+      },
+      {
+        "name": "Input field 5 (Target Value Lowering Temperature °C)",
+        "description": "The temperature for the lowering mode can be set here.",
+        "allowedValues": "5-30°C"
+      },
+      {
+        "name": "Input field 6 (Target Value Service Off Temperature °C)",
+        "description": "Here the temperature can be entered from which average outdoor temperature the controller should switch off.",
+        "allowedValues": "15-20°C"
+      },
+      {
+        "name": "1 Switch (On Lowering Mode, Off Lowering Mode, State Lowering Mode)",
+        "description": "This switch can be used to activate or deactivate the lowering mode.",
+        "allowedValues": ""
+      },
+      {
+        "name": "Show event (ServiceOn/Off)",
+        "description": "Indicates whether the controller is switched on or off. This can be the case, for example, when the outdoor temperature is too high.",
+        "allowedValues": "251 = Green <br> Al other Values = Red"
+      },
+      {
+        "name": "Start Date for historical Data",
+        "description": "Here a start date can be selected, from when the data from the database can be used retroactively for this controller for learning. This is the so-called historical data. If no date is specified, the controller does not use any historical data for learning. Learning and until the controller is than ready for use will then take longer.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "Flow Temperature",
+        "description": "Flow temperature of the heating circuit from the Room which is to be regulated",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Return Temperature",
+        "description": "Return temperature of the heating circuit from the Room which is to be regulated",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Room Temperature",
+        "description": "Room temperature which is to be regulated.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Valve Position",
+        "description": "Valve Position from the Room from PLC to MPC Controller which is to be regulated.",
+        "allowedValues": "0-1 or 0-100"
+      },
+      {
+        "name": "New Vale Position",
+        "description": "New Valve position what the MPC Controller has calculated to send on the PLC",
+        "allowedValues": "0-1 or 0-100"
+      },
+      {
+        "name": "New Room Temperature",
+        "description": "New calculated room temperature to be reached in the next hour. ",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "New Set Temperature",
+        "description": "Here the current setpoint temperature can be sent from the MPC to the PLC.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "The MPC Service generate a optional Heartbeat, to monitore on the PLC that the Service is active or not. The value switch every 60 seconds between 0 and 1",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Error/Warning",
+        "description": "Error/Warning State from the MPC Controller to send to the PLC.",
+        "allowedValues": "0= OK <br> 1 = Warning <br> 2= Error"
+      },
+      {
+        "name": "MPC Ready",
+        "description": "This variable indicates whether the MPC controller is ready to control the valve on plc or not.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Additional Room Temperature",
+        "description": "Additional room temperatures can be specified here, e.g. the room temperatures of the neighboring rooms of the respective room in which the MPC controller is stored.",
+        "allowedValues": "32 Bit Value"
+      }
+    ]
+  },
+  "PVProductionService": {
+    "title": "PV Production Service description",
+    "name": "PVProductionService",
+    "overview": "With this service, a prediction can be made based on the current PV power with how much PV power is expected in the next 24 hours. The service outputs the power in kW for the next 24 hours and the sum of the energy in kWh for the next 24 hours.",
+    "table": [
+      {
+        "name": "Start Date for historical Data",
+        "description": "Here a start date can be selected, from when the data from the database can be used retroactively for this service for learning. This is the so-called historical data. If no date is specified, the service does not use any historical data for learning. Learning and until the service is than ready for use will then take longer.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "current_value_chart",
+        "description": "Shows the forecast for the calculated PV power and the sum for the calculated PV energy for the next 24 hours. In addition, the chart shows the historical course of the calculated values including the current PV power.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "Show event (Service Ready)",
+        "description": "Indicates whether the PV Production Service is ready or not.",
+        "allowedValues": "251 = Green <br> Al other Values = No Light"
+      },
+      {
+        "name": "Output Field 1 (actual Power PV)",
+        "description": "Show the actual power of the Pv system wich is dended from the plc.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Output Field 2 (calculated power 24h)",
+        "description": "Show the calculated power of the Pv system from the next 24h wich the service is sending to the plc",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Output Field 3 (calculated energy 24h)",
+        "description": "Show the calculated sum of energy of the Pv system from the next 24h wich the service is sending to the plc",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "The PV Production Service generate a optional Heartbeat, to monitore on the PLC that the Service is active or not. The value switch every 60 seconds between 0 and 1. ",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Error/Warning",
+        "description": "Error/Warning State from the PV Production Service to send to the PLC.",
+        "allowedValues": "0= OK <br> 1 = Warning <br> 2= Error"
+      },
+      {
+        "name": "Service Ready",
+        "description": "This variable indicates whether the PV Production Service is ready or not.",
+        "allowedValues": "0-1"
+      }
+    ]
+  },
+  "ConsumptionService": {
+    "title": "Consumption Service description",
+    "name": "ConsumptionService",
+    "overview": "This service can be used to predict how much consumption can be expected in the next 24 hours based on the current consumption power. The service outputs the power in KW for the next 24 hours and the sum of the energy in KWh for the next 24 hours.",
+    "table": [
+      {
+        "name": "current_value_chart",
+        "description": "Shows the forcast for the calculated consumption power and the sum for the calculated consumption energy for the next 24 hours. In addition, the chart shows the historical course of the calculated values including the current consumption power.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "Show event (Service Ready)",
+        "description": "Indicates whether the consumption Service is ready or not.",
+        "allowedValues": "251 = Green <br> Al other Values = No Light"
+      },
+      {
+        "name": "Output Field 1 (actual Power PV)",
+        "description": "Show the actual power of the consumption wich is dended from the plc.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Output Field 2 (calculated power 24h)",
+        "description": "Show the calculated power of the consumption from the next 24h wich the service is sending to the plc",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Output Field 3 (calculated energy 24h)",
+        "description": "Show the calculated sum of energy of the consumption from the next 24h wich the service is sending to the plc",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "The consumption Service generate a optional Heartbeat, to monitore on the PLC that the Service is active or not. The value switch every 60 seconds between 0 and 1.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Error/Warning",
+        "description": "Error/Warning State from the Consumption Service to send to the PLC.",
+        "allowedValues": "0= OK <br> 1 = Warning <br> 2= Error"
+      },
+      {
+        "name": "Service Ready",
+        "description": "This variable indicates whether the Consumption Service is ready or not.",
+        "allowedValues": "0-1"
+      }
+    ]
+  },
+  "EMS": {
+    "title": "EMS",
+    "name": "EMS",
+    "overview": "With this logarithm it is possible via artificial intelligence and weather data to use and distribute the produced energy in the building as optimally as possible. The producers incl. grid connection can be added individually. Also the common consumers like heat pumps, charging stations and batteries can be generated individually. The data is than prepared in the backend and then forwarded to the controller for execution. Various settings can then be made to the devices during operation. In addition, the service offers the possibility to view the generation and consumption for the next 24 hours. This data is also stored historically in parallel and is thus also available later.",
+    "table": [
+      {
+        "name": "Heartbeat",
+        "description": "The  Energy optimization is generate a optional Heartbeat, to monitore on the PLC that the Service is active or not. The value switch every 60 seconds between 0 and 1.",
+        "allowedValues": "32 Bit Value"
+      },
+      {
+        "name": "Show event (Error/Warning)\n",
+        "description": "Error/Warning State from the  Energy optimization is to send to the PLC.\n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Show event (Energy optimization Ready)\n",
+        "description": "This variable indicates whether the Energy optimization is ready or not.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "New Battery power\n",
+        "description": "This variable indicates the new battery power from Backend to the plc. Every 15 Minutes.\n",
+        "allowedValues": "32 Bit Value\n"
+      },
+      {
+        "name": "Activate Heating Pump\n",
+        "description": "This variable indicates when on the plc the heating pump can switch on when we have no surplus in the next 24 hours. So switch on the heating pump in the time when we have lower tariff for current costs. \n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Controling state\n",
+        "description": "The control mode of the service is linked here.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Input Field 1 (Size Main Fuse charging Station)\n",
+        "description": "Indicates the size of the main fuse of the charging stations in kW\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Dropdown (Operation Mode EMS)\n",
+        "description": "Operation Mode EMS\n",
+        "allowedValues": "0 = All off; 1 = Self Consumption; 2 = Peak Load capping; 3 = Load management; 4 = Adaptive Self Consumption; \n"
+      },
+      {
+        "name": "Input Field 2 (Max deph of Discharge in Emergency power mode)\n",
+        "description": "If islanding is active, the maximum discharge depth of the batteries can be set here until the inverter switches off.\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Input Field 3 (Reserve Battery SOC for Emergeny power mode)",
+        "description": "Reserve SOC in battery for emergency power operation\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Input Field 4 (Minimal SOC for Adaptive Self Consumption)",
+        "description": "Minimal SOC for Adaptive Self Consumption\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Input Field 5 (Priority min charge Battery SOC in Emergency power mode)\n",
+        "description": "If emergency power is active battery inverter which builds up the stand-alone grid first charge up to this % value, only than allocate power according to priorities\n",
+        "allowedValues": "25-75\n"
+      },
+      {
+        "name": "Input Field 6 (Reserve Charge from grid)\n",
+        "description": "Reserve in battery charged from grid when grid measured < grid max size and below this value (only active in peak load capping and load management mode).\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Input Field 7 (Update Time EMS)\n",
+        "description": "Update Time when EMS calculate new Emergy surplus or energy consumption and controll than the consumers. The Unit is seconds.\n",
+        "allowedValues": "1-600\n"
+      },
+      {
+        "name": "DropDown (Message EMS)\n",
+        "description": "Message from the EMS Function.\n",
+        "allowedValues": "0 = Dissabled; 1 = Enabled; 2 = All prioritys at the minimum; 3 = All prioritys at the maximum; 4 = Missing Power Values On Device Setup; 5 = Too many Functions In This Project\n"
+      },
+      {
+        "name": "Switch_2v (Enable EMS)\n",
+        "description": "Enable or Disable the EMS Function\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable EMS)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (Button Allowed charging from Grid)\n",
+        "description": "With this Button its possible to allowed the charging from the battery from grid. Its only active in the load management mode and peak capping mode.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Allowed charging from Grid)\n",
+        "description": "Here a variable can be linked which provides the status of the allowed to charge Battery from Grid Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Start Date for historical Data\n",
+        "description": "Here a start date can be selected, from when the data from the database can be used retroactively for this service for learning. This is the so-called historical data. If no date is specified, the service does not use any historical data for learning. Learning and until the service is than ready for use will then take longer.\n",
+        "allowedValues": "Used for internal communication\n"
+      },
+      {
+        "name": "current_value_chart",
+        "description": "Shows the forecast for the power and sum of the energy for the different and added consumers and producers for the next 24 hours. In addition, the chart shows the historical course of the calculated values including the current  power values.",
+        "allowedValues": "Used for internal communication"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual PV Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current PV production in the field. The unit is kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning PV system) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual Generator Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current Generator power in the field. The unit is kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Push Button (State Reset Button Generator) (1-10)\n",
+        "description": "Here the variable can be mapped which returns the status of the reset process.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Push Button (Button Reset Generator) (1-10)\n",
+        "description": "With this variable the reset command can be sent to the PLC\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Show Event (Error/Warning Generator) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Show Event (State Generator) (1-10)\n",
+        "description": "Here the state of the generator can be linked whether it is Push buttoned on or off. \n",
+        "allowedValues": "1 = Green Light. All other values no light\n"
+      },
+      {
+        "name": "Input Field (Enabled SOC Generator) (1-10)\n",
+        "description": "When battery SOC falling below this value the generator is switched on\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Disable SOC Generator) (1-10)\n",
+        "description": "When battery SOC this value is exceeded, the generator is switched off\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Switch_2v(Enable Generator) (1-10)\n",
+        "description": "Enable or Disable the Device\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable Generator) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual Grid Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current Grid power in the field. The unit is kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning Grid) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Input Field (Size Grid Connection) (1-10)\n",
+        "description": "Max Size from the grid connection with unit kW\n",
+        "allowedValues": "0.1-1000 KW\n"
+      },
+      {
+        "name": "Output Field (Actual Battery Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current battery power in the field. The unit is kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning Battery) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual Battery SOC) (1-10)\n",
+        "description": "Here the variable can be mapped, which contains the current Battery SOC.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field (Actual Battery Capacity) (1-10)\n",
+        "description": "Here the variable can be mapped, which contains the current Battery capacity in kWh.\n",
+        "allowedValues": "32 Bit Value\n"
+      },
+      {
+        "name": "Input Field (SOC Range: max) (1-10)\n",
+        "description": "The maximum range for the state of charge.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (SOC Range: min) (1-10)\n",
+        "description": "The minimum range for the state of charge.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field (State SOC Range: max) (1-10)\n",
+        "description": "The state of the maximum range for the state of charge.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field (State SOC Range: min) (1-10)\n",
+        "description": "The state of the minimum range for the state of charge.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field (Target Power Battery) (1-10)\n",
+        "description": "Here the variable can be mapped, which contains the current Battery power from -100%(charging) to +100%(discharging). \n",
+        "allowedValues": "-100 +100\n"
+      },
+      {
+        "name": "Input Field (Size capacity battery) (1-10)\n",
+        "description": "Here a variable can be linked which indicates the maximum size of the battery in kWh.\n",
+        "allowedValues": "0-1000 kWh\n"
+      },
+      {
+        "name": "Input Field (Priority battery) (1-10)\n",
+        "description": "Priority of the device with which it is controlled in the EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Switch_2v (Enable Battery) (1-10)\n",
+        "description": "Enable or Disable the Device\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable Battery) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Push Button (State Reset Button Battery) (1-10)\n",
+        "description": "Here the variable can be mapped which returns the status of the reset process.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Push Button (Button Reset Battery) (1-10)\n",
+        "description": "With this variable the reset command can be sent to the PLC\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual House Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current House power in the field. The unit is kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning House) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Switch_2v (Enable House power) (1-10)\n",
+        "description": "Enable or Disable the Device\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable House power) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual charging station Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current power of the charging station in the field. The unit is kW\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning charging station) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Show Event (Car connected charging station) (1-10)\n",
+        "description": "Here a variable can be linked to indicate whether the charging station is connected to a vehicle.\n",
+        "allowedValues": "1 = Green Light. All other values no light\n"
+      },
+      {
+        "name": "Output Field (Charging time charging station) (1-10)\n",
+        "description": "Here a variable can be linked that shows how much time has passed since the start of the loading process\n",
+        "allowedValues": "32 Bit Value\n"
+      },
+      {
+        "name": "Show Event (State charging station) (1-10)\n",
+        "description": "Here a variable can be linked which indicates whether the charging station is switched on or not.\n",
+        "allowedValues": "1 = Green Light. All other values no light\n"
+      },
+      {
+        "name": "Switch_2v (Emergency Power Off charging station) (1-10)\n",
+        "description": "This variable can be used to deactivate the consumer in emergency power operation.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Emergency Power Off charging station) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the Emergency Power Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (Manualy On charging station) (1-10)\n",
+        "description": "Switch the device manualy on\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State manualy on charging station) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the manually on Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Slider(Manualy target power charging station) (1-10)\n",
+        "description": "% of the max Power in kW when the Device is manually on\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(State manualy target power charging station) (1-10)\n",
+        "description": "Here a variable can be linked which returns the actual value of the slider for the manual power.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Slider(Min power charging station) (1-10)\n",
+        "description": "Min power in % of the max power in kW. The charging station is operated with this power even if there is no surplus. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(State min target power charging station) (1-10)\n",
+        "description": "Here a variable can be linked which returns the actual value of the slider for the min power.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(Target Power charging station) (1-10)\n",
+        "description": "Here the variable can be mapped, which contains the current charging station power from 0% to 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Priority charging station) (1-10)\n",
+        "description": "Priority of the device with which it is controlled in the EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Input Field (Enabled SOC charging station) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer can be switched on.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Disable SOC charging station) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer must be switched off.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Max power charging station) (1-10)\n",
+        "description": "Max. power from the charging Station with unit kW.\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Switch_2v (Enable charging station) (1-10)\n",
+        "description": "Enable or Disable the Device\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable charging station) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual electric heating element Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current power of the electric heating element in the field. The unit is kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning electric heating element) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Output Field (Temperature Boiler electric heating element) (1-10)\n",
+        "description": "Temperature in the boiler which is heated with the heating element.\n",
+        "allowedValues": "-30 +120 \n"
+      },
+      {
+        "name": "Show Event (State electric heating element) (1-10)\n",
+        "description": "Here a variable can be linked which indicates whether the electric heating element is switched on or not.\n",
+        "allowedValues": "1 = Green Light. All other values no light\n"
+      },
+      {
+        "name": "Switch_2v (Emergency Power Off electric heating element) (1-10)\n",
+        "description": "This variable can be used to deactivate the consumer in emergency power operation.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Emergency Power Off electric heating element) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the Emergency Power Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (Manualy On electric heating element) (1-10)\n",
+        "description": "Switch the device manualy on\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State manualy on electric heating element) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the manually on Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Slider(Manualy target power electric heating element) (1-10)\n",
+        "description": "% of the max Power in kW when the Device is manually on\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(State manualy target power electric heating element) (1-10)\n",
+        "description": "Here a variable can be linked which returns the actual value of the slider for the manual power.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Switch_2v (Time enabled electric heating element) (1-10)\n",
+        "description": "Heating element enabled only between the specified time if the temperature falls below the on temperature. \n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State time enabled electric heating element) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the time enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (Disable legionella protection electric heating element) (1-10)\n",
+        "description": "With this variable the legionella protection can be deactivated.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State disable legionella protection electric heating element) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the disable legionella protection Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Output Field(Target Power electric heating element) (1-10)\n",
+        "description": "Here the variable can be mapped, which contains the current heating element power from 0% to 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Priority electric heating element) (1-10)\n",
+        "description": "Priority of the device with which it is controlled in the EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Input Field (Enabled SOC electric heating element) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer can be switched on.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Disable SOC electric heating element) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer must be switched off.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Hour On electric heating element) (1-10)\n",
+        "description": "Hour from which the heating element can switch on \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Input Field (Minutes On electric heating element) (1-10)\n",
+        "description": "Minutes from which the heating element can switch on \n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Input Field (Hour Off electric heating element) (1-10)\n",
+        "description": "Hour from which the heating element can switch off\n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Input Field (Minutes Off electric heating element) (1-10)\n",
+        "description": "Minutes from which the heating element can switch off\n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Input Field (Target Temp On electric heating element) (1-10)\n",
+        "description": "Below this temperature value, the heating element is switched on in normal mode.\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Input Field (Target Temp Off electric heating element) (1-10)\n",
+        "description": "When the temperature reaches this value in normal operation, the heating element switches off.\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Input Field (Target Temp Max electric heating element) (1-10)\n",
+        "description": "Temperature setpoint that is approached in the event of excess power. (Overheating)\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Input Field (Max power electric heating element 1-10) (1-10)\n",
+        "description": "Max. power from the electric heating element with unit kW. The electric heating element can have max. 10 different Max Powers. (Step switched)\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Switch_2v (Enable electric heating element) (1-10)\n",
+        "description": "Enable or Disable the Device\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable electric heating element) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual heating pump Power) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current power of the heating pump in the field. The unit is kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning heating pump) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Push Button (State Reset Button heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped which returns the status of the reset process.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Push Button (Button Reset heating pump) (1-10)\n",
+        "description": "With this variable the reset command can be sent to the PLC\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Show Event (State heating pump) (1-10)\n",
+        "description": "Here a variable can be linked which indicates whether the heating pump is switched on or not.\n",
+        "allowedValues": "1 = Green Light. All other values no light\n"
+      },
+      {
+        "name": "Switch_2v (Emergency Power Off heating pump) (1-10)\n",
+        "description": "This variable can be used to deactivate the consumer in emergency power operation.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Emergency Power Off heating pump) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the Emergency Power Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (Manualy On heating pump) (1-10)\n",
+        "description": "Switch the device manualy on\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State manualy on heating pump) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the manually on Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Slider(Manualy target power heating pump) (1-10)\n",
+        "description": "% of the max Power in kW when the Device is manually on\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(State manualy target power heating pump) (1-10)\n",
+        "description": "Here a variable can be linked which returns the actual value of the slider for the manual power.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Switch_2v (Time enabled heating pump) (1-10)\n",
+        "description": "If True, the heat pump will be switched to the elevated mode between the specified time\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State time enabled heating pump) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the time enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Slider(Power whent time mode enabled heating pump) (1-10)\n",
+        "description": "% power to the output within release time, if the heat pump is not step switched\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(State Power when Time mode enabled heating pump) (1-10)\n",
+        "description": "Here a variable can be linked which returns the actual value of the slider for the power when the heating pump is active in time mode.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(Actual flow temperature heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped to show which flow temperature is present at the heat pump on the PLC\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Output Field(Actual return temperature heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped to show which return temperature is present at the heat pump on the PLC\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Output Field(Source inlet temperature heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped to show which source inlet temperature is present at the heat pump on the PLC. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Output Field(Source outlet temperature heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped to show which source outlet temperature is present at the heat pump on the PLC.\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Output Field(Boiler Temp Heating system heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped to show which Boiler temperature heating system is present at the heat pump on the PLC. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Output Field(Boiler Temp Service water heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped to show Boiler temperature service water is present at the heat pump on the PLC. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Output Field(Target Power heating pump) (1-10)\n",
+        "description": "Here the variable can be mapped, which contains the current heating pump power from 0% to 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Priority heating pump) (1-10)\n",
+        "description": "Priority of the device with which it is controlled in the EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Input Field (Enabled SOC heating pump) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer can be switched on.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Disable SOC heating pump) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer must be switched off.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Hour On heating pump) (1-10)\n",
+        "description": "Hour from which the heating pump can work in increased operation \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Input Field (Minutes On heating pump) (1-10)\n",
+        "description": "Minutes from which the heating pump can work in increased operation \n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Input Field (Hour Off heating pump) (1-10)\n",
+        "description": "Hour from which the heating pump can't work in increased operation \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Input Field (Minutes Off heating pump) (1-10)\n",
+        "description": "Minutes from which the heating pump can't work in increased operation\n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Input Field (Max power heating pump 1-2) (1-10)\n",
+        "description": "Max. power from heating pump with unit kW. The heating pump can have max. 2 different Max Powers. (Step switched)\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Switch_2v (Enable heating pump) (1-10)\n",
+        "description": "Enable or Disable the Device\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable heating pump) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Output Field (Actual Power other big consumer) (1-10)\n",
+        "description": "Here the variable can be linked and returns the current power of a other big consumer in the field. The unit is kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Show Event (Error/Warning other big consumer) (1-10)\n",
+        "description": "Here the variable can be linked a variable that send a error or a warning from the plc to the backend. 1 = Warning, 2 = Error. \n",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Show Event (State other big consumer) (1-10)\n",
+        "description": "Here a variable can be linked which indicates whether the big consumer is switched on or not.\n",
+        "allowedValues": "1 = Green Light. All other values no light\n"
+      },
+      {
+        "name": "Switch_2v (Emergency Power Off big consumer) (1-10)\n",
+        "description": "This variable can be used to deactivate the consumer in emergency power operation.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Emergency Power Off big consumer) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the Emergency Power Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (Manualy On big consumer) (1-10)\n",
+        "description": "Switch the device manualy on\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State manualy on big consumer) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the manually on Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Slider(Manualy target power other big consumer) (1-10)\n",
+        "description": "% of the max Power in kW when the Device is manually on\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(State manualy target power other big consumer) (1-10)\n",
+        "description": "Here a variable can be linked which returns the actual value of the slider for the manual power.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Priority other big consumer) (1-10)\n",
+        "description": "Priority of the device with which it is controlled in the EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Input Field (Enabled SOC big consumer) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer can be switched on.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Input Field (Disable SOC big consumer) (1-10)\n",
+        "description": "This variable is used to set from which SOC of the battery the consumer must be switched off.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Output Field(Target Power big consumer) (1-10)\n",
+        "description": "Here the variable can be mapped, which contains the current big cosnumer power from 0% to 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Switch_2v (Enable big consumer) (1-10)\n",
+        "description": "Enable or Disable the Device\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Switch_2v (State Enable big consumer) (1-10)\n",
+        "description": "Here a variable can be linked which provides the status of the enable Button.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Input Field (Max power other big consumer) (1-10)\n",
+        "description": "Max. power from the other big consumers with unit kW.\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Battery standby optimisation status",
+        "description": "This variable indicates which battery standby optimisation mode is currently active",
+        "allowedValues": "0, 1, 2"
+      },
+      {
+        "name": "Battery-Standby-Optimization Mode",
+        "description": "Battery standby optimisation mode",
+        "allowedValues": "0 = Deactivated, 2 = Load-dependent"
+      },
+      {
+        "name": "Time-Threshold “On” (minutes)",
+        "description": "Defines the time threshold value after which the BSO should be switched on if the power threshold value is reached",
+        "allowedValues": "Any byte value"
+      },
+      {
+        "name": "Time-Threshold “Off” (minutes)",
+        "description": "Defines the time threshold value after which the BSO should be switched off if the power threshold value is reached",
+        "allowedValues": "Any byte value"
+      },
+      {
+        "name": "Power-Threshold “On” (kW)",
+        "description": "Defines the threshold value of the power above which the BSO should be switched on",
+        "allowedValues": "Any integer value"
+      },
+      {
+        "name": "Power-Threshold “Off” (kW)",
+        "description": "Defines the power threshold above which the BSO should be switched off",
+        "allowedValues": "Any integer value"
+      }
+    ]
+  },
+  "PVMonitoringService": {
+    "title": "PVMonitoringService",
+    "name": "PVMonitoringService",
+    "overview": "This algorithm takes the pv-power values of a site during a referenced time frame, it than compares the live datastream of the site to the referenced data on a daily basis. \nThus, power losses of the PV system can be determined. This can be e.g. by pollution of the PV modules or by the aging of the PV plant.",
+    "table": [
+      {
+        "name": "Input Field PV-Power",
+        "description": "This Input-Mapping maps the PV-Power variable of the site which should be monitored.",
+        "allowedValues": "Only numeric values"
+      },
+      {
+        "name": "Input Field Start-Date",
+        "description": "This input field takes the start day of the reference time frame",
+        "allowedValues": "Datetime in seconds"
+      },
+      {
+        "name": "Input Field End-Date",
+        "description": "This input field takes the end day of the reference time frame",
+        "allowedValues": "Datetime in seconds"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "The consumption Service generate a optional Heartbeat, to monitore on the PLC that the Service is active or not. The value switch every 60 seconds between 0 and 1.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Error/Warning",
+        "description": "Error/Warning State from the Consumption Service to send to the PLC.",
+        "allowedValues": "0= OK\n1 = Warning\n2= Error"
+      },
+      {
+        "name": "Service Ready",
+        "description": "This variable indicates whether the Consumption Service is ready or not.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Optional-Output Field PV-Efficiency",
+        "description": "This output field maps the calculated efficiency of the PV system to a variable of the PLC",
+        "allowedValues": "0-100%"
+      }
+    ]
+  },
+  "SetpointOptimizer": {
+    "title": "Setpoint Optimizer",
+    "name": "SetpointOptimizer",
+    "overview": "This algorithm can optimize an existing heating or cooling system based on a new set point. This can be, for example, an optimized flow temperature or an optimized supply air temperature. This device can be used for heating or cooling circuits with liquid medium or also for circuits with air medium. It is also possible to mix heating and cooling in one circuit.",
+    "table": [
+      {
+        "name": "Heartbeat",
+        "description": "The Setpoint optimizer generate a optional Heartbeat, to monitore on the PLC that the Service is active or not. The value switch every 60 seconds between 0 and 1.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Error/Warning",
+        "description": "Error/Warning State from the Setpoint optimizer to send to the PLC.",
+        "allowedValues": "0-2 0 = OK, 1=Warning, 2=Error | When 1 device should glow yellow, when 2 device should glow red"
+      },
+      {
+        "name": "Service Ready",
+        "description": "This variable indicates whether the Setpoint optimizer is ready or not.",
+        "allowedValues": "0-1, 0=Not ready, 1=Ready, when 0 green light else gray"
+      },
+      {
+        "name": "Input Field Start-Date",
+        "description": "This input field takes the start day of the reference time frame.",
+        "allowedValues": "Datetime in seconds"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Input Field Flow Temperature",
+        "description": "This input mapping maps the flow temperature of the water circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Return Temperature",
+        "description": "This input mapping maps the return temperature of the water circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field On/Off Status",
+        "description": "This input mapping maps the current status of the heating water circuit. 0 means the heating circuit is turned off, 1 means the heating curcuit is turned on.",
+        "allowedValues": "0-1, 0=Off, 1=On, when 1 component in device should glow red"
+      },
+      {
+        "name": "Input Field Room Temperature",
+        "description": "This input mapping maps the room temperature of the rooms which are connected to the water circuit, can be dynamically added to max 10 room temperatures, 1 is mandatory the rest is optional.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Output Field Optimized Flow Temperature",
+        "description": "This output mapping maps the optimized flow temperature of the setpoint optimizer to the PLC.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Title",
+        "description": "This input takes the name of the water circuit to display it in the UI",
+        "allowedValues": "String"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Input Field Air Flow Temperature",
+        "description": "This input mapping maps the air flow temperature of the air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Air Return Temperature",
+        "description": "This input mapping maps the air return temperature of the air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field On/Off Status",
+        "description": "This input mapping maps the current status of the heating air circuit. 0 means the heating circuit is turned off, 1 means the heating curcuit is turned on",
+        "allowedValues": "0-1, 0=Off, 1=On, when 1 component in device should glow red"
+      },
+      {
+        "name": "Input Field Room Temperature",
+        "description": "This input mapping maps the room temperature of the rooms which are connected to the air circuit, can be dynamically added to max 10 room temperatures, 1 is mandatory the rest is optional",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Output Field Optimized Air Flow Temperature",
+        "description": "This output mapping maps the optimized flow temperature of the setpoint optimizer to the PLC.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Title",
+        "description": "This input takes the name of the air circuit to display it in the UI",
+        "allowedValues": "String"
+      },
+      {
+        "name": "In to Out Air Flow Temperature",
+        "description": "This input mapping maps the In to Out Air flow temperature of the Air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Out to In Air Flow Temperature",
+        "description": "This input mapping maps the Out to In Air return temperature of the Air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Input Field Flow Temperature",
+        "description": "This input mapping maps the flow temperature of the water circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Return Temperature",
+        "description": "This input mapping maps the return temperature of the water circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field On/Off Status",
+        "description": "This input mapping maps the current status of the cooling water circuit. 0 means the cooling circuit is turned off, 1 means the cooling curcuit is turned on",
+        "allowedValues": "0-1, 0=Off, 1=On, when 1 component in device should glow blue"
+      },
+      {
+        "name": "Input Field Room Temperature",
+        "description": "This input mapping maps the room temperature of the rooms which are connected to the water circuit, can be dynamically added to max 10 room temperatures, 1 is mandatory the rest is optional",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Output Field Optimized Flow Temperature",
+        "description": "This output mapping maps the optimized flow temperature of the setpoint optimizer to the PLC.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Title",
+        "description": "This input takes the name of the water circuit to display it in the UI",
+        "allowedValues": "String"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Input Field Air Flow Temperature",
+        "description": "This input mapping maps the air flow temperature of the air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Air Return Temperature",
+        "description": "This input mapping maps the air return temperature of the air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field On/Off Status",
+        "description": "This input mapping maps the current status of the cooling air circuit. 0 means the cooling circuit is turned off, 1 means the cooling circuit is turned on",
+        "allowedValues": "0-1, 0=Off, 1=On, when 1 component in device should glow blue"
+      },
+      {
+        "name": "Input Field Room Temperature",
+        "description": "This input mapping maps the room temperature of the rooms which are connected to the air circuit, can be dynamically added to max 10 room temperatures, 1 is mandatory the rest is optional",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Output Field Optimized Air Flow Temperature",
+        "description": "This output mapping maps the optimized flow temperature of the setpoint optimizer to the PLC.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Title",
+        "description": "This input takes the name of the air circuit to display it in the UI",
+        "allowedValues": "String"
+      },
+      {
+        "name": "In to Out Air Flow Temperature",
+        "description": "This input mapping maps the In to Out Air flow temperature of the Air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Out to In Air Flow Temperature",
+        "description": "This input mapping maps the Out to In Air return temperature of the Air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Input Field Flow Temperature",
+        "description": "This input mapping maps the flow temperature of the water circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Return Temperature",
+        "description": "This input mapping maps the return temperature of the water circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Hybrid Status",
+        "description": "This input mapping maps the current status of the Hybrid water circuit. 0 means the hybrid circuit is turned off, 1 means the heating is turned on, 2 means the cooling is turned on",
+        "allowedValues": "0-2, 0=Off, 1= Cooling = blue, 2=Heating = red"
+      },
+      {
+        "name": "Input Field Room Temperature",
+        "description": "This input mapping maps the room temperature of the rooms which are connected to the water circuit, can be dynamically added to max 10 room temperatures, 1 is mandatory the rest is optional",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Output Field Optimized Flow Temperature",
+        "description": "This output mapping maps the optimized flow temperature of the setpoint optimizer to the PLC.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Title",
+        "description": "This input takes the name of the water circuit to display it in the UI",
+        "allowedValues": "String"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Input Field Air Flow Temperature",
+        "description": "This input mapping maps the air flow temperature of the air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Air Return Temperature",
+        "description": "This input mapping maps the air return temperature of the air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Hybrid Status",
+        "description": "This input mapping maps the current status of the Hybrid air circuit. 0 means the hybrid circuit is turned off, 1 means the heating is turned on, 2 means the cooling is turned on",
+        "allowedValues": "0-2, 0=Off, 1= Cooling = blue, 2=Heating = red"
+      },
+      {
+        "name": "Input Field Room Temperature",
+        "description": "This input mapping maps the room temperature of the rooms which are connected to the air circuit, can be dynamically added to max 10 room temperatures, 1 is mandatory the rest is optional",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Output Field Optimized Air Flow Temperature",
+        "description": "This output mapping maps the optimized flow temperature of the setpoint optimizer to the PLC.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Input Field Title",
+        "description": "This input takes the name of the air circuit to display it in the UI",
+        "allowedValues": "String"
+      },
+      {
+        "name": "In to Out Air Flow Temperature",
+        "description": "This input mapping maps the In to Out Air flow temperature of the water circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      },
+      {
+        "name": "Out to In Air Flow Temperature",
+        "description": "This input mapping maps the Out to In Air return temperature of the Air circuit to the setpoint optimizer.",
+        "allowedValues": "Only numeric values (max 2 Commas)"
+      }
+    ]
+  }
+}

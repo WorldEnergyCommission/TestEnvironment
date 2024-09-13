@@ -1,0 +1,1281 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ParsDocument" Id="{9f32afd1-4865-41eb-9ba9-69f777cdc0d2}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_ParsDocument
+VAR_INPUT
+	{attribute 'hide'}
+	bRead								: BOOL;																											//Rising edge start the function
+	{attribute 'hide'}
+	bStop								: BOOL;																											//Stop the parsing in this Function
+	{attribute 'hide'}
+	eSavePositionTMCFile				: eSavePositionFile;																							//Save position from tmc file
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	arrContentOfDocument				: ARRAY[1..Constants_Communicator.uiArraySizeOfSubItems] OF ST_Content_Of_Document;								//Struct with content of the symbols
+	{attribute 'hide'}
+	uiFoundItems						: UINT;																											//Found Items in the Document
+	{attribute 'hide'}
+	bError								: BOOL;																											//Error state
+	{attribute 'hide'}
+	udiErrorCode						: UDINT;																										//Error Code
+	{attribute 'hide'}
+	bBusy								: BOOL;																											//Busy state
+	{attribute 'hide'}
+	bDone								: BOOL;																											//True if the function was successful
+	{attribute 'hide'}
+	byProgress							: BYTE;																											//Progress
+	{attribute 'hide'}
+	sSymbolNameWithError				: STRING(97);																									//Smbol Type with Error
+END_VAR
+VAR
+	fbFileOpen							: FB_FileOpen;																									//Function for open the document
+	fbFileGet							: FB_FileGets;																									//Function for read out the content from the open document
+	fbFileTell							: FB_FileTell;																									//Function to check the actual position in the open file
+	fbFileSeek							: FB_FileSeek;																									//Function to go to the end of the file
+	fbFileClose							: FB_FileClose;																									//Function to close the document after complete read out
+	FPStart								: R_TRIG;																										//Internal risinge edge
+	FPStop								: R_TRIG;																										//Internal risinge edge
+	FPErrorOpen							: R_TRIG;																										//Internal risinge edge
+	FPErrorGet							: R_TRIG;																										//Internal risinge edge
+	FPErrorTell							: R_TRIG;																										//Internal risinge edge
+	FPErrorSeek							: R_TRIG;																										//Internal risinge edge
+	FPErrorClose						: R_TRIG;																										//Internal risinge edge
+	FPState2							: R_TRIG;																										//Internal risinge edge
+	timTimout							: TON;																											//Timout timer for state maschine
+	arrCheckListForNestedSymbols		: ARRAY[1..Constants_Communicator.uiArraySizeOfSubItems] OF STRING(48); 										//Check List for nestend symbols in an function block or a struct 												
+	arrNumberForLPCheckIdentSymbols		: ARRAY[1..4] OF UINT;																							//Loop in 4 pices that code works on small plc 
+	bRestOfDescriptionInNextLine		: BOOL;																											//True if in 1 received line from the GET function is not the complete description
+	bNoNewDescription					: BOOL;																											//True if in 1 line is not the complete descrption and the rest from the line is '', then in the next step we have the complete description but no content. Then with that variable we save the description for next step
+	bSymbolNameFound					: BOOL;																											//True if the symbol was found in the file, after that check the subitems
+	bNotGet								: BOOL;																											//If the rest from the old line is concat with the new line and its done, read the rest from the new line befor start a new get  
+	bFBOrStructDetected					: BOOL;																											//True if a struct or a fb is detected
+	bEnumDetected						: BOOL;																											//True if a enum is detected
+	bWaitForFB							: BOOL;																											//Wait than its possible that the symbol is a Function Block
+	bDeleteStep3						: BOOL;																											//True if in Step 3 a pice of the received line is deleted
+	byCounterWaitInStep					: BYTE;																											//Cycles that are serviced in steps
+	uiSubItemArrayInProgress			: UINT;																											//Array which is in progress for save content of the subitems
+	uiLPClearStruct						: UINT;																											//Loop to clear the struct at the beginning from the state maschine
+	uiCounterWantedSymbolInProgress		: UINT;																											//Counted symbols with right comment
+	uiCounterClearStruct				: UINT;																											//Counter to clear struct
+	uiDimensionArray					: UINT;																											//Dimension of array
+	uiCounterInProgressFromDocument		: UINT;																											//Counter that rear out the array from foundet symbols from the document
+	uiCounterListForFBorStruct			: UINT;																											//Counter to write internal structs to check if they are available
+	uiCounterCheckSubItemsInContentOfDoc: UINT;																											//Counter to ckeck if the Subitems are in the content of the document
+	uiCounterFBorStruct					: UINT;																											//Counter to check for no Standart Datatyp in found symbols
+	uiLPCheckIdentSymbols				: UINT;																											//Check ident internal symbols
+	uiLPCkeckContentInSubItems			: UINT;																											//Loop to check the content if in a Subitem is a other subitem includet
+	uiCounterCkeckContenInSubItems_1	: UINT;																											//Check if in the subitems in the structs or Functionblocks is not more than 1 extra Subitem (Number of the actual Symbol)
+	uiCounterCkeckContenInSubItems_2	: UINT;																											//Check if in the subitems in the structs or Functionblocks is not more than 1 extra Subitem (Number of included Symbol Types)
+	iFindBegin							: INT;																											//Find beginn position of content in the document
+	iFindEnd							: INT;																											//Find end position of content in the document
+	iFindBeginComment					: INT;																											//Find beginn position of the comment in the document from the subitems
+	iFindEndComment						: INT;																											//Find end position of the comment in the document from the subitems	
+	iLenghComment						: INT;																											//Lenght of the comment in the document from the subitems
+	iStateParseDocument					: INT;																											//State of the state maschine
+	diEndPositionInDocument				: DINT;																											//End of the position from the open file
+	uliSizeOfString						: ULINT;																										//Size from the String in the Sub Item
+	sLine								: T_MaxString;																									//Actual line with content from the document
+	sLineRest							: T_MaxString;																									//Rest from the actual line if not all information from the contetn is included
+	sDescription						: T_MaxString;																									//Description from the type that was found in the document
+	sSymbolName							: T_MaxString;																									//Symbol Name to check that the lenght from the string is ok
+	sNameSubItem						: T_MaxString;																									//Name from subitem to check that the lenght from the string is ok
+	sNameSubItemOld						: T_MaxString;																									//Old name from SubItem that we can clean old information from previos SubItem
+	sTypeSubItem						: T_MaxString;																									//Type from the sub item
+	sTextEnum							: T_MaxString;																									//Text from the Enum
+	sIndexEnum							: T_MaxString;																									//Index of the value fromt the enum
+	sComment							: T_MaxString;																									//Comment from the subitem in progress
+	sValue								: T_MaxString;																									//Value from symbol
+	sLBound								: T_MaxString;																									//Lower Bound from array
+	sElements							: T_MaxString;																									//Elements in array
+	sUnit								: T_MaxString;																									//Unit from the subitme in progress
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 04.05.2020
+//Version : 2.0.0.0
+
+//With this function is possible to read out the tmc file from a project to find out all information from structs,fb and enums.
+
+FPStart(CLK:= bRead, Q=> );
+	FPStop(CLK:= bStop, Q=> );
+
+IF FPStart.Q AND iStateParseDocument = 0 THEN iStateParseDocument := - 5; END_IF
+	IF FPStop.Q THEN iStateParseDocument := 100; END_IF
+
+FPState2(CLK:= iStateParseDocument = 2, Q=> );
+
+IF iStateParseDocument = -5 OR iStateParseDocument = 0 OR iStateParseDocument = 101 OR iStateParseDocument = 102 OR iStateParseDocument = 103 OR iStateParseDocument = 104 OR iStateParseDocument = 105 OR FPState2.Q THEN timTimout.IN := FALSE; ELSE timTimout.IN := TRUE; END_IF 
+	timTimout(IN:= , PT:= T#2S, Q=> , ET=> );
+
+CASE iStateParseDocument OF
+	
+	-5://Reset struct and check the size of wanted symbols
+		uiCounterClearStruct := uiCounterClearStruct + 1;
+			uiCounterClearStruct := LIMIT(1,uiCounterClearStruct,Constants_Communicator.uiArraySizeOfSubItems);
+	
+		arrContentOfDocument[uiCounterClearStruct].sSymbolName := '';
+			arrContentOfDocument[uiCounterClearStruct].eSymbolType := eSymbolTypeFromDocument.eNoInformation;
+				arrCheckListForNestedSymbols[uiCounterClearStruct] := '';
+					FOR uiLPClearStruct := 1 TO Constants_Communicator.uiArraySizeOfMarkedSubItems BY 1 DO
+						arrContentOfDocument[uiCounterClearStruct].arrSubItemName[uiLPClearStruct] := '';
+							arrContentOfDocument[uiCounterClearStruct].arrSubItemSymbolType[uiLPClearStruct] := '';	
+								arrContentOfDocument[uiCounterClearStruct].arrSubItemTextEnum[uiLPClearStruct] := '';
+									arrContentOfDocument[uiCounterClearStruct].arrSubItemIndexEnum[uiLPClearStruct] := '';
+										arrContentOfDocument[uiCounterClearStruct].arrSubItemUnit[uiLPClearStruct] := '';	
+					END_FOR 	
+		
+		bError := FALSE;
+			udiErrorCode := 0;	
+				bBusy := TRUE;
+					bDone := FALSE;
+						sSymbolNameWithError := '';
+							uiCounterWantedSymbolInProgress := 1;
+								diEndPositionInDocument := 0;
+									byProgress := 0;	
+										uiFoundItems := 0;	
+				
+		IF uiCounterClearStruct >= Constants_Communicator.uiArraySizeOfSubItems THEN 
+			iStateParseDocument := - 4;	
+				uiCounterClearStruct := 0;
+		END_IF
+									
+	-4://Open File to Check the Size from the file
+		fbFileOpen.bExecute := TRUE;
+
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+		
+		IF NOT fbFileOpen.bBusy AND NOT fbFileOpen.bError AND byCounterWaitInStep >= 2 THEN iStateParseDocument := - 3; fbFileOpen.bExecute := FALSE; byCounterWaitInStep := 0; END_IF	
+
+		IF FPErrorOpen.Q OR timTimout.Q THEN 
+			iStateParseDocument := 200; 
+				IF FPErrorOpen.Q THEN udiErrorCode := 105; END_IF 
+					IF timTimout.Q THEN udiErrorCode := 100; END_IF 
+		END_IF
+						
+	-3://Go to the End from the Line
+		fbFileSeek.bExecute := TRUE;
+
+		byCounterWaitInStep := byCounterWaitInStep + 1;	
+		
+		IF NOT fbFileSeek.bBusy AND NOT fbFileSeek.bError AND byCounterWaitInStep >= 2 THEN iStateParseDocument := - 2; fbFileSeek.bExecute := FALSE; byCounterWaitInStep := 0; END_IF	
+
+		IF FPErrorSeek.Q OR timTimout.Q THEN 
+			iStateParseDocument := 200; 
+				IF FPErrorSeek.Q THEN udiErrorCode := 114; END_IF 
+					IF timTimout.Q THEN udiErrorCode := 100; END_IF 
+		END_IF
+		
+	-2://Check Position in file to calculate the progress state 0-100%
+		fbFileTell.bExecute := TRUE;
+
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+		
+		IF NOT fbFileTell.bBusy AND NOT fbFileTell.bError AND byCounterWaitInStep >= 2 THEN iStateParseDocument := - 1; fbFileTell.bExecute := FALSE; byCounterWaitInStep := 0; diEndPositionInDocument := fbFileTell.nSeekPos; END_IF
+					
+		IF FPErrorTell.Q OR timTimout.Q THEN 
+			iStateParseDocument := 200; 
+				IF FPErrorTell.Q THEN udiErrorCode := 113; END_IF 
+					IF timTimout.Q THEN udiErrorCode := 100; END_IF 
+		END_IF 		
+	
+	-1://Close the file
+		fbFileClose.bExecute := TRUE;
+
+		byCounterWaitInStep := byCounterWaitInStep + 1; 
+		
+		IF NOT fbFileClose.bBusy AND NOT fbFileClose.bError AND byCounterWaitInStep >= 2 THEN iStateParseDocument := 1; fbFileClose.bExecute := FALSE; byCounterWaitInStep := 0; END_IF	
+		
+		IF FPErrorClose.Q OR timTimout.Q THEN 
+			iStateParseDocument := 200; 
+				IF FPErrorClose.Q THEN udiErrorCode := 107; END_IF 
+					IF timTimout.Q THEN udiErrorCode := 100; END_IF 
+		END_IF 		
+		
+	0://Init step and set all Variables to default value for next start
+		byCounterWaitInStep := 0; iFindBegin := 0; iFindEnd := 0; uiSubItemArrayInProgress := 0; sLine := ''; sLineRest := ''; sDescription := ''; sSymbolName := ''; sNameSubItem := ''; sTextEnum := ''; sIndexEnum := ''; sComment := '';
+			sTypeSubItem := ''; iLenghComment := 0; sValue := ''; uiCounterClearStruct := 0; sLBound := ''; sElements := ''; uiDimensionArray := 0; uliSizeOfString := 0; sNameSubItemOld := ''; sUnit := '';
+				bRestOfDescriptionInNextLine := FALSE; bSymbolNameFound := FALSE; fbFileOpen.bExecute := FALSE; fbfileGet.bExecute := FALSE; fbFileClose.bExecute := FALSE; bFBOrStructDetected := FALSE; bWaitForFB := FALSE; bDeleteStep3 := FALSE;
+					bNotGet := FALSE; bRead := FALSE; bBusy := FALSE; bNoNewDescription := FALSE; bEnumDetected := FALSE; uiCounterWantedSymbolInProgress := 0; uiCounterFBorStruct := 0;	
+						uiCounterInProgressFromDocument := 0; uiCounterListForFBorStruct := 0; fbFileTell.bExecute := FALSE; fbFileSeek.bExecute := FALSE; uiCounterCheckSubItemsInContentOfDoc := 0;
+							arrNumberForLPCheckIdentSymbols[1] := 0; arrNumberForLPCheckIdentSymbols[2] := 0; arrNumberForLPCheckIdentSymbols[3] := 0; arrNumberForLPCheckIdentSymbols[4] := 0; uiCounterCkeckContenInSubItems_1 := 0;
+								uiCounterCkeckContenInSubItems_2 := 0;		
+
+	1://File open
+		fbFileOpen.bExecute := TRUE;
+
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+		
+		IF NOT fbFileOpen.bBusy AND NOT fbFileOpen.bError AND byCounterWaitInStep >= 2 THEN iStateParseDocument := 2; fbFileOpen.bExecute := FALSE; byCounterWaitInStep := 0; END_IF	
+
+		IF FPErrorOpen.Q OR timTimout.Q THEN 
+			iStateParseDocument := 200; 
+				IF FPErrorOpen.Q THEN udiErrorCode := 105; END_IF 
+					IF timTimout.Q THEN udiErrorCode := 100; END_IF 
+		END_IF
+		
+	2://Get line
+		IF NOT bNotGet THEN fbFileGet.bExecute := TRUE;	END_IF	
+		
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+		
+		IF NOT fbFileGet.bBusy AND NOT fbFileGet.bError AND byCounterWaitInStep >= 2 AND NOT bRestOfDescriptionInNextLine AND NOT bNotGet THEN 
+			iStateParseDocument := 3; fbfileGet.bExecute := FALSE; byCounterWaitInStep := 0;
+				sLine := fbfileGet.sLine; 
+		END_IF	
+			IF NOT fbFileGet.bBusy AND NOT fbFileGet.bError AND byCounterWaitInStep >= 2 AND bRestOfDescriptionInNextLine AND NOT bNotGet THEN 
+				IF (FIND(fbFileGet.sLine,'>')) + LEN(sLineRest) <= 255 THEN 
+					IF FIND(fbFileGet.sLine,'>') <> 0 THEN sLine := CONCAT(sLineRest,LEFT(fbFileGet.sLine,FIND(fbFileGet.sLine,'>'))); bNotGet := TRUE; END_IF
+				ELSE
+					iStateParseDocument := 200; udiErrorCode := 101;
+				END_IF
+					IF FIND(fbFileGet.sLine,'>') = 0 THEN sLine := fbFileGet.sLine; END_IF	
+						bRestOfDescriptionInNextLine := FALSE; 
+							sLineRest := '';
+								iStateParseDocument := 3; fbfileGet.bExecute := FALSE; byCounterWaitInStep := 0;
+			END_IF
+				IF bNotGet AND iStateParseDocument = 2 THEN
+					sLine := MID(fbFileGet.sLine,255 - FIND(fbFileGet.sLine,'>'),FIND(fbFileGet.sLine,'>') + 1);
+						bNotGet := FALSE;
+							iStateParseDocument := 3;
+								byCounterWaitInStep := 0;
+				END_IF
+		
+		IF (timTimout.Q AND NOT fbFileGet.bEOF) OR FPErrorGet.Q THEN iStateParseDocument := 200; END_IF 
+			IF FPErrorGet.Q THEN udiErrorCode := 106; END_IF
+				IF timTimout.Q AND NOT fbFileGet.bEOF THEN udiErrorCode := 100; END_IF 
+	
+	3://Check position in file
+		fbFileTell.bExecute := TRUE;
+
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+		
+		IF NOT fbFileTell.bBusy AND NOT fbFileTell.bError AND byCounterWaitInStep >= 2 THEN iStateParseDocument := 4; fbFileTell.bExecute := FALSE; byCounterWaitInStep := 0; END_IF
+					
+		IF (timTimout.Q AND NOT fbFileGet.bEOF) OR FPErrorTell.Q THEN iStateParseDocument := 200; END_IF 
+			IF FPErrorTell.Q THEN udiErrorCode := 113; END_IF
+				IF timTimout.Q AND NOT fbFileGet.bEOF THEN udiErrorCode := 100; END_IF 			
+	
+	4://Check the content what is writen between <>
+		iFindBegin := FIND(sLine,'<');
+			iFindEnd := FIND(sLine,'>'); 
+		
+		bDeleteStep3 := FALSE;	
+			
+		//Complete content is in 1 line	
+		IF ((iFindBegin <> 0 OR iFindEnd <> 0) AND iFindEnd > iFindBegin) THEN
+			IF NOT bNoNewDescription THEN sDescription := MID(sLine,iFindEnd - iFindBegin - 1,iFindBegin + 1); END_IF
+				//Name from big data 
+				IF ((FIND(sDescription,'Name Namespace="') <> 0 OR sDescription = 'Name') AND NOT bSymbolNameFound) THEN
+					//Workaround when we use Big Data from library. Because then its writen before allways Namespace
+					IF FIND(sDescription,'Name Namespace="') <> 0 THEN sDescription := 'Name'; END_IF 
+						iStateParseDocument := 5;
+							IF NOT bNoNewDescription THEN sLine := DELETE(sLine,iFindEnd,1); END_IF
+								bNoNewDescription := FALSE;
+				//Subitem (struct and FB)
+				ELSIF (FIND(sDescription,'Name Namespace="') <> 0 OR sDescription = 'Name' OR sDescription = 'Type' OR FIND(sDescription,'Type Namespace="') <> 0 OR sDescription = 'Comment' OR sDescription = 'Value' OR sDescription = 'LBound' OR sDescription = 'Elements') AND bSymbolNameFound AND NOT bEnumDetected THEN 
+					//Workaround when we use Structure or FB from library. Because then its writen before allways Namespace
+					IF FIND(sDescription,'Name Namespace="') <> 0 THEN sDescription := 'Name'; END_IF 
+					IF FIND(sDescription,'Type Namespace="') <> 0 THEN sDescription := 'Type'; END_IF
+						iStateParseDocument := 6;
+							IF NOT bNoNewDescription THEN sLine := DELETE(sLine,iFindEnd,1); END_IF
+								bNoNewDescription := FALSE;
+									bFBOrStructDetected := TRUE;
+				//Subitem (Enum)
+				ELSIF (sDescription = 'Text' OR sDescription = 'Enum' OR sDescription = 'Comment') AND bSymbolNameFound AND NOT bFBOrStructDetected THEN 
+					iStateParseDocument := 6;
+						IF NOT bNoNewDescription THEN sLine := DELETE(sLine,iFindEnd,1); END_IF
+							bNoNewDescription := FALSE;
+								bEnumDetected := TRUE;
+									sLBound := ''; sElements := ''; uiDimensionArray := 0;
+				//End of the big data
+				ELSIF sDescription = '/DataType' AND bSymbolNameFound THEN 
+					iStateParseDocument := 8;
+				ELSE 
+					sLine := DELETE(sLine,iFindEnd,1); 
+						bDeleteStep3 := TRUE;
+			 	END_IF
+		END_IF
+			//Content is not received in 1 line or nor begin no end is detected
+			IF (iFindBegin <> 0 AND iFindEnd = 0) OR (iFindBegin = 0 AND iFindEnd = 0) THEN
+				sLineRest := sLine;
+					bRestOfDescriptionInNextLine := TRUE;
+						IF NOT fbfileGet.bEOF THEN iStateParseDocument := 2; END_IF
+			END_IF
+				//Check ><
+				IF iFindBegin <> 0 AND iFindEnd <> 0 AND iFindBegin = (iFindEnd + 1) THEN
+					sLine := DELETE(sLine,FIND(sLine,'>'),1);
+						bRestOfDescriptionInNextLine := FALSE; 
+				END_IF
+					//Check no needed description
+					IF ((sDescription <> 'Name' OR sDescription <> 'Type' OR sDescription <> 'Comment' OR sDescription <> 'Text' OR sDescription <> 'Enum' OR sDescription = 'Value' OR sDescription = 'LBound' OR sDescription = 'Elements') AND iStateParseDocument = 4 AND NOT bDeleteStep3) THEN
+						sLine := DELETE(sLine,FIND(sLine,'>'),1);	
+					END_IF
+						//Line is done
+						IF LEN(sLine) = 0 AND iStateParseDocument = 4 AND NOT fbfileGet.bEOF THEN iStateParseDocument := 2; END_IF
+		
+		//If bEOF is True then after Timeout Line is complete
+		IF timTimout.Q AND fbFileGet.bEOF THEN iStateParseDocument := 100; END_IF
+			IF timTimout.Q AND NOT fbFileGet.bEOF THEN iStateParseDocument := 200; udiErrorCode := 100; END_IF	
+		
+	5://Check first the symbol type in document
+		iFindBegin := FIND(sLine,'<');
+			iFindEnd := FIND(sLine,'>'); 
+		
+		//Name from the symbol is not received in 1 line
+		IF iFindBegin = 0 OR iFindEnd = 0 THEN
+			sLineRest := sLine;
+				bRestOfDescriptionInNextLine := TRUE;
+					bNoNewDescription := TRUE;
+						IF NOT fbfileGet.bEOF THEN iStateParseDocument := 2; END_IF
+		END_IF
+			//Name from the symbol is in 1 line
+			IF iFindBegin <> 0 AND sDescription = 'Name' AND iStateParseDocument = 5 THEN
+				sSymbolName := LEFT(sLine,iFindBegin - 1);
+					sLine := DELETE(sLine,iFindBegin - 1,1);
+						iStateParseDocument := 4;
+							bSymbolNameFound := TRUE;
+								bRestOfDescriptionInNextLine := FALSE;
+			END_IF 
+				//Line is done
+				IF LEN(sLine) = 0 AND iStateParseDocument = 5 AND NOT fbfileGet.bEOF THEN iStateParseDocument := 2; END_IF	
+		
+		//If bEOF is True then after Timeout Line is complete
+		IF timTimout.Q AND fbFileGet.bEOF THEN iStateParseDocument := 100; END_IF
+			IF timTimout.Q AND NOT fbFileGet.bEOF THEN iStateParseDocument := 200; udiErrorCode := 100; END_IF
+						
+	6://Check the Sub Items
+		iFindBegin := FIND(sLine,'<');
+			iFindEnd := FIND(sLine,'>'); 
+				iFindBeginComment := FIND(sLine,'[');
+					iFindEndComment := FIND(sLine,']]');
+					
+		//Check they are more than Constants_Communicator.uiArraySizeOfMarkedSubItems symbols in the subitems			
+		IF uiSubItemArrayInProgress > Constants_Communicator.uiArraySizeOfMarkedSubItems THEN iStateParseDocument := 200; udiErrorCode := 103; END_IF 			
+			uiSubItemArrayInProgress := LIMIT(1,uiSubItemArrayInProgress,Constants_Communicator.uiArraySizeOfMarkedSubItems); 
+		
+		//Content from Sub Item is not received in 1 line
+		IF iFindBegin = 0 OR iFindEnd = 0 AND iStateParseDocument = 6 THEN
+			sLineRest := sLine;
+				bRestOfDescriptionInNextLine := TRUE;
+					bNoNewDescription := TRUE;
+						IF NOT fbfileGet.bEOF THEN iStateParseDocument := 2; END_IF
+		END_IF
+			//Content from SubItem is in 1 line (FB or struct)
+			IF iFindBegin <> 0 AND bFBOrStructDetected AND iStateParseDocument = 6 AND (sDescription = 'Name' OR sDescription = 'Type' OR sDescription = 'Comment' OR sDescription = 'Value' OR sDescription = 'LBound' OR sDescription = 'Elements') THEN
+				IF sDescription = 'Name' AND sSymbolName <> '' THEN sNameSubItem := LEFT(sLine,(iFindBegin - 1)); END_IF
+				IF sDescription = 'Type' AND sSymbolName <> '' THEN sTypeSubItem := LEFT(sLine,(iFindBegin - 1)); END_IF	
+				IF sDescription = 'Comment' AND sSymbolName <> '' THEN
+					sComment := MID(sLine,iFindEndComment - iFindBeginComment,iFindBeginComment + 7);
+						iFindEndComment := FIND(sComment,']]');
+							iLenghComment := LEN(sComment);
+								sUnit := MID(sComment,(FIND(sComment,')') - FIND(sComment,'(')) - 1,FIND(sComment,'(') + 1);	
+									sComment := DELETE(sComment,iLenghComment - iFindEndComment + 1,iFindEndComment);	
+				END_IF
+				IF sDescription = 'Value' AND sSymbolName <> '' THEN sValue := MID(sLine,iFindBegin - 1,FIND(sLine,'F')); END_IF
+				IF sDescription = 'LBound' AND sSymbolName <> '' THEN sLBound := LEFT(sLine,(iFindBegin - 1)); END_IF
+				IF sDescription = 'Elements' AND sSymbolName <> '' THEN sElements := LEFT(sLine,(iFindBegin - 1)); END_IF 
+					sLine := DELETE(sLine,iFindBegin - 1,1);
+						IF iStateParseDocument = 6 THEN iStateParseDocument := 7; END_IF
+							bRestOfDescriptionInNextLine := FALSE;
+			END_IF 
+				//Content from SubItem is in 1 line (Enum)
+				IF iFindBegin <> 0 AND bEnumDetected AND iStateParseDocument = 6 AND (sDescription = 'Text' OR sDescription = 'Enum' OR sDescription = 'Comment') THEN
+					IF sDescription = 'Text' AND sSymbolName <> '' THEN sTextEnum := LEFT(sLine,(iFindBegin - 1)); END_IF
+					IF sDescription = 'Enum' AND sSymbolName <> '' THEN sIndexEnum := LEFT(sLine,(iFindBegin - 1)); END_IF
+					IF sDescription = 'Comment' AND sSymbolName <> '' THEN
+						sComment := MID(sLine,iFindEndComment - iFindBeginComment,iFindBeginComment + 7);
+							iFindEndComment := FIND(sComment,']]');
+								iLenghComment := LEN(sComment);
+									sUnit := MID(sComment,(FIND(sComment,')') - FIND(sComment,'(')) - 1,FIND(sComment,'(') + 1);
+										sComment := DELETE(sComment,iLenghComment - iFindEndComment + 1,iFindEndComment);	 
+					END_IF 
+						sLine := DELETE(sLine,iFindBegin - 1,1);
+							IF iStateParseDocument = 6 THEN iStateParseDocument := 7; END_IF
+								bRestOfDescriptionInNextLine := FALSE;
+				END_IF
+					//Line is done
+					IF LEN(sLine) = 0 AND iStateParseDocument = 6 AND NOT fbfileGet.bEOF THEN iStateParseDocument := 2; END_IF
+
+		//If bEOF is True then after Timeout Line is complete
+		IF timTimout.Q AND fbFileGet.bEOF THEN iStateParseDocument := 100; END_IF
+			IF timTimout.Q AND NOT fbFileGet.bEOF THEN iStateParseDocument := 200; udiErrorCode := 100; END_IF		
+	
+	7://Check the comment
+		//Clear Array information if a new SubItem Name is in progress
+		IF sNameSubItem <> sNameSubItemOld THEN sLBound := ''; sElements := ''; uiDimensionArray := 0; sNameSubItemOld := sNameSubItem; END_IF 
+	
+		//Ckeck for multi-dimensional arrays
+		IF sLBound <> '' AND sElements <> '' THEN uiDimensionArray := uiDimensionArray + 1; END_IF
+		
+		//Struct detected
+		IF (((sSymbolName <> '' AND sNameSubItem <> '' AND sTypeSubItem <> '' AND sComment <> '' AND sSymbolName <> TwinCAT_SystemInfoVarList._AppInfo.ProjectName) OR (sSymbolName <> '' AND sNameSubItem <> '' AND sTypeSubItem <> '' AND sLBound <> '' AND sElements <> '' AND sComment <> '' AND sSymbolName <> TwinCAT_SystemInfoVarList._AppInfo.ProjectName)) AND bFBOrStructDetected) THEN
+			IF MID(sComment,14,1) = '{#lynus.ag#()}' THEN 
+				IF LEN(sSymbolName) <= 48 AND LEN(sNameSubItem) <= 48 THEN
+					arrContentOfDocument[uiCounterWantedSymbolInProgress].sSymbolName := sSymbolName;
+			 			arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemName[uiSubItemArrayInProgress] := sNameSubItem;
+							arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress] := sTypeSubItem;
+								arrContentOfDocument[uiCounterWantedSymbolInProgress].eSymbolType := eSymbolTypeFromDocument.eIsStruct;
+									arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemUnit[uiSubItemArrayInProgress] := sUnit;	
+									//Ckeck the lenght from the String
+									IF FIND(arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress],'STRING(') <> 0 OR FIND(arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress],'OF STRING(') <> 0 THEN
+										uliSizeOfString := STRING_TO_ULINT(MID(arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress],FIND(arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress],')') - 
+															FIND(arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress],'(') - 1,FIND(arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress],'(') + 1));
+										IF uliSizeOfString <> 30 THEN iStateParseDocument := 200; udiErrorCode := 112; END_IF
+									END_IF  
+										//Check the size from the array
+										IF sElements <> '' AND sLBound <> '' AND (TO_ULINT(sElements) - TO_ULINT(sLBound)) + 1 <= Constants_Communicator.bySizeOfValueArray THEN 
+											arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress] := 
+												CONCAT(CONCAT('ARRAY [',sLBound),CONCAT(CONCAT('..',sElements),CONCAT('] OF ',arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemSymbolType[uiSubItemArrayInProgress])));
+										END_IF
+											IF (sElements <> '' AND sLBound <> '' AND (TO_ULINT(sElements) - TO_ULINT(sLBound)) + 1 > Constants_Communicator.bySizeOfValueArray) OR uiDimensionArray > 2 THEN
+												iStateParseDocument := 200; 
+													udiErrorCode := 111;
+											END_IF
+												//Commetn to long
+												IF LEN(sUnit) > 240 OR LEN2(ADR(sComment)) > 255 THEN udiErrorCode := 3; iStateParseDocument := 200; END_IF  
+												//Comment is worng
+												IF LEN(sComment) > 14 AND MID(sComment,3,15) <> ' //' THEN udiErrorCode := 4; iStateParseDocument := 200; END_IF  			  
+					uiSubItemArrayInProgress := uiSubItemArrayInProgress + 1;
+						IF iStateParseDocument = 7 THEN 
+							iStateParseDocument := 4; 
+								sNameSubItem := '';
+									sTypeSubItem := '';
+										sComment := '';
+											sLBound := '';
+												sElements := '';
+													uliSizeOfString := 0;
+														bWaitForFB := TRUE;
+															sUnit := '';
+						END_IF
+				ELSE
+					IF LEN(sSymbolName) > 48 THEN iStateParseDocument := 200; udiErrorCode := 102; END_IF
+					IF LEN(sNameSubItem) > 48 THEN iStateParseDocument := 200; udiErrorCode := 104; END_IF
+				END_IF
+			END_IF
+		END_IF
+			//FB detected
+			IF sSymbolName <> '' AND sSymbolName <> TwinCAT_SystemInfoVarList._AppInfo.ProjectName AND sValue = 'FunctionBlock' AND bWaitForFB AND bFBOrStructDetected THEN
+				arrContentOfDocument[uiCounterWantedSymbolInProgress].eSymbolType := eSymbolTypeFromDocument.eIsFunctionBlock; 	
+					IF iStateParseDocument = 7 THEN 
+						iStateParseDocument := 4; 
+							sValue := '';
+					END_IF
+			END_IF
+				//Enum detected
+				IF sSymbolName <> '' AND sTextEnum <> '' AND sIndexEnum <> '' AND sComment <> '' AND sSymbolName <> TwinCAT_SystemInfoVarList._AppInfo.ProjectName AND bEnumDetected THEN
+					IF MID(sComment,14,1) = '{#lynus.ag#()}' THEN 
+						IF LEN(sSymbolName) <= 48 AND LEN(sTextEnum) <= 48 AND LEN(sIndexEnum) <= 6 THEN
+							arrContentOfDocument[uiCounterWantedSymbolInProgress].sSymbolName := sSymbolName;
+								arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemTextEnum[uiSubItemArrayInProgress] := sTextEnum;
+									arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemIndexEnum[uiSubItemArrayInProgress] := sIndexEnum;
+										arrContentOfDocument[uiCounterWantedSymbolInProgress].eSymbolType := eSymbolTypeFromDocument.eIsEnum;	
+											arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemUnit[uiSubItemArrayInProgress] := sUnit;	
+												//Commetn to long
+												IF LEN(sUnit) > 240 OR LEN2(ADR(sComment)) > 255 THEN udiErrorCode := 3; iStateParseDocument := 200; END_IF 
+												//Comment is worng
+												IF LEN(sComment) > 14 AND MID(sComment,3,15) <> ' //' THEN udiErrorCode := 4; iStateParseDocument := 200; END_IF	
+							uiSubItemArrayInProgress := uiSubItemArrayInProgress + 1;
+								IF iStateParseDocument = 7 THEN 
+									iStateParseDocument := 4;
+										sComment := '';
+											sTextEnum := '';
+												sIndexEnum := '';
+													sUnit := '';
+								END_IF
+						ELSE
+							IF LEN(sSymbolName) > 48 THEN iStateParseDocument := 200; udiErrorCode := 102; END_IF
+							IF LEN(sTextEnum) > 48 THEN iStateParseDocument := 200; udiErrorCode := 109; END_IF
+							IF LEN(sIndexEnum) > 6 THEN iStateParseDocument := 200; udiErrorCode := 110; END_IF
+						END_IF
+					END_IF
+				END_IF
+				
+		IF iStateParseDocument = 7 THEN iStateParseDocument := 4; END_IF
+		
+		//If bEOF is True then after Timeout Line is complete
+		IF timTimout.Q AND fbFileGet.bEOF THEN iStateParseDocument := 100; END_IF
+			IF timTimout.Q AND NOT fbFileGet.bEOF THEN iStateParseDocument := 200; udiErrorCode := 100; END_IF
+		
+	8://End of Datatype
+		IF sDescription = '/DataType' THEN
+			sLine := DELETE(sLine,FIND(sLine,'>'),1);
+				IF arrContentOfDocument[uiCounterWantedSymbolInProgress].sSymbolName <> '' THEN uiCounterWantedSymbolInProgress := uiCounterWantedSymbolInProgress + 1; END_IF
+					IF uiCounterWantedSymbolInProgress > Constants_Communicator.uiArraySizeOfSubItems  THEN iStateParseDocument := 200; udiErrorCode := 108; END_IF
+						sSymbolName := '';
+							sValue := '';
+								sLBound := '';
+									sElements := '';
+										uiSubItemArrayInProgress := 0;
+											bSymbolNameFound := FALSE;
+												bFBOrStructDetected := FALSE;
+													bEnumDetected := FALSE;
+														bWaitForFB := FALSE; 
+															uiDimensionArray := 0;
+																IF iStateParseDocument = 8 THEN iStateParseDocument := 4; END_IF
+		END_IF		
+			
+		//If bEOF is True then after Timeout Line is complete
+		IF timTimout.Q AND fbFileGet.bEOF THEN iStateParseDocument := 100; END_IF
+			IF timTimout.Q AND NOT fbFileGet.bEOF THEN iStateParseDocument := 200; udiErrorCode := 100; END_IF
+		
+	100://Close file
+		fbFileClose.bExecute := TRUE;
+
+		byCounterWaitInStep := byCounterWaitInStep + 1; 
+		
+		IF NOT fbFileClose.bBusy AND NOT fbFileClose.bError AND byCounterWaitInStep >= 2 THEN iStateParseDocument := 101; fbFileClose.bExecute := FALSE; byCounterWaitInStep := 0; END_IF	
+		
+		IF (timTimout.Q AND NOT fbFileGet.bEOF) OR FPErrorClose.Q THEN iStateParseDocument := 200; END_IF
+			IF FPErrorClose.Q THEN udiErrorCode := 107; END_IF 
+				IF timTimout.Q AND NOT fbFileGet.bEOF THEN udiErrorCode := 100; END_IF 
+		
+	101://Search all "No Standart" Data Types that occur in the FB and structures Step 1 (Its solved with counter and not with a loop because the code must work also on a small plc) (Start with progress + 1)
+		uiCounterFBorStruct := uiCounterFBorStruct + 1; 
+			IF uiCounterFBorStruct > Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiCounterInProgressFromDocument := uiCounterInProgressFromDocument + 1; uiCounterFBorStruct := 1; END_IF
+				uiCounterInProgressFromDocument := LIMIT(1,uiCounterInProgressFromDocument,Constants_Communicator.uiArraySizeOfSubItems);
+		
+		IF ((arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType = eSymbolTypeFromDocument.eIsFunctionBlock OR arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType = eSymbolTypeFromDocument. eIsStruct) AND arrContentOfDocument[1].sSymbolName <> '') THEN
+			IF arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'BOOL' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'BYTE' AND
+				arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'WORD' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'DWORD' AND
+					arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'SINT' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'USINT' AND
+						arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'INT' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'UINT' AND
+							arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'DINT' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'UDINT' AND
+								arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'LINT' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'ULINT' AND
+									arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'LWORD' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'REAL' AND
+										arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'LREAL' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'STRING(30)' AND
+											arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'TIME' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'TIME_OF_DAY' AND
+												arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'DATE' AND arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> 'DATE_AND_TIME' AND  
+			FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF BOOL') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF BYTE') = 0 AND
+				FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF WORD') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF DWORD') = 0 AND
+					FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF SINT') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF USINT') = 0 AND 
+						FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF INT') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF UINT') = 0 AND
+							FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF DINT') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF UDINT') = 0 AND
+								FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF LINT') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF ULINT') = 0 AND
+									FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF LWORD') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF REAL') = 0 AND
+										FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF LREAL') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF STRING(30)') = 0 AND
+											FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF TIME') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF TIME_OF_DAY') = 0 AND
+												FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF DATE') = 0 AND FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'OF DATE_AND_TIME') = 0 AND
+													FIND(arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct],'ARRAY') = 0 AND
+				arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] <> '' THEN
+					uiCounterListForFBorStruct := uiCounterListForFBorStruct + 1;
+						uiCounterListForFBorStruct := LIMIT(1,uiCounterListForFBorStruct,Constants_Communicator.uiArraySizeOfSubItems);
+							arrNumberForLPCheckIdentSymbols[1] := Constants_Communicator.uiArraySizeOfSubItems / 4;
+							arrNumberForLPCheckIdentSymbols[2] := Constants_Communicator.uiArraySizeOfSubItems / 4;
+							arrNumberForLPCheckIdentSymbols[3] := Constants_Communicator.uiArraySizeOfSubItems / 4;
+							arrNumberForLPCheckIdentSymbols[4] := Constants_Communicator.uiArraySizeOfSubItems - arrNumberForLPCheckIdentSymbols[1] - arrNumberForLPCheckIdentSymbols[2] - arrNumberForLPCheckIdentSymbols[3]; 
+								iStateParseDocument := 102;	
+			END_IF		
+		END_IF
+	
+		IF (((uiCounterInProgressFromDocument >= (uiCounterWantedSymbolInProgress - 1)) AND iStateParseDocument = 101 AND uiCounterFBorStruct >= Constants_Communicator.uiArraySizeOfMarkedSubItems AND 
+			(arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType = eSymbolTypeFromDocument.eIsFunctionBlock OR arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType = eSymbolTypeFromDocument. eIsStruct))) OR 
+				((uiCounterInProgressFromDocument >= (uiCounterWantedSymbolInProgress - 1)) AND iStateParseDocument = 101 AND 
+					arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType <> eSymbolTypeFromDocument.eIsFunctionBlock AND arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType <> eSymbolTypeFromDocument. eIsStruct) OR
+						arrContentOfDocument[1].sSymbolName = '' OR uiCounterWantedSymbolInProgress = 1 THEN
+							iStateParseDocument := 103;
+								byProgress := byProgress + 1;
+		END_IF
+			IF arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType <> eSymbolTypeFromDocument.eIsFunctionBlock AND arrContentOfDocument[uiCounterInProgressFromDocument].eSymbolType <> eSymbolTypeFromDocument. eIsStruct AND 
+				iStateParseDocument = 101 THEN
+					uiCounterInProgressFromDocument := uiCounterInProgressFromDocument + 1;
+			END_IF	
+		
+	102://Search all "No Standart" Data Types that occur in the FB and structures Step 2
+		byCounterWaitInStep := byCounterWaitInStep + 1;
+	
+		IF byCounterWaitInStep = 1 THEN
+			FOR uiLPCheckIdentSymbols := 1 TO arrNumberForLPCheckIdentSymbols[1] BY 1 DO 
+				IF arrCheckListForNestedSymbols[uiLPCheckIdentSymbols] = arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] THEN 
+					uiCounterListForFBorStruct := uiCounterListForFBorStruct - 1;
+						byCounterWaitInStep := 5;
+							EXIT;
+				END_IF
+			END_FOR
+		END_IF
+			IF byCounterWaitInStep = 2 THEN
+				FOR uiLPCheckIdentSymbols := arrNumberForLPCheckIdentSymbols[1] TO arrNumberForLPCheckIdentSymbols[1] + arrNumberForLPCheckIdentSymbols[2] BY 1 DO 
+					IF arrCheckListForNestedSymbols[uiLPCheckIdentSymbols] = arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] THEN 
+						uiCounterListForFBorStruct := uiCounterListForFBorStruct - 1;
+							byCounterWaitInStep := 5;
+								EXIT;
+					END_IF
+				END_FOR
+			END_IF
+				IF byCounterWaitInStep = 3 THEN
+					FOR uiLPCheckIdentSymbols := arrNumberForLPCheckIdentSymbols[1] + arrNumberForLPCheckIdentSymbols[2] TO arrNumberForLPCheckIdentSymbols[1] + arrNumberForLPCheckIdentSymbols[2] + arrNumberForLPCheckIdentSymbols[3] BY 1 DO 
+						IF arrCheckListForNestedSymbols[uiLPCheckIdentSymbols] = arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] THEN 
+							uiCounterListForFBorStruct := uiCounterListForFBorStruct - 1;
+								byCounterWaitInStep := 5;
+									EXIT;
+						END_IF
+					END_FOR
+				END_IF
+					IF byCounterWaitInStep = 4 THEN
+						FOR uiLPCheckIdentSymbols := arrNumberForLPCheckIdentSymbols[1] + arrNumberForLPCheckIdentSymbols[2] + arrNumberForLPCheckIdentSymbols[3] TO arrNumberForLPCheckIdentSymbols[1] + arrNumberForLPCheckIdentSymbols[2] + arrNumberForLPCheckIdentSymbols[3] + arrNumberForLPCheckIdentSymbols[4] BY 1 DO 
+							IF arrCheckListForNestedSymbols[uiLPCheckIdentSymbols] = arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct] THEN 
+								uiCounterListForFBorStruct := uiCounterListForFBorStruct - 1;
+									EXIT;
+							ELSIF uiLPCheckIdentSymbols >= arrNumberForLPCheckIdentSymbols[1] + arrNumberForLPCheckIdentSymbols[2] + arrNumberForLPCheckIdentSymbols[3] + arrNumberForLPCheckIdentSymbols[4] THEN    
+								arrCheckListForNestedSymbols[uiCounterListForFBorStruct] := arrContentOfDocument[uiCounterInProgressFromDocument].arrSubItemSymbolType[uiCounterFBorStruct]; 
+							END_IF
+						END_FOR
+					END_IF	
+	
+		IF byCounterWaitInStep >= 4 AND (uiCounterInProgressFromDocument < (uiCounterWantedSymbolInProgress - 1)) OR 
+			(byCounterWaitInStep >= 4 AND (uiCounterInProgressFromDocument = (uiCounterWantedSymbolInProgress - 1)) AND uiCounterFBorStruct < Constants_Communicator.uiArraySizeOfMarkedSubItems) THEN 
+				iStateParseDocument := 101;
+					byCounterWaitInStep := 0; 
+		END_IF
+			IF ((uiCounterInProgressFromDocument >= (uiCounterWantedSymbolInProgress - 1)) AND iStateParseDocument = 102 AND byCounterWaitInStep >= 4 AND uiCounterFBorStruct >= Constants_Communicator.uiArraySizeOfMarkedSubItems) THEN
+				iStateParseDocument := 103;
+					byProgress := byProgress + 1;
+						byCounterWaitInStep := 0;
+			END_IF
+	
+	103://Check if all structs and enums are found that are needed for the function blocks or structs
+		uiCounterCheckSubItemsInContentOfDoc := uiCounterCheckSubItemsInContentOfDoc + 1;
+			uiCounterCheckSubItemsInContentOfDoc := LIMIT(1,uiCounterCheckSubItemsInContentOfDoc,Constants_Communicator.uiArraySizeOfSubItems);
+		
+		IF uiCounterListForFBorStruct > 0 THEN 	
+			FOR uiLPCheckIdentSymbols := 1 TO Constants_Communicator.uiArraySizeOfSubItems BY 1 DO 
+				IF arrCheckListForNestedSymbols[uiCounterCheckSubItemsInContentOfDoc] = arrContentOfDocument[uiLPCheckIdentSymbols].sSymbolName THEN
+					EXIT;
+				ELSE
+					IF uiLPCheckIdentSymbols >= Constants_Communicator.uiArraySizeOfSubItems THEN 
+						iStateParseDocument := 200;
+							udiErrorCode := 115;
+					END_IF
+				END_IF 
+			END_FOR
+		END_IF	 
+		
+		IF uiCounterCheckSubItemsInContentOfDoc >= uiCounterListForFBorStruct AND uiCounterListForFBorStruct > 0 AND iStateParseDocument = 103 THEN 
+			iStateParseDocument := 104; byProgress := byProgress + 1; uiCounterCheckSubItemsInContentOfDoc := 0; 
+		END_IF
+			IF uiCounterListForFBorStruct = 0 AND iStateParseDocument = 103 THEN iStateParseDocument := 106; byProgress := byProgress + 1; uiCounterCheckSubItemsInContentOfDoc := 0; END_IF 
+			
+	104://Ckeck for other Functionblocks in used Structs or Function Blocks (Its not alowed at this Version)
+		uiCounterCheckSubItemsInContentOfDoc := uiCounterCheckSubItemsInContentOfDoc + 1;
+			uiCounterCheckSubItemsInContentOfDoc := LIMIT(1,uiCounterCheckSubItemsInContentOfDoc,Constants_Communicator.uiArraySizeOfSubItems);
+			
+		IF uiCounterInProgressFromDocument <= Constants_Communicator.uiArraySizeOfSubItems THEN	
+			FOR uiLPCkeckContentInSubItems := 1 TO uiCounterInProgressFromDocument BY 1 DO
+				IF arrCheckListForNestedSymbols[uiCounterCheckSubItemsInContentOfDoc] = arrContentOfDocument[uiLPCkeckContentInSubItems].sSymbolName AND 
+					arrContentOfDocument[uiLPCkeckContentInSubItems].eSymbolType = eSymbolTypeFromDocument.eIsFunctionBlock THEN
+						iStateParseDocument := 200;
+							udiErrorCode := 116;
+								EXIT;	
+				END_IF
+			END_FOR
+		END_IF
+  
+		IF uiCounterCheckSubItemsInContentOfDoc >= uiCounterListForFBorStruct AND iStateParseDocument = 104 THEN iStateParseDocument := 105; byProgress := byProgress + 1; uiCounterCheckSubItemsInContentOfDoc := 0; END_IF		
+		
+	105://Ckeck if in the subitems in the structs or Functionblocks is not more than 1 extra Subitem
+		uiCounterCkeckContenInSubItems_2 := uiCounterCkeckContenInSubItems_2 + 1;
+		
+		IF uiCounterCkeckContenInSubItems_2 > Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiCounterCkeckContenInSubItems_1 := uiCounterCkeckContenInSubItems_1 + 1; END_IF
+			
+		IF uiCounterCkeckContenInSubItems_2 > Constants_Communicator.uiArraySizeOfMarkedSubItems AND uiCounterCkeckContenInSubItems_1 > uiCounterInProgressFromDocument THEN uiCounterCheckSubItemsInContentOfDoc := uiCounterCheckSubItemsInContentOfDoc + 1; END_IF	
+
+		IF uiCounterCkeckContenInSubItems_1 > uiCounterInProgressFromDocument THEN uiCounterCkeckContenInSubItems_1 := 1; END_IF	
+		IF uiCounterCkeckContenInSubItems_2 > Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiCounterCkeckContenInSubItems_2 := 1; END_IF
+	
+		uiCounterCkeckContenInSubItems_2 := LIMIT(1,uiCounterCkeckContenInSubItems_2,Constants_Communicator.uiArraySizeOfMarkedSubItems);	
+		uiCounterCheckSubItemsInContentOfDoc := LIMIT(1,uiCounterCheckSubItemsInContentOfDoc,Constants_Communicator.uiArraySizeOfSubItems);
+		uiCounterCkeckContenInSubItems_1 := LIMIT(1,uiCounterCkeckContenInSubItems_1,Constants_Communicator.uiArraySizeOfSubItems);
+			
+		IF arrCheckListForNestedSymbols[uiCounterCheckSubItemsInContentOfDoc] = arrContentOfDocument[uiCounterCkeckContenInSubItems_1].sSymbolName THEN
+			IF arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'BOOL' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'BYTE' AND
+				arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'WORD' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'DWORD' AND
+					arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'SINT' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'USINT' AND
+						arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'INT' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'UINT' AND
+							arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'DINT' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'UDINT' AND
+								arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'LINT' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'ULINT' AND
+									arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'LWORD' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'REAL' AND
+										arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'LREAL' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'STRING(30)' AND
+											arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'TIME' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'TIME_OF_DAY' AND
+												arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'DATE' AND arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> 'DATE_AND_TIME' AND 
+			FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF BOOL') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF BYTE') = 0 AND
+				FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF WORD') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DWORD') = 0 AND
+					FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF SINT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF USINT') = 0 AND 
+						FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF INT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF UINT') = 0 AND
+							FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DINT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF UDINT') = 0 AND
+								FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF LINT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF ULINT') = 0 AND
+									FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF LWORD') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF REAL') = 0 AND
+										FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF LREAL') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF STRING(30)') = 0 AND
+											FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF TIME') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF TIME_OF_DAY') = 0 AND
+												FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DATE') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DATE_AND_TIME') = 0 AND
+			arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> '' THEN 
+				iStateParseDocument := 200;
+					udiErrorCode := 117;
+			END_IF	
+		END_IF
+		
+		IF uiCounterCheckSubItemsInContentOfDoc >= uiCounterListForFBorStruct AND uiCounterCkeckContenInSubItems_1 >= uiCounterInProgressFromDocument AND uiCounterCkeckContenInSubItems_2 >= Constants_Communicator.uiArraySizeOfMarkedSubItems AND iStateParseDocument = 105 THEN 
+			iStateParseDocument := 106; byProgress := byProgress + 1;
+				uiCounterCheckSubItemsInContentOfDoc := 0; uiCounterCkeckContenInSubItems_1 := 0; uiCounterCkeckContenInSubItems_2 := 0;
+		END_IF
+		
+	106://Check in Sub Items for no standart Datatypes in Array	
+		uiCounterCkeckContenInSubItems_2 := uiCounterCkeckContenInSubItems_2 + 1;
+		
+		IF uiCounterCkeckContenInSubItems_2 > Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiCounterCkeckContenInSubItems_1 := uiCounterCkeckContenInSubItems_1 + 1; END_IF
+			
+		IF uiCounterCkeckContenInSubItems_2 > Constants_Communicator.uiArraySizeOfMarkedSubItems AND uiCounterCkeckContenInSubItems_1 > uiCounterInProgressFromDocument THEN uiCounterCheckSubItemsInContentOfDoc := uiCounterCheckSubItemsInContentOfDoc + 1; END_IF	
+
+		IF uiCounterCkeckContenInSubItems_1 > uiCounterInProgressFromDocument THEN uiCounterCkeckContenInSubItems_1 := 1; END_IF	
+		IF uiCounterCkeckContenInSubItems_2 > Constants_Communicator.uiArraySizeOfMarkedSubItems THEN uiCounterCkeckContenInSubItems_2 := 1; END_IF
+	
+		uiCounterCkeckContenInSubItems_2 := LIMIT(1,uiCounterCkeckContenInSubItems_2,Constants_Communicator.uiArraySizeOfMarkedSubItems);	
+		uiCounterCheckSubItemsInContentOfDoc := LIMIT(1,uiCounterCheckSubItemsInContentOfDoc,Constants_Communicator.uiArraySizeOfSubItems);
+		uiCounterCkeckContenInSubItems_1 := LIMIT(1,uiCounterCkeckContenInSubItems_1,Constants_Communicator.uiArraySizeOfSubItems);
+		
+		//Array with no Standart Datatype
+		IF FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'ARRAY') = 1 AND 
+			FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF BOOL') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF BYTE') = 0 AND
+				FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF WORD') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DWORD') = 0 AND
+					FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF SINT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF USINT') = 0 AND 
+						FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF INT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF UINT') = 0 AND
+							FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DINT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF UDINT') = 0 AND
+								FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF LINT') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF ULINT') = 0 AND
+									FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF LWORD') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF REAL') = 0 AND
+										FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF LREAL') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF STRING(30)') = 0 AND
+											FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF TIME') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF TIME_OF_DAY') = 0 AND
+												FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DATE') = 0 AND FIND(arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2],'OF DATE_AND_TIME') = 0 AND
+			arrContentOfDocument[uiCounterCkeckContenInSubItems_1].arrSubItemSymbolType[uiCounterCkeckContenInSubItems_2] <> '' THEN 
+				iStateParseDocument := 200;
+					udiErrorCode := 118;
+		END_IF
+	
+		IF uiCounterCheckSubItemsInContentOfDoc >= uiCounterListForFBorStruct AND uiCounterCkeckContenInSubItems_1 >= uiCounterInProgressFromDocument AND uiCounterCkeckContenInSubItems_2 >= Constants_Communicator.uiArraySizeOfMarkedSubItems AND iStateParseDocument = 106 THEN 
+			iStateParseDocument := 0; byProgress := 100; bDone := TRUE; uiFoundItems := uiCounterInProgressFromDocument; 
+		END_IF
+		
+	200://Error
+		IF udiErrorCode = 101 OR udiErrorCode = 102 OR udiErrorCode = 103 OR udiErrorCode = 108 OR udiErrorCode = 109 OR udiErrorCode = 110 OR udiErrorCode = 3 OR udiErrorCode = 4 THEN sSymbolNameWithError := sSymbolName; END_IF
+			IF udiErrorCode = 104 THEN sSymbolNameWithError := CONCAT(CONCAT(sSymbolName,'.'),sNameSubItem); END_IF 
+				IF ((udiErrorCode = 111 OR udiErrorCode = 112) AND uiCounterWantedSymbolInProgress <= 1 AND uiSubItemArrayInProgress <= 2) THEN 
+					sSymbolNameWithError := CONCAT(CONCAT(arrContentOfDocument[1].sSymbolName,'.'),arrContentOfDocument[1].arrSubItemName[1]); 
+				END_IF
+					IF ((udiErrorCode = 111 OR udiErrorCode = 112) AND uiCounterWantedSymbolInProgress > 1 AND uiSubItemArrayInProgress <= 2) THEN 
+						sSymbolNameWithError := CONCAT(CONCAT(arrContentOfDocument[uiCounterWantedSymbolInProgress].sSymbolName,'.'),arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemName[1]); 
+					END_IF
+						IF ((udiErrorCode = 111 OR udiErrorCode = 112) AND uiCounterWantedSymbolInProgress <= 1 AND uiSubItemArrayInProgress > 2) THEN 
+							sSymbolNameWithError := CONCAT(CONCAT(arrContentOfDocument[1].sSymbolName,'.'),arrContentOfDocument[1].arrSubItemName[uiSubItemArrayInProgress - 1]); 
+						END_IF
+							IF ((udiErrorCode = 111 OR udiErrorCode = 112) AND uiCounterWantedSymbolInProgress > 1 AND uiSubItemArrayInProgress > 2) THEN 
+								sSymbolNameWithError := CONCAT(CONCAT(arrContentOfDocument[uiCounterWantedSymbolInProgress].sSymbolName,'.'),arrContentOfDocument[uiCounterWantedSymbolInProgress].arrSubItemName[uiSubItemArrayInProgress - 1]); 
+							END_IF
+								IF udiErrorCode = 115 OR udiErrorCode = 116 OR udiErrorCode = 117 THEN sSymbolNameWithError := arrCheckListForNestedSymbols[uiCounterCheckSubItemsInContentOfDoc]; END_IF 
+									IF udiErrorCode = 118 THEN sSymbolNameWithError := arrContentOfDocument[uiCounterCkeckContenInSubItems_1].sSymbolName; END_IF 
+		bError := TRUE;
+			iStateParseDocument := 0;
+			
+END_CASE
+
+//Save position
+IF eSavePositionTMCFile = eSavePositionFile.ePostionC THEN fbFileOpen.sPathName := CONCAT(CONCAT('C:\TwinCAT\3.1\Config\TMC\',TwinCAT_SystemInfoVarList._AppInfo.ProjectName),'.tmc'); END_IF
+IF eSavePositionTMCFile = eSavePositionFile.ePostionHardDisk THEN fbFileOpen.sPathName := CONCAT(CONCAT('Hard Disk\TwinCAT\3.1\Config\TMC\',TwinCAT_SystemInfoVarList._AppInfo.ProjectName),'.tmc'); END_IF
+
+fbFileOpen(
+	sNetId:= , 
+	sPathName:= , 
+	nMode:= FOPEN_MODEREAD OR FOPEN_MODETEXT, 
+	ePath:= PATH_GENERIC, 
+	bExecute:= , 
+	tTimeout:= T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> , 
+	hFile=> );
+
+FPErrorOpen(CLK:= fbFileOpen.bError, Q=> );
+	
+fbFileGet(
+	sNetId:= , 
+	hFile:= fbFileOpen.hFile, 
+	bExecute:= , 
+	tTimeout:= T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> , 
+	sLine=> , 
+	bEOF=> );
+
+FPErrorGet(CLK:= fbFileGet.bError, Q=> );
+
+fbFileTell(
+	sNetId:= , 
+	hFile:= fbFileOpen.hFile, 
+	bExecute:= , 
+	tTimeout:= T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> , 
+	nSeekPos=> );
+
+FPErrorTell(CLK:= fbFileTell.bError, Q=> );	
+
+fbFileSeek(
+	sNetId:= , 
+	hFile:= fbFileOpen.hFile, 
+	nSeekPos:= , 
+	eOrigin:= SEEK_END, 
+	bExecute:= , 
+	tTimeout:= T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+
+FPErrorSeek(CLK:= fbFileSeek.bError, Q=> );
+	
+fbFileClose(
+	sNetId:= , 
+	hFile:= fbFileOpen.hFile, 
+	bExecute:= , 
+	tTimeout:= T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+	
+FPErrorClose(CLK:= fbFileClose.bError, Q=> );	
+
+//Progress
+IF iStateParseDocument > 3 AND iStateParseDocument < 100 AND diEndPositionInDocument > 0 THEN
+	byProgress := REAL_TO_BYTE(F_Scalvalue(x:= DINT_TO_REAL(fbFileTell.nSeekPos), x1:= 0, y1:= 0, x2:= DINT_TO_REAL(diEndPositionInDocument), y2:= 100));
+		IF byProgress >= 5 THEN
+			byProgress := byProgress - 5;
+		ELSE
+			byProgress := 0;
+		END_IF
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ParsDocument">
+      <LineId Id="504" Count="2" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="507" Count="1" />
+      <LineId Id="2700" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="2501" Count="0" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="2502" Count="0" />
+      <LineId Id="1218" Count="1" />
+      <LineId Id="321" Count="1" />
+      <LineId Id="39" Count="3" />
+      <LineId Id="1708" Count="0" />
+      <LineId Id="1221" Count="0" />
+      <LineId Id="1223" Count="0" />
+      <LineId Id="1222" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="1010" Count="0" />
+      <LineId Id="1614" Count="0" />
+      <LineId Id="46" Count="2" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="2696" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="791" Count="0" />
+      <LineId Id="1424" Count="4" />
+      <LineId Id="1422" Count="0" />
+      <LineId Id="1782" Count="1" />
+      <LineId Id="2174" Count="0" />
+      <LineId Id="1423" Count="0" />
+      <LineId Id="1225" Count="0" />
+      <LineId Id="801" Count="0" />
+      <LineId Id="1227" Count="0" />
+      <LineId Id="1226" Count="0" />
+      <LineId Id="799" Count="0" />
+      <LineId Id="1710" Count="0" />
+      <LineId Id="1712" Count="9" />
+      <LineId Id="1711" Count="0" />
+      <LineId Id="1709" Count="0" />
+      <LineId Id="1722" Count="0" />
+      <LineId Id="1724" Count="0" />
+      <LineId Id="1741" Count="0" />
+      <LineId Id="1740" Count="0" />
+      <LineId Id="1723" Count="0" />
+      <LineId Id="1744" Count="5" />
+      <LineId Id="1742" Count="1" />
+      <LineId Id="1750" Count="0" />
+      <LineId Id="1754" Count="5" />
+      <LineId Id="1773" Count="3" />
+      <LineId Id="1752" Count="1" />
+      <LineId Id="1763" Count="0" />
+      <LineId Id="1765" Count="5" />
+      <LineId Id="1777" Count="3" />
+      <LineId Id="1764" Count="0" />
+      <LineId Id="1751" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="945" Count="0" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="1610" Count="0" />
+      <LineId Id="2071" Count="0" />
+      <LineId Id="2424" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="1194" Count="0" />
+      <LineId Id="61" Count="4" />
+      <LineId Id="498" Count="3" />
+      <LineId Id="66" Count="2" />
+      <LineId Id="1196" Count="0" />
+      <LineId Id="70" Count="2" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="74" Count="9" />
+      <LineId Id="429" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="87" Count="7" />
+      <LineId Id="1112" Count="0" />
+      <LineId Id="1111" Count="0" />
+      <LineId Id="1113" Count="1" />
+      <LineId Id="1694" Count="0" />
+      <LineId Id="1696" Count="0" />
+      <LineId Id="1702" Count="0" />
+      <LineId Id="1700" Count="0" />
+      <LineId Id="1703" Count="0" />
+      <LineId Id="1701" Count="0" />
+      <LineId Id="1699" Count="0" />
+      <LineId Id="1705" Count="1" />
+      <LineId Id="1695" Count="0" />
+      <LineId Id="1704" Count="0" />
+      <LineId Id="1678" Count="0" />
+      <LineId Id="1198" Count="0" />
+      <LineId Id="99" Count="1" />
+      <LineId Id="1102" Count="1" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="102" Count="1" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="2799" Count="0" />
+      <LineId Id="2796" Count="0" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="108" Count="2" />
+      <LineId Id="2800" Count="1" />
+      <LineId Id="2798" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="572" Count="4" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="2095" Count="0" />
+      <LineId Id="112" Count="4" />
+      <LineId Id="1104" Count="0" />
+      <LineId Id="117" Count="10" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="946" Count="3" />
+      <LineId Id="129" Count="4" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="134" Count="1" />
+      <LineId Id="1200" Count="0" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="142" Count="4" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="149" Count="2" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="159" Count="4" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="164" Count="1" />
+      <LineId Id="1202" Count="0" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="370" Count="1" />
+      <LineId Id="484" Count="2" />
+      <LineId Id="167" Count="1" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="173" Count="5" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="2683" Count="0" />
+      <LineId Id="2686" Count="0" />
+      <LineId Id="966" Count="0" />
+      <LineId Id="1015" Count="0" />
+      <LineId Id="1334" Count="0" />
+      <LineId Id="1338" Count="0" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="1013" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="762" Count="0" />
+      <LineId Id="747" Count="2" />
+      <LineId Id="752" Count="3" />
+      <LineId Id="2688" Count="0" />
+      <LineId Id="2691" Count="0" />
+      <LineId Id="757" Count="3" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="185" Count="4" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="626" Count="0" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="2092" Count="0" />
+      <LineId Id="2094" Count="0" />
+      <LineId Id="2093" Count="0" />
+      <LineId Id="1463" Count="0" />
+      <LineId Id="1466" Count="0" />
+      <LineId Id="1464" Count="1" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="877" Count="2" />
+      <LineId Id="1235" Count="0" />
+      <LineId Id="2697" Count="0" />
+      <LineId Id="1490" Count="2" />
+      <LineId Id="1495" Count="1" />
+      <LineId Id="1500" Count="0" />
+      <LineId Id="1489" Count="0" />
+      <LineId Id="1406" Count="1" />
+      <LineId Id="1409" Count="0" />
+      <LineId Id="1408" Count="0" />
+      <LineId Id="1417" Count="1" />
+      <LineId Id="1461" Count="0" />
+      <LineId Id="1419" Count="0" />
+      <LineId Id="2793" Count="0" />
+      <LineId Id="2701" Count="0" />
+      <LineId Id="2893" Count="1" />
+      <LineId Id="1094" Count="0" />
+      <LineId Id="883" Count="0" />
+      <LineId Id="1430" Count="0" />
+      <LineId Id="1025" Count="1" />
+      <LineId Id="1023" Count="0" />
+      <LineId Id="1410" Count="1" />
+      <LineId Id="1497" Count="0" />
+      <LineId Id="1032" Count="0" />
+      <LineId Id="2694" Count="0" />
+      <LineId Id="1429" Count="0" />
+      <LineId Id="885" Count="1" />
+      <LineId Id="891" Count="0" />
+      <LineId Id="887" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="983" Count="2" />
+      <LineId Id="990" Count="0" />
+      <LineId Id="1431" Count="0" />
+      <LineId Id="1033" Count="0" />
+      <LineId Id="1432" Count="0" />
+      <LineId Id="997" Count="0" />
+      <LineId Id="1339" Count="0" />
+      <LineId Id="770" Count="1" />
+      <LineId Id="900" Count="0" />
+      <LineId Id="902" Count="0" />
+      <LineId Id="904" Count="1" />
+      <LineId Id="1236" Count="0" />
+      <LineId Id="2699" Count="0" />
+      <LineId Id="2703" Count="0" />
+      <LineId Id="2794" Count="0" />
+      <LineId Id="2895" Count="1" />
+      <LineId Id="1095" Count="0" />
+      <LineId Id="903" Count="0" />
+      <LineId Id="1433" Count="0" />
+      <LineId Id="1027" Count="1" />
+      <LineId Id="1024" Count="0" />
+      <LineId Id="2695" Count="0" />
+      <LineId Id="1434" Count="0" />
+      <LineId Id="906" Count="1" />
+      <LineId Id="910" Count="1" />
+      <LineId Id="908" Count="0" />
+      <LineId Id="774" Count="1" />
+      <LineId Id="1021" Count="1" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="651" Count="1" />
+      <LineId Id="649" Count="1" />
+      <LineId Id="968" Count="0" />
+      <LineId Id="1206" Count="0" />
+      <LineId Id="973" Count="0" />
+      <LineId Id="1435" Count="0" />
+      <LineId Id="1093" Count="0" />
+      <LineId Id="976" Count="0" />
+      <LineId Id="1035" Count="0" />
+      <LineId Id="1415" Count="1" />
+      <LineId Id="1020" Count="0" />
+      <LineId Id="978" Count="2" />
+      <LineId Id="1031" Count="0" />
+      <LineId Id="1460" Count="0" />
+      <LineId Id="1440" Count="0" />
+      <LineId Id="970" Count="0" />
+      <LineId Id="969" Count="0" />
+      <LineId Id="1109" Count="1" />
+      <LineId Id="1107" Count="1" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="1785" Count="0" />
+      <LineId Id="193" Count="2" />
+      <LineId Id="655" Count="0" />
+      <LineId Id="197" Count="1" />
+      <LineId Id="492" Count="0" />
+      <LineId Id="1187" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="1115" Count="0" />
+      <LineId Id="2399" Count="0" />
+      <LineId Id="1823" Count="0" />
+      <LineId Id="1475" Count="1" />
+      <LineId Id="1234" Count="0" />
+      <LineId Id="1526" Count="0" />
+      <LineId Id="1482" Count="6" />
+      <LineId Id="1503" Count="11" />
+      <LineId Id="1525" Count="0" />
+      <LineId Id="2533" Count="0" />
+      <LineId Id="1515" Count="0" />
+      <LineId Id="1519" Count="0" />
+      <LineId Id="1964" Count="0" />
+      <LineId Id="1968" Count="2" />
+      <LineId Id="2052" Count="0" />
+      <LineId Id="2056" Count="0" />
+      <LineId Id="1480" Count="0" />
+      <LineId Id="1471" Count="0" />
+      <LineId Id="2044" Count="0" />
+      <LineId Id="2080" Count="2" />
+      <LineId Id="2059" Count="0" />
+      <LineId Id="2045" Count="1" />
+      <LineId Id="2042" Count="1" />
+      <LineId Id="2076" Count="0" />
+      <LineId Id="2074" Count="1" />
+      <LineId Id="2073" Count="0" />
+      <LineId Id="1999" Count="0" />
+      <LineId Id="2032" Count="2" />
+      <LineId Id="2001" Count="1" />
+      <LineId Id="2064" Count="1" />
+      <LineId Id="2003" Count="0" />
+      <LineId Id="2005" Count="1" />
+      <LineId Id="2035" Count="1" />
+      <LineId Id="2007" Count="1" />
+      <LineId Id="2066" Count="1" />
+      <LineId Id="2062" Count="0" />
+      <LineId Id="2011" Count="1" />
+      <LineId Id="2037" Count="1" />
+      <LineId Id="2013" Count="1" />
+      <LineId Id="2068" Count="1" />
+      <LineId Id="2063" Count="0" />
+      <LineId Id="2017" Count="1" />
+      <LineId Id="2039" Count="1" />
+      <LineId Id="2019" Count="2" />
+      <LineId Id="2070" Count="0" />
+      <LineId Id="2023" Count="2" />
+      <LineId Id="2000" Count="0" />
+      <LineId Id="2041" Count="0" />
+      <LineId Id="1998" Count="0" />
+      <LineId Id="2026" Count="0" />
+      <LineId Id="2060" Count="0" />
+      <LineId Id="2049" Count="2" />
+      <LineId Id="2047" Count="0" />
+      <LineId Id="2030" Count="1" />
+      <LineId Id="2048" Count="0" />
+      <LineId Id="2027" Count="1" />
+      <LineId Id="1792" Count="0" />
+      <LineId Id="1794" Count="0" />
+      <LineId Id="1797" Count="1" />
+      <LineId Id="1809" Count="0" />
+      <LineId Id="1799" Count="0" />
+      <LineId Id="1801" Count="2" />
+      <LineId Id="1805" Count="0" />
+      <LineId Id="2175" Count="0" />
+      <LineId Id="1806" Count="0" />
+      <LineId Id="2176" Count="0" />
+      <LineId Id="1804" Count="0" />
+      <LineId Id="1800" Count="0" />
+      <LineId Id="1810" Count="0" />
+      <LineId Id="2535" Count="0" />
+      <LineId Id="1807" Count="0" />
+      <LineId Id="2183" Count="1" />
+      <LineId Id="2172" Count="0" />
+      <LineId Id="1811" Count="0" />
+      <LineId Id="1814" Count="0" />
+      <LineId Id="2168" Count="0" />
+      <LineId Id="2177" Count="1" />
+      <LineId Id="2185" Count="0" />
+      <LineId Id="2179" Count="0" />
+      <LineId Id="2186" Count="0" />
+      <LineId Id="2267" Count="0" />
+      <LineId Id="2190" Count="0" />
+      <LineId Id="2268" Count="0" />
+      <LineId Id="2274" Count="0" />
+      <LineId Id="2191" Count="0" />
+      <LineId Id="2187" Count="1" />
+      <LineId Id="2182" Count="0" />
+      <LineId Id="2169" Count="0" />
+      <LineId Id="1813" Count="0" />
+      <LineId Id="2269" Count="0" />
+      <LineId Id="2276" Count="0" />
+      <LineId Id="2421" Count="0" />
+      <LineId Id="2408" Count="0" />
+      <LineId Id="2418" Count="0" />
+      <LineId Id="2420" Count="0" />
+      <LineId Id="2423" Count="0" />
+      <LineId Id="2417" Count="0" />
+      <LineId Id="2416" Count="0" />
+      <LineId Id="2422" Count="0" />
+      <LineId Id="2406" Count="0" />
+      <LineId Id="2413" Count="1" />
+      <LineId Id="2401" Count="0" />
+      <LineId Id="2280" Count="0" />
+      <LineId Id="2288" Count="0" />
+      <LineId Id="2292" Count="7" />
+      <LineId Id="2289" Count="0" />
+      <LineId Id="2301" Count="9" />
+      <LineId Id="2300" Count="0" />
+      <LineId Id="2311" Count="0" />
+      <LineId Id="2323" Count="1" />
+      <LineId Id="2285" Count="0" />
+      <LineId Id="2290" Count="0" />
+      <LineId Id="2317" Count="0" />
+      <LineId Id="2504" Count="0" />
+      <LineId Id="2602" Count="0" />
+      <LineId Id="2506" Count="0" />
+      <LineId Id="2270" Count="0" />
+      <LineId Id="2566" Count="1" />
+      <LineId Id="2571" Count="26" />
+      <LineId Id="2568" Count="1" />
+      <LineId Id="2600" Count="1" />
+      <LineId Id="2598" Count="1" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="1420" Count="0" />
+      <LineId Id="1442" Count="0" />
+      <LineId Id="1444" Count="1" />
+      <LineId Id="1447" Count="1" />
+      <LineId Id="1446" Count="0" />
+      <LineId Id="1453" Count="1" />
+      <LineId Id="1452" Count="0" />
+      <LineId Id="1456" Count="1" />
+      <LineId Id="1455" Count="0" />
+      <LineId Id="1894" Count="0" />
+      <LineId Id="2603" Count="0" />
+      <LineId Id="1333" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="203" Count="1" />
+      <LineId Id="1192" Count="0" />
+      <LineId Id="1189" Count="2" />
+      <LineId Id="2077" Count="0" />
+      <LineId Id="206" Count="25" />
+      <LineId Id="1681" Count="0" />
+      <LineId Id="1683" Count="7" />
+      <LineId Id="1682" Count="0" />
+      <LineId Id="1691" Count="0" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="1727" Count="0" />
+      <LineId Id="1729" Count="8" />
+      <LineId Id="1728" Count="0" />
+      <LineId Id="1738" Count="1" />
+      <LineId Id="1692" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="234" Count="8" />
+      <LineId Id="1787" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="1790" Count="0" />
+      <LineId Id="1817" Count="0" />
+      <LineId Id="1819" Count="0" />
+      <LineId Id="1818" Count="0" />
+      <LineId Id="1820" Count="2" />
+      <LineId Id="1791" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

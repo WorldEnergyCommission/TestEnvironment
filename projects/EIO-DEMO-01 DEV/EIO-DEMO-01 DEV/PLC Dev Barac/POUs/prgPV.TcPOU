@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{369cfaa2-6e99-4202-9cb5-5c3760d0cb35}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR	
+	lrPowerPV_1: LREAL;							//{#lynus.ag#()}
+	lrPowerPV_2: LREAL;							//{#lynus.ag#()}
+	lrPowerPV: LREAL;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[ prgPV.lrPowerPV_1		:=		prg_ADS.struct_received.lrPowerPV_1			;
+ prgPV.lrPowerPV_2		:=		prg_ADS.struct_received.lrPowerPV_2			;
+lrPowerPV := lrPowerPV_1+lrPowerPV_2;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="12" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,738 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HeatingPump" Id="{f03d0799-15b9-4274-8101-6387950e8dee}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HeatingPump
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;									//Enable or dissable the function
+	{attribute 'hide'}
+	bError								: BOOL;									//Error Heating pump
+	{attribute 'hide'}
+	bWarning							: BOOL;									//Warning Heating pump
+	{attribute 'hide'}
+	bIsStepSwitched						: BOOL;									//Heating pump is step switched or not
+	{attribute 'hide'}
+	bEPOIsActive						: BOOL;									//Emergency power operation is active
+	{attribute 'hide'}
+	bExternalLock						: BOOL;									//External lock (All functions are locked)
+	{attribute 'hide'}
+	bReset								: BOOL;									//Reset the Heating pup after an error with the output reset and a negative edge
+	{attribute 'hide'}
+	bExternalOnCommand					: BOOL;									//External On command to switch on the heating pump
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;									//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	bHPIsRunning						: BOOL;									//Feedback from the Heating pump if he is running (Need for min run time)
+	{attribute 'hide'}
+	iErrorCode							: INT;									//Error Code from external HP
+	{attribute 'hide'}
+	iWarningCode						: INT;									//Warning Code from external HP
+	{attribute 'hide'}
+	dwBatterySOC						: DWORD;								//Actual Battery SOC in %
+	{attribute 'hide'}
+	diNumberOfHP						: DINT;									//Number of heating pump what is calculatet by a external function
+	{attribute 'hide'}
+	rBoilerTempHeatingSys				: REAL;									//Boilertemperatur Heating system with the unit °C
+	{attribute 'hide'}
+	rBoilerTempServiceWater				: REAL;									//Boilertemperatur Service water with the unit °C
+	{attribute 'hide'}
+	rFlowTemp							: REAL;									//Flow temperatur heating pump with the unit °C
+	{attribute 'hide'}
+	rReturnTemp							: REAL;									//Return temperatur heating pump with the unit °C
+	{attribute 'hide'}
+	rFlowTempEnergySource				: REAL;									//Flow temperatur energy source heating pump with the unit °C
+	{attribute 'hide'}
+	rReturnTempEnergySource				: REAL;									//Return temperatur energy source heating pump with the unit °C
+	{attribute 'hide'}
+	lrSizeGridConnection				: LREAL;								//Max size from the grid connection in kW
+	{attribute 'hide'}
+	lrGridPower							: LREAL;								//Actual Grid power in kW
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;								//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;								//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;								//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;								//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;								//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;								//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrCounterThermalEnergy_Heating		: LREAL;								//Total Counter for thermal Energy from the heating system with unit Wh
+	{attribute 'hide'}
+	lrCounterThermalEnergy_Water		: LREAL;								//Total Counter for thermal Energy from the service water system with unit Wh
+	{attribute 'hide'}
+	lrElPowerHP							: LREAL;								//Input Value from the power of the Heating pump with unit W
+	{attribute 'hide'}
+	arrTargetPower						: ARRAY[1..2] OF REAL;					//Target power from 0% to +100% for each step (0% to 100%) 
+	{attribute 'hide'}
+	tOnDelayExternalOn					: TIME := T#2M;							//On delay before the pump is switching on with external on command
+	{attribute 'hide'}
+	tOffDelayExternalOn					: TIME := T#1H;							//Off delay when the pump was switching on with external on command
+	{attribute 'hide'}
+	tMinOnTime							: TIME := T#30M;						//Minimum On time for the HP in the surplus mode 
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;							//Delay Time to write some Data to the Output
+	{attribute 'hide'}	
+	stSystemTime						: ST_Systemtime;						//Local system time
+	{attribute 'hide'}
+	stSetupHP							: ST_Setup_HP;							//Setup heating pump
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataHPOut							: ST_HP_Output;							//Heating pump output data
+	{attribute 'hide'}
+	stDataHPOutDelay					: ST_HP_Output;							//Heating pump output data with delay
+	{attribute 'hide'}
+	arrPercentValuesSteps				: ARRAY[1..2] OF REAL;					//Percent values from the Steps
+END_VAR
+VAR
+	FPTimeEn							: R_TRIG;								//Internal positive edge
+	FPTimeDis							: R_TRIG;								//Internal positive edge
+	FPReset								: R_TRIG;								//Internal positive edge
+	FPResetIntern						: R_TRIG;								//Internal positive edge
+	FPExternalOnCommand					: R_TRIG;								//Internal positive edge
+	FPStartMinOnTimer					: R_TRIG;								//Internal postive edge
+	FPEnable							: R_TRIG;								//Internal positive Edge
+	FNEnable							: F_TRIG;								//Internal negative Edge
+	timDelayOutputs						: TON;									//Timer to send Data with Delay to the outputs
+	timResetOut							: TOF;									//Timer to reset the error
+	timMinOnInStep4						: TOF;									//Timer for the minimum on time in the step 4 in the surplus mode.
+	timOnDelayExternalOn				: TON;									//Timer to start the pump with a delay when external on command is active
+	timOffDelayExternalOn				: TON;									//Timer to stop the pump with a delay after the pump was running in the external on command mode
+	timSOCOff							: TON;									//Timer to dissable the Device when the SOC from the Battery is under the Setpoint
+	bEnableTimeFunction					: BOOL;									//Enable the time function
+	byLPMaxPower						: BYTE;									//Loop to limit the max power and the target power from the ems
+	byLPNumberOfSteps					: BYTE;									//Loop to count the numbers of active steps
+	byLPMaxPowerLimit					: BYTE;									//Loop to limit the max power at the output with 1 comma
+	byLPCalcStepPower					: BYTE;									//Loop to calcualte the power from each step
+	byLPCalcPercentPowerSteps			: BYTE;									//Loop to calcualte the % power from each step
+	byLPMaxIsReached					: BYTE;									//Loop to check if each step has reached the maximum of target power or not
+	iStateIntStep3						: INT;									//Internal state machine in general step 3
+	uiState								: UINT;									//State Maschine
+	rSumOfSteps							: REAL;									//Total sum of each steps in kW
+	arrMaxPower							: ARRAY[1..2] OF REAL; 					//Maximum power of the consumer in kW (Per stage) [1] = Increased operation [2] = Maximum operation
+	arrMaxIsReached						: ARRAY[1..2] OF BOOL;					//Array in wich is saved when the target power from each step is >= 100%
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.05.2021
+//Version : 1.0.0.0
+
+//With this function its possible to control a heating pump with the plc
+//When the heating pump is switching maualy, then the target power from the ems function is without functionality
+//On the max power inputs can be add the power limits. The pump can by step switched by 2 steps
+//The percent number from each step is added to the output target power
+//< Constants.byTargetOffPowerOnOffDevices Target power from the ems dissable the heating pump after the delay in the surplus mode in Step 4
+//When the HP is not step switched, the input target power is set linear to the output target power.
+//When the target power from the ems <= 0 and after delay then the heating pump is dissabled in the surplus mode in step 4
+//On the emergency power mode and when the soc from the battery <= dissableSOC then the target output power from the heating pump is 0
+//Otherwise the heating pump runs in normal mode and the output boutputHB is then always true 
+//If in the setups from the heating pump the OffOn Emergency mode is true then the Heating pump is dissabled in the emergency power mode
+//When the time function is enabled, then the heating pump run in this time with the % value from max power [1] from the setup when its step switched.
+//If there is no step switching and time mode is active, the power input is set linearly to the output. The % value with which the pump should then run over the time can be set at the setups
+//This function has also a external look input. If this input is set then the heating pump is dissabled
+//This function has also a step to activate the heating pump by a external command. Here the pump switch on with delay and check before the power on the grid
+
+(*---------------------------------------------------------------Limits-------------------------------------------------------------------------------*)
+
+dwBatterySOC := LIMIT(0,dwBatterySOC,100);
+	stSetupHP.byManualyTargetPower := LIMIT(0,stSetupHP.byManualyTargetPower,100);
+		rBoilerTempHeatingSys := LIMIT(-30,rBoilerTempHeatingSys,120);
+			rBoilerTempServiceWater := LIMIT(-30,rBoilerTempServiceWater,120);
+				rFlowTemp := LIMIT(-30,rFlowTemp,120);
+					rReturnTemp := LIMIT(-30,rReturnTemp,120);
+						rFlowTempEnergySource := LIMIT(-30,rFlowTempEnergySource,120); 
+							rReturnTempEnergySource := LIMIT(-30,rReturnTempEnergySource,120); 
+								stSetupHP.byTimeEnabledTargetPower := LIMIT(0,stSetupHP.byTimeEnabledTargetPower,100);
+									stSetupHP.byHourOn := LIMIT(0,stSetupHP.byHourOn,23);
+										stSetupHP.byHourOff := LIMIT(0,stSetupHP.byHourOff,23);
+											stSetupHP.byMinutesOn := LIMIT(0,stSetupHP.byMinutesOn,59);
+												stSetupHP.byMinutesOff := LIMIT(0,stSetupHP.byMinutesOff,59);
+													IF IsFinite(F_LREAL(lrCounterThermalEnergy_Water)) THEN lrCounterThermalEnergy_Water := LIMIT(0,lrCounterThermalEnergy_Water,999999999999999); END_IF
+														IF IsFinite(F_LREAL(lrCounterThermalEnergy_Heating)) THEN lrCounterThermalEnergy_Heating := LIMIT(0,lrCounterThermalEnergy_Heating,999999999999999); END_IF
+															diNumberOfHP := LIMIT(0,diNumberOfHP,Constants_Energy.diMaxNumberOfHeatingPumps);
+																tOnDelayExternalOn := LIMIT(T#1M,tOnDelayExternalOn,T#10M);	
+																	tOffDelayExternalOn := LIMIT(T#15M,tOffDelayExternalOn,T#2H);
+																		tMinOnTime := LIMIT(T#15M,tMinOnTime,T#2H);	
+
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrElPowerHP := LIMIT(-999999999999999,lrElPowerHP,999999999999999);	
+							lrSizeGridConnection := LIMIT(-999999999999999,lrSizeGridConnection,999999999999999);	
+								lrGridPower := LIMIT(-999999999999999,lrGridPower,999999999999999);														
+														
+IF bIsStepSwitched AND stSetupHP.rMaxPower1 <= 0 AND stSetupHP.rMaxPower2 > 0 THEN stSetupHP.rMaxPower1 := stSetupHP.rMaxPower2; END_IF												
+												
+FOR byLPMaxPower := 1 TO 2 BY 1 DO
+	arrTargetPower[byLPMaxPower] := LIMIT(0,arrTargetPower[byLPMaxPower],100);
+END_FOR
+
+stSetupHP.rMaxPower1 := LIMIT(0,stSetupHP.rMaxPower1,500);
+		stSetupHP.rMaxPower2 := LIMIT(0,stSetupHP.rMaxPower2,500);
+
+//Copy the max input power in the internal array to calculate the steps
+arrMaxPower[1] := stSetupHP.rMaxPower1;
+	arrMaxPower[2] := stSetupHP.rMaxPower2;
+	
+IF stSetupHP.byDisableSOC > stSetupHP.byEnableSOC THEN stSetupHP.byEnableSOC := stSetupHP.byDisableSOC + 1; END_IF
+
+stSetupHP.byDisableSOC := LIMIT(0,stSetupHP.byDisableSOC,100);
+	stSetupHP.byEnableSOC := LIMIT(1,stSetupHP.byEnableSOC,100);
+	
+(*---------------------------------------------------------------------------Enable----------------------------------------------------------------------------------*)
+
+stDataHPOut.bEnabled := bEnable;
+
+(*-----------------------------------------------------------------------------Count the steps when the pump is step switched----------------------------------------------------------------------------*)
+
+stDataHPOut.byNumberOfSteps := 0;
+	FOR byLPNumberOfSteps := 1 TO 2 BY 1 DO
+		IF arrMaxPower[byLPNumberOfSteps] > 0 THEN stDataHPOut.byNumberOfSteps := stDataHPOut.byNumberOfSteps + 1; END_IF
+	END_FOR
+
+(*-----------------------------------------------------------------------------Max power for the output----------------------------------------------------------------------------*)	
+	
+FOR byLPMaxPowerLimit := 1 TO 2 BY 1 DO
+	stDataHPOut.arrMaxPower[byLPMaxPowerLimit] := DINT_TO_REAL(REAL_TO_DINT(arrMaxPower[byLPMaxPowerLimit] * 100)) / 100;
+END_FOR		
+	
+(*-----------------------------------------------------------------------------Errors and Warning----------------------------------------------------------------------------*)
+
+FPReset(CLK:= stSetupHP.bReset AND (stDataHPOut.byErrorWarning <> 0), Q=> ); 
+	timResetOut(IN:= FPReset.Q AND NOT timResetOut.Q, PT:= T#2S, Q=> stDataHPOut.bSReset, ET=> );
+		FPResetIntern(CLK:= bReset, Q=> );	
+			IF FPResetIntern.Q THEN stDataHPOut.byErrorWarning := 0; END_IF	 	
+
+IF bWarning AND stDataHPOut.byErrorWarning <> 2 THEN stDataHPOut.byErrorWarning := 1; END_IF
+	IF bError THEN stDataHPOut.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF uiState = 3 THEN stDataHPOut.eMessage := E_Message_HP.eExternalOnCommandIsActive;	
+ELSIF bExternalLock THEN stDataHPOut.eMessage := E_Message_HP.eExternalLockActive;
+ELSIF stDataHPOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataHPOut.eMessage := E_Message_HP.eNoConnectionToBackend;
+ELSIF stDataHPOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataHPOut.eMessage := E_Message_HP.eHPError;
+ELSIF stDataHPOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataHPOut.eMessage := E_Message_HP.eTooMuchHP;
+ELSIF stDataHPOut.byErrorWarning = 2 AND iErrorCode = 2 THEN stDataHPOut.eMessage := E_Message_HP.eWindowsSystemTimeError;
+ELSIF stDataHPOut.byErrorWarning = 2 AND iErrorCode = 3 THEN stDataHPOut.eMessage := E_Message_HP.eConnectionError;
+ELSE stDataHPOut.eMessage := E_Message_HP.eNoMessage; 
+END_IF	
+	
+(*----------------------------------------------------------------------------Logic------------------------------------------------------------------------------------*)
+
+//Timer for SOC dissabling
+timSOCOff(IN:= dwBatterySOC <= stSetupHP.byDisableSOC, PT:= T#30S, Q=> , ET=> );
+
+//Calcualte the % value from each step when the pump is step switched
+rSumOfSteps := 0;
+	FOR byLPCalcStepPower := 1 TO 2 BY 1 DO
+		rSumOfSteps := rSumOfSteps + stDataHPOut.arrMaxPower[byLPCalcStepPower];
+			arrPercentValuesSteps[byLPCalcStepPower] := 0;	
+	END_FOR
+IF stDataHPOut.byNumberOfSteps > 0 AND stDataHPOut.byNumberOfSteps <= 2 AND rSumOfSteps > 0 THEN
+	FOR byLPCalcPercentPowerSteps := 1 TO stDataHPOut.byNumberOfSteps BY 1 DO
+		arrPercentValuesSteps[byLPCalcPercentPowerSteps] := (stDataHPOut.arrMaxPower[byLPCalcPercentPowerSteps] * 100) / rSumOfSteps;
+	END_FOR 
+END_IF
+
+arrPercentValuesSteps[1] := DINT_TO_REAL(REAL_TO_DINT(arrPercentValuesSteps[1] * 100)) / 100; 
+	arrPercentValuesSteps[2] := DINT_TO_REAL(REAL_TO_DINT(arrPercentValuesSteps[2] * 100)) / 100; 
+
+//Enable the pump about the time function
+FPTimeEn(CLK:= stSystemTime.wHour >= stSetupHP.byHourOn AND stSystemTime.wMinute >= stSetupHP.byMinutesOn AND stSetupHP.bTimeEnabled, Q=> );
+	FPTimeDis(CLK:= stSystemTime.wHour >= stSetupHP.byHourOff AND stSystemTime.wMinute >= stSetupHP.byMinutesOff AND stSetupHP.bTimeEnabled, Q=> );
+
+IF FPTimeEn.Q THEN bEnableTimeFunction := TRUE; END_IF
+	IF FPTimeDis.Q THEN bEnableTimeFunction := FALSE; END_IF	
+	
+IF NOT stSetupHP.bTimeEnabled THEN bEnableTimeFunction := FALSE; END_IF
+
+//Activate the different operation modes
+
+FPExternalOnCommand(CLK:= bExternalOnCommand, Q=> );
+
+IF bEnable AND NOT bExternalLock AND bEnableTimeFunction AND NOT bIsStepSwitched AND stDataHPOut.byErrorWarning <> 2 THEN uiState := 1; END_IF
+IF bEnable AND NOT bExternalLock AND bEnableTimeFunction AND bIsStepSwitched AND stDataHPOut.byErrorWarning <> 2 THEN uiState := 2; END_IF
+IF bEnable AND NOT bExternalLock AND NOT bEPOIsActive AND FPExternalOnCommand.Q AND stDataHPOut.byErrorWarning <> 2 THEN uiState := 3; END_IF
+IF bEnable AND NOT bExternalLock AND stDataHPOut.byErrorWarning <> 2 AND (arrTargetPower[1] > 0 OR arrTargetPower[2] > 0) THEN uiState := 4; END_IF
+IF bEnable AND NOT bExternalLock AND stDataHPOut.byErrorWarning <> 2 AND stSetupHP.bManualyOn THEN uiState := 5; END_IF 
+
+IF NOT bEnable OR stDataHPOut.byErrorWarning = 2 OR bExternalLock THEN uiState := 0; END_IF
+
+//Timer for Min on time in Step 4 in the surplus mode
+FPStartMinOnTimer(CLK:= uiState = 4 AND stDataHPOut.rTargetPower > 0 AND bHPIsRunning, Q=> );
+	timMinOnInStep4(IN:= FPStartMinOnTimer.Q, PT:= tMinOnTime, Q=> , ET=> );
+
+CASE uiState OF
+	
+	0: //Init Step and Error
+		IF (NOT bEPOIsActive AND bEnable AND NOT bExternalLock AND stDataHPOut.byErrorWarning <> 2) OR 
+				(bEPOIsActive AND bEnable AND NOT bExternalLock AND stDataHPOut.byErrorWarning <> 2 AND NOT stSetupHP.bOnEmergPowerOff AND dwBatterySOC >= stSetupHP.byEnableSOC) THEN
+					stDataHPOut.bOutput := TRUE;
+		END_IF
+			IF (bEPOIsActive AND timSOCOff.Q OR NOT bEnable OR bExternalLock OR stDataHPOut.byErrorWarning = 2 OR (bEPOIsActive AND stSetupHP.bOnEmergPowerOff)) THEN
+				stDataHPOut.bOutput := FALSE;
+					stDataHPOut.rTargetPower := 0;
+			END_IF
+			
+	1: //Enable Heating pump about the time function (linear power)
+		//On
+		IF (NOT bEPOIsActive AND bEnableTimeFunction AND stSetupHP.byTimeEnabledTargetPower > 0) OR (bEnableTimeFunction AND stSetupHP.byTimeEnabledTargetPower > 0 AND bEPOIsActive AND NOT stSetupHP.bOnEmergPowerOff AND dwBatterySOC >= stSetupHP.byEnableSOC) THEN
+			stDataHPOut.bOutput := TRUE; stDataHPOut.rTargetPower := BYTE_TO_REAL(stSetupHP.byTimeEnabledTargetPower);
+		END_IF
+		//Off		
+		IF NOT bEnableTimeFunction OR stSetupHP.byTimeEnabledTargetPower <= 0 OR (bEPOIsActive AND stSetupHP.bOnEmergPowerOff) OR (bEPOIsActive AND (timSOCOff.Q)) THEN 
+			stDataHPOut.rTargetPower := 0; 
+		END_IF	
+			IF stSetupHP.byTimeEnabledTargetPower <= 0 OR (bEPOIsActive AND stSetupHP.bOnEmergPowerOff) OR (bEPOIsActive AND (timSOCOff.Q)) THEN
+				stDataHPOut.bOutput := FALSE;
+			END_IF	 
+		
+	2: //Enable Heating pump about the time function (step switched)
+		//On
+		IF (NOT bEPOIsActive AND bEnableTimeFunction AND arrPercentValuesSteps[1] > 0) OR (bEnableTimeFunction AND arrPercentValuesSteps[1] > 0 AND bEPOIsActive AND NOT stSetupHP.bOnEmergPowerOff AND dwBatterySOC >= stSetupHP.byEnableSOC) THEN
+			stDataHPOut.bOutput := TRUE; stDataHPOut.rTargetPower := arrPercentValuesSteps[1];
+		END_IF
+		//Off
+		IF NOT bEnableTimeFunction OR arrPercentValuesSteps[1] <= 0 OR (bEPOIsActive AND stSetupHP.bOnEmergPowerOff) OR (bEPOIsActive AND (timSOCOff.Q)) THEN 
+			stDataHPOut.rTargetPower := 0; 
+		END_IF	
+			IF arrPercentValuesSteps[1] <= 0 OR (bEPOIsActive AND stSetupHP.bOnEmergPowerOff) OR (bEPOIsActive AND (timSOCOff.Q)) THEN
+				stDataHPOut.bOutput := FALSE;
+			END_IF	 
+	 
+	3: //Switch on the HP with external on command on max power
+		
+			CASE iStateIntStep3 OF
+				
+				0: //Search biggest power from the HP
+					//Max Power 1 (1 Step switched or linear/modular)
+					IF stSetupHP.rMaxPower1 > 0 AND stSetupHP.rMaxPower2 = 0 THEN
+						//Start delay timer when the actual grid power has the capacity for the heating pump max power
+						IF (lrGridPower + stSetupHP.rMaxPower1) <= lrSizeGridConnection AND diNumberOfHP > 0 THEN timOnDelayExternalOn.IN := TRUE; ELSE timOnDelayExternalOn.IN := FALSE; END_IF 
+					END_IF 
+						//Max Power 2 (1 Step switched or linear/modular) 
+						IF stSetupHP.rMaxPower2 > 0 AND stSetupHP.rMaxPower1 = 0 THEN 
+							//Start delay timer when the actual grid power has the capacity for the heating pump max power
+							IF (lrGridPower + stSetupHP.rMaxPower2) <= lrSizeGridConnection AND diNumberOfHP > 0 THEN timOnDelayExternalOn.IN := TRUE; ELSE timOnDelayExternalOn.IN := FALSE; END_IF
+						END_IF 
+							//Max Power 1 and Max Power 2 (2 Step switched)
+							IF stSetupHP.rMaxPower2 > 0 AND stSetupHP.rMaxPower1 > 0 THEN 
+								//Start delay timer when the actual grid power has the capacity for the heating pump max power
+								IF (lrGridPower + stSetupHP.rMaxPower1 + stSetupHP.rMaxPower2) <= lrSizeGridConnection AND diNumberOfHP > 0 THEN timOnDelayExternalOn.IN := TRUE; ELSE timOnDelayExternalOn.IN := FALSE; END_IF
+							END_IF 
+								//Next step
+								IF timOnDelayExternalOn.Q THEN iStateIntStep3 := 1; timOnDelayExternalOn.IN := FALSE; END_IF
+		
+				1: //Switch on the Heating pump with max power			
+					stDataHPOut.rTargetPower := 100;
+						stDataHPOut.bOutput := TRUE;
+							stDataHPOut.bExtOnCommandIsActive := TRUE;
+								timOffDelayExternalOn.IN := TRUE;
+						//Next step
+						IF timOffDelayExternalOn.Q THEN iStateIntStep3 := 0; uiState := 0; stDataHPOut.rTargetPower := 0; END_IF 
+				
+			END_CASE
+		
+				//Stop this program when the emergency power mode is active
+				IF bEPOIsActive THEN uiState := 0; stDataHPOut.rTargetPower := 0; END_IF
+					//Stop this programm when we have no power data from the heating pump
+					IF stSetupHP.rMaxPower1 >= stSetupHP.rMaxPower2 AND stSetupHP.rMaxPower1 = 0 THEN uiState := 0; stDataHPOut.rTargetPower := 0; END_IF   	
+			
+	4: //Enable the Heating pump with the target power from the EMS function
+		//Power to the heating pump (linear)
+		IF NOT bIsStepSwitched AND stDataHPOut.byNumberOfSteps > 0 THEN	
+			stDataHPOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT(arrTargetPower[1] * 100)) / 100;
+		END_IF
+			//When the min on Time is not passed and the input target power is < 1% then set the output target power to 1%
+			IF NOT bIsStepSwitched AND stDataHPOut.byNumberOfSteps > 0 AND arrTargetPower[1] <= 1 AND timMinOnInStep4.Q THEN
+				stDataHPOut.rTargetPower := 1;
+			END_IF   
+		
+				//Power to the heating pump (step switched)
+				FOR byLPMaxIsReached := 1 TO 2 BY 1 DO
+					IF arrTargetPower[byLPMaxIsReached] >= 100 THEN arrMaxIsReached[byLPMaxIsReached] := TRUE; END_IF
+						IF arrTargetPower[byLPMaxIsReached] < Constants_Energy.byTargetOffPowerForOnOffDevices THEN arrMaxIsReached[byLPMaxIsReached] := FALSE; END_IF	
+				END_FOR
+				
+				//Off after min on time is passed
+				IF NOT timMinOnInStep4.Q AND bIsStepSwitched AND stDataHPOut.byNumberOfSteps > 0 AND NOT arrMaxIsReached[1] AND arrTargetPower[1] < Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+					stDataHPOut.rTargetPower := 0; 
+				END_IF
+				IF timMinOnInStep4.Q AND bIsStepSwitched AND stDataHPOut.byNumberOfSteps > 0 AND NOT arrMaxIsReached[1] AND arrTargetPower[1] < Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+					stDataHPOut.rTargetPower := arrPercentValuesSteps[1];
+				END_IF 
+					//Step 1
+					IF bIsStepSwitched AND stDataHPOut.byNumberOfSteps > 0 AND arrMaxIsReached[1] AND arrTargetPower[1] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+						stDataHPOut.rTargetPower := arrPercentValuesSteps[1]; 	
+					END_IF
+						//Step 2
+						IF bIsStepSwitched AND stDataHPOut.byNumberOfSteps > 0 AND arrMaxIsReached[1] AND arrMaxIsReached[2] AND arrTargetPower[2] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+							stDataHPOut.rTargetPower := arrPercentValuesSteps[1] + arrPercentValuesSteps[2]; 
+						END_IF
+						
+		IF bIsStepSwitched AND stDataHPOut.rTargetPower > 100 THEN stDataHPOut.rTargetPower := 100; END_IF 
+			
+		//Switch the outputs
+		IF (NOT bEPOIsActive AND stDataHPOut.byNumberOfSteps > 0) OR 
+			(bEPOIsActive AND stDataHPOut.byNumberOfSteps > 0 AND NOT stSetupHP.bOnEmergPowerOff AND dwBatterySOC >= stSetupHP.byEnableSOC) THEN
+				stDataHPOut.bOutput := TRUE;
+		END_IF
+			IF (bEPOIsActive AND timSOCOff.Q OR (bEPOIsActive AND stSetupHP.bOnEmergPowerOff)) OR 
+				stDataHPOut.byNumberOfSteps <= 0 THEN
+					stDataHPOut.bOutput := FALSE;
+			END_IF 	
+		
+		IF NOT stDataHPOut.bOutput THEN stDataHPOut.rTargetPower := 0; END_IF 
+
+	5: //Switch manually
+		stDataHPOut.rTargetPower := BYTE_TO_REAL(stSetupHP.byManualyTargetPower);
+		
+		IF stSetupHP.bManualyOn AND stDataHPOut.rTargetPower > 0 THEN stDataHPOut.bOutput := TRUE; END_IF
+			IF NOT stSetupHP.bManualyOn OR stDataHPOut.rTargetPower <= 0 THEN stDataHPOut.bOutput := FALSE; END_IF 
+
+		IF NOT stDataHPOut.bOutput THEN stDataHPOut.rTargetPower := 0; END_IF 		
+
+END_CASE
+
+//Timer for external command
+IF uiState <> 3 THEN timOnDelayExternalOn.IN := FALSE; timOffDelayExternalOn.IN := FALSE; iStateIntStep3 := 0; stDataHPOut.bExtOnCommandIsActive := FALSE; END_IF
+
+timOnDelayExternalOn(IN:= , PT:= tOnDelayExternalOn * diNumberOfHP, Q=> , ET=> );
+	timOffDelayExternalOn(IN:= , PT:= tOffDelayExternalOn, Q=> , ET=> );
+	
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------------------------*)
+
+IF bEnable THEN
+	stDataHPOut.lrElPower:= LINT_TO_LREAL(LREAL_TO_LINT((lrElPowerHP / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataHPOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataHPOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataHPOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataHPOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataHPOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataHPOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF 
+				
+		IF stDataHPOut.lrElPower < 0 THEN
+				stDataHPOut.lrElPowerProduction := (stDataHPOut.lrElPower * - 1);
+				stDataHPOut.lrElPowerConsumption := 0;
+		ELSIF stDataHPOut.lrElPower > 0 THEN
+				stDataHPOut.lrElPowerProduction := 0;
+				stDataHPOut.lrElPowerConsumption := stDataHPOut.lrElPower;
+		ELSIF stDataHPOut.lrElPower = 0 THEN
+				stDataHPOut.lrElPowerProduction := 0;
+				stDataHPOut.lrElPowerConsumption := 0;
+		END_IF
+		
+ELSE
+	stDataHPOut.lrElPower := 0;
+		stDataHPOut.lrCounterEnergyT1_Consumption := 0;
+			stDataHPOut.lrCounterEnergyT2_Consumption := 0;
+				stDataHPOut.lrCounterEnergyT1_Production := 0;
+					stDataHPOut.lrCounterEnergyT2_Production := 0;
+						stDataHPOut.lrElPowerProduction := 0;
+							stDataHPOut.lrElPowerConsumption := 0;	
+								stDataHPOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataHPOut.lrTotalCounterEnergy_Production := 0;
+END_IF
+
+(*---------------------------------------------------------------------------Outputs--------------------------------------------------------------------------------------*)
+
+stDataHPOut.byPriority := stSetupHP.byPriority;
+	stDataHPOut.bIsStepSwitched := bIsStepSwitched;
+		stDataHPOut.bSOnEmergPowerOff := stSetupHP.bOnEmergPowerOff;
+			stDataHPOut.bSManualyOn := stSetupHP.bManualyOn;
+				stDataHPOut.bySManualyTargetPower := stSetupHP.byManualyTargetPower;
+					stDataHPOut.bSTimeEnabled := stSetupHP.bTimeEnabled;
+						stDataHPOut.bySTimeEnabledTargetPower := stSetupHP.byTimeEnabledTargetPower;
+				
+IF bEnable THEN
+	stDataHPOut.rBoilerTempServiceWater := DINT_TO_REAL(REAL_TO_DINT(rBoilerTempServiceWater * 100)) / 100;
+		stDataHPOut.rBoilerTempHeatingSys := DINT_TO_REAL(REAL_TO_DINT(rBoilerTempHeatingSys * 100)) / 100;
+			stDataHPOut.rReturnTemp := DINT_TO_REAL(REAL_TO_DINT(rReturnTemp * 100)) / 100;
+				stDataHPOut.rReturnTempEnergySource := DINT_TO_REAL(REAL_TO_DINT(rReturnTempEnergySource * 100)) / 100;
+					stDataHPOut.rFlowTemp := DINT_TO_REAL(REAL_TO_DINT(rFlowTemp * 100)) / 100;
+						stDataHPOut.rFlowTempEnergySource := DINT_TO_REAL(REAL_TO_DINT(rFlowTempEnergySource * 100)) / 100;
+							IF IsFinite(F_LREAL(lrCounterThermalEnergy_Heating)) THEN stDataHPOut.lrCounterThermalHeatingSys := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterThermalEnergy_Heating / 1000) * 100)) / 100; END_IF
+								IF IsFinite(F_LREAL(lrCounterThermalEnergy_Water)) THEN stDataHPOut.lrCounterThermalServiceWater := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterThermalEnergy_Water / 1000) * 100)) / 100; END_IF	
+ELSE	
+	stDataHPOut.rBoilerTempServiceWater := 0;
+		stDataHPOut.rBoilerTempHeatingSys := 0;
+			stDataHPOut.rReturnTemp := 0;
+				stDataHPOut.rReturnTempEnergySource := 0;
+					stDataHPOut.rFlowTemp := 0;
+						stDataHPOut.rFlowTempEnergySource := 0;
+							stDataHPOut.lrCounterThermalHeatingSys := 0;
+								stDataHPOut.lrCounterThermalServiceWater := 0;		
+END_IF
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+		
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataHPOutDelay := stDataHPOut;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HeatingPump">
+      <LineId Id="1300" Count="2" />
+      <LineId Id="1298" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="709" Count="0" />
+      <LineId Id="1303" Count="0" />
+      <LineId Id="1609" Count="0" />
+      <LineId Id="1605" Count="1" />
+      <LineId Id="1304" Count="3" />
+      <LineId Id="789" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="1524" Count="0" />
+      <LineId Id="1109" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="778" Count="2" />
+      <LineId Id="787" Count="0" />
+      <LineId Id="783" Count="0" />
+      <LineId Id="790" Count="0" />
+      <LineId Id="785" Count="0" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="1167" Count="1" />
+      <LineId Id="1549" Count="0" />
+      <LineId Id="1582" Count="1" />
+      <LineId Id="1590" Count="0" />
+      <LineId Id="1284" Count="0" />
+      <LineId Id="2550" Count="4" />
+      <LineId Id="1291" Count="0" />
+      <LineId Id="1057" Count="0" />
+      <LineId Id="1550" Count="1" />
+      <LineId Id="1285" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="501" Count="2" />
+      <LineId Id="1874" Count="0" />
+      <LineId Id="1876" Count="0" />
+      <LineId Id="1875" Count="0" />
+      <LineId Id="1877" Count="1" />
+      <LineId Id="1880" Count="0" />
+      <LineId Id="1879" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="534" Count="1" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="531" Count="2" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="720" Count="0" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="722" Count="1" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="721" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="1415" Count="1" />
+      <LineId Id="1418" Count="2" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="791" Count="0" />
+      <LineId Id="1739" Count="0" />
+      <LineId Id="1741" Count="0" />
+      <LineId Id="1957" Count="1" />
+      <LineId Id="2075" Count="0" />
+      <LineId Id="1742" Count="1" />
+      <LineId Id="1749" Count="0" />
+      <LineId Id="2190" Count="0" />
+      <LineId Id="1744" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="1740" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="2430" Count="0" />
+      <LineId Id="2432" Count="0" />
+      <LineId Id="2431" Count="0" />
+      <LineId Id="898" Count="0" />
+      <LineId Id="887" Count="0" />
+      <LineId Id="889" Count="8" />
+      <LineId Id="888" Count="0" />
+      <LineId Id="1954" Count="2" />
+      <LineId Id="812" Count="0" />
+      <LineId Id="814" Count="6" />
+      <LineId Id="813" Count="0" />
+      <LineId Id="1533" Count="0" />
+      <LineId Id="821" Count="0" />
+      <LineId Id="1535" Count="1" />
+      <LineId Id="1534" Count="0" />
+      <LineId Id="811" Count="0" />
+      <LineId Id="858" Count="0" />
+      <LineId Id="1537" Count="0" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="1591" Count="0" />
+      <LineId Id="1593" Count="0" />
+      <LineId Id="1600" Count="0" />
+      <LineId Id="1599" Count="0" />
+      <LineId Id="840" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="980" Count="0" />
+      <LineId Id="993" Count="0" />
+      <LineId Id="982" Count="2" />
+      <LineId Id="994" Count="1" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="988" Count="1" />
+      <LineId Id="902" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="1673" Count="0" />
+      <LineId Id="853" Count="0" />
+      <LineId Id="900" Count="1" />
+      <LineId Id="861" Count="4" />
+      <LineId Id="870" Count="0" />
+      <LineId Id="872" Count="0" />
+      <LineId Id="919" Count="0" />
+      <LineId Id="873" Count="2" />
+      <LineId Id="920" Count="0" />
+      <LineId Id="876" Count="5" />
+      <LineId Id="871" Count="0" />
+      <LineId Id="1538" Count="0" />
+      <LineId Id="1541" Count="0" />
+      <LineId Id="1555" Count="1" />
+      <LineId Id="1558" Count="0" />
+      <LineId Id="2306" Count="0" />
+      <LineId Id="2305" Count="0" />
+      <LineId Id="1567" Count="0" />
+      <LineId Id="1564" Count="0" />
+      <LineId Id="1569" Count="0" />
+      <LineId Id="2307" Count="0" />
+      <LineId Id="1563" Count="0" />
+      <LineId Id="1566" Count="0" />
+      <LineId Id="1568" Count="0" />
+      <LineId Id="1565" Count="0" />
+      <LineId Id="2312" Count="0" />
+      <LineId Id="2309" Count="2" />
+      <LineId Id="2308" Count="0" />
+      <LineId Id="1560" Count="0" />
+      <LineId Id="1571" Count="0" />
+      <LineId Id="1570" Count="0" />
+      <LineId Id="1572" Count="0" />
+      <LineId Id="1559" Count="0" />
+      <LineId Id="1953" Count="0" />
+      <LineId Id="1574" Count="1" />
+      <LineId Id="1577" Count="0" />
+      <LineId Id="1579" Count="0" />
+      <LineId Id="1573" Count="0" />
+      <LineId Id="1557" Count="0" />
+      <LineId Id="1542" Count="0" />
+      <LineId Id="1540" Count="0" />
+      <LineId Id="1578" Count="0" />
+      <LineId Id="1580" Count="1" />
+      <LineId Id="1539" Count="0" />
+      <LineId Id="839" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="1598" Count="0" />
+      <LineId Id="1594" Count="0" />
+      <LineId Id="1597" Count="0" />
+      <LineId Id="1596" Count="0" />
+      <LineId Id="1595" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="670" Count="0" />
+      <LineId Id="665" Count="0" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="1473" Count="0" />
+      <LineId Id="1603" Count="1" />
+      <LineId Id="1602" Count="0" />
+      <LineId Id="667" Count="0" />
+      <LineId Id="675" Count="1" />
+      <LineId Id="1471" Count="0" />
+      <LineId Id="581" Count="0" />
+      <LineId Id="677" Count="0" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="1472" Count="0" />
+      <LineId Id="587" Count="0" />
+      <LineId Id="673" Count="1" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="582" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="277" Count="1" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="987" Count="0" />
+      <LineId Id="974" Count="0" />
+      <LineId Id="1545" Count="1" />
+      <LineId Id="1553" Count="0" />
+      <LineId Id="1552" Count="0" />
+      <LineId Id="1547" Count="1" />
+      <LineId Id="1586" Count="0" />
+      <LineId Id="161" Count="2" />
+      <LineId Id="1292" Count="0" />
+      <LineId Id="2555" Count="4" />
+      <LineId Id="1222" Count="1" />
+      <LineId Id="170" Count="18" />
+      <LineId Id="1224" Count="1" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="1359" Count="0" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="1361" Count="0" />
+      <LineId Id="1360" Count="0" />
+      <LineId Id="1363" Count="0" />
+      <LineId Id="1362" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="829" Count="4" />
+      <LineId Id="828" Count="0" />
+      <LineId Id="1163" Count="1" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="834" Count="4" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="1165" Count="1" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="1753" Count="2" />
+      <LineId Id="1752" Count="0" />
+      <LineId Id="1760" Count="0" />
+      <LineId Id="1777" Count="0" />
+      <LineId Id="1780" Count="0" />
+      <LineId Id="1801" Count="0" />
+      <LineId Id="1782" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

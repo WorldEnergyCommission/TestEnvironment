@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Generator_Output" Id="{bb8e97d1-47fe-4e3a-b9ce-33e7d5c2f06f}">
+    <Declaration><![CDATA[TYPE ST_Generator_Output :
+STRUCT
+	bEnabled									: BOOL;									//{#lynus.ag#()} //Generator is enabled
+	bOutput										: BOOL;									//Output Generator
+	bSReset										: BOOL;									//{#lynus.ag#()} //Reset Generator
+	byErrorWarning								: BYTE;									//Show if the function has a Error or a Warning
+	lrPower										: LREAL;								//Actual power generator with unit kw
+	lrPowerConsumption							: LREAL;								//Consumption generator with unit kW
+	lrPowerProduction							: LREAL;								//Production generator with unit kW
+	lrTotalCounterEnergy_Consumption			: LREAL;								//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production				: LREAL;								//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption				: LREAL;								//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption				: LREAL;								//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production				: LREAL;								//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production				: LREAL;								//Total counter for energy Tariff 2 production with unit kWh
+	eMessage									: E_Message_Generator;					//Message from the Generator
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

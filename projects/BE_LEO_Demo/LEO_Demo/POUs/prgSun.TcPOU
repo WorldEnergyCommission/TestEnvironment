@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgSun" Id="{6c4f4ad0-de7f-493b-bc08-a998c748e129}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgSun
+VAR
+	fbTimerC1					: FB_WeeklyTimeSwitch;
+	fbCalcSunriseSunset   		: FB_CalcSunriseSunset;
+	todSunrise            		: TOD;
+	todSunset             		: TOD;
+	bCircle1On					: BOOL;
+	bCircle1Off					: BOOL;
+	tSwitchOnTime				: TOD;	//{#lynus.ag#()}
+	tSwitchOffTime				: TOD;	//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+	bEnableTimerC1				: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF prgSystemTime.bSystemTimeValid THEN
+
+	fbCalcSunriseSunset(
+		fDegreeOfLongitude := GVL.location_lon,   (* Longitude of Verl *)
+        fDegreeOfLatitude := GVL.location_lat,   (* Latitude of Verl *)
+    	fReferenceMeridian := 30.0,  (* Central European Summer Time *)
+        dCurrentDate := DT_TO_DATE(prgSystemTime.dtSystemTime),
+        todSunrise => todSunrise,
+        todSunset => todSunset);
+END_IF
+
+
+(*
+IF prgSystemTime.bSystemTimeValid THEN
+
+	fbTimerC1(
+		bEnable:=bEnableTimerC1, 
+		tCurrentDateTime:=prgSystemTime.dtSystemTime, 
+		tSwitchOnTime:=todSunrise, 
+		tSwitchOffTime:=todSunset, 
+		bSunday:=TRUE, 
+		bMonday:=TRUE, 
+		bTuesday:=TRUE, 
+		bWednesday:=TRUE, 
+		bThursday:=TRUE, 
+		bFriday:=TRUE, 
+		bSaturday:=TRUE,
+		bEdgeOn=> bCircle1On,
+		bEdgeOff=> bCircle1Off);
+END_IF
+*)]]></ST>
+    </Implementation>
+    <LineIds Name="prgSun">
+      <LineId Id="18" Count="10" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="30" Count="18" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

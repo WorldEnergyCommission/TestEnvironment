@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_HourCounter" Id="{a6003e8c-ed4c-4c3f-8980-0695e33c061b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_HourCounter
+VAR_INPUT
+	mCounterON								: BOOL;
+END_VAR
+VAR_OUTPUT
+	realHours								: REAL;
+END_VAR
+VAR
+	wSecond_old: WORD;
+	fbGetSystemTime							: NT_GetTime;																					//Function to read out the windows system time on the local plc
+	timGetTime								: TON;																							//Timer to activate the function tho read out the windows system time
+END_VAR
+VAR PERSISTENT
+	udintEngineRunningSeconds				: UDINT;
+	realHours_Persistent					: REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF mCounterON THEN
+	IF fbGetSystemTime.TIMESTR.wSecond<>wSecond_old THEN
+		udintEngineRunningSeconds:=udintEngineRunningSeconds+1;
+	END_IF
+END_IF
+wSecond_old:=fbGetSystemTime.TIMESTR.wSecond;
+realHours:=UDINT_TO_REAL(udintEngineRunningSeconds)/3600;
+realHours_Persistent:=realHours;
+
+timGetTime(IN:= NOT timGetTime.Q, PT:= T#1S, Q=> , ET=> );
+
+fbGetSystemTime(
+	NETID:= , 
+	START:= timGetTime.Q AND NOT fbGetSystemTime.BUSY, 
+	TMOUT:= , 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> , 
+	TIMESTR=> );	]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HourCounter">
+      <LineId Id="14" Count="6" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="52" Count="7" />
+      <LineId Id="22" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

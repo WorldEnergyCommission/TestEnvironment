@@ -1,0 +1,549 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.56">
+	<Project ProjectGUID="{F43AAEE5-2463-4A44-850D-FA184E344BDB}" TargetNetId="5.120.60.129.1.1" AutoPrioManagement="true" ShowHideConfigurations="#x387">
+		<System>
+			<Settings>
+				<IoIdleTask Priority="4"/>
+			</Settings>
+			<Licenses>
+				<Target>
+					<ManualSelect>{3EBB9639-5FF3-42B6-8847-35C70DC013C8}</ManualSelect>
+					<ManualSelect>{6952449D-F68C-49A2-ADE4-8639D85B33A4}</ManualSelect>
+					<ManualSelect>{A1AF8A04-C08D-4853-A5A0-0E6C3A278A8C}</ManualSelect>
+				</Target>
+			</Licenses>
+			<Tasks>
+				<Task Id="2" Priority="6" CycleTime="50000" AmsPort="350" AdtTasks="true">
+					<Name>FastTask</Name>
+				</Task>
+				<Task Id="3" Priority="8" CycleTime="100000" AmsPort="351" AdtTasks="true">
+					<Name>MiddleTask</Name>
+				</Task>
+				<Task Id="4" Priority="10" CycleTime="200000" AmsPort="352" AdtTasks="true">
+					<Name>SlowTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project GUID="{8FEAD213-FC6A-4A7C-8BD7-23AFCFDB6132}" Name="7000_Theresianum" PrjFilePath="7000_Theresianum\7000_Theresianum.plcproj" TmcFilePath="7000_Theresianum\7000_Theresianum.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance File="7000_Theresianum Instance.xti"/>
+			</Project>
+		</Plc>
+		<Io>
+			<Device Id="1" DevType="124" DevFlags="#x0004">
+				<Name>Gerät 1 (Beckhoff CCAT)</Name>
+				<ImageId>230</ImageId>
+				<AddressInfo>
+					<Pci>
+						<Address>-1073741824</Address>
+						<Size>0</Size>
+						<BusNo>65535</BusNo>
+						<SlotNo>0</SlotNo>
+					</Pci>
+				</AddressInfo>
+				<CCat>
+					<Slot Id="#x03010011">
+						<Name>Slot 1 (MAC-DMA)</Name>
+						<ImageId>231</ImageId>
+						<CCatSlot SlotType="15000100030200000000010000400000" SlotData="0000000000000000000105783c820000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" SlotName="Slot 1 (MAC-DMA)" Ports="2" MacOids="1200010313000103140001030000000000000000000000000000000000000000" SlotNo="1"/>
+					</Slot>
+					<Slot Id="#x03010015">
+						<Name>Slot 2 (Switch)</Name>
+						<ImageId>231</ImageId>
+						<CCatSlot SlotType="05000600030000000000030000200000" SlotName="Slot 2 (Switch)" SlotNo="2"/>
+					</Slot>
+					<Slot Id="#x03010016">
+						<Name>Slot 5 (GPIO)</Name>
+						<ImageId>231</ImageId>
+						<CCatSlot SlotType="0d0000000a0000000003000020000000" SlotName="Slot 5 (GPIO)" SlotNo="5"/>
+					</Slot>
+					<Slot Id="#x03010017">
+						<Name>Slot 6 (System Time)</Name>
+						<ImageId>231</ImageId>
+						<CCatSlot SlotType="10000000000000000004000080000000" SlotName="Slot 6 (System Time)" MacOids="1800010300000000000000000000000000000000000000000000000000000000" SlotNo="6"/>
+					</Slot>
+					<Slot Id="#x03010019">
+						<Name>Slot 11 (EEPROM)</Name>
+						<ImageId>231</ImageId>
+						<CCatSlot SlotType="12000000000000000002000040000000" SlotName="Slot 11 (EEPROM)" SlotNo="11"/>
+					</Slot>
+					<Slot Id="#x0301001a">
+						<Name>Slot 13 (SRAM)</Name>
+						<ImageId>231</ImageId>
+						<CCatSlot SlotType="16000000000000000000100000001000" SlotName="Slot 13 (SRAM)" SlotNo="13"/>
+					</Slot>
+				</CCat>
+			</Device>
+			<Device Id="2" DevType="120">
+				<Name>Gerät 2 (CX-BK)</Name>
+				<DevData>000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffff0000000000000100000007000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</DevData>
+				<Image Id="1" AddrType="1" ImageType="3" SizeIn="50" SizeOut="50">
+					<Name>Prozessabbild</Name>
+				</Image>
+				<Box Id="1" BoxType="9703" AmsPort="28928">
+					<Name>Box 1 (CX-BK)</Name>
+					<ImageId>5</ImageId>
+					<Vars VarGrpType="1">
+						<Name>Eingänge</Name>
+						<Var>
+							<Name>State</Name>
+							<Comment><![CDATA[Bit 0 = K-Bus Err
+Bit 1 = Terminal State Err
+Bit 2 = Process Data Length Err
+Bit 7 = K-Bus invalid
+Bit 8 = No valid Inputs
+Bit 9 = K-Bus Input Update busy
+Bit 10 = K-Bus Output Update busy
+Bit 11 = Watchdog Err
+Bit 15 = Acyc. Function atcive (e.g. K-Bus Reset)
+]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2">
+						<Name>Ausgänge</Name>
+						<Var>
+							<Name>Ctrl</Name>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<BusCoupler ComplexTermSupport="true" NewHardware="true">
+						<Term Id="2" TermType="#xd4b" Fieldbus="6">
+							<Name>Klemme 2 (KL3403)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>40</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>40</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>56</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>56</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>88</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>88</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="3" TermType="#xd4b" Fieldbus="6">
+							<Name>Klemme 3 (KL3403)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>104</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>112</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>104</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>112</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>128</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>136</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>128</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>136</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>152</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>160</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>152</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>160</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="4" TermType="#xd4b" Fieldbus="6">
+							<Name>Klemme 4 (KL3403)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>176</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>184</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>176</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>184</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>200</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>208</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>200</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>208</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>224</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>232</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>224</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>232</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="5" TermType="#xd4b" Fieldbus="6">
+							<Name>Klemme 5 (KL3403)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>248</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>256</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>248</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>256</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>272</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>280</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>272</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>280</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>296</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>304</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>296</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>304</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="6" TermType="#xd4b" Fieldbus="6">
+							<Name>Klemme 6 (KL3403)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>320</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>328</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>320</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>328</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>344</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>352</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>344</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>352</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>368</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>376</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>368</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>376</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="1" TermType="#x2332" Fieldbus="6">
+							<Name>End-Klemme (KL9010)</Name>
+							<ImageId>32</ImageId>
+						</Term>
+					</BusCoupler>
+					<CxBk/>
+				</Box>
+			</Device>
+		</Io>
+	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-2002-0850-0120-500810000403}" Id="#x02030010"/>
+	</Mappings>
+</TcSmProject>

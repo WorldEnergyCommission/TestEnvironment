@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="F_Convert_Reg_to_Real" Id="{292d9dd4-2974-437f-aa87-ef95e4fa2d32}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_Convert_Reg_to_Real : REAL
+VAR_INPUT
+	word_in1:WORD;
+	word_in2:WORD;
+END_VAR
+VAR
+	word_in	:ARRAY[0..1] OF WORD;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[word_in[0]:=word_in1;
+word_in[1]:=word_in2;
+
+memcpy(ADR(F_Convert_Reg_to_Real),ADR(word_in),SIZEOF(word_in));
+	]]></ST>
+    </Implementation>
+    <LineIds Name="F_Convert_Reg_to_Real">
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

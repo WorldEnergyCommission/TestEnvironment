@@ -1,0 +1,363 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prg5532Con" Id="{12dc3e4a-2b84-4984-84a8-e3b193267d81}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prg5532Con
+VAR
+	// Shelly1: 
+//	fbShelly1				:	FB_Shelly_Pro1PM;
+	lrS1P1Power				:	LREAL;			//{#lynus.ag#()}
+	lrS1P1Power_kW			:	LREAL;			//{#lynus.ag#()}
+	lrS1P1Voltage			:	LREAL;			//{#lynus.ag#()}
+	lrS1P1Energy			:	LREAL;			//{#lynus.ag#()}
+	lrS1P1Temperature		:	LREAL;			//{#lynus.ag#()}
+	bS1P1On					:	BOOL;			//{#lynus.ag#()}
+	bS1P1Off				:	BOOL;			//{#lynus.ag#()}
+	bS1P1Switch				:	BOOL;			//{#lynus.ag#()}
+	
+	// Shelly2: 
+//	fbShelly2				:	FB_Shelly_Pro1PM;
+	lrS2P1Power				:	LREAL;			//{#lynus.ag#()}
+	lrS2P1Power_kW			:	LREAL;			//{#lynus.ag#()}
+	lrS2P1Voltage			:	LREAL;			//{#lynus.ag#()}
+	lrS2P1Energy			:	LREAL;			//{#lynus.ag#()}
+	lrS2P1Temperature		:	LREAL;			//{#lynus.ag#()}
+	bS2P1On					:	BOOL;			//{#lynus.ag#()}
+	bS2P1Off				:	BOOL;			//{#lynus.ag#()}
+	bS2P1Switch				:	BOOL;			//{#lynus.ag#()}
+	
+	// Shelly3: 
+//	fbShelly3				:	FB_Shelly_Pro1PM;
+	lrS3P1Power				:	LREAL;			//{#lynus.ag#()}
+	lrS3P1Power_kW			:	LREAL;			//{#lynus.ag#()}
+	lrS3P1Voltage			:	LREAL;			//{#lynus.ag#()}
+	lrS3P1Energy			:	LREAL;			//{#lynus.ag#()}
+	lrS3P1Temperature		:	LREAL;			//{#lynus.ag#()}
+	bS3P1On					:	BOOL;			//{#lynus.ag#()}
+	bS3P1Off				:	BOOL;			//{#lynus.ag#()}
+	bS3P1Switch				:	BOOL;			//{#lynus.ag#()}
+	
+	// Shelly4: 
+//	fbShelly4				:	FB_Shelly_Pro1PM;
+	lrS4P1Power				:	LREAL;			//{#lynus.ag#()}
+	lrS4P1Power_kW			:	LREAL;			//{#lynus.ag#()}
+	lrS4P1Voltage			:	LREAL;			//{#lynus.ag#()}
+	lrS4P1Energy			:	LREAL;			//{#lynus.ag#()}
+	lrS4P1Temperature		:	LREAL;			//{#lynus.ag#()}
+	bS4P1On					:	BOOL;			//{#lynus.ag#()}
+	bS4P1Off				:	BOOL;			//{#lynus.ag#()}
+	bS4P1Switch				:	BOOL;			//{#lynus.ag#()}
+	
+	// Shelly5: 
+//	fbShelly5				:	FB_Shelly_Pro1PM;
+	lrS5P1Power				:	LREAL;			//{#lynus.ag#()}
+	lrS5P1Power_kW			:	LREAL;			//{#lynus.ag#()}
+	lrS5P1Voltage			:	LREAL;			//{#lynus.ag#()}
+	lrS5P1Energy			:	LREAL;			//{#lynus.ag#()}
+	lrS5P1Temperature		:	LREAL;			//{#lynus.ag#()}
+	bS5P1On					:	BOOL;			//{#lynus.ag#()}
+	bS5P1Off				:	BOOL;			//{#lynus.ag#()}
+	bS5P1Switch				:	BOOL;			//{#lynus.ag#()}
+	
+	// Other
+	lrRemainPower_kW		:	LREAL;			//{#lynus.ag#()}
+	// state maschine for GET requests
+	str_Array_IPs			: array[1..30] of STRING(15);			//arrays for IPs
+	int_State: INT;
+	
+	int_Multiplier_1 			:INT:=1;								// multilpier received values, =2 when external fuse is on, was at the beginning
+	int_Multiplier_2			:INT:=1;								// multilpier received values, =2 when external fuse is on, was at the beginning
+	int_Multiplier_3 			:INT:=2;								// multilpier received values, =2 when external fuse is on, was at the beginning
+	int_Multiplier_4 			:INT:=2;								// multilpier received values, =2 when external fuse is on, was at the beginning
+	int_Multiplier_5 			:INT:=1;								// multilpier received values, =2 when external fuse is on, was at the beginning
+	int_TimeoutCounter: ARRAY[1..30] OF INT;	
+	int_SuccessCounter: ARRAY[1..30] OF INT;	
+	int_ErrorCounter: ARRAY[1..30] OF INT;
+	ton_wait: Ton;
+	fbShelly				:	ARRAY[1..20] OF FB_Shelly_Pro1PM;
+	f_Trig_Busy				:	ARRAY[1..20] OF f_trig;
+	m_Error_HTTP: BOOL;							//{#lynus.ag#()}
+
+	mTest: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE int_State OF
+	0: 		// Init State
+	
+	// define IPs
+	str_Array_IPs[1]	:='10.55.32.131';
+	str_Array_IPs[2]	:='10.55.32.132';
+	str_Array_IPs[3]	:='10.55.32.133';			// bypass aktiv
+	str_Array_IPs[4]	:='10.55.32.134';			// bypass aktiv    Getränkekühler RedBull
+	str_Array_IPs[5]	:='10.55.32.135';
+	str_Array_IPs[6]	:='';
+	str_Array_IPs[7]	:='';
+	str_Array_IPs[8]	:='';
+	str_Array_IPs[9]	:='';
+	str_Array_IPs[10]	:='';
+	str_Array_IPs[11]	:='';
+	str_Array_IPs[12]	:='';
+	str_Array_IPs[13]	:='';
+	str_Array_IPs[14]	:='';
+	fbShelly[1].sHostname:= str_Array_IPs[1];
+	fbShelly[2].sHostname:= str_Array_IPs[2];
+	fbShelly[3].sHostname:= str_Array_IPs[3];
+	fbShelly[4].sHostname:= str_Array_IPs[4];
+	fbShelly[5].sHostname:= str_Array_IPs[5];
+ 
+	
+	// =2 for the beginning when bypass fuse is on
+	int_Multiplier_1:=1;
+	int_Multiplier_2:=1;
+	int_Multiplier_3:=2;
+	int_Multiplier_4:=2;
+	int_Multiplier_5:=1;
+	
+	IF str_Array_IPs[1] <> '' THEN
+		int_State :=1;
+	END_IF
+		
+	1: 		// request
+	
+		fbShelly[int_State].bStart:= TRUE;
+		fbShelly[int_State].bOnP1:= bS1P1On;
+		fbShelly[int_State].bOffP1:= bS1P1Off;
+	
+		f_Trig_Busy[int_State](CLK :=fbShelly[int_State].bBusy);
+			
+		// go to next state
+		IF f_Trig_Busy[int_State].Q  AND NOT fbShelly[int_State].bError THEN	
+			int_SuccessCounter[int_State]	:= int_SuccessCounter[int_State]+1;
+			lrS1P1Power 	:= 	fbShelly[int_State].lrpowerP1 * int_Multiplier_1;
+			lrS1P1Energy 	:= 	fbShelly[int_State].lrenergyP1 * int_Multiplier_1;
+			lrS1P1Voltage	:=	fbShelly[int_State].lrvoltageP1; 
+			lrS1P1Temperature :=fbShelly[int_State].lrTemperatureP1;
+			bS1P1Switch		:=	fbShelly[int_State].bStateP1;
+		ELSIF  f_Trig_Busy[int_State].Q  AND fbShelly[int_State].bError THEN
+			int_ErrorCounter[int_State]	:= int_ErrorCounter[int_State]+1;
+		END_IF
+		IF 	int_state < 20 AND str_Array_IPs[int_State+1] <> '' AND f_Trig_Busy[int_State].Q  THEN	
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := int_State+1;
+		ELSIF  (str_Array_IPs[int_State+1] = '' OR int_state > 20) AND f_Trig_Busy[int_State].Q THEN
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := 100;			// wait state for new run
+		END_IF		
+	
+	2: 		// request
+	
+		fbShelly[int_State].bStart:= TRUE;
+		fbShelly[int_State].bOnP1:= bS2P1On;
+		fbShelly[int_State].bOffP1:= bS2P1Off;
+	
+		f_Trig_Busy[int_State](CLK :=fbShelly[int_State].bBusy);
+			
+		// go to next state
+		IF f_Trig_Busy[int_State].Q  AND NOT fbShelly[int_State].bError THEN	
+			int_SuccessCounter[int_State]	:= int_SuccessCounter[int_State]+1;
+			lrS2P1Power 	:= 	fbShelly[int_State].lrpowerP1 * int_Multiplier_2;
+			lrS2P1Energy 	:= 	fbShelly[int_State].lrenergyP1 * int_Multiplier_2;
+			lrS2P1Temperature :=fbShelly[int_State].lrTemperatureP1;
+			lrS2P1Voltage	:=	fbShelly[int_State].lrvoltageP1; 
+			bS2P1Switch		:=	fbShelly[int_State].bStateP1;
+		ELSIF  f_Trig_Busy[int_State].Q  AND fbShelly[int_State].bError THEN
+			int_ErrorCounter[int_State]	:= int_ErrorCounter[int_State]+1;
+		END_IF
+		IF 	int_state < 20 AND str_Array_IPs[int_State+1] <> '' AND f_Trig_Busy[int_State].Q  THEN	
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := int_State+1;
+		ELSIF  (str_Array_IPs[int_State+1] = '' OR int_state > 20) AND f_Trig_Busy[int_State].Q THEN
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := 100;			// wait state for new run
+		END_IF	
+		
+	3: 		// request
+		fbShelly[int_State].bStart:= TRUE;
+		fbShelly[int_State].bOnP1:= bS3P1On;
+		fbShelly[int_State].bOffP1:= bS3P1Off;
+	
+		f_Trig_Busy[int_State](CLK :=fbShelly[int_State].bBusy);
+			
+		// go to next state
+		IF f_Trig_Busy[int_State].Q  AND NOT fbShelly[int_State].bError THEN	
+			int_SuccessCounter[int_State]	:= int_SuccessCounter[int_State]+1;
+			lrS3P1Power 	:= 	fbShelly[int_State].lrpowerP1 * int_Multiplier_3;
+			lrS3P1Energy 	:= 	fbShelly[int_State].lrenergyP1 * int_Multiplier_3;
+			lrS3P1Temperature :=fbShelly[int_State].lrTemperatureP1;
+			lrS3P1Voltage	:=	fbShelly[int_State].lrvoltageP1; 
+			bS3P1Switch		:=	fbShelly[int_State].bStateP1;
+		ELSIF  f_Trig_Busy[int_State].Q  AND fbShelly[int_State].bError THEN
+			int_ErrorCounter[int_State]	:= int_ErrorCounter[int_State]+1;
+		END_IF
+		IF 	int_state < 20 AND str_Array_IPs[int_State+1] <> '' AND f_Trig_Busy[int_State].Q  THEN	
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := int_State+1;
+		ELSIF  (str_Array_IPs[int_State+1] = '' OR int_state > 20) AND f_Trig_Busy[int_State].Q THEN
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := 100;			// wait state for new run
+		END_IF	
+	4: 		// request
+	
+		fbShelly[int_State].bStart:= TRUE;
+		fbShelly[int_State].bOnP1:= bS4P1On;
+		fbShelly[int_State].bOffP1:= bS4P1Off;
+	
+		f_Trig_Busy[int_State](CLK :=fbShelly[int_State].bBusy);
+		IF f_Trig_Busy[int_State].Q THEN
+			mTest:=TRUE;
+		END_IF	
+		// go to next state
+		IF f_Trig_Busy[int_State].Q  AND NOT fbShelly[int_State].bError THEN	
+			int_SuccessCounter[int_State]	:= int_SuccessCounter[int_State]+1;
+			lrS4P1Power 	:= 	fbShelly[int_State].lrpowerP1 * int_Multiplier_4;
+			lrS4P1Energy 	:= 	fbShelly[int_State].lrenergyP1 * int_Multiplier_4;
+			lrS4P1Temperature :=fbShelly[int_State].lrTemperatureP1;
+			lrS4P1Voltage	:=	fbShelly[int_State].lrvoltageP1; 
+			bS4P1Switch		:=	fbShelly[int_State].bStateP1;
+		ELSIF  f_Trig_Busy[int_State].Q  AND fbShelly[int_State].bError THEN
+			int_ErrorCounter[int_State]	:= int_ErrorCounter[int_State]+1;
+		END_IF
+		IF 	int_state < 20 AND str_Array_IPs[int_State+1] <> '' AND f_Trig_Busy[int_State].Q  THEN	
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := int_State+1;
+		ELSIF  (str_Array_IPs[int_State+1] = '' OR int_state > 20) AND f_Trig_Busy[int_State].Q THEN
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := 100;			// wait state for new run
+		END_IF
+		
+	5: 		// request
+	
+		fbShelly[int_State].bStart:= TRUE;
+		fbShelly[int_State].bOnP1:= bS5P1On;
+		fbShelly[int_State].bOffP1:= bS5P1Off;
+	
+		f_Trig_Busy[int_State](CLK :=fbShelly[int_State].bBusy);
+			
+		// go to next state
+		IF f_Trig_Busy[int_State].Q  AND NOT fbShelly[int_State].bError THEN	
+			int_SuccessCounter[int_State]	:= int_SuccessCounter[int_State]+1;
+			lrS5P1Power 	:= 	fbShelly[int_State].lrpowerP1 * int_Multiplier_5;
+			lrS5P1Energy 	:= 	fbShelly[int_State].lrenergyP1 * int_Multiplier_5;
+			lrS5P1Temperature :=fbShelly[int_State].lrTemperatureP1;
+			lrS5P1Voltage	:=	fbShelly[int_State].lrvoltageP1; 
+			bS5P1Switch		:=	fbShelly[int_State].bStateP1;
+		ELSIF  f_Trig_Busy[int_State].Q  AND fbShelly[int_State].bError THEN
+			int_ErrorCounter[int_State]	:= int_ErrorCounter[int_State]+1;
+		END_IF
+		IF 	int_state < 20 AND str_Array_IPs[int_State+1] <> '' AND f_Trig_Busy[int_State].Q  THEN	
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := int_State+1;
+		ELSIF  (str_Array_IPs[int_State+1] = '' OR int_state > 20) AND f_Trig_Busy[int_State].Q THEN
+			fbShelly[int_State].bStart		:= FALSE;
+			int_State := 100;			// wait state for new run
+		END_IF	
+	
+	100:		// wait state
+	ton_wait.IN :=TRUE;
+	IF ton_wait.Q THEN
+		ton_wait.IN :=FALSE;
+//		IF NOT fbShelly[1].bError THEN
+			int_State := 1;			//// <-- must be 1
+//		ELSIF fbShelly[1].bError AND prg_SystemTime.structSystemTime.wHour=4 AND prg_SystemTime.structSystemTime.wMinute>45 THEN
+//			int_State := 1;
+//		ELSE
+//			int_State := 3;
+//		END_IF
+	END_IF		
+END_CASE
+
+
+// Shelly communication
+
+fbShelly[1](tDelayRequest:= T#0S, );
+fbShelly[2](tDelayRequest:= T#0S, );
+fbShelly[3](tDelayRequest:= T#0S, );
+fbShelly[4](tDelayRequest:= T#0S, );
+fbShelly[5](tDelayRequest:= T#0S, );
+
+
+// wait
+ton_wait(PT:=T#3S);
+
+
+// re-calc to kW
+lrS1P1Power_kW := lrS1P1Power / 1000;
+	lrS2P1Power_kW := lrS2P1Power / 1000;
+		lrS3P1Power_kW := lrS3P1Power / 1000;
+			lrS4P1Power_kW := lrS4P1Power / 1000;
+				lrS5P1Power_kW := lrS5P1Power / 1000;
+				
+// Other
+lrRemainPower_kW := LIMIT(0, prg5532Grid.lrPowerGrid - (lrS1P1Power_kW + lrS2P1Power_kW + lrS3P1Power_kW + lrS4P1Power_kW + lrS5P1Power_kW), 999999);
+	
+// on / off commands from EMS
+
+// AC Shelly 1
+fbShelly[1].bEnableControl := TRUE;		// prg5532EMS.FB_TimeSwitch_AC.b_Enable;
+IF prg5532EMS.FB_TimeSwitch_AC.b_Output_On AND NOT fbShelly[1].bStateP1 THEN
+	bS1P1On :=TRUE;
+ELSE
+	bS1P1On := FALSE;
+END_IF
+IF NOT prg5532EMS.FB_TimeSwitch_AC.b_Output_On AND fbShelly[1].bStateP1 THEN
+	bS1P1Off :=TRUE;
+ELSE
+	bS1P1Off := FALSE;
+END_IF
+// Snackvitrine Shelly 2
+fbShelly[2].bEnableControl := TRUE;		// prg5532EMS.FB_TimeSwitch_Snack.b_Enable;
+IF prg5532EMS.FB_TimeSwitch_Snack.b_Output_On AND NOT fbShelly[2].bStateP1 THEN
+	bS2P1On :=TRUE;
+ELSE
+	bS2P1On := FALSE;
+END_IF
+IF NOT prg5532EMS.FB_TimeSwitch_Snack.b_Output_On AND fbShelly[2].bStateP1 THEN
+	bS2P1Off :=TRUE;
+ELSE
+	bS2P1Off := FALSE;
+END_IF
+
+// Außenbeleuchtung Shelly 5
+fbShelly[5].bEnableControl := TRUE;		// prg5532EMS.FB_TimeSwitch_Outside.b_Enable;
+IF prg5532EMS.RS_Outsidelight.Q1 AND NOT fbShelly[5].bStateP1 THEN
+	bS5P1On :=TRUE;
+ELSE
+	bS5P1On := FALSE;
+END_IF
+IF NOT prg5532EMS.RS_Outsidelight.Q1 AND fbShelly[5].bStateP1 THEN
+	bS5P1Off :=TRUE;
+ELSE
+	bS5P1Off := FALSE;
+END_IF
+
+// error bit to cloud 
+
+m_Error_HTTP := fbShelly[1].bError OR fbShelly[2].bError OR fbShelly[5].bError;]]></ST>
+    </Implementation>
+    <LineIds Name="prg5532Con">
+      <LineId Id="267" Count="26" />
+      <LineId Id="840" Count="3" />
+      <LineId Id="294" Count="49" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="345" Count="40" />
+      <LineId Id="496" Count="1" />
+      <LineId Id="386" Count="84" />
+      <LineId Id="659" Count="11" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="673" Count="10" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="572" Count="0" />
+      <LineId Id="585" Count="0" />
+      <LineId Id="574" Count="1" />
+      <LineId Id="578" Count="1" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="581" Count="3" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="759" Count="0" />
+      <LineId Id="758" Count="0" />
+      <LineId Id="761" Count="0" />
+      <LineId Id="760" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

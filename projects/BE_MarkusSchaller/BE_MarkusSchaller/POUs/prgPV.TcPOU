@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgPV" Id="{a58e9652-b023-4b9d-a214-d3e02f0281a3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV						: FB_SolarLog;
+	fbPVCounter					: FB_EnergyCounter;
+	fbHouseCounter				: FB_EnergyCounter;
+	lrPowerPV					: LREAL;		//{#lynus.ag#()}
+	lrPowerHouse				: LREAL;		//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	// trigger command execution
+	bEnablePV			 		: BOOL;			//{#lynus.ag#()}
+	lrCounterPV					: LREAL;		//{#lynus.ag#()}
+	lrCounterHouse				: LREAL;		//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbPV(
+	bStart:= bEnablePV, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.178.33', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerPV=>lrPowerPV,
+	lrPowerHouse=>lrPowerHouse );
+
+// EnergyCounter PV
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+
+// EnergyCounter House
+fbHouseCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerHouse, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbHouseCounter.lrTotalCounterEnergy_Production > lrCounterHouse THEN  	
+	lrCounterHouse := fbHouseCounter.lrTotalCounterEnergy_Production;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="45" Count="8" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="68" Count="13" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="85" Count="14" />
+      <LineId Id="84" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,1099 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ElectricHeatingElement" Id="{efd8fc57-ddea-4869-a0df-6a3d1f599a82}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_ElectricHeatingElement
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;									//Enable the Fuctionblock and his logic
+	{attribute 'hide'}
+	bError								: BOOL;									//Error Input electric heating element
+	{attribute 'hide'}
+	bWarning							: BOOL;									//Warning Input electric heating element
+	{attribute 'hide'}
+	bIsStepSwitched						: BOOL;									//Heating element is step switched or not
+	{attribute 'hide'}
+	bEPOIsActive						: BOOL;									//Emergency power operation is active
+	{attribute 'hide'}
+	bExternalLock						: BOOL;									//External lock (All functions are locked)
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;									//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	bTimeDissableFunctions				: BOOL;									//True when we have longer Time no conncection to the Backend System. We need this Information to switch on the Heating Element for the Legionella Prtection
+	{attribute 'hide'}
+	iErrorCode							: INT;									//Error Code from external EHE
+	{attribute 'hide'}
+	iWarningCode						: INT;									//Warning Code from external EHE
+	{attribute 'hide'}
+	diNumberOfEHE						: DINT;									//Number of Electric Heating Element what is calculatet by a external function
+	{attribute 'hide'}
+	dwBatterySOC						: DWORD;								//Actual Battery SOC in %
+	{attribute 'hide'}
+	lrSizeGridConnection				: LREAL;								//Max size from the grid connection in kW
+	{attribute 'hide'}
+	lrGridPower							: LREAL;								//Actual Grid power in kW
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;								//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;								//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;								//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;								//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;								//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;								//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrPowerEHE							: LREAL;								//Input Value from the power of the electro heating element with unit W
+	{attribute 'hide'}
+	arrTargetPower						: ARRAY[1..10] OF REAL;					//Target power from 0% to +100% for each step (0% to 100%) 
+	{attribute 'hide'}
+	rTemperatureInBoiler				: REAL;									//Temperature in the boiler which is heated with the heating element
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;							//Delay Time to write some Data to the Output
+	{attribute 'hide'}
+	stSystemTime						: ST_Systemtime;						//Local System Time
+	{attribute 'hide'}
+	stSetupEHE							: ST_Setup_EHE;							//Setup electric heating element
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataEHEOut						: ST_EHE_Output;						//Electric heating element output data
+	{attribute 'hide'}
+	stDataEHEOutDelay					: ST_EHE_Output;						//Electric heating element output data with delay
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbPD1								: FB_PersistentData_Number;				//Function to save persistent data
+	{attribute 'hide'}
+	fbPD2								: FB_PersistentData_Number;				//Function to save persistent data
+	{attribute 'hide'}
+	FPTimeEnable						: R_TRIG;								//Internal positive edge
+	{attribute 'hide'}
+	FPTimeDisable						: R_TRIG;								//Internal positive edge
+	{attribute 'hide'}
+	FPWeekProgram						: R_TRIG;								//Internal positive edge
+	{attribute 'hide'}
+	FPRSWeekProgram						: R_TRIG;								//Internal positive edge
+	{attribute 'hide'}
+	FPEnable							: R_TRIG;								//Internal positive Edge
+	{attribute 'hide'}
+	FNEnable							: F_TRIG;								//Internal negative Edge
+	{attribute 'hide'}
+	timError							: TOF;									//Timer to set the error
+	{attribute 'hide'}
+	timWeekProgram						: TON;									//Timer for the week program (legionella protection)
+	{attribute 'hide'}
+	timDelayOutputs						: TON;									//Timer to send Data with Delay to the outputs
+	{attribute 'hide'}
+	timStep5							: TON;									//Timer what show when the state machine is to long in step 5. (The heating element not can heat the boiler at the Temperature what we need for the weekprogram)
+	{attribute 'hide'}
+	timStep6IsActive					: TON;									//Timer what is active when Step 6 in the State Machine is active
+	{attribute 'hide'}
+	timOnDelayStep6						: TON;									//Delay to switch on the EHE in Step 6
+	{attribute 'hide'}
+	timOffDelayStep6					: TON;									//Delay to switch off the EHE in Step 6
+	{attribute 'hide'}
+	timSOCOff							: TON;									//Timer to dissable the Device when the SOC from the Battery is under the Setpoint
+	{attribute 'hide'}
+	bTimeIsEnabled						: BOOL;									//Enable time controll
+	{attribute 'hide'}
+	byLPLimitsPw						: BYTE;									//Loop to check limits for target and max power
+	{attribute 'hide'}
+	byLPNumberOfSteps					: BYTE;									//Loop to ckeck to number of steps for step switching
+	{attribute 'hide'}
+	byLPMaxPowerOutput					: BYTE;									//Loop to ckeck the max power befor write to the output
+	{attribute 'hide'}
+	byLPSumPwOfSteps					: BYTE;									//Loop to calculate the complete power of all steps
+	{attribute 'hide'}
+	byLPPercentPwOfSteps				: BYTE;									//Loop to calculate the complete power in percent of all steps
+	{attribute 'hide'}
+	byLPMaxReached						: BYTE;									//Loop to check if for some step the target power is >= 100 or < Constants.byTargetOffPowerOnOffDevices
+	{attribute 'hide'}
+	iStateIntStep6						: INT;									//Internal Statmachine in Step 6
+	{attribute 'hide'}
+	uiState								: UINT;									//State Maschine
+	{attribute 'hide'}
+	uiHysteresisOnStep3					: UINT;									//Hysteresis to switch on or off the heating elemtn in step 3 (Surplus mode and max temperature)
+	{attribute 'hide'}
+	uiWeekProgramTemp					: UINT;									//Temperature, what is needed for the legionella protection
+	{attribute 'hide'}
+	rSumSteps							: REAL;									//Sum from all steps 
+	{attribute 'hide'}
+	arrMaxPower							: ARRAY[1..10] OF REAL; 				//Maximum power of the load in kW (Per stage) (If no stage or only On Off then max power in array[1])	
+	{attribute 'hide'}
+	arrPercentValueSteps				: ARRAY[1..10] OF REAL;					//Percent Value from each step
+	{attribute 'hide'}
+	arrMaxReached						: ARRAY[1..10] OF BOOL;					//Array from each step what goes to true when the power is >= 100%
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	bWeekProgramEnable					: BOOL;									//Enable the Week programm for one time
+	{attribute 'conditionalshow'}
+	byCounterDays						: BYTE;									//Counter that counts the days how long has not reached the maximum temperature
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 19.05.2021
+//Version : 1.0.0.0
+
+//General description:
+//This function block implements an electric heating element. It can be used for one adjustable step-switched, one adjustable stepless and one ON/OFF heating element.
+//The function block can be switched manually and also contoll based.
+//The output bOutputEHEOnOff is set at 100% power input. If the power input is < Constants.byTargetOffPowerOnOffDevices, the output is reset (hysteresis to prevent toggling).
+//This output is used for electrical heating elements which cannot be controlled. So only have an on / off function. 
+//The output bOutputEHE is set as soon as the power input is greater than or equal to 1%. This output is used for the control of the controllable heating elements. 
+//If the temperature falls below the minimum temperature (uiTargetTempOn), the heating element is heated up until the target temperature (uiTargetTempOff) is reached. If time-controlled, this only takes place in the respectively enabled time.
+//If a battery cabinet is in emergency power mode at this time, the current SOC must also be above the SOC Off value so that the heating element switches on. This prevents the battery from being discharged.
+//IMPORTANT : When controlling the electric heating element, it is important that if it has an integrated mechanical thermostat, this value is set as high as the minimum max. temperature (uiTargetTempMax) set on the PLC. !!Min 65°C!!
+//----------------------------------------
+//Adjustable stage-switched heating element:
+//With the controllable stage-switched heating element, each stage can be given a separate power setting. Each stage can be viewed internally similar to a heating element that can only ON/OFF.
+//If >= 100% power output per stage, the percentage value of the respective stage is passed on to the power output (rTargetPowerEHE) or added to it. 
+//If the level becomes < Constants.byTargetOffPowerOnOffDevices again, the percentage value is removed from the output again.
+//----------------------------------------
+//Adjustable stepless heating element:
+//In the case of the controllable stepless heating element, the power setting is given linearly to the power setting output (rTargetPowerEHE). 
+//The maximum power (arrMaxPowerEHE) must therefore only be entered in the first array field. 
+//----------------------------------------
+//On-off heating elemet
+//Works in the same style like the stepless heating element. But here we use only the output bOutputEHEOnOff to switch on and off the heating element. The rTargetPowerEHE we didn't need here. 
+//----------------------------------------
+//Timefunctions: 
+//If the time function has been selected, the heating element is only controlled if the uiTargetTempOn is undershot between the set time period.
+//Is usefully if you have 2 differen current tariffs
+//----------------------------------------
+//Legionella protection: 
+//If the Legionella protection has not been deactivated (bDisableLegionellaProtection), the heating element runs the maximum temperature once every 7 days (if the maximum temperature > 60°C), 
+//or 60°C (if maximum temperature < 60°C). If within the 7 days the heating element has already reached the maximum temperature once, the counter, which counts the days will be reset.
+//In emergency power mode, the program is only executed if the battery charge level allows it.
+//When the Connection to the Backend is lost, then every 5 days the Heating Elemet switch on for 9 hours (In the 9 hours the temperature for legionella protection should be reached)
+//----------------------------------------
+//On Emergency power operation off
+//If the lock for emergency power operation (bOnEmergPowerOff) has been selected for the electric heating element, it will not be switched on in emergency power operation. However, it can be overridden manually.
+//----------------------------------------
+//External look:
+//The FB also has an external inhibit signal which switches off all functions as long as this signal is active.
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+dwBatterySOC := LIMIT(0, dwBatterySOC, 100);
+	stSetupEHE.byManualyTargetPower := LIMIT(0, stSetupEHE.byManualyTargetPower, 100);
+		rTemperatureInBoiler := LIMIT(-30, rTemperatureInBoiler, 120); 
+			stSetupEHE.byHourOn := LIMIT(0, stSetupEHE.byHourOn, 23);
+				stSetupEHE.byHourOff := LIMIT(0, stSetupEHE.byHourOff, 23);
+					stSetupEHE.byMinutesOn := LIMIT(0, stSetupEHE.byMinutesOn, 59);
+						stSetupEHE.byMinutesOff := LIMIT(0, stSetupEHE.byMinutesOff, 59);
+						
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrPowerEHE := LIMIT(-999999999999999,lrPowerEHE,999999999999999);
+
+//If a maximum power has not been entered everywhere, use the next higher power (only for step-switched). 
+IF bIsStepSwitched AND stSetupEHE.rMaxPower1 <= 0 AND stSetupEHE.rMaxPower2 > 0 THEN 
+	stSetupEHE.rMaxPower1 := stSetupEHE.rMaxPower2; 
+END_IF
+	IF bIsStepSwitched AND stSetupEHE.rMaxPower2 <= 0 AND stSetupEHE.rMaxPower3 > 0 THEN 
+		stSetupEHE.rMaxPower2 := stSetupEHE.rMaxPower3;
+	END_IF
+IF bIsStepSwitched AND stSetupEHE.rMaxPower3 <= 0 AND stSetupEHE.rMaxPower4 > 0 THEN 
+	stSetupEHE.rMaxPower3 := stSetupEHE.rMaxPower4; 
+END_IF
+	IF bIsStepSwitched AND stSetupEHE.rMaxPower4 <= 0 AND stSetupEHE.rMaxPower5 > 0 THEN 
+		stSetupEHE.rMaxPower4 := stSetupEHE.rMaxPower5; 
+	END_IF
+IF bIsStepSwitched AND stSetupEHE.rMaxPower5 <= 0 AND stSetupEHE.rMaxPower6 > 0 THEN 
+	stSetupEHE.rMaxPower5 := stSetupEHE.rMaxPower6; 
+END_IF
+	IF bIsStepSwitched AND stSetupEHE.rMaxPower6 <= 0 AND stSetupEHE.rMaxPower7 > 0 THEN 
+		stSetupEHE.rMaxPower6 := stSetupEHE.rMaxPower7; 
+	END_IF
+IF bIsStepSwitched AND stSetupEHE.rMaxPower7 <= 0 AND stSetupEHE.rMaxPower8 > 0 THEN 
+	stSetupEHE.rMaxPower7 := stSetupEHE.rMaxPower8; 
+END_IF
+	IF bIsStepSwitched AND stSetupEHE.rMaxPower8 <= 0 AND stSetupEHE.rMaxPower9 > 0 THEN 
+		stSetupEHE.rMaxPower8 := stSetupEHE.rMaxPower9; 
+	END_IF
+IF bIsStepSwitched AND stSetupEHE.rMaxPower9 <= 0 AND stSetupEHE.rMaxPower10 > 0 THEN 
+	stSetupEHE.rMaxPower9 := stSetupEHE.rMaxPower10; 
+END_IF						
+
+//Check limits for target power and maximum power						
+FOR byLPLimitsPw := 1 TO 10 BY 1 DO
+	arrTargetPower[byLPLimitsPw] := LIMIT(0, arrTargetPower[byLPLimitsPw], 100);
+END_FOR
+	stSetupEHE.rMaxPower1 := LIMIT(0,stSetupEHE.rMaxPower1,500);
+		stSetupEHE.rMaxPower2 := LIMIT(0,stSetupEHE.rMaxPower2,500);
+			stSetupEHE.rMaxPower3 := LIMIT(0,stSetupEHE.rMaxPower3,500);
+				stSetupEHE.rMaxPower4 := LIMIT(0,stSetupEHE.rMaxPower4,500);
+					stSetupEHE.rMaxPower5 := LIMIT(0,stSetupEHE.rMaxPower5,500);
+						stSetupEHE.rMaxPower6 := LIMIT(0,stSetupEHE.rMaxPower6,500);
+							stSetupEHE.rMaxPower7 := LIMIT(0,stSetupEHE.rMaxPower7,500);
+								stSetupEHE.rMaxPower8 := LIMIT(0,stSetupEHE.rMaxPower8,500);
+									stSetupEHE.rMaxPower9 := LIMIT(0,stSetupEHE.rMaxPower9,500);
+										stSetupEHE.rMaxPower10 := LIMIT(0,stSetupEHE.rMaxPower10,500);
+
+//Copy the max input power in the internal array to calculate the steps
+arrMaxPower[1] := stSetupEHE.rMaxPower1;
+	arrMaxPower[2] := stSetupEHE.rMaxPower2;
+		arrMaxPower[3] := stSetupEHE.rMaxPower3;
+			arrMaxPower[4] := stSetupEHE.rMaxPower4;
+				arrMaxPower[5] := stSetupEHE.rMaxPower5;
+					arrMaxPower[6] := stSetupEHE.rMaxPower6;
+						arrMaxPower[7] := stSetupEHE.rMaxPower7;
+							arrMaxPower[8] := stSetupEHE.rMaxPower8;
+								arrMaxPower[9] := stSetupEHE.rMaxPower9;
+									arrMaxPower[10] := stSetupEHE.rMaxPower10;
+
+//Check that Disable SOC is bigger then Enable SOC	
+IF stSetupEHE.byDisableSOC > stSetupEHE.byEnableSOC THEN 
+	stSetupEHE.byEnableSOC := stSetupEHE.byDisableSOC + 1; 
+END_IF
+	stSetupEHE.byDisableSOC := LIMIT(0, stSetupEHE.byDisableSOC, 100);
+		stSetupEHE.byEnableSOC := LIMIT(1, stSetupEHE.byEnableSOC, 100);
+
+//Check that On temperature is bigger than off temperatur	
+IF stSetupEHE.uiTargetTempOn > stSetupEHE.uiTargetTempOff THEN 
+	stSetupEHE.uiTargetTempOff := stSetupEHE.uiTargetTempOn + 1; 
+END_IF
+	//Check that max temperature is bigger than on temperatur
+	IF stSetupEHE.uiTargetTempOn > stSetupEHE.uiTargetTempMax THEN 
+		stSetupEHE.uiTargetTempMax := stSetupEHE.uiTargetTempOn + 1; 
+	END_IF
+		//Check that max temperature is bigger than off temperatur
+		IF stSetupEHE.uiTargetTempOff > stSetupEHE.uiTargetTempMax THEN 
+			stSetupEHE.uiTargetTempMax := stSetupEHE.uiTargetTempOff + 1; 
+		END_IF  
+			stSetupEHE.uiTargetTempOn := LIMIT(0, stSetupEHE.uiTargetTempOn, 120);
+				stSetupEHE.uiTargetTempOff := LIMIT(0, stSetupEHE.uiTargetTempOff, 120);
+					stSetupEHE.uiTargetTempMax := LIMIT(0, stSetupEHE.uiTargetTempMax, 120);
+
+//Calculate the hysteresis
+IF stSetupEHE.uiTargetTempMax >= 2 THEN
+	uiHysteresisOnStep3 := 1;
+ELSE
+	uiHysteresisOnStep3 := 0;
+END_IF		
+
+//Check number of steps
+stDataEHEOut.byNumberOfSteps := 0;
+	FOR byLPNumberOfSteps := 1 TO 10 BY 1 DO
+		IF arrMaxPower[byLPNumberOfSteps] > 0 THEN stDataEHEOut.byNumberOfSteps := stDataEHEOut.byNumberOfSteps + 1; END_IF
+	END_FOR
+
+//Round the output power
+FOR byLPMaxPowerOutput := 1 TO 10 BY 1 DO
+	stDataEHEOut.arrMaxPower[byLPMaxPowerOutput] := DINT_TO_REAL(REAL_TO_DINT(arrMaxPower[byLPMaxPowerOutput] * 100)) / 100;
+END_FOR	
+		
+(*---------------------------------------------------------------------------Enable----------------------------------------------------------------------------------*)
+stDataEHEOut.bEnabled := bEnable;
+
+(*-----------------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)
+timError(IN:= bError, PT:= T#5S, Q=> , ET=> );
+
+stDataEHEOut.byErrorWarning := 0;
+	IF bWarning OR timStep5.Q THEN stDataEHEOut.byErrorWarning := 1; END_IF 	
+	IF timError.Q THEN stDataEHEOut.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF stSetupEHE.bDisableLegionellaPr THEN stDataEHEOut.eMessage := E_Message_EHE.eLegionellaProtectionDisabledFromUser;
+ELSIF timStep5.Q THEN stDataEHEOut.eMessage := E_Message_EHE.eEHEDontReachedTheSetTemp;
+ELSIF bExternalLock THEN stDataEHEOut.eMessage := E_Message_EHE.eExternalLockActive;
+ELSIF stDataEHEOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataEHEOut.eMessage := E_Message_EHE.eNoConnectionToBackend;
+ELSIF stDataEHEOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataEHEOut.eMessage := E_Message_EHE.eErrorEHE;
+ELSIF stDataEHEOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataEHEOut.eMessage := E_Message_EHE.eTooMuchEHE;
+ELSIF stDataEHEOut.byErrorWarning = 2 AND iErrorCode = 2 THEN stDataEHEOut.eMessage := E_Message_EHE.eTempSensorInBufferError;
+ELSIF stDataEHEOut.byErrorWarning = 2 AND iErrorCode = 3 THEN stDataEHEOut.eMessage := E_Message_EHE.eWindowsSystemTimeError;	
+ELSE stDataEHEOut.eMessage := E_Message_EHE.eNoMessage; 
+END_IF
+	
+(*----------------------------------------------------------------------------Logic Part------------------------------------------------------------------------------------*)
+
+//Timer for SOC dissabling
+timSOCOff(IN:= dwBatterySOC <= stSetupEHE.byDisableSOC, PT:= T#30S, Q=> , ET=> );
+
+//Switch heating element depending on temperature (without power setting, without control via time)
+IF bEnable AND NOT bWeekProgramEnable AND NOT bExternalLock AND stDataEHEOut.byErrorWarning <> 2 AND 
+ rTemperatureInBoiler < stSetupEHE.uiTargetTempOn AND NOT stSetupEHE.bTimeEnabled THEN 
+	uiState := 1; 
+END_IF
+
+//Switch heating element depending on temperature (without power setting, with control via time)
+IF bEnable AND NOT bWeekProgramEnable AND NOT bExternalLock AND stDataEHEOut.byErrorWarning <> 2 AND 
+ rTemperatureInBoiler < stSetupEHE.uiTargetTempOn AND stSetupEHE.bTimeEnabled THEN 
+	uiState := 2; 
+END_IF
+
+//Switch heating element with power preset (surplus)
+IF bEnable AND NOT bWeekProgramEnable AND NOT bExternalLock AND stDataEHEOut.byErrorWarning <> 2 AND 
+ (arrTargetPower[1] > 0 OR arrTargetPower[2] > 0 OR arrTargetPower[3] > 0 OR arrTargetPower[4] > 0 OR arrTargetPower[5] > 0 OR
+ 	arrTargetPower[6] > 0 OR arrTargetPower[7] > 0 OR arrTargetPower[8] > 0 OR arrTargetPower[9] > 0 OR arrTargetPower[10] > 0) THEN 
+		uiState := 3; 
+END_IF
+
+//Switch heating element manually
+IF bEnable AND NOT bWeekProgramEnable AND NOT bExternalLock AND stDataEHEOut.byErrorWarning <> 2 AND stSetupEHE.bManualyOn THEN 
+	uiState := 4; 
+END_IF 
+
+//Legionella protection
+IF NOT stSetupEHE.bDisableLegionellaPr THEN
+	//Determine the temperature to be approached
+	IF stSetupEHE.uiTargetTempMax > 60 THEN
+		uiWeekProgramTemp := stSetupEHE.uiTargetTempMax;
+	ELSE
+		uiWeekProgramTemp := 60;
+	END_IF
+	
+	//Timer and counter for days
+	timWeekProgram(IN:= NOT timWeekProgram.Q AND bEnable AND uiState <> 5, PT:=T#24H , Q=> , ET=> );
+		FPWeekProgram(CLK:= timWeekProgram.Q, Q=> );
+			IF FPWeekProgram.Q THEN 
+				byCounterDays := byCounterDays + 1; 
+			END_IF
+	
+	//Reset the counter for the days
+	FPRSWeekProgram(CLK:= rTemperatureInBoiler >= uiWeekProgramTemp, Q=> );		
+		IF (byCounterDays >= 7 AND rTemperatureInBoiler >= uiWeekProgramTemp) OR FPRSWeekProgram.Q THEN 
+			byCounterDays := 0; 
+		END_IF
+	
+	IF byCounterDays >= 7 THEN 
+		bWeekProgramEnable := TRUE;
+	END_IF 
+	
+	IF bWeekProgramEnable THEN 
+		uiState := 5; 
+	END_IF
+END_IF
+
+//Timer, when the Weekprogram take to long time and dont reached the Week programm temperature
+IF uiState = 5 THEN timStep5.IN := TRUE; ELSE timStep5.IN := FALSE; END_IF
+	timStep5(IN:= , PT:= T#12H, Q=> , ET=> );
+
+//Heating Element in Init step (Reset-Off)
+IF NOT bEnable OR
+	(uiState <> 5 AND (stDataEHEOut.byErrorWarning = 2 OR bExternalLock)) THEN
+		uiState := 0;
+END_IF
+
+//Activeate the Legionella Protection when the Function is dissabled why we have no connection to the Backend Service
+IF NOT bEnable AND bTimeDissableFunctions AND NOT stSetupEHE.bDisableLegionellaPr THEN uiState := 6; END_IF
+
+//Enable via time
+FPTimeEnable(CLK:= stSystemTime.wHour >= stSetupEHE.byHourOn AND stSystemTime.wMinute >= stSetupEHE.byMinutesOn AND stSetupEHE.bTimeEnabled, Q=> );
+	FPTimeDisable(CLK:= stSystemTime.wHour >= stSetupEHE.byHourOff AND stSystemTime.wMinute >= stSetupEHE.byMinutesOff AND stSetupEHE.bTimeEnabled, Q=> );
+
+IF FPTimeEnable.Q THEN 
+	bTimeIsEnabled := TRUE; 
+END_IF
+	IF FPTimeDisable.Q THEN 
+		bTimeIsEnabled := FALSE; 
+	END_IF	
+		IF NOT stSetupEHE.bTimeEnabled THEN 
+			bTimeIsEnabled := FALSE; 
+		END_IF
+
+CASE uiState OF
+	
+	0: //Init step
+		stDataEHEOut.bOutput := FALSE;
+			stDataEHEOut.bOutputOnOff := FALSE;
+				stDataEHEOut.rTargetPower := 0;
+			
+	1: //Switch heating element depending on temperature (without power setting, without control via time)
+		IF (rTemperatureInBoiler < stSetupEHE.uiTargetTempOn AND NOT bEPOIsActive) OR (rTemperatureInBoiler < stSetupEHE.uiTargetTempOn AND 
+		 bEPOIsActive AND NOT stSetupEHE.bOnEmergPowerOff AND dwBatterySOC >= stSetupEHE.byEnableSOC)	THEN 
+			stDataEHEOut.bOutput := TRUE; 
+				stDataEHEOut.bOutputOnOff := TRUE; 
+					stDataEHEOut.rTargetPower := 100;
+		END_IF
+		
+		IF (rTemperatureInBoiler >= stSetupEHE.uiTargetTempOff) OR (timSOCOff.Q AND bEPOIsActive) OR 
+		 (bEPOIsActive AND stSetupEHE.bOnEmergPowerOff) THEN
+			stDataEHEOut.bOutput := FALSE; 
+				stDataEHEOut.bOutputOnOff := FALSE; 
+					stDataEHEOut.rTargetPower := 0;
+		END_IF
+		 
+	2: //Switch heating element depending on temperature (without power setting, with control via time)	
+		IF (rTemperatureInBoiler < stSetupEHE.uiTargetTempOn AND NOT bEPOIsActive AND bTimeIsEnabled) OR 
+			(rTemperatureInBoiler < stSetupEHE.uiTargetTempOn AND bEPOIsActive AND NOT stSetupEHE.bOnEmergPowerOff AND dwBatterySOC >= stSetupEHE.byEnableSOC AND bTimeIsEnabled) THEN 
+				stDataEHEOut.bOutput := TRUE; stDataEHEOut.bOutputOnOff := TRUE; stDataEHEOut.rTargetPower := 100; 
+		END_IF
+			IF (rTemperatureInBoiler >= stSetupEHE.uiTargetTempOff) OR 
+				(timSOCOff.Q AND bEPOIsActive) OR
+					(bEPOIsActive AND stSetupEHE.bOnEmergPowerOff) OR	 
+						NOT bTimeIsEnabled THEN
+							stDataEHEOut.bOutput := FALSE; stDataEHEOut.bOutputOnOff := FALSE; stDataEHEOut.rTargetPower := 0;
+			END_IF
+
+	3: //Switch heating element with power preset (surplus)
+		//Power not stepped switched (on-off or linear)
+		IF NOT bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 THEN	
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT(arrTargetPower[1] * 100)) / 100;
+		END_IF
+		
+		//Power step switched
+		//Calculate the sum of power from al steps
+		rSumSteps := 0;
+		FOR byLPSumPwOfSteps := 1 TO 10 BY 1 DO
+			rSumSteps := rSumSteps + stDataEHEOut.arrMaxPower[byLPSumPwOfSteps];
+				arrPercentValueSteps[byLPSumPwOfSteps] := 0;	
+		END_FOR
+		
+		//Calculate the power in % for each step	
+		IF stDataEHEOut.byNumberOfSteps > 0 AND stDataEHEOut.byNumberOfSteps <= 10 AND rSumSteps > 0 THEN
+			FOR byLPPercentPwOfSteps := 1 TO stDataEHEOut.byNumberOfSteps BY 1 DO
+				arrPercentValueSteps[byLPPercentPwOfSteps] := (stDataEHEOut.arrMaxPower[byLPPercentPwOfSteps] * 100) / rSumSteps;
+			END_FOR 
+		END_IF
+		
+		//Check when a step has reached the maximum or not	
+		FOR byLPMaxReached := 1 TO 10 BY 1 DO
+			IF arrTargetPower[byLPMaxReached] >= 100 THEN 
+				arrMaxReached[byLPMaxReached] := TRUE; 
+			END_IF	
+				IF arrTargetPower[byLPMaxReached] < Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+					arrMaxReached[byLPMaxReached] := FALSE; 
+				END_IF	
+		END_FOR
+		
+		//Off	
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND NOT arrMaxReached[1] AND arrTargetPower[1] < Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := 0; 
+		END_IF 
+		//Step 1
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrTargetPower[1] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT(arrPercentValueSteps[1] * 100)) / 100; 	
+		END_IF
+		//Step 1 to Step 2
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrTargetPower[2] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 3
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND 
+		 arrTargetPower[3] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + arrPercentValueSteps[3]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 4				
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND 
+		 arrMaxReached[4] AND arrTargetPower[4] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + 
+				arrPercentValueSteps[3] + arrPercentValueSteps[4]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 5					
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND
+		 arrMaxReached[4] AND arrMaxReached[5] AND arrTargetPower[5] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + 
+				arrPercentValueSteps[3] + arrPercentValueSteps[4] + arrPercentValueSteps[5]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 6
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND 
+		 arrMaxReached[4] AND arrMaxReached[5] AND arrMaxReached[6] AND arrTargetPower[6] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + 
+				arrPercentValueSteps[3] + arrPercentValueSteps[4] + arrPercentValueSteps[5] + arrPercentValueSteps[6]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 7	
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND 
+		 arrMaxReached[4] AND arrMaxReached[5] AND arrMaxReached[6] AND arrMaxReached[7] AND arrTargetPower[7] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + 
+				arrPercentValueSteps[3] + arrPercentValueSteps[4] + arrPercentValueSteps[5] + arrPercentValueSteps[6] + arrPercentValueSteps[7]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 8
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND 
+		 arrMaxReached[4] AND arrMaxReached[5] AND arrMaxReached[6] AND arrMaxReached[7] AND arrMaxReached[8] AND arrTargetPower[8] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + 
+				arrPercentValueSteps[3] + arrPercentValueSteps[4] + arrPercentValueSteps[5] + arrPercentValueSteps[6] + arrPercentValueSteps[7] + 
+					arrPercentValueSteps[8]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 9
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND 
+		 arrMaxReached[4] AND arrMaxReached[5] AND arrMaxReached[6] AND arrMaxReached[7] AND arrMaxReached[8] AND arrMaxReached[9] AND arrTargetPower[9] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+			stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + 
+				arrPercentValueSteps[3] + arrPercentValueSteps[4] + arrPercentValueSteps[5] + arrPercentValueSteps[6] + arrPercentValueSteps[7] + 
+					arrPercentValueSteps[8] + arrPercentValueSteps[9]) * 100)) / 100; 
+		END_IF
+		//Step 1 to Step 10
+		IF bIsStepSwitched AND stDataEHEOut.byNumberOfSteps > 0 AND arrMaxReached[1] AND arrMaxReached[2] AND arrMaxReached[3] AND 
+		 arrMaxReached[4] AND arrMaxReached[5] AND arrMaxReached[6] AND arrMaxReached[7] AND arrMaxReached[8] AND arrMaxReached[9] AND arrMaxReached[10] AND 
+			 arrTargetPower[10] >= Constants_Energy.byTargetOffPowerForOnOffDevices THEN 
+				stDataEHEOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT((arrPercentValueSteps[1] + arrPercentValueSteps[2] + 
+					arrPercentValueSteps[3] + arrPercentValueSteps[4] + arrPercentValueSteps[5] + arrPercentValueSteps[6] + arrPercentValueSteps[7] + 
+						arrPercentValueSteps[8] + arrPercentValueSteps[9] + arrPercentValueSteps[10]) * 100)) / 100; 
+		END_IF
+		//Limit the output to <= 100
+		IF bIsStepSwitched AND stDataEHEOut.rTargetPower > 100 THEN 
+			stDataEHEOut.rTargetPower := 100; 
+		END_IF 
+			
+		//Swtich the outputs
+		IF (NOT bEPOIsActive AND (arrTargetPower[1] > 0 OR arrTargetPower[2] > 0 OR arrTargetPower[3] > 0 OR arrTargetPower[4] > 0 OR arrTargetPower[5] > 0 OR
+		 arrTargetPower[6] > 0 OR arrTargetPower[7] > 0 OR arrTargetPower[8] > 0 OR arrTargetPower[9] > 0 OR arrTargetPower[10] > 0) AND
+		 dwBatterySOC >= stSetupEHE.byEnableSOC AND rTemperatureInBoiler < stSetupEHE.uiTargetTempMax - uiHysteresisOnStep3) OR 
+		 (bEPOIsActive AND NOT stSetupEHE.bOnEmergPowerOff AND (arrTargetPower[1] > 0 OR arrTargetPower[2] > 0 OR arrTargetPower[3] > 0 OR 
+		 arrTargetPower[4] > 0 OR arrTargetPower[5] > 0 OR arrTargetPower[6] > 0 OR arrTargetPower[7] > 0 OR arrTargetPower[8] > 0 OR 
+		 arrTargetPower[9] > 0 OR arrTargetPower[10] > 0) AND dwBatterySOC >= stSetupEHE.byEnableSOC AND 
+		 rTemperatureInBoiler < stSetupEHE.uiTargetTempMax - uiHysteresisOnStep3) THEN
+			stDataEHEOut.bOutput := TRUE;
+		END_IF
+		
+		IF (arrTargetPower[1] <= 0 AND arrTargetPower[2] <= 0 AND arrTargetPower[3] <= 0 AND arrTargetPower[4] <= 0 AND arrTargetPower[5] <= 0 AND
+		 arrTargetPower[6] <= 0 AND arrTargetPower[7] <= 0 AND arrTargetPower[8] <= 0 AND arrTargetPower[9] <= 0 AND arrTargetPower[10] <= 0) OR 
+		 timSOCOff.Q OR (bEPOIsActive AND stSetupEHE.bOnEmergPowerOff) OR rTemperatureInBoiler >= stSetupEHE.uiTargetTempMax OR
+		 stDataEHEOut.byNumberOfSteps <= 0 THEN
+			stDataEHEOut.bOutput := FALSE;
+		END_IF 	
+		
+		IF NOT stDataEHEOut.bOutput THEN 
+			stDataEHEOut.rTargetPower := 0; 
+		END_IF 
+			IF stDataEHEOut.rTargetPower >= 100 AND stDataEHEOut.bOutput THEN 
+				stDataEHEOut.bOutputOnOff := TRUE; 
+			END_IF
+				IF stDataEHEOut.rTargetPower < Constants_Energy.byTargetOffPowerForOnOffDevices OR NOT stDataEHEOut.bOutput THEN 
+					stDataEHEOut.bOutputOnOff := FALSE; 
+				END_IF 
+
+	4: //Switch heating element manually
+		stDataEHEOut.rTargetPower := BYTE_TO_REAL(stSetupEHE.byManualyTargetPower);
+		
+		IF stSetupEHE.bManualyOn AND stDataEHEOut.rTargetPower > 0 THEN 
+			stDataEHEOut.bOutput := TRUE; 
+		END_IF
+			IF NOT stSetupEHE.bManualyOn OR stDataEHEOut.rTargetPower <= 0 THEN 
+				stDataEHEOut.bOutput := FALSE; 
+			END_IF 
+				IF NOT stDataEHEOut.bOutput THEN 
+					stDataEHEOut.rTargetPower := 0; 
+				END_IF 	
+					IF stDataEHEOut.rTargetPower >= 100 AND stDataEHEOut.bOutput THEN 
+						stDataEHEOut.bOutputOnOff := TRUE; 
+					END_IF
+						IF stDataEHEOut.rTargetPower < Constants_Energy.byTargetOffPowerForOnOffDevices OR NOT stDataEHEOut.bOutput THEN 
+							stDataEHEOut.bOutputOnOff := FALSE; 
+						END_IF	
+	
+	5: //Week programm (Legionella protection)
+		//100% target power
+		IF (bEPOIsActive AND dwBatterySOC >= stSetupEHE.byEnableSOC AND bWeekProgramEnable AND stDataEHEOut.byErrorWarning <> 2 AND NOT bExternalLock) OR (NOT bEPOIsActive AND bWeekProgramEnable AND stDataEHEOut.byErrorWarning <> 2 AND NOT bExternalLock) THEN 
+			stDataEHEOut.bOutput := TRUE; 
+				stDataEHEOut.bOutputOnOff := TRUE; 
+					stDataEHEOut.rTargetPower := 100;
+		END_IF
+			//Off when emergency power operation is on and battery soc is to low	
+			IF (bEPOIsActive AND timSOCOff.Q) OR stDataEHEOut.byErrorWarning = 2 OR bExternalLock THEN
+				stDataEHEOut.bOutput := FALSE; 
+					stDataEHEOut.bOutputOnOff := FALSE; 
+						stDataEHEOut.rTargetPower := 0;
+			END_IF
+				//Finish and back to the init step
+				IF FPRSWeekProgram.Q OR stSetupEHE.bDisableLegionellaPr THEN 
+					bWeekProgramEnable := FALSE; 
+						uiState := 0; 
+				END_IF
+				
+	6://Legionelle Protection when we have no connection to the Backend Service
+		
+		CASE iStateIntStep6 OF
+
+			0://Init Step
+				timStep6IsActive.IN := TRUE;
+					IF timStep6IsActive.Q THEN iStateIntStep6 := 1; timStep6IsActive.IN := FALSE; END_IF
+			
+			1://Wait that we have enought Power on the Grid
+				IF (lrGridPower + stSetupEHE.rMaxPower1 + stSetupEHE.rMaxPower2 + stSetupEHE.rMaxPower3 + stSetupEHE.rMaxPower4 + stSetupEHE.rMaxPower5 + 
+						stSetupEHE.rMaxPower6 + stSetupEHE.rMaxPower7 + stSetupEHE.rMaxPower8 + stSetupEHE.rMaxPower9 + stSetupEHE.rMaxPower10) <= lrSizeGridConnection AND diNumberOfEHE > 0 THEN
+					timOnDelayStep6.IN := TRUE;
+				ELSE
+					timOnDelayStep6.IN := FALSE;
+				END_IF  	
+					//Next Step
+					IF timOnDelayStep6.Q THEN iStateIntStep6 := 2; timOnDelayStep6.IN := FALSE; END_IF
+					
+			2://Switch on the Electric Heating Elemnt with the Max Power for 9 hours
+				stDataEHEOut.rTargetPower := 100;
+					stDataEHEOut.bOutput := TRUE;
+						stDataEHEOut.bOutputOnOff := TRUE;
+							timOffDelayStep6.IN := TRUE;	
+					//Next Step
+					IF timOffDelayStep6.Q THEN 
+						iStateIntStep6 := 0; 
+							stDataEHEOut.bOutput := FALSE;
+								stDataEHEOut.bOutputOnOff := FALSE;
+									stDataEHEOut.rTargetPower := 0; 
+										timOffDelayStep6.IN := FALSE;
+					END_IF
+				
+		END_CASE 
+	
+		//End of this Step
+		IF NOT bTimeDissableFunctions OR bEnable OR stSetupEHE.bDisableLegionellaPr THEN uiState := 0; iStateIntStep6 := 0; END_IF  
+	
+END_CASE
+
+//Timer for Step 6 (Legionella protection when we have no connerction to the Backend Service)
+IF uiState <> 6 THEN 
+	timStep6IsActive.IN := FALSE; 
+		timOnDelayStep6.IN := FALSE; 
+			timOffDelayStep6.IN := FALSE;
+END_IF
+			
+timStep6IsActive(IN:= , PT:= T#5D, Q=> , ET=> );
+	timOnDelayStep6(IN:= , PT:= (T#1M * diNumberOfEHE), Q=> , ET=> );
+		timOffDelayStep6(IN:= , PT:= T#9H, Q=> , ET=> );
+
+(*------------------------------------------------------------------Power data----------------------------------------------------------------------------------------------*)
+IF bEnable THEN	
+	stDataEHEOut.lrPower := LINT_TO_LREAL(LREAL_TO_LINT((lrPowerEHE / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataEHEOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataEHEOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataEHEOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataEHEOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataEHEOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataEHEOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF 	
+			
+	IF stDataEHEOut.lrPower < 0 THEN
+		stDataEHEOut.lrPowerProduction := (stDataEHEOut.lrPower * - 1);
+		stDataEHEOut.lrPowerConsumption := 0;
+	ELSIF stDataEHEOut.lrPower > 0 THEN
+		stDataEHEOut.lrPowerProduction := 0;
+		stDataEHEOut.lrPowerConsumption := stDataEHEOut.lrPower;
+	ELSIF stDataEHEOut.lrPower = 0 THEN
+		stDataEHEOut.lrPowerProduction := 0;
+		stDataEHEOut.lrPowerConsumption := 0;
+	END_IF
+		
+ELSE
+	stDataEHEOut.lrPower := 0;
+		stDataEHEOut.lrCounterEnergyT1_Consumption := 0;
+			stDataEHEOut.lrCounterEnergyT2_Consumption := 0;
+				stDataEHEOut.lrCounterEnergyT1_Production := 0;
+					stDataEHEOut.lrCounterEnergyT2_Production := 0;
+						stDataEHEOut.lrPowerProduction := 0;
+							stDataEHEOut.lrPowerConsumption := 0;	
+								stDataEHEOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataEHEOut.lrTotalCounterEnergy_Production := 0;
+END_IF
+
+(*---------------------------------------------------------------------------Outputs--------------------------------------------------------------------------------------*)
+stDataEHEOut.byPriority := stSetupEHE.byPriority;
+	stDataEHEOut.bIsStepSwitched := bIsStepSwitched;
+		stDataEHEOut.bSOnEmergPowerOff := stSetupEHE.bOnEmergPowerOff;
+			stDataEHEOut.bSManualyOn := stSetupEHE.bManualyOn;
+				stDataEHEOut.bySManualyTargetPower := stSetupEHE.byManualyTargetPower;
+					stDataEHEOut.bSTimeEnabled := stSetupEHE.bTimeEnabled;
+						stDataEHEOut.bSDisableLegionellaPr := stSetupEHE.bDisableLegionellaPr;
+					
+IF bEnable THEN
+	stDataEHEOut.rTempInBoiler := DINT_TO_REAL(REAL_TO_DINT(rTemperatureInBoiler * 100)) / 100;
+ELSE	
+	stDataEHEOut.rTempInBoiler := 0;
+END_IF
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataEHEOutDelay := stDataEHEOut;
+END_IF
+		
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+fbPD1(lrValue:= BOOL_TO_REAL(bWeekProgramEnable), bEventBasedActive=> );
+	fbPD2(lrValue:= BYTE_TO_REAL(byCounterDays), bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ElectricHeatingElement">
+      <LineId Id="1704" Count="2" />
+      <LineId Id="1702" Count="0" />
+      <LineId Id="1711" Count="0" />
+      <LineId Id="1703" Count="0" />
+      <LineId Id="1191" Count="0" />
+      <LineId Id="1539" Count="0" />
+      <LineId Id="1547" Count="1" />
+      <LineId Id="1550" Count="0" />
+      <LineId Id="1546" Count="0" />
+      <LineId Id="1707" Count="0" />
+      <LineId Id="1739" Count="0" />
+      <LineId Id="1586" Count="0" />
+      <LineId Id="1557" Count="0" />
+      <LineId Id="1553" Count="1" />
+      <LineId Id="1708" Count="0" />
+      <LineId Id="1559" Count="0" />
+      <LineId Id="1587" Count="0" />
+      <LineId Id="1558" Count="0" />
+      <LineId Id="1709" Count="0" />
+      <LineId Id="1582" Count="0" />
+      <LineId Id="1713" Count="1" />
+      <LineId Id="1712" Count="0" />
+      <LineId Id="1544" Count="0" />
+      <LineId Id="1578" Count="0" />
+      <LineId Id="1715" Count="0" />
+      <LineId Id="1573" Count="0" />
+      <LineId Id="1562" Count="0" />
+      <LineId Id="1579" Count="2" />
+      <LineId Id="2394" Count="0" />
+      <LineId Id="1569" Count="0" />
+      <LineId Id="1565" Count="0" />
+      <LineId Id="1588" Count="0" />
+      <LineId Id="1570" Count="0" />
+      <LineId Id="1583" Count="0" />
+      <LineId Id="1585" Count="0" />
+      <LineId Id="1181" Count="0" />
+      <LineId Id="1170" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="42" Count="3" />
+      <LineId Id="1793" Count="0" />
+      <LineId Id="2727" Count="4" />
+      <LineId Id="1800" Count="0" />
+      <LineId Id="1794" Count="0" />
+      <LineId Id="1305" Count="0" />
+      <LineId Id="765" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="1210" Count="1" />
+      <LineId Id="768" Count="0" />
+      <LineId Id="1212" Count="1" />
+      <LineId Id="767" Count="0" />
+      <LineId Id="1214" Count="1" />
+      <LineId Id="769" Count="0" />
+      <LineId Id="1216" Count="1" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="1218" Count="1" />
+      <LineId Id="771" Count="0" />
+      <LineId Id="1220" Count="1" />
+      <LineId Id="772" Count="0" />
+      <LineId Id="1223" Count="1" />
+      <LineId Id="773" Count="0" />
+      <LineId Id="1225" Count="1" />
+      <LineId Id="774" Count="0" />
+      <LineId Id="1227" Count="1" />
+      <LineId Id="1307" Count="0" />
+      <LineId Id="766" Count="0" />
+      <LineId Id="501" Count="2" />
+      <LineId Id="2129" Count="0" />
+      <LineId Id="2131" Count="8" />
+      <LineId Id="2142" Count="0" />
+      <LineId Id="2140" Count="1" />
+      <LineId Id="2143" Count="8" />
+      <LineId Id="1308" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="1229" Count="1" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="1309" Count="0" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="1231" Count="0" />
+      <LineId Id="1234" Count="0" />
+      <LineId Id="1716" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="1232" Count="0" />
+      <LineId Id="1235" Count="0" />
+      <LineId Id="1717" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="1233" Count="0" />
+      <LineId Id="1236" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="1310" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="315" Count="3" />
+      <LineId Id="1718" Count="0" />
+      <LineId Id="1720" Count="1" />
+      <LineId Id="1723" Count="1" />
+      <LineId Id="1727" Count="4" />
+      <LineId Id="1719" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="60" Count="1" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="2304" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="2305" Count="0" />
+      <LineId Id="1905" Count="0" />
+      <LineId Id="2011" Count="0" />
+      <LineId Id="2013" Count="0" />
+      <LineId Id="2210" Count="0" />
+      <LineId Id="2217" Count="0" />
+      <LineId Id="2211" Count="0" />
+      <LineId Id="2306" Count="0" />
+      <LineId Id="2014" Count="1" />
+      <LineId Id="2021" Count="1" />
+      <LineId Id="2017" Count="0" />
+      <LineId Id="2012" Count="0" />
+      <LineId Id="1273" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="2593" Count="2" />
+      <LineId Id="1732" Count="0" />
+      <LineId Id="1271" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="1248" Count="0" />
+      <LineId Id="1241" Count="1" />
+      <LineId Id="1272" Count="0" />
+      <LineId Id="1243" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="1249" Count="0" />
+      <LineId Id="1245" Count="1" />
+      <LineId Id="1274" Count="0" />
+      <LineId Id="1247" Count="0" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="1250" Count="0" />
+      <LineId Id="496" Count="1" />
+      <LineId Id="1275" Count="0" />
+      <LineId Id="1251" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="1252" Count="1" />
+      <LineId Id="1385" Count="0" />
+      <LineId Id="1383" Count="0" />
+      <LineId Id="1276" Count="0" />
+      <LineId Id="846" Count="0" />
+      <LineId Id="1322" Count="3" />
+      <LineId Id="1320" Count="0" />
+      <LineId Id="1328" Count="0" />
+      <LineId Id="1326" Count="0" />
+      <LineId Id="848" Count="0" />
+      <LineId Id="1312" Count="0" />
+      <LineId Id="850" Count="0" />
+      <LineId Id="1255" Count="1" />
+      <LineId Id="1315" Count="1" />
+      <LineId Id="852" Count="1" />
+      <LineId Id="1257" Count="1" />
+      <LineId Id="854" Count="1" />
+      <LineId Id="1259" Count="1" />
+      <LineId Id="856" Count="0" />
+      <LineId Id="847" Count="0" />
+      <LineId Id="1261" Count="1" />
+      <LineId Id="1311" Count="0" />
+      <LineId Id="2212" Count="1" />
+      <LineId Id="2216" Count="0" />
+      <LineId Id="2215" Count="0" />
+      <LineId Id="1384" Count="0" />
+      <LineId Id="834" Count="0" />
+      <LineId Id="1956" Count="1" />
+      <LineId Id="1959" Count="0" />
+      <LineId Id="1958" Count="0" />
+      <LineId Id="2399" Count="2" />
+      <LineId Id="835" Count="0" />
+      <LineId Id="249" Count="4" />
+      <LineId Id="1265" Count="1" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="1267" Count="1" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="1269" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="232" Count="1" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="243" Count="2" />
+      <LineId Id="1278" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="1282" Count="1" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="1279" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="1280" Count="1" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="267" Count="4" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="702" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="1284" Count="0" />
+      <LineId Id="1741" Count="0" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="568" Count="1" />
+      <LineId Id="579" Count="0" />
+      <LineId Id="566" Count="0" />
+      <LineId Id="1740" Count="0" />
+      <LineId Id="567" Count="0" />
+      <LineId Id="572" Count="1" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="580" Count="0" />
+      <LineId Id="1742" Count="0" />
+      <LineId Id="661" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="1285" Count="4" />
+      <LineId Id="665" Count="0" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="1743" Count="0" />
+      <LineId Id="667" Count="0" />
+      <LineId Id="675" Count="1" />
+      <LineId Id="1290" Count="0" />
+      <LineId Id="581" Count="0" />
+      <LineId Id="677" Count="0" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="1291" Count="0" />
+      <LineId Id="587" Count="0" />
+      <LineId Id="673" Count="1" />
+      <LineId Id="1293" Count="0" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="1292" Count="0" />
+      <LineId Id="680" Count="2" />
+      <LineId Id="1294" Count="1" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="1296" Count="0" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="684" Count="0" />
+      <LineId Id="1297" Count="1" />
+      <LineId Id="685" Count="0" />
+      <LineId Id="1299" Count="0" />
+      <LineId Id="595" Count="0" />
+      <LineId Id="1300" Count="0" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="1388" Count="0" />
+      <LineId Id="689" Count="0" />
+      <LineId Id="1389" Count="0" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="1301" Count="0" />
+      <LineId Id="691" Count="0" />
+      <LineId Id="1390" Count="0" />
+      <LineId Id="692" Count="0" />
+      <LineId Id="1391" Count="0" />
+      <LineId Id="690" Count="0" />
+      <LineId Id="1302" Count="0" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="1392" Count="0" />
+      <LineId Id="695" Count="0" />
+      <LineId Id="1393" Count="1" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="1303" Count="0" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="1395" Count="0" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="1396" Count="1" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="1304" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="1398" Count="1" />
+      <LineId Id="700" Count="0" />
+      <LineId Id="1400" Count="1" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="582" Count="1" />
+      <LineId Id="1402" Count="1" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="1404" Count="2" />
+      <LineId Id="277" Count="1" />
+      <LineId Id="1407" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="1408" Count="1" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="1410" Count="1" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="1413" Count="1" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="1415" Count="1" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="1418" Count="1" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="1420" Count="1" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="1422" Count="1" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="1425" Count="1" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="858" Count="0" />
+      <LineId Id="860" Count="0" />
+      <LineId Id="1481" Count="0" />
+      <LineId Id="862" Count="0" />
+      <LineId Id="1477" Count="1" />
+      <LineId Id="863" Count="0" />
+      <LineId Id="866" Count="0" />
+      <LineId Id="1427" Count="0" />
+      <LineId Id="867" Count="0" />
+      <LineId Id="1479" Count="1" />
+      <LineId Id="859" Count="0" />
+      <LineId Id="868" Count="1" />
+      <LineId Id="1428" Count="0" />
+      <LineId Id="1476" Count="0" />
+      <LineId Id="1429" Count="0" />
+      <LineId Id="2402" Count="2" />
+      <LineId Id="2461" Count="32" />
+      <LineId Id="2406" Count="0" />
+      <LineId Id="857" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="2415" Count="0" />
+      <LineId Id="2410" Count="0" />
+      <LineId Id="2417" Count="0" />
+      <LineId Id="2432" Count="2" />
+      <LineId Id="2437" Count="0" />
+      <LineId Id="2431" Count="0" />
+      <LineId Id="2416" Count="0" />
+      <LineId Id="2411" Count="0" />
+      <LineId Id="2414" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="1430" Count="0" />
+      <LineId Id="2732" Count="4" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="1113" Count="0" />
+      <LineId Id="170" Count="18" />
+      <LineId Id="1114" Count="1" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="1461" Count="0" />
+      <LineId Id="201" Count="1" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="1850" Count="0" />
+      <LineId Id="1852" Count="3" />
+      <LineId Id="1851" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="208" Count="1" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="2030" Count="0" />
+      <LineId Id="2032" Count="1" />
+      <LineId Id="2031" Count="0" />
+      <LineId Id="2036" Count="0" />
+      <LineId Id="2068" Count="2" />
+      <LineId Id="2056" Count="0" />
+      <LineId Id="973" Count="1" />
+      <LineId Id="1645" Count="0" />
+      <LineId Id="1651" Count="0" />
+      <LineId Id="970" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

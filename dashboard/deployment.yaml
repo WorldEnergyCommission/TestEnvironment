@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: lynus
+  labels:
+    app: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: dashboard
+          image: ghcr.io/efficientio/efficientio/dashboard:TAG
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          ports:
+            - name: http
+              containerPort: 80
+          imagePullPolicy: Always
+      nodeSelector:
+        nodetype: large
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: lynus
+  labels:
+    app: dashboard
+spec:
+  selector:
+    app: dashboard
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

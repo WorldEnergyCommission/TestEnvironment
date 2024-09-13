@@ -1,0 +1,2939 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "version": "2021.4",
+    "title": "EfficientIO",
+    "description": "EfficientIO API documentation for developers.",
+    "contact": {
+      "email": "admin@efficientio.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.DOMAIN_VALUE/v1"
+    }
+  ],
+  "security": [
+    {
+      "JWT": []
+    }
+  ],
+  "paths": {
+    "/invoices": {
+      "get": {
+        "summary": "Get all invoices",
+        "operationId": "listInvoices",
+        "tags": ["Invoice"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/assets": {
+      "post": {
+        "summary": "Upload an asset of any type",
+        "operationId": "createAsset",
+        "tags": ["Asset"],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "description": "File to upload",
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/places": {
+      "get": {
+        "summary": "List places",
+        "tags": ["Weather"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Zurich, Switzerland"
+            },
+            "description": "The place of which to get the coordinates"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Place"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/weather": {
+      "get": {
+        "tags": ["Weather"],
+        "summary": "Get weather",
+        "parameters": [
+          {
+            "in": "query",
+            "required": true,
+            "name": "lat",
+            "schema": {
+              "type": "number",
+              "format": "float32",
+              "example": 47.372395
+            }
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "lon",
+            "schema": {
+              "type": "number",
+              "format": "float32",
+              "example": 8.542333
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Weather"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Find User",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "email",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/users/{user_id}": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects": {
+      "post": {
+        "summary": "Create project",
+        "operationId": "createProject",
+        "tags": ["Project"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List projects",
+        "operationId": "listProjects",
+        "tags": ["Project"],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}": {
+      "get": {
+        "summary": "Get project",
+        "operationId": "getProject",
+        "tags": ["Project"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update project",
+        "operationId": "updateProject",
+        "tags": ["Project"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectOptionsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Patch project",
+        "operationId": "patchProject",
+        "tags": ["Project"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete project",
+        "operationId": "deleteProject",
+        "tags": ["Project"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/reports": {
+      "get": {
+        "summary": "Get a list of project reports",
+        "operationId": "getReports",
+        "tags": ["Report"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Report"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new project report",
+        "operationId": "createProjectReport",
+        "tags": ["Report"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/reports/{report_id}": {
+      "get": {
+        "summary": "Get a report",
+        "operationId": "getReport",
+        "tags": ["Report"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/ReportParam"
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "type": "string",
+              "enum": ["pdf", "json", "csv"],
+              "default": "pdf"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float64",
+              "example": "1625557925"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float64",
+              "example": "1625557925"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a project report",
+        "operationId": "updateProjectReport",
+        "tags": ["Report"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/ReportParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a report",
+        "operationId": "deleteReport",
+        "tags": ["Report"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/ReportParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/documents": {
+      "get": {
+        "summary": "Get a list of project assets",
+        "operationId": "getAssets",
+        "tags": ["Asset"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Asset"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new project asset",
+        "operationId": "createProjectAsset",
+        "tags": ["Asset"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "upload_url": {
+                      "type": "string"
+                    },
+                    "form": {
+                      "type": "object"
+                    },
+                    "asset": {
+                      "$ref": "#/components/schemas/Asset"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/documents/{document_id}": {
+      "delete": {
+        "summary": "Delete a project asset",
+        "operationId": "deleteProjectAsset",
+        "tags": ["Asset"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DocumentParam"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/collections": {
+      "post": {
+        "summary": "Create collection",
+        "operationId": "createCollection",
+        "tags": ["Collection"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List collections",
+        "operationId": "listCollections",
+        "tags": ["Collection"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Collection"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/collections/{collection_id}": {
+      "get": {
+        "summary": "Get collection",
+        "operationId": "getCollection",
+        "tags": ["Collection"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/CollectionParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update collection",
+        "operationId": "updateCollection",
+        "tags": ["Collection"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/CollectionParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete collection",
+        "operationId": "deleteCollection",
+        "tags": ["Collection"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/CollectionParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/devices": {
+      "post": {
+        "summary": "Create device",
+        "operationId": "createDevice",
+        "tags": ["Device"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List devices",
+        "operationId": "listDevices",
+        "tags": ["Device"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Device"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/devices/{device_id}": {
+      "get": {
+        "summary": "Get device",
+        "operationId": "getDevice",
+        "tags": ["Device"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/DeviceParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update device",
+        "operationId": "updateDevice",
+        "tags": ["Device"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/DeviceParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete device",
+        "operationId": "deleteDevice",
+        "tags": ["Device"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/DeviceParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/devices/chartOptions/{device_id}": {
+      "put": {
+        "summary": "Update the chart options period and interval",
+        "operationId": "updateChartOptions",
+        "tags": ["Device"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/DeviceParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChartOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/alerts": {
+      "get": {
+        "tags": ["Alert"],
+        "summary": "List Alerts",
+        "operationId": "listMembers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "accepted",
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "description": "Filter by accepted (only show accepted or not accepted)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Alert"
+                      }
+                    },
+                    "pages": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Alert"],
+        "summary": "Accept all alerts",
+        "operationId": "acceptAllAlerts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/alerts/{alert_id}": {
+      "put": {
+        "tags": ["Alert"],
+        "summary": "Update alert",
+        "operationId": "updateAlert",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/AlertParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Alert"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/members": {
+      "get": {
+        "tags": ["Member"],
+        "summary": "List members",
+        "operationId": "listProjectMembers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Member"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Member"],
+        "summary": "Create member",
+        "operationId": "createMember",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/members/{member_id}": {
+      "get": {
+        "tags": ["Member"],
+        "summary": "Get member",
+        "operationId": "getMember",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/MemberParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Member"],
+        "summary": "Update member",
+        "operationId": "updateMember",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/MemberParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Member"],
+        "summary": "Delete member",
+        "operationId": "deleteMember",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/MemberParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/measurements": {
+      "get": {
+        "tags": ["Measurement"],
+        "summary": "List measurements",
+        "operationId": "listMeasurements",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "number",
+                    "format": "float32"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/measurements/{measurement_id}": {
+      "get": {
+        "tags": ["Measurement"],
+        "summary": "Get measurement",
+        "operationId": "getMeasurement",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/MeasurementParam"
+          },
+          {
+            "in": "query",
+            "name": "at",
+            "description": "get the last point before time",
+            "schema": {
+              "type": "number",
+              "example": 1600948146
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 1600948146
+                    },
+                    "value": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 31.41
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/measurements/{measurement_id}/chart": {
+      "get": {
+        "tags": ["Measurement"],
+        "summary": "Get measurement history",
+        "operationId": "getMeasurementHistory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/MeasurementParam"
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "the start unix timestamp for the aggregation",
+              "example": 1600948146
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "the end unix timestamp for the aggregation",
+              "example": 1602684121
+            }
+          },
+          {
+            "in": "query",
+            "name": "agg",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "with which aggregation function should the data in the interval be aggregated",
+              "enum": [
+                "avg",
+                "avgtw",
+                "integral",
+                "count",
+                "max",
+                "min",
+                "range",
+                "sum",
+                "first",
+                "last",
+                "stddev",
+                "var",
+                "diff",
+                "derivate"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "miss",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "this parameter defines the strategy used to fill up missing aggregated values",
+              "enum": ["locf", "none"],
+              "default": "locf"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tz",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "this parameter defines the requested timezone for aggregations as timezone abbreviation",
+              "default": "UTC"
+            }
+          },
+          {
+            "in": "query",
+            "name": "int",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1s",
+                "5s",
+                "10s",
+                "15s",
+                "30s",
+                "1m",
+                "5m",
+                "10m",
+                "15m",
+                "30m",
+                "45m",
+                "1h",
+                "4h",
+                "6h",
+                "1d",
+                "1w"
+              ]
+            },
+            "description": "Intervals for time (end-start)  * `5s, 10s` <= 3 hours\n  * `15s, 30s, 45s` <= 6 hours\n  * `1m` <= 1 day\n  * `5m, 10m, 15m, 30m, 45m` <= 1 week\n  * `1h` <= 90 days\n  * `4h, 6h, 12h` <= 180 days\n  * `1d` <= 10 years\n"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "example": [
+                    [1600939356, 10.2],
+                    [1600931342, 10.42]
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/favorites/{device_id}": {
+      "put": {
+        "tags": ["Favorite"],
+        "summary": "Add favorite",
+        "operationId": "addFavorite",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/DeviceParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Favorite"],
+        "summary": "Delete favorite",
+        "operationId": "deleteFavorite",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/DeviceParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/rules": {
+      "get": {
+        "tags": ["Rule"],
+        "summary": "List rules",
+        "operationId": "listRules",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Rule"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Rule"],
+        "summary": "create rule",
+        "operationId": "createRule",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rule"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/rules/{rule_id}": {
+      "put": {
+        "tags": ["Rule"],
+        "summary": "Update rule",
+        "operationId": "updateRule",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/RuleParam"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rule"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/InputError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Rule"],
+        "summary": "Delete rule",
+        "operationId": "deleteRule",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectParam"
+          },
+          {
+            "$ref": "#/components/parameters/RuleParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "500": {
+            "$ref": "#/components/responses/UnexpectedError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PatchRequest": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PatchDocument"
+        }
+      },
+      "PatchDocument": {
+        "description": "A JSONPatch document as defined by RFC 6902",
+        "required": ["op", "path"],
+        "properties": {
+          "op": {
+            "type": "string",
+            "description": "The operation to be performed",
+            "enum": ["add", "remove", "replace", "move", "copy", "test"]
+          },
+          "path": {
+            "type": "string",
+            "description": "A JSON-Pointer"
+          },
+          "value": {
+            "type": "object",
+            "description": "The value to be used within the operations"
+          },
+          "from": {
+            "type": "string",
+            "description": "A string containing a JSON Pointer value"
+          }
+        }
+      },
+      "Invoice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float64"
+          },
+          "paid_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Rule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "timeout": {
+            "type": "number"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RuleOptions": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "timeout": {
+            "type": "number"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Condition": {
+        "type": "object",
+        "properties": {
+          "variable": {
+            "type": "string"
+          },
+          "and_or": {
+            "type": "boolean",
+            "description": "`and` if and_or is true, else `or`\n"
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "less",
+              "less_equals",
+              "equals",
+              "not_equals",
+              "greater_equals",
+              "greater"
+            ]
+          },
+          "target": {
+            "type": "number",
+            "format": "float"
+          }
+        }
+      },
+      "Action": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["webhook", "email"]
+          },
+          "params": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "string"
+              },
+              "recipients": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "subject": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string",
+                "enum": ["POST", "PUT", "PATCH", "DELETE", "GET"]
+              },
+              "headers": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Params for alert: * `type` int enum [0 = OK, 1 = WARNING, 2 = ERROR, don't ask me why]\n * `body` string\n\n Params for email:  * `recipients` string array with list of email recipients\n  * `subject` string\n  * `body` string\n\nParams for webhook:  * `url` string\n  * `method` string enum [POST, PUT, DELETE, GET, PATCH]\n  * `headers` map[string]string\n  * `body` string\n"
+          }
+        }
+      },
+      "Asset": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number",
+            "description": "size in bytes"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateReportOptions": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["normal", "zev"]
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "street": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              }
+            }
+          },
+          "currency": {
+            "type": "string",
+            "enum": ["EUR", "CHF", "USD"]
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportVariable"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["email"]
+                },
+                "recipients": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "username@domain.com"
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object"
+          }
+        }
+      },
+      "ReportVariable": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "description": "a title for the variable, since variable names can look cryptic"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit_cost": {
+            "type": "number",
+            "format": "float64"
+          }
+        }
+      },
+      "Report": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["normal", "zev"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "street": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              }
+            }
+          },
+          "currency": {
+            "type": "string",
+            "enum": ["EUR", "CHF", "USD"]
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportVariable"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["email", "webhook"]
+                },
+                "recipients": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "username@domain.com"
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "zev": {
+                "type": "object",
+                "properties": {
+                  "consumers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "producers": {
+                    "type": "object",
+                    "properties": {
+                      "internal": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "external": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "tariffs": {
+                    "type": "object",
+                    "properties": {
+                      "internal": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "maxItems": 7,
+                            "minItems": 7,
+                            "type": "array",
+                            "description": "must contain all 7 days",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "description": "start and end time (in minutes from the start of day) of the low tariff. start needs to be smaller than end",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": {
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          },
+                          "high": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "low": {
+                            "type": "number",
+                            "format": "float"
+                          }
+                        }
+                      },
+                      "external": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "type": "array",
+                            "maxItems": 7,
+                            "minItems": 7,
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": {
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          },
+                          "high": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "low": {
+                            "type": "number",
+                            "format": "float"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Place": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "example": "Zurich, Switzerland"
+          },
+          "lat": {
+            "type": "number",
+            "format": "float64",
+            "example": 47.372395
+          },
+          "lon": {
+            "type": "number",
+            "format": "float64",
+            "example": 8.542333
+          }
+        }
+      },
+      "Weather": {
+        "description": "https://openweathermap.org/current#current_JSON",
+        "type": "object",
+        "properties": {
+          "clouds": {
+            "type": "object",
+            "properties": {
+              "all": {
+                "type": "number",
+                "description": "Cloudiness in %"
+              }
+            }
+          },
+          "coord": {
+            "type": "object",
+            "properties": {
+              "lon": {
+                "type": "number",
+                "format": "float32",
+                "description": "City geo location, longitude"
+              },
+              "lat": {
+                "type": "number",
+                "format": "float32",
+                "description": "City geo location, latitude"
+              }
+            }
+          },
+          "dt": {
+            "type": "number",
+            "format": "timestamp",
+            "description": "Time of data calculation, unix, UTC"
+          },
+          "main": {
+            "type": "object",
+            "properties": {
+              "feels_like": {
+                "type": "number",
+                "format": "float32",
+                "description": "Temperature. This temperature parameter accounts for the human perception of weather. Unit in Celsius"
+              },
+              "humidity": {
+                "type": "number",
+                "format": "float32",
+                "description": "Humidity in %"
+              },
+              "pressure": {
+                "type": "number",
+                "format": "float32"
+              },
+              "temp": {
+                "type": "number",
+                "format": "float32"
+              },
+              "temp_max": {
+                "type": "number",
+                "format": "float32"
+              },
+              "temp_min": {
+                "type": "number",
+                "format": "float32"
+              }
+            }
+          },
+          "timezone": {
+            "type": "number",
+            "format": "float32",
+            "description": "Shift in seconds from UTC"
+          },
+          "wind": {
+            "type": "object",
+            "properties": {
+              "deg": {
+                "type": "number",
+                "description": "Wind direction in degrees (meteorological)"
+              },
+              "speed": {
+                "type": "number",
+                "format": "float32"
+              }
+            }
+          },
+          "weather": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "example": "broken clouds"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "number",
+                  "description": "Weather condition id"
+                },
+                "main": {
+                  "type": "string",
+                  "example": "Clouds",
+                  "description": "Group of weather parameters (Rain, Snow, Extreme etc.)"
+                }
+              }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "admin": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MemberOptions": {
+        "type": "object",
+        "properties": {
+          "admin": {
+            "description": "When creating am member admin will always be false, regardless of what you supply",
+            "type": "boolean"
+          },
+          "owner": {
+            "description": "A user can only give himself owner (and he has to be an administrator)",
+            "type": "boolean"
+          }
+        }
+      },
+      "Limits": {
+        "type": "object",
+        "properties": {
+          "collections": {
+            "type": "number"
+          },
+          "devices": {
+            "type": "number"
+          },
+          "members": {
+            "type": "number"
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "secret": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "meta": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "device": {
+                "type": "number"
+              },
+              "collections": {
+                "type": "number"
+              },
+              "members": {
+                "type": "number"
+              },
+              "warnings": {
+                "type": "number"
+              },
+              "errors": {
+                "type": "number"
+              }
+            }
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "connectivity": {
+            "description": "not shows when listing projects, only on GET project",
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Action"
+                }
+              },
+              "last": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "ProjectOptions": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object"
+          },
+          "connectivity": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Action"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProjectOptionsUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object"
+          },
+          "connectivity": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Action"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Alert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "type": {
+            "type": "number",
+            "enum": [0, 1, 2],
+            "description": "0 = OK, 1 = WARNING, 2 = ERROR"
+          },
+          "accepted_by": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Collection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CollectionOptions": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object"
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "favorite": {
+            "type": "boolean"
+          },
+          "collection_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DeviceOptions": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "collection_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateChartOptions": {
+        "type": "object",
+        "properties": {
+          "period_name": {
+            "type": "string"
+          },
+          "interval": {
+            "type": "object"
+          }
+        }
+      },
+      "AssetOptions": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "content_type": {
+            "type": "string"
+          }
+        }
+      },
+      "Role": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "is_admin": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RoleOptions": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "is_admin": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "MeasurementParam": {
+        "in": "path",
+        "name": "measurement_id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "RuleParam": {
+        "in": "path",
+        "name": "rule_id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "ReportParam": {
+        "in": "path",
+        "name": "report_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "ProjectParam": {
+        "in": "path",
+        "name": "project_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "AlertParam": {
+        "in": "path",
+        "name": "alert_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "DocumentParam": {
+        "in": "path",
+        "name": "document_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "DeviceParam": {
+        "in": "path",
+        "name": "device_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "CollectionParam": {
+        "in": "path",
+        "name": "collection_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "RoleParam": {
+        "in": "path",
+        "name": "role_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "MemberParam": {
+        "in": "path",
+        "name": "member_id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "responses": {
+      "UnexpectedError": {
+        "description": "Unexpected Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "InputError": {
+        "description": "Data was not correctly sent or is missing",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "UnauthorizedError": {
+        "description": "Not authorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "JWT": {
+        "description": "",
+        "type": "http",
+        "name": "Authorization",
+        "scheme": "bearer",
+        "in": "header"
+      }
+    }
+  }
+}

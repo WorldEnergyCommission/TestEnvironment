@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCom" Id="{d858db40-3f09-4afd-998a-78d8dc65504e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCom
+VAR
+	fbCom			: FB_MqttCommunicator;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	sUserName:= '72fdbad2-fabb-42d1-92f3-804e54f17da8', 
+	sUserPassword:= '6f851dd6-91ab-45c0-a514-6f2b6955b811', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionC, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgCom">
+      <LineId Id="7" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

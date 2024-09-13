@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_EHE_GVL" Id="{b29f3876-328d-4c4a-bfae-3235975105bd}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_EHE_GVL :
+STRUCT
+	//Data from the electric heating element to the GVL to other functions.
+	{attribute 'hide'}
+	bEnabled									: BOOL;										//Heating element is enabled
+	{attribute 'hide'}
+	bIsStepSwitched								: BOOL;										//Heating element is step switched or not
+	{attribute 'hide'}
+	bIsControllable 							: BOOL;										//Heating element is controllable
+	{attribute 'hide'}
+	byPriority									: BYTE; 									//Priority of the device if controlled via the EMS block => 1 2 3 (If 0 then this device does not exist for the EMS block)
+	{attribute 'hide'}
+	byErrorWarning								: BYTE;										//Show if the function has a Error or a Warning
+	{attribute 'hide'}
+	byNumberOfSteps								: BYTE;										//Numer of steps form the heating element
+	{attribute 'hide'}
+	arrMaxPower									: ARRAY[1..10] OF REAL; 					//Maximum power of the load in kW (Per stage) (If no stage or only On Off then max power in array[1])
+	{attribute 'hide'}
+	lrPower										: LREAL;									//Actual power heating element with unit kW
+	{attribute 'hide'}
+	lrPowerConsumption							: LREAL;									//Consumption heating element with unit kW
+	{attribute 'hide'}
+	lrPowerProduction							: LREAL;									//Production heating element with unit kW
+	//Data from the EMS function to the GVL to the electric heating element function.
+	{attribute 'hide'}
+	arrTargetPowerEMS							: ARRAY[1..10] OF REAL;						//Target power from 0% to +100% from the EMS function
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,303 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_ModBus_2Registers" Id="{9a67a8d5-d423-4929-9fce-b957a4a37ac5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ModBus_2Registers
+VAR_INPUT PERSISTENT
+	m_Enable					: BOOL;						//Enable the Fuctionblock and his logic
+	str_IPAdress				: STRING(15);				//IP Adress of the meter
+	w_Adress					: WORD;						//modbus adress
+	int_Divider					: INT;						//Devider of the received data
+END_VAR
+VAR_OUTPUT
+	m_PollSuccessful			: BOOL;						//Poll succesfull		
+	r_ReceivedValue				: REAL;						//Received Value
+	udint_Error_ID				: UDINT;					// ERR ID FB_MBReadRegs
+END_VAR
+VAR
+	{attribute 'hide'}
+	timer_Delay					: TON;						//Timer for Delay between Requests
+	{attribute 'hide'}
+	timer_DelayStart			: TON;						//Timer to start the state machine with Delay after enabling or after the system ist restartet
+	{attribute 'hide'}
+	timer_TimeOut				: TON;						//Timer for Timeout MB Read
+	{attribute 'hide'}
+	iStateModbusRead			: INT;						//State machine for read out Data over Modbus RTU
+	{attribute 'hide'}
+	fbMBRead_FC3				: FB_MBReadRegs ;		//Modbus Read Function (FC3)
+	{attribute 'hide'}
+	ftrig_PEnable				: f_trig;					//Internal positive Edge
+	{attribute 'hide'}
+	iStateModbusError			: INT;						//State machine for error out Data over Modbus TCP/IP	
+	{attribute 'hide'}
+	FPError_FC_3				: R_TRIG;					//Internal positive Edge
+	{attribute 'hide'}
+	arrBuffer_FC3				: ARRAY[1..2] OF WORD;		//Buffer with Data from FC3
+	{attribute 'hide'}
+	timer_Connection_ok			: TON;
+	int_Data_Received			: INT;
+	{attribute 'hide'}
+	m_MBTCPError				: BOOL;
+	{attribute 'hide'}
+	int_Data_Received_old		: INT;
+	{attribute 'hide'}
+	timer_Connection_ok_TOF	: TOF;
+	{attribute 'hide'}
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	{attribute 'hide'}
+	usintSign					: USINT;						// converstion dword to real	
+	{attribute 'hide'}
+	intExponent					: INT;							// converstion dword to real
+	{attribute 'hide'}
+	realMantisse				: REAL;							// converstion dword to real
+	{attribute 'hide'}
+	m_Poll_ok: BOOL;
+	{attribute 'hide'}
+	timer_Wait: Ton;
+	int_TimeoutError: INT;
+	int_FC3Error: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+
+w_Adress := LIMIT(0,w_Adress,32767);
+int_Divider := LIMIT(1,int_Divider,32767);
+	
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timer_Delay(IN:= , PT:= T#50MS, Q=> , ET=> );
+
+//Timer for Timeout in Statemachine
+IF (iStateModbusRead > 0 AND iStateModbusRead < 3) THEN
+	timer_Timeout.IN := TRUE;
+ELSE	
+	timer_Timeout.IN := FALSE;
+END_IF 
+
+//Timeout Timer is dissabled when the Init Step is aktiv or the function is not enabled
+IF iStateModbusRead = 0 OR NOT m_Enable THEN 
+	timer_Timeout.IN := FALSE; 
+END_IF
+timer_Timeout(IN:= , PT:= T#1S, Q=> , ET=> );
+
+//Enable with Delay that not all sockets have to be created at the same time
+timer_DelayStart(IN:= m_Enable, PT:= T#1S, Q=> , ET=> );
+ftrig_PEnable(CLK:= timer_DelayStart.Q, Q=> );
+
+IF ftrig_PEnable.Q AND iStateModbusRead = 0 THEN 
+	iStateModbusRead := 1; 
+END_IF		
+		
+//Not Enabled
+IF NOT m_Enable THEN 
+	iStateModbusRead := 0; 
+	iStateModbusError := 0; 
+END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step 
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+	
+		iStateModbusRead := 1;
+	
+	1://read the required registers
+		//Start Read
+		fbMBRead_FC3.nQuantity := 2;
+		fbMBRead_FC3.nMBAddr := w_Adress;
+		fbMBRead_FC3.bExecute := TRUE;
+		fbMBRead_FC3.nUnitID := 1;
+		IF fbMBRead_FC3.bBusy THEN 
+			timer_Delay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timer_Delay.Q THEN
+			m_Poll_ok:=TRUE;
+			int_Data_Received:=int_Data_Received+1;
+			m_MBTCPError := FALSE; 
+			// convert received data
+			
+			// dword conversion not tested. Phoenix device sends data in 4 registers
+			//		IF m_ConversionToFloat32 = FALSE THEN
+			//			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[1], wInputValue_2:= arrBuffer_FC3[2], eByteOrderForConvert:= eByteOrder.eLittleEndian, dwOutputValue=> );
+			//			r_ReceivedValue := (DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue))/int_Divider;
+			//		ELSE
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[1], wInputValue_2:= arrBuffer_FC3[2], eByteOrderForConvert:= eByteOrder.eLittleEndian , dwOutputValue=> );
+			(* Sign *)
+			usintSign:=BOOL_TO_USINT(fbConvertWordToDword.dwOutputValue.31);
+			(* Exponent *)
+			intExponent:=DWORD_TO_INT(SHR(fbConvertWordToDword.dwOutputValue,23) AND 16#FF);
+			(* Mantisse *)
+			realMantisse:=DWORD_TO_REAL(fbConvertWordToDword.dwOutputValue AND 16#7FFFFF);
+			(* Result *)
+			r_ReceivedValue := LREAL_TO_REAL((EXPT((-1),usintSign) * (1+realMantisse/8388608) * EXPT(2,intExponent-127))/int_Divider);
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timer_Delay.IN := FALSE;		
+			iStateModbusRead := 3;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_3.Q THEN 
+			iStateModbusError := 300;
+			int_FC3Error := int_FC3Error+1;
+		ELSIF timer_Timeout.Q THEN   	
+			iStateModbusError := 300;
+			int_TimeoutError := int_TimeoutError+1;
+		END_IF
+		
+	
+	3://Wait and go to step 1
+		//1 because 0 is the Init Step for Read
+		timer_Wait.IN := TRUE;
+		
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 1;
+			timer_Wait.IN :=FALSE;
+		END_IF
+
+			
+		
+		//Error on Master, changes on Inputs or Timeout
+		IF timer_Timeout.Q THEN 
+			iStateModbusError := 300; 
+		END_IF
+	
+END_CASE
+
+(* wait timer*)
+
+timer_Wait(PT:=T#3S);
+
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+ 
+timer_Connection_ok			(In:=int_Data_Received<>int_Data_Received_old,PT:=T#10S);
+timer_Connection_ok_TOF		(In:=NOT(int_Data_Received<>int_Data_Received_old) AND int_Data_Received>3 ,PT:=T#20S);
+int_Data_Received_old:=int_Data_Received;
+m_PollSuccessful:=NOT timer_Connection_ok.Q AND timer_Connection_ok_TOF.Q ;
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(	sIPAddr:= str_IPAdress, 
+				nTCPPort:= 502,
+				cbLength:= SIZEOF(arrBuffer_FC3), 
+				pDestAddr:= ADR(arrBuffer_FC3), 
+				tTimeout:= T#10S,
+				nErrId => udint_Error_ID);
+
+FPError_FC_3(CLK:= fbMBRead_FC3.  bError, Q=> );		
+
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		timer_Wait.IN :=TRUE;
+		timer_Delay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		m_MBTCPError := TRUE; 		
+		m_Poll_ok:=FALSE;
+		int_Data_Received:=0;
+				//Restart from new with the Read out part after an Error
+		IF timer_Wait.Q = TRUE THEN
+			iStateModbusRead := 0;	
+			iStateModbusError := 0;
+			timer_Wait.IN :=FALSE;
+		END_IF		
+							
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ModBus_2Registers">
+      <LineId Id="23" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="32" Count="7" />
+      <LineId Id="41" Count="2" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="182" Count="1" />
+      <LineId Id="46" Count="6" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="53" Count="2" />
+      <LineId Id="194" Count="2" />
+      <LineId Id="56" Count="3" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="283" Count="1" />
+      <LineId Id="66" Count="1" />
+      <LineId Id="73" Count="4" />
+      <LineId Id="200" Count="2" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="328" Count="1" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="264" Count="1" />
+      <LineId Id="267" Count="1" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="90" Count="6" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="386" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="375" Count="2" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="153" Count="2" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="365" Count="1" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="159" Count="2" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="209" Count="3" />
+      <LineId Id="215" Count="3" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="234" Count="4" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="240" Count="2" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="380" Count="1" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="28" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgGrid" Id="{7baeccdf-076f-481e-be2b-3e357576b311}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR PERSISTENT
+	rSizeGridConn				: REAL;									//{#lynus.ag#()}
+END_VAR
+VAR
+	fbGrid						: FB_Grid_Power_Ext_Input;
+	lrGridPower					: LREAL;								//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF prgCS1.byErrorWarningDC_1 = 2 THEN fbGrid.bExtErrorGrid := TRUE; ELSE fbGrid.bExtErrorGrid := FALSE; END_IF
+
+fbGrid(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	rSizeGridConn:= rSizeGridConn, 
+	bExtErrorGrid:= , 
+	lrExtGridPower:= prgCS1.fbApliT_1.lrTotalPowerECSRealTime, 
+	lrExtTotalCounterEnergy_Consumption:= 0, 
+	lrExtTotalCounterEnergy_Production:= 0, 
+	lrExtCounterEnergyT1_Consumption:= 0, 
+	lrExtCounterEnergyT2_Consumption:= 0, 
+	lrExtCounterEnergyT1_Production:= 0, 
+	lrExtCounterEnergyT2_Production:= 0, 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );
+	
+lrGridPower := fbGrid.stDataGrid.lrPower;]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="25" Count="1" />
+      <LineId Id="12" Count="12" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="35" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

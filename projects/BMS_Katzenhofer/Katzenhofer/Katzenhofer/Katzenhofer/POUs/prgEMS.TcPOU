@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEMS" Id="{31a9ec2d-f516-494e-ad55-a36d7da724f5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR PERSISTENT
+	byMaxDepthOfDischrgEPO		: BYTE;							//{#lynus.ag#()}
+	byPrioMinChrgBattSOCInEPO	: BYTE;							//{#lynus.ag#()}
+	byResChrgfromGridToBatt		: BYTE;							//{#lynus.ag#()}
+	byReserveSOCEPO				: BYTE;							//{#lynus.ag#()}
+	uiUpdateTime				: UINT;							//{#lynus.ag#()}
+	bEnableEMS					: BOOL;							//{#lynus.ag#()}
+	bAllowChrgFromGrid			: BOOL;							//{#lynus.ag#()}
+	rMainFuseCSEMS				: REAL;							//{#lynus.ag#()}
+	iOperationModeEMS			: INT;							//{#lynus.ag#()}
+	by_MinSOC_AdaptiveLC		: BYTE;							//{#lynus.ag#()}
+END_VAR
+VAR
+	fbEMS						: FB_EMS_V12;
+	bIsEnableEMS				: BOOL;							//{#lynus.ag#()}
+	bStateAllowChrgFromGrid		: BOOL;							//{#lynus.ag#()}
+	bHPActivate					: BOOL;							//{#lynus.ag#()}
+	bControllingState			: BOOL;							//{#lynus.ag#()}
+	iMessageEMS					: INT;							//{#lynus.ag#()}
+	rHeartbeatEMS				: REAL;							//{#lynus.ag#()}
+	rErrorWarningEMS			: REAL;							//{#lynus.ag#()}
+	rReadyEMS					: REAL;							//{#lynus.ag#()}
+	rNewBatteryPowerEMS			: REAL;							//{#lynus.ag#()}
+	fbRestart					: NT_Reboot;
+	byte_test: BYTE;
+	real_test: REAL;
+	m_test: BOOL;
+	lreal_Test: LREAL;
+	m_test2: BOOL;
+	by_test: BYTE;
+	m_Test3: BOOL;
+	m_ZeroPowerRegulationActive: BOOL:=FALSE;					//{#lynus.ag#()}
+	m_Enable_Dynamic_LM: BOOL;
+	timer_CarConnected_CSPowerlow: Ton;
+	m_ByteTemp: BOOL;					//{#lynus.ag#()}
+	dw_Test: DWORD;
+	iOperationModeEMS_actual	: INT;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbEMS.stSetupEMS.bAllowChrgFromGrid := bAllowChrgFromGrid;
+fbEMS.stSetupEMS.byMaxDepthOfDischrgEPO := byMaxDepthOfDischrgEPO;
+fbEMS.stSetupEMS.byPrioMinChrgBattSOCInEPO := byPrioMinChrgBattSOCInEPO;
+fbEMS.stSetupEMS.byResChrgfromGridToBatt := byResChrgfromGridToBatt;
+fbEMS.stSetupEMS.byReserveSOCEPO := byReserveSOCEPO;
+fbEMS.stSetupEMS.rSizeMainFuseCS := rMainFuseCSEMS;
+fbEMS.stSetupEMS.uiUpdateTime := uiUpdateTime;
+
+
+(*
+IF m_Enable_Dynamic_LM THEN
+	IF prgBattery.dwSOCBattery > byMinSOCdynamicLM AND NOT prgCS.bCarConnected THEN
+		iOperationModeEMS := 1;		// Eigenbedarfsoptimierung
+	ELSE
+		iOperationModeEMS := 3;		// Lastmanagement
+	END_IF  
+END_IF
+*)
+
+IF iOperationModeEMS = 0 THEN fbEMS.eOperationMode_Ext := E_OperatingMode_EMS.eAllOff;
+ELSIF iOperationModeEMS = 1 THEN fbEMS.eOperationMode_Ext := E_OperatingMode_EMS.eSelfConsumption;	
+ELSIF iOperationModeEMS = 2 THEN fbEMS.eOperationMode_Ext := E_OperatingMode_EMS.ePeakLoadCapping;
+ELSIF iOperationModeEMS = 3 THEN fbEMS.eOperationMode_Ext := E_OperatingMode_EMS.eLoadManagement;			
+ELSIF iOperationModeEMS = 4 THEN fbEMS.eOperationMode_Ext := E_OperatingMode_EMS.eAdaptiveLoadControl;			
+
+END_IF
+
+fbEMS(
+	bEnable:= bEnableEMS, 
+	diNrOfEM_IN_ECS:= , 
+	stSetupEMS:= , 
+	eOperationMode_Ext:= , 
+	eSpeedModeBackendController:= E_SpeedModeBackendController_EMS.eSlow, 
+	eSpeedModeLocalController:= E_SpeedModeLocalController_EMS.eSlow,
+	bZeroPowerRegulation := m_ZeroPowerRegulationActive,
+	by_MinSOC_AdaptiveLC:= by_MinSOC_AdaptiveLC , 
+	bActivateHP:= bHPActivate, 
+	bControllingState:= TRUE, //bControllingState, 
+	rHeartbeat:= rHeartbeatEMS, 
+	rErrorWarning:= rErrorWarningEMS, 
+	rEnergyOptReady:= rReadyEMS, 
+	rNewBattPower:= rNewBatteryPowerEMS, 
+	b_AnyCarConnected:= prgCS.bCarConnected, 
+	eMessageEMS=> iMessageEMS, 
+	bStateEnable=> bIsEnableEMS, 
+	bStateAllowChrgFromGrid=> bStateAllowChrgFromGrid, 
+	bMissingPowerData=> , 
+	bSurplusAvailable=> , 
+	byProgress=> , 
+	uiState_OUT=> , 
+	diNrOfEMS_OUT=> , 
+	arrMinPrioReached=> , 
+	arrMaxPrioReached=> );
+
+	
+iOperationModeEMS_actual := fbEMS.eOperationMode;
+	
+fbRestart(
+	NETID:= , 
+	DELAY:= , 
+	START:= , 
+	TMOUT:= , 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> );
+	
+
+timer_CarConnected_CSPowerlow( 	IN := prgCS.bCarConnected AND prgCS.lrPowerCS < 2,	// required to get out of zero power regulation if a car is connected all night long
+								PT := T#10M);
+							
+m_ZeroPowerRegulationActive := prgCS.bCarConnected AND NOT timer_CarConnected_CSPowerlow.Q;
+	
+// TEMP
+
+real_test:= Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].rTargetPowerEMS;
+
+
+//byte_test:=Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].byPriority;
+ 
+//m_test:=Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].bEnabled; 
+//Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].rTargetPowerEMS 
+//Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].rTargetPowerEMS + rValuePercentToControllableDevices;
+		
+ lreal_Test:=fbEMS.lrPowerDiffFuseECS;
+ 
+m_test2:=Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].bIsControllable;
+by_test:=Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].byPriority;
+//by_test:=Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,fbEMS.arrLPPrioZeroSetToZeroP[5]].byPriority;
+by_test:= Lynus_Standards.GVL_Energy.stDataElectricChargingStations[1,1].byPriority; 
+ 
+m_Test3:=Lynus_Standards.GVL_Energy.stDataElectricMeters[1].bEnabled ;
+
+						]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="29" Count="6" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="322" Count="6" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="37" Count="3" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="378" Count="4" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="406" Count="5" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="413" Count="2" />
+      <LineId Id="397" Count="5" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="458" Count="1" />
+      <LineId Id="67" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="162" Count="2" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="121" Count="1" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="374" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Decode_Json_Iosys" Id="{3d550ab8-a687-4b3b-b84e-b7b61a5c2186}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Decode_Json_Iosys
+VAR_INPUT
+	{attribute 'hide'}
+	bExecute				: BOOL;										//Start the decoding
+	{attribute 'hide'}
+	sContent				: STRING(35000);							//Received Content
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bDone					: BOOL;										//Function Done
+	{attribute 'hide'}
+	sToken		      		: STRING(255);								//Last Token from the content
+	{attribute 'hide'}
+	arrValuesIosys			: ARRAY[0..249] OF ST_Values_Iosys;			//Datapoints with Value in a array
+END_VAR
+VAR
+	fbJson            		: FB_JsonDomParser;							//Function Json Parser
+	FPExecute				: R_TRIG;									//Internal positive edge
+	jsonDoc           		: SJsonValue;								//Initila Json Value							
+	//First Array
+	jsonIteratorStartA1		: SJsonIterator;							//Json Start Ilaterator from the 1 Array
+	jsonIteratorEndA1		: SJsonIterator;							//Json End Ilaterator from the 1 Array
+	jsonValA1_A2         	: SJsonValue;								//Json Value to Get Array Value
+	jsonValA1_1         	: SJsonValue;								//Json Value to find Member for the token
+	uiCounter				: UINT;										//Counter to find Values in 1 and 2 Array from received Json
+	//Second Array 1 Loop to get Array Value
+	jsonIteratorStartA2_1	:  SJsonIterator;							//Json Start Ilaterator from the 2 Array to check all Members
+	jsonIteratorEndA2_1		:  SJsonIterator;							//Json End Ilaterator from the 2 Array to check all Members
+	//Second Array 2 Loop to get Member value
+	jsonIteratorStartA2_2	: SJsonIterator;							//Json Start Ilaterator from the 2 Array to check all Values from the necessary Members
+	jsonIteratorEndA2_2		: SJsonIterator;							//Json End Ilaterator from the 2 Array to check all Values from the necessary Members
+	jsonValA2_1         	: SJsonValue;								//Json Value to Get Array Value
+	jsonValA2_2        		: SJsonValue;								//Json Value to Get the Member Value
+	byLoop					: BYTE;										//Loop to clear the Output Array befor insert the new Data
+	uiCounterArray			: UINT;										//Counter to fill the Values in the Output Array
+	sMember					: STRING(255);								//String with the member name
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.02.2021
+//Version : 1.0.0.0
+
+//With this Fuction is possible to decode the Json String that we received from the Iosys Interface from the Aprol Server from the B&R Comapny
+//The Message arrives allwas in 2 Arrays. In the 1 Array is the Token from the last request. In the 2 Array all Datapoints with the Values from the Request
+
+FPExecute(CLK:= bExecute, Q=> );
+	jsonDoc:= fbJson.ParseDocument(sContent);
+		uiCounter := 0;
+			uiCounterArray := 0;
+
+bDone := FALSE;
+	
+IF jsonDoc <> 0 AND FPExecute.Q THEN
+	
+	//Clear Array
+	FOR byLoop := 0 TO 249 BY 1 DO
+		arrValuesIosys[byLoop].sId := '';
+			arrValuesIosys[byLoop].sTimestamp := '';
+				arrValuesIosys[byLoop].sValue := '';
+					arrValuesIosys[byLoop].bNoValue := FALSE;	
+	END_FOR
+
+jsonIteratorStartA1 := fbJson.ArrayBegin(jsonDoc);
+jsonIteratorEndA1 := fbJson.ArrayEnd(jsonDoc);
+	//Check the first Array with the token
+	WHILE jsonIteratorStartA1 <> jsonIteratorEndA1 DO
+		uiCounter := uiCounter + 1;
+		jsonValA1_A2 := fbJson.GetArrayValue(jsonIteratorStartA1);
+			IF uiCounter = 1 AND fbJson.HasMember(jsonValA1_A2,'token') AND jsonValA1_A2 <> 0 THEN 
+				jsonValA1_1 := fbJson.FindMember(jsonValA1_A2,'token'); 
+				IF jsonValA1_1 <> 0 AND fbJson.IsString(jsonValA1_1) THEN sToken := fbJson.GetString(jsonValA1_1); END_IF
+			END_IF
+				IF uiCounter = 2 THEN 
+					jsonIteratorStartA2_1 := fbJson.ArrayBegin(jsonValA1_A2);
+					jsonIteratorEndA2_1 := fbJson.ArrayEnd(jsonValA1_A2);
+						//Check the second Array to parse all menbers 
+						WHILE jsonIteratorStartA2_1 <> jsonIteratorEndA2_1 DO
+							jsonValA2_1 := fbJson.GetArrayValue(jsonIteratorStartA2_1);	
+								IF jsonValA2_1 <> 0 THEN
+									jsonIteratorStartA2_2 := fbJson.MemberBegin(jsonValA2_1);
+									jsonIteratorEndA2_2 := fbJson.MemberEnd(jsonValA2_1);
+										//Check necessary member in Second Array for the values
+										WHILE jsonIteratorStartA2_2 <> jsonIteratorEndA2_2 DO
+											sMember := fbJson.GetMemberName(jsonIteratorStartA2_2);
+												IF sMember = 'ts' THEN 
+													jsonValA2_2 := fbJson.GetMemberValue(jsonIteratorStartA2_2); 
+														IF fbJson.IsString(jsonValA2_2) AND jsonValA2_2 <> 0 THEN arrValuesIosys[uiCounterArray].sTimestamp := fbJson.GetString(jsonValA2_2); END_IF
+												END_IF
+												IF sMember = 'id' THEN 
+													jsonValA2_2 := fbJson.GetMemberValue(jsonIteratorStartA2_2); 
+														IF fbJson.IsString(jsonValA2_2) AND jsonValA2_2 <> 0 THEN arrValuesIosys[uiCounterArray].sId := fbJson.GetString(jsonValA2_2); END_IF
+												END_IF
+												IF sMember = 'val' THEN 
+													jsonValA2_2 := fbJson.GetMemberValue(jsonIteratorStartA2_2); 
+														IF fbJson.IsString(jsonValA2_2) AND jsonValA2_2 <> 0 THEN arrValuesIosys[uiCounterArray].sValue := fbJson.GetString(jsonValA2_2); END_IF
+												END_IF
+													jsonIteratorStartA2_2 := fbJson.NextMember(jsonIteratorStartA2_2);
+										END_WHILE
+											IF arrValuesIosys[uiCounterArray].sValue = '' THEN arrValuesIosys[uiCounterArray].bNoValue := TRUE; END_IF
+											uiCounterArray := uiCounterArray + 1;
+												uiCounterArray := LIMIT(0,uiCounterArray,249);
+								END_IF
+								jsonIteratorStartA2_1 := fbJson.NextArray(jsonIteratorStartA2_1);
+						END_WHILE
+					END_IF
+			jsonIteratorStartA1 := fbJson.NextArray(jsonIteratorStartA1);
+	END_WHILE
+	//If min the token is received then the function is done
+	IF sToken <> '' THEN bDone := TRUE;	END_IF			
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Decode_Json_Iosys">
+      <LineId Id="157" Count="2" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="172" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="146" Count="1" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="151" Count="2" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="37" Count="9" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="47" Count="4" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="92" Count="2" />
+      <LineId Id="103" Count="2" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="107" Count="2" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="111" Count="1" />
+      <LineId Id="58" Count="4" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="73" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

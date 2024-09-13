@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgLynusCom" Id="{383ca695-4bbf-4213-9a92-fe555ff7f8d2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgLynusCom
+VAR
+	fbCom			: FB_MqttCommunicator;
+	tim				: TON;
+	FPCount			: R_TRIG;
+	FPError			: R_TRIG;
+	uiCount			: UINT;
+END_VAR
+VAR PERSISTENT
+	uiBigestCount			: UINT;
+	byNumberInArray			: BYTE;
+	arrhrErrorCode			: ARRAY[1..100] OF HRESULT;
+	arrConectionState		: ARRAY[1..100] OF ETcIotMqttClientState;
+	arrErrorMessage			: ARRAY[1..100] OF eErrorMessage;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	sUserName:= '3921075b-1e74-45a5-8328-80c5bef081c6', 
+	sUserPassword:= 'fabe4500-c68c-444e-afd1-dea7524982bb', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionC, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+FPCount(CLK:= , Q=> );
+	IF FPCount.Q THEN uiCount := uiCount + 1; END_IF
+	
+tim(IN:= fbCom.bConnected AND NOT tim.Q, PT:= T#1M, Q=> , ET=> );
+
+IF tim.Q THEN
+	IF uiCount > uiBigestCount THEN uiBigestCount := uiCount; END_IF
+		uiCount := 0;
+END_IF
+
+
+//Error Log
+FPError(CLK:= fbCom.bError, Q=> );
+
+IF FPError.Q THEN
+	byNumberInArray := byNumberInArray + 1;
+		IF byNumberInArray > 100 THEN byNumberInArray := 1; END_IF
+			byNumberInArray := LIMIT(1,byNumberInArray,100);
+	arrhrErrorCode[byNumberInArray] := fbCom.hrErrorCode;
+	arrConectionState[byNumberInArray] := fbCom.eConnectionState;
+	arrErrorMessage[byNumberInArray] := fbCom.eErrorMessage_Out;
+END_IF
+	
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgLynusCom">
+      <LineId Id="10" Count="8" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="38" Count="2" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="64" Count="3" />
+      <LineId Id="62" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

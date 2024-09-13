@@ -1,0 +1,268 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgWCounter_old" Id="{ae19ba3a-8624-4acc-b9b2-998a8b0623ed}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgWCounter_old
+VAR
+	fbMBusKL6781 : FB_MBUSKL6781;
+	fbmbusScan	: FB_MBUS_Scan;
+	bStartScan : BOOL;
+	bStopScan : BOOL;
+	stComIn    AT %I*	:	ST_KL6781inData22B;
+	stComOut   AT %Q*	:	ST_KL6781outData22B;
+	stCom				:	ST_MBUS_Communication;
+	fb_Mbus				: 	FB_MBUS_General_Water;
+	sec_Address			: 	ST_MBUS_SecAdr;
+	
+	m_Start: BOOL;
+	state: INT;
+	ton_Wait: Ton;
+	x: INT;							
+	udint_Adress: UDINT;
+	manu: INT:=1;
+	int_Found: INT;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE state OF
+	0: // init
+		sec_Address.usiVersion     :=0;
+		state:=1;
+	1: // start request
+		m_Start := TRUE;
+		state:=2;
+	2: // wait for busy getting low
+		IF fb_Mbus.bBusy = FALSE THEN		
+			m_Start := FALSE;
+			IF fb_Mbus.bError = TRUE THEN
+				sec_Address.usiVersion := sec_Address.usiVersion+1;
+				state := 3;
+			ELSE
+				state := 3;
+				x:=x+1;
+			END_IF
+		END_IF
+	3: // wait
+		ton_Wait.IN:=TRUE;
+		IF ton_Wait.Q THEN
+			ton_Wait.IN:=FALSE;
+			state :=1;
+		END_IF
+END_CASE
+ton_Wait(PT:=T#500MS);
+
+
+int_Found:=x;
+
+IF sec_Address.usiVersion>251 THEN 
+	sec_Address.usiVersion:=0; 
+	IF manu>109 THEN 
+		manu:=1;
+		sec_Address.udiIdNumber:=172785;
+	ELSE
+		manu:=manu+1;
+	END_IF
+	CASE manu OF 
+		1	:	sec_Address.uiManufacturer := 16#0442	;
+		2	:	sec_Address.uiManufacturer := 16#0465	;
+		3	:	sec_Address.uiManufacturer := 16#0467	;
+		4	:	sec_Address.uiManufacturer := 16#0477	;
+		5	:	sec_Address.uiManufacturer := 16#04A7	;
+		6	:	sec_Address.uiManufacturer := 16#04AC	;
+		7	:	sec_Address.uiManufacturer := 16#04AD	;
+		8	:	sec_Address.uiManufacturer := 16#05B0	;
+		9	:	sec_Address.uiManufacturer := 16#05B4	;
+		10	:	sec_Address.uiManufacturer := 16#0613	;
+		11	:	sec_Address.uiManufacturer := 16#08A3	;
+		12	:	sec_Address.uiManufacturer := 16#08B2	;
+		13	:	sec_Address.uiManufacturer := 16#0A65	;
+		14	:	sec_Address.uiManufacturer := 16#0A74	;
+		15	:	sec_Address.uiManufacturer := 16#0C49	;
+		16	:	sec_Address.uiManufacturer := 16#0D8F	;
+		17	:	sec_Address.uiManufacturer := 16#0DEE	;
+		18	:	sec_Address.uiManufacturer := 16#0F4D	;
+		19	:	sec_Address.uiManufacturer := 16#102E	;
+		20	:	sec_Address.uiManufacturer := 16#10D3	;
+		21	:	sec_Address.uiManufacturer := 16#11A5	;
+		22	:	sec_Address.uiManufacturer := 16#1347	;
+		23	:	sec_Address.uiManufacturer := 16#148D	;
+		24	:	sec_Address.uiManufacturer := 16#14C5	;
+		25	:	sec_Address.uiManufacturer := 16#1574	;
+		26	:	sec_Address.uiManufacturer := 16#158D	;
+		27	:	sec_Address.uiManufacturer := 16#1593	;
+		28	:	sec_Address.uiManufacturer := 16#15A8	;
+		29	:	sec_Address.uiManufacturer := 16#15B5	;
+		30	:	sec_Address.uiManufacturer := 16#15AF	;
+		31	:	sec_Address.uiManufacturer := 16#15C4	;
+		32	:	sec_Address.uiManufacturer := 16#15D0	;
+		33	:	sec_Address.uiManufacturer := 16#15D4	;
+		34	:	sec_Address.uiManufacturer := 16#164C	;
+		35	:	sec_Address.uiManufacturer := 16#166D	;
+		36	:	sec_Address.uiManufacturer := 16#16B2	;
+		37	:	sec_Address.uiManufacturer := 16#16F4	;
+		38	:	sec_Address.uiManufacturer := 16#18A4	;
+		39	:	sec_Address.uiManufacturer := 16#19AC	;
+		40	:	sec_Address.uiManufacturer := 16#1C4A	;
+		41	:	sec_Address.uiManufacturer := 16#1CA3	;
+		42	:	sec_Address.uiManufacturer := 16#1E70	;
+		43	:	sec_Address.uiManufacturer := 16#1EE6	;
+		44	:	sec_Address.uiManufacturer := 16#20A7	;
+		45	:	sec_Address.uiManufacturer := 16#20AC	;
+		46	:	sec_Address.uiManufacturer := 16#2283	;
+		47	:	sec_Address.uiManufacturer := 16#2324	;
+		48	:	sec_Address.uiManufacturer := 16#246D	;
+		49	:	sec_Address.uiManufacturer := 16#2485	;
+		50	:	sec_Address.uiManufacturer := 16#25D6	;
+		51	:	sec_Address.uiManufacturer := 16#266B	;
+		52	:	sec_Address.uiManufacturer := 16#2674	;
+		53	:	sec_Address.uiManufacturer := 16#2692	;
+		54	:	sec_Address.uiManufacturer := 16#26EB	;
+		55	:	sec_Address.uiManufacturer := 16#2C2D	;
+		56	:	sec_Address.uiManufacturer := 16#2D0C	;
+		57	:	sec_Address.uiManufacturer := 16#2D65	;
+		58	:	sec_Address.uiManufacturer := 16#2DD8	;
+		59	:	sec_Address.uiManufacturer := 16#2E4F	;
+		60	:	sec_Address.uiManufacturer := 16#2E74	;
+		61	:	sec_Address.uiManufacturer := 16#30AD	;
+		62	:	sec_Address.uiManufacturer := 16#30E2	;
+		63	:	sec_Address.uiManufacturer := 16#30E4	;
+		64	:	sec_Address.uiManufacturer := 16#30FA	;
+		65	:	sec_Address.uiManufacturer := 16#3101	;
+		66	:	sec_Address.uiManufacturer := 16#31AC	;
+		67	:	sec_Address.uiManufacturer := 16#3265	;
+		68	:	sec_Address.uiManufacturer := 16#3270	;
+		69	:	sec_Address.uiManufacturer := 16#32A7	;
+		70	:	sec_Address.uiManufacturer := 16#327A	;
+		71	:	sec_Address.uiManufacturer := 16#3424	;
+		72	:	sec_Address.uiManufacturer := 16#34A9	;
+		73	:	sec_Address.uiManufacturer := 16#3573	;
+		74	:	sec_Address.uiManufacturer := 16#35D3	;
+		75	:	sec_Address.uiManufacturer := 16#3613	;
+		76	:	sec_Address.uiManufacturer := 16#3683	;
+		77	:	sec_Address.uiManufacturer := 16#3933	;
+		78	:	sec_Address.uiManufacturer := 16#39B3	;
+		79	:	sec_Address.uiManufacturer := 16#3A4D	;
+		80	:	sec_Address.uiManufacturer := 16#3DD2	;
+		81	:	sec_Address.uiManufacturer := 16#4024	;
+		82	:	sec_Address.uiManufacturer := 16#41A7	;
+		83	:	sec_Address.uiManufacturer := 16#4249	;
+		84	:	sec_Address.uiManufacturer := 16#4833	;
+		85	:	sec_Address.uiManufacturer := 16#48AC	;
+		86	:	sec_Address.uiManufacturer := 16#4965	;
+		87	:	sec_Address.uiManufacturer := 16#4C30	;
+		88	:	sec_Address.uiManufacturer := 16#4C68	;
+		89	:	sec_Address.uiManufacturer := 16#4CAE	;
+		90	:	sec_Address.uiManufacturer := 16#4DA3	;
+		91	:	sec_Address.uiManufacturer := 16#4DA5	;
+		92	:	sec_Address.uiManufacturer := 16#4DAC	;
+		93	:	sec_Address.uiManufacturer := 16#4D25	;
+		94	:	sec_Address.uiManufacturer := 16#4D82	;
+		95	:	sec_Address.uiManufacturer := 16#4DEE	;
+		96	:	sec_Address.uiManufacturer := 16#4DE6	;
+		97	:	sec_Address.uiManufacturer := 16#4E0C	;
+		98	:	sec_Address.uiManufacturer := 16#4E18	;
+		99	:	sec_Address.uiManufacturer := 16#4ECD	;
+		100	:	sec_Address.uiManufacturer := 16#5068	;
+		101	:	sec_Address.uiManufacturer := 16#5130	;
+		102	:	sec_Address.uiManufacturer := 16#5427	;
+		103	:	sec_Address.uiManufacturer := 16#54E9	;
+		104	:	sec_Address.uiManufacturer := 16#58B3	;
+		105	:	sec_Address.uiManufacturer := 16#5A09	;
+		106	:	sec_Address.uiManufacturer := 16#5DAF	;
+		107	:	sec_Address.uiManufacturer := 16#6685	;
+		108	:	sec_Address.uiManufacturer := 16#6827	;
+		109	:	sec_Address.uiManufacturer := 16#6830	;
+		110	:	sec_Address.uiManufacturer := 16#6936	;
+	END_CASE
+END_IF
+		
+		
+fb_Mbus(	usiAddress	:= 	253,
+			stSecAdr	:= 	sec_Address,
+			eBaudrate   :=	E_MBUS_Baudrate.eMBus_Baud2400,
+			bStart      :=	m_Start,
+			stCom		:=	stCom);
+	
+fbMBusKL6781(
+	usiRetries:= , 
+	bStart:= , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	stComIn:= stComIn, 
+	stComOut:= stComOut, 
+	stCom:= stCom);
+
+			
+(*
+	
+fbMBusScan(
+	bStart:= , 
+	bStop:= , 
+	eBaudrate:= , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	usiAddress=> , 
+	usiCount=> , 
+	arrDevice=> , 
+	stCom:= stCom);
+	
+	*)]]></ST>
+    </Implementation>
+    <LineIds Name="prgWCounter_old">
+      <LineId Id="74" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="102" Count="1" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="114" Count="1" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="110" Count="1" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="265" Count="1" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="151" Count="109" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="14" Count="9" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="24" Count="12" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="49" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

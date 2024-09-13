@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_XL3XXX_AI" Id="{ce16877a-a5df-402d-880d-c3128266aae9}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_XL3XXX_AI
+VAR_INPUT
+	{attribute 'hide'}
+	rXMinTerminalValue		: REAL;				//Min value from the Terminal for scalling
+	{attribute 'hide'}
+	rYMinOutputSignal		: REAL;				//Min value from the new output signal for scalling
+	{attribute 'hide'}
+	rXMaxTerminalValue		: REAL;				//Max value from the Terminal for scalling
+	{attribute 'hide'}
+	rYMaxOutputSignal		: REAL;				//Max value from the new output signal for scalling
+END_VAR
+VAR_OUTPUT
+	usiState	AT%I*		: USINT;			//State from the terminal
+	{attribute 'hide'}
+	rSignal					: REAL;				//New output signal
+END_VAR	
+VAR
+	iDataIn		AT%I*		: INT;				//Raw Input value from the terminal
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.06.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to read in a analog signal from a beckhoff analog input terminal and convert in the right size. 32767 to 10 for example
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+
+rXMinTerminalValue := LIMIT(0,rXMinTerminalValue,32767);
+	rXMaxTerminalValue := LIMIT(0,rXMaxTerminalValue,32767);	
+
+(*----------------------------------------------------------------------Scalling----------------------------------------------------------------------------------------------*)
+
+rSignal := F_Scalvalue(x:= INT_TO_REAL(iDataIn), x1:= rXMinTerminalValue, y1:= rYMinOutputSignal, x2:= rXMaxTerminalValue, y2:= rYMaxOutputSignal,);
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_XL3XXX_AI">
+      <LineId Id="215" Count="2" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="224" Count="1" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="75" Count="1" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

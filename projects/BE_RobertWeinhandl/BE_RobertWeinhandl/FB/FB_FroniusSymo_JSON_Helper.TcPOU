@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_FroniusSymo_JSON_Helper" Id="{96c793ca-5a99-4d77-bff1-6e6b5baf9725}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FroniusSymo_JSON_Helper
+VAR_INPUT
+	bSend			: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient		: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy			: BOOL;
+	bError			: BOOL;
+	lrapowerP1		: LREAL;
+	lrvoltageP1		: LREAL;
+	lraenergyP1		: LREAL;
+	lrapowerP2		: LREAL;
+	lrvoltageP2		: LREAL;
+	lraenergyP2		: LREAL;
+	lrapowerP3		: LREAL;
+	lrvoltageP3		: LREAL;
+	lraenergyP3		: LREAL;
+	lrapowerP4		: LREAL;
+	lrvoltageP4		: LREAL;
+	lraenergyP4		: LREAL;
+END_VAR
+
+VAR
+	fbRequestSwitch0	: FB_IotHttpRequest;
+	fbRequestSwitch1	: FB_IotHttpRequest;
+	fbRequestSwitch2	: FB_IotHttpRequest;
+	fbRequestSwitch3	: FB_IotHttpRequest;
+	fbJson				: FB_JsonDomParser;
+	fbPayload			: FB_JsonSaxWriter;
+	fbHeader            : FB_IotHttpHeaderFieldMap;
+	nState				: UDINT;
+	RisingEdge			: R_TRIG;
+	
+	bGetContentResult	: BOOL;
+	bOnce				: BOOL;
+	sContent			: STRING(511);
+	sContentS0			: STRING(2048);
+	sContentS1			: STRING(511);
+	sContentS2			: STRING(511);
+	sContentS3			: STRING(511);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bOnce THEN
+	fbHeader.AddField('Content-type','application/json', FALSE);
+	bOnce:= FALSE;
+END_IF
+
+RisingEdge(CLK:= bSend );
+CASE nState OF
+0:	
+	IF RisingEdge.Q THEN 
+		IF
+			fbRequestSwitch0.SendRequest(sUri:='/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&DeviceID=1&DataCollection=CommonInverterData', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, fbHeader) THEN				
+			nState:= 1;
+			nReqCount:= nReqCount+1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+1:
+	IF NOT fbRequestSwitch0.bBusy THEN
+		bError:= TRUE;
+		
+		IF NOT fbRequestSwitch0.bError THEN				 
+			bGetContentResult:= fbRequestSwitch0.GetContent(pContent:= ADR(sContentS0), nContentSize:= SIZEOF(sContentS0), bSetNullTermination:= TRUE);
+			IF fbRequestSwitch0.nStatusCode >= 200 AND fbRequestSwitch0.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				//sResponseContent := 
+				jsonDoc:= fbRequestSwitch0.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'Body')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'Body');
+                        IF fbJson.HasMember(jsonVal, 'Data') THEN
+                            jsonVal:= fbJson.FindMember(jsonVal, 'Data');
+								IF fbJson.HasMember(jsonVal, 'PAC') THEN
+									jsonVal:= fbJson.FindMember(jsonVal, 'PAC');
+										IF fbJson.HasMember(jsonVal, 'Value') THEN
+											jsonVal:= fbJson.FindMember(jsonVal, 'Value');
+										END_IF
+								END_IF	
+						END_IF
+					END_IF
+				END_IF
+			nValidResCount:= nValidResCount+1;
+			IF fbJson.IsDouble(jsonVal) THEN
+				lraenergyP1:= fbJson.GetDouble(jsonVal);
+			END_IF
+			bError:= FALSE;
+			nResCount:= nResCount+1;
+			END_IF
+		END_IF						
+					
+	nState:= 0;
+	bBusy:= FALSE;
+		IF bError THEN
+			nErrCount:= nErrCount+1;
+		END_IF
+	END_IF  	
+END_CASE
+
+fbClient.Execute();]]></ST>
+    </Implementation>
+    <LineIds Name="FB_FroniusSymo_JSON_Helper">
+      <LineId Id="230" Count="2" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="58" Count="3" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="66" Count="14" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="81" Count="3" />
+      <LineId Id="95" Count="2" />
+      <LineId Id="236" Count="1" />
+      <LineId Id="239" Count="3" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="244" Count="1" />
+      <LineId Id="98" Count="4" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="103" Count="2" />
+      <LineId Id="209" Count="7" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

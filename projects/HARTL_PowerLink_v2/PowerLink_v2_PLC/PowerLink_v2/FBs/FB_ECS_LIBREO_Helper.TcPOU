@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ECS_LIBREO_Helper" Id="{77fa0af9-33fd-4eab-907e-9a826fdad1a9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ECS_LIBREO_Helper
+VAR_INPUT
+	bSend			: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient		: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy					: BOOL;
+	bError					: BOOL;
+	bCarConnected			: BOOL;
+	bCarCharging			: BOOL;
+	lrTotalPower			: LREAL;
+	uiChrgCurr				: UINT;
+	uiExtChrgCurr			: UINT;
+
+END_VAR
+
+VAR
+	fbRequestStatus		: FB_IotHttpRequest;
+	fbJson				: FB_JsonDomParser;
+	nState				: UDINT;
+	RisingEdge			: R_TRIG;
+	timTimeout			: TON;
+	tTimeOut			: TIME := T#30S;
+	
+	bGetContentResult	: BOOL;
+	sContent			: STRING(2048);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN 
+		nState := 0;
+		bBusy := FALSE;
+	END_IF
+
+RisingEdge(CLK:= bSend );
+CASE nState OF
+0:	
+	IF RisingEdge.Q THEN 
+		IF fbRequestStatus.SendRequest(sUri:='/status', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+			nState:= 1;
+			nReqCount:= nReqCount+1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+1:
+	IF NOT fbRequestStatus.bBusy THEN
+		bError:= TRUE;
+		
+		IF NOT fbRequestStatus.bError THEN				 
+			bGetContentResult:= fbRequestStatus.GetContent(pContent:= ADR(sContent), nContentSize:= SIZEOF(sContent), bSetNullTermination:= TRUE);
+			IF fbRequestStatus.nStatusCode >= 200 AND fbRequestStatus.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestStatus.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'ts')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'chrgCurr');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsUint(jsonVal) THEN							
+							uiChrgCurr:= UDINT_TO_UINT(fbJson.GetUint(jsonVal));									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'extCurr');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsUint(jsonVal) THEN							
+							uiExtChrgCurr:= UDINT_TO_UINT(fbJson.GetUint(jsonVal));									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'evConn');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsBool(jsonVal) THEN							
+							bCarConnected:= fbJson.GetBool(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'chrgState');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsBool(jsonVal) THEN							
+							bCarCharging:= fbJson.GetBool(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMemberPath(jsonDoc, 'readings/wattTotal');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrTotalPower:= fbJson.GetDouble(jsonVal);									
+						END_IF		
+						bError:= FALSE;
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+			END_IF
+		END_IF
+		
+	nState:= 0;
+	bBusy:= FALSE;
+		IF bError THEN
+			nErrCount:= nErrCount+1;
+		END_IF
+	END_IF  	
+END_CASE
+
+fbClient.Execute();]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ECS_LIBREO_Helper">
+      <LineId Id="509" Count="34" />
+      <LineId Id="792" Count="3" />
+      <LineId Id="548" Count="5" />
+      <LineId Id="796" Count="3" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="800" Count="0" />
+      <LineId Id="560" Count="3" />
+      <LineId Id="569" Count="6" />
+      <LineId Id="784" Count="7" />
+      <LineId Id="369" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

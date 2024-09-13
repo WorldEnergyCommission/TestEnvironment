@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM" Id="{2e582916-7d77-4864-9d3b-f8d4d01a814d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	FB_Phoenix:FB_PhoenixContact_EM_EEM_EM375;
+	
+	lrPower_Grid_TotalkW			: LREAL;			//{#lynus.ag#()}
+	lrPower_Grid_L1				: LREAL;			//{#lynus.ag#()}
+	lrPower_Grid_L2				: LREAL;			//{#lynus.ag#()}
+	lrPower_Grid_L3				: LREAL;			//{#lynus.ag#()}
+	lrCurrent_Grid_L1			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_Grid_L2			: LREAL;			//{#lynus.ag#()}
+	lrCurrent_Grid_L3			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_Grid_L1N			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_Grid_L2N			: LREAL;			//{#lynus.ag#()}
+	lrVoltage_Grid_L3N			: LREAL;			//{#lynus.ag#()}
+	
+
+	flEMPowerTotal		: LREAL;
+	bPullSuccessfull 	: BOOL;
+	udintErrorID		: UDINT;
+
+
+	uint_State								AT%I* 	: uint;
+	lrPower_House_kW			: LREAL;			//{#lynus.ag#()}
+		
+END_VAR
+
+VAR PERSISTENT
+	bEnableEM			: 	BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+lrPower_House_kW := LIMIT(0,- FB_Phoenix.stDataEMPower.lrPowerTotal - prgCS1.lrPower_Alfen_S1 - prgCS2.lrPower_Alfen_S1 - prgCS3.lrPower_Alfen_S1 - prgCS4.lrPowerDC1_S1 - prgCS4.lrPowerDC1_S2,100);
+
+
+FB_Phoenix(
+	bEnable:= TRUE, 
+	byUnitID:= 255, 
+	sIPAdress:= '192.168.1.11', 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+	
+lrPower_Grid_TotalkW 	:= 	-FB_Phoenix.stDataEMPower.lrPowerTotal;
+lrPower_Grid_L1		 	:= 	-FB_Phoenix.stDataEMPower.lrPowerL1;
+lrPower_Grid_L2		 	:= 	-FB_Phoenix.stDataEMPower.lrPowerL2;
+lrPower_Grid_L3		 	:= 	-FB_Phoenix.stDataEMPower.lrPowerL3;
+lrCurrent_Grid_L1 		:= 	FB_Phoenix.stDataEMPower.lrCurrentL1;
+lrCurrent_Grid_L2 		:= 	FB_Phoenix.stDataEMPower.lrCurrentL2;
+lrCurrent_Grid_L3 		:= 	FB_Phoenix.stDataEMPower.lrCurrentL3;
+lrVoltage_Grid_L1N		:= 	FB_Phoenix.stDataEMPower.lrVoltageL1N;
+lrVoltage_Grid_L2N		:= 	FB_Phoenix.stDataEMPower.lrVoltageL2N;
+lrVoltage_Grid_L3N		:= 	FB_Phoenix.stDataEMPower.lrVoltageL3N;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="182" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="183" Count="9" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="195" Count="3" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="199" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

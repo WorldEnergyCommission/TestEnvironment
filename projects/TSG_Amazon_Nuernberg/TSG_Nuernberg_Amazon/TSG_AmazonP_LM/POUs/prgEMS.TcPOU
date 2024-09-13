@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgEMS" Id="{43ebb449-82a0-463e-ac0c-aa87b6e35e86}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR
+	fbEMS		: FB_EMS_V2;		//{#lynus.ag#()}
+	
+	
+	//Feedback CS
+	arrTarget1			: ARRAY[1..12] OF REAL;
+	arrTarget2			: ARRAY[1..10] OF REAL;
+	arrTarget3			: ARRAY[1..10] OF REAL;
+	arrTarget4			: ARRAY[1..10] OF REAL;
+	arrTarget5			: ARRAY[1..10] OF REAL;
+	arrTarget6			: ARRAY[1..10] OF REAL;
+	arrTarget7			: ARRAY[1..2] OF REAL;
+	
+	arrPower1			: ARRAY[1..12] OF LREAL;
+	arrPower2			: ARRAY[1..10] OF LREAL;
+	arrPower3			: ARRAY[1..10] OF LREAL;
+	arrPower4			: ARRAY[1..10] OF LREAL;
+	arrPower5			: ARRAY[1..10] OF LREAL;
+	arrPower6			: ARRAY[1..10] OF LREAL;
+	arrPower7			: ARRAY[1..2] OF LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbEMS(
+	bEnable:= , 
+	tDelayPwrCorrectionECS:= , 
+	stNrOfEM_IN_ECS:= , 
+	stSizeMainFuseCS:= , 
+	stSetupEMS:= , 
+	eOperationMode:= , 
+	eSpeedModeBackendController:= E_SpeedModeBackendController_EMS.eSlow, 
+	eSpeedModeLocalController:= E_SpeedModeLocalController_EMS.eSlow, 
+	bActivateHP:= , 
+	bControllingState:= , 
+	rHeartbeat:= , 
+	rErrorWarning:= , 
+	rEnergyOptReady:= , 
+	rNewBattPower:= , 
+	eMessageEMS=> , 
+	bStateEnable=> , 
+	bStateAllowChrgFromGrid=> , 
+	bMissingPowerData=> , 
+	bSurplusAvailable=> , 
+	bSEnableMainFuseFunc=> , 
+	byProgress=> , 
+	uiState_OUT=> , 
+	diNrOfEMS_OUT=> , 
+	arrMinPrioReached=> , 
+	arrMaxPrioReached=> );
+	
+//Feedback
+arrTarget1[1] := prgCS1.fbAlfen1.stDataECS.rTargetPower;
+arrTarget1[2] := prgCS1.fbAlfen2.stDataECS.rTargetPower;
+arrTarget1[3] := prgCS1.fbAlfen3.stDataECS.rTargetPower;
+arrTarget1[4] := prgCS1.fbAlfen4.stDataECS.rTargetPower;
+arrTarget1[5] := prgCS1.fbAlfen5.stDataECS.rTargetPower;
+arrTarget1[6] := prgCS1.fbAlfen6.stDataECS.rTargetPower;
+arrTarget1[7] := prgCS1.fbAlfen7.stDataECS.rTargetPower;
+arrTarget1[8] := prgCS1.fbAlfen8.stDataECS.rTargetPower;
+arrTarget1[9] := prgCS1.fbAlfen9.stDataECS.rTargetPower;
+arrTarget1[10] := prgCS1.fbAlfen10.stDataECS.rTargetPower;
+arrTarget1[11] := prgCS1.fbApliT_1.stDataECS.rTargetPower;
+arrTarget1[12] := prgCS1.fbApliT_2.stDataECS.rTargetPower;
+
+arrTarget2[1] := prgCS2.fbAlfen1.stDataECS.rTargetPower;
+arrTarget2[2] := prgCS2.fbAlfen2.stDataECS.rTargetPower;
+arrTarget2[3] := prgCS2.fbAlfen3.stDataECS.rTargetPower;
+arrTarget2[4] := prgCS2.fbAlfen4.stDataECS.rTargetPower;
+arrTarget2[5] := prgCS2.fbAlfen5.stDataECS.rTargetPower;
+arrTarget2[6] := prgCS2.fbAlfen6.stDataECS.rTargetPower;
+arrTarget2[7] := prgCS2.fbAlfen7.stDataECS.rTargetPower;
+arrTarget2[8] := prgCS2.fbAlfen8.stDataECS.rTargetPower;
+arrTarget2[9] := prgCS2.fbAlfen9.stDataECS.rTargetPower;
+arrTarget2[10] := prgCS2.fbAlfen10.stDataECS.rTargetPower;
+
+arrTarget3[1] := prgCS3.fbAlfen1.stDataECS.rTargetPower;
+arrTarget3[2] := prgCS3.fbAlfen2.stDataECS.rTargetPower;
+arrTarget3[3] := prgCS3.fbAlfen3.stDataECS.rTargetPower;
+arrTarget3[4] := prgCS3.fbAlfen4.stDataECS.rTargetPower;
+arrTarget3[5] := prgCS3.fbAlfen5.stDataECS.rTargetPower;
+arrTarget3[6] := prgCS3.fbAlfen6.stDataECS.rTargetPower;
+arrTarget3[7] := prgCS3.fbAlfen7.stDataECS.rTargetPower;
+arrTarget3[8] := prgCS3.fbAlfen8.stDataECS.rTargetPower;
+arrTarget3[9] := prgCS3.fbAlfen9.stDataECS.rTargetPower;
+arrTarget3[10] := prgCS3.fbAlfen10.stDataECS.rTargetPower;
+
+arrTarget4[1] := prgCS4.fbAlfen1.stDataECS.rTargetPower;
+arrTarget4[2] := prgCS4.fbAlfen2.stDataECS.rTargetPower;
+arrTarget4[3] := prgCS4.fbAlfen3.stDataECS.rTargetPower;
+arrTarget4[4] := prgCS4.fbAlfen4.stDataECS.rTargetPower;
+arrTarget4[5] := prgCS4.fbAlfen5.stDataECS.rTargetPower;
+arrTarget4[6] := prgCS4.fbAlfen6.stDataECS.rTargetPower;
+arrTarget4[7] := prgCS4.fbAlfen7.stDataECS.rTargetPower;
+arrTarget4[8] := prgCS4.fbAlfen8.stDataECS.rTargetPower;
+arrTarget4[9] := prgCS4.fbAlfen9.stDataECS.rTargetPower;
+arrTarget4[10] := prgCS4.fbAlfen10.stDataECS.rTargetPower;
+
+arrTarget5[1] := prgCS5.fbAlfen1.stDataECS.rTargetPower;
+arrTarget5[2] := prgCS5.fbAlfen2.stDataECS.rTargetPower;
+arrTarget5[3] := prgCS5.fbAlfen3.stDataECS.rTargetPower;
+arrTarget5[4] := prgCS5.fbAlfen4.stDataECS.rTargetPower;
+arrTarget5[5] := prgCS5.fbAlfen5.stDataECS.rTargetPower;
+arrTarget5[6] := prgCS5.fbAlfen6.stDataECS.rTargetPower;
+arrTarget5[7] := prgCS5.fbAlfen7.stDataECS.rTargetPower;
+arrTarget5[8] := prgCS5.fbAlfen8.stDataECS.rTargetPower;
+arrTarget5[9] := prgCS5.fbAlfen9.stDataECS.rTargetPower;
+arrTarget5[10] := prgCS5.fbAlfen10.stDataECS.rTargetPower;
+
+arrTarget6[1] := prgCS6.fbAlfen1.stDataECS.rTargetPower;
+arrTarget6[2] := prgCS6.fbAlfen2.stDataECS.rTargetPower;
+arrTarget6[3] := prgCS6.fbAlfen3.stDataECS.rTargetPower;
+arrTarget6[4] := prgCS6.fbAlfen4.stDataECS.rTargetPower;
+arrTarget6[5] := prgCS6.fbAlfen5.stDataECS.rTargetPower;
+arrTarget6[6] := prgCS6.fbAlfen6.stDataECS.rTargetPower;
+arrTarget6[7] := prgCS6.fbAlfen7.stDataECS.rTargetPower;
+arrTarget6[8] := prgCS6.fbAlfen8.stDataECS.rTargetPower;
+arrTarget6[9] := prgCS6.fbAlfen9.stDataECS.rTargetPower;
+arrTarget6[10] := prgCS6.fbAlfen10.stDataECS.rTargetPower;
+
+arrTarget7[1] := prgCS7.fbAlfen1.stDataECS.rTargetPower;
+arrTarget7[2] := prgCS7.fbAlfen2.stDataECS.rTargetPower;
+
+//Power
+arrPower1[1] := prgCS1.fbAlfen1.stDataECS.lrTotalPower;
+arrPower1[2] := prgCS1.fbAlfen2.stDataECS.lrTotalPower;
+arrPower1[3] := prgCS1.fbAlfen3.stDataECS.lrTotalPower;
+arrPower1[4] := prgCS1.fbAlfen4.stDataECS.lrTotalPower;
+arrPower1[5] := prgCS1.fbAlfen5.stDataECS.lrTotalPower;
+arrPower1[6] := prgCS1.fbAlfen6.stDataECS.lrTotalPower;
+arrPower1[7] := prgCS1.fbAlfen7.stDataECS.lrTotalPower;
+arrPower1[8] := prgCS1.fbAlfen8.stDataECS.lrTotalPower;
+arrPower1[9] := prgCS1.fbAlfen9.stDataECS.lrTotalPower;
+arrPower1[10] := prgCS1.fbAlfen10.stDataECS.lrTotalPower;
+arrPower1[11] := prgCS1.fbApliT_1.stDataECS.lrTotalPower;
+arrPower1[12] := prgCS1.fbApliT_2.stDataECS.lrTotalPower;
+
+arrPower2[1] := prgCS2.fbAlfen1.stDataECS.lrTotalPower;
+arrPower2[2] := prgCS2.fbAlfen2.stDataECS.lrTotalPower;
+arrPower2[3] := prgCS2.fbAlfen3.stDataECS.lrTotalPower;
+arrPower2[4] := prgCS2.fbAlfen4.stDataECS.lrTotalPower;
+arrPower2[5] := prgCS2.fbAlfen5.stDataECS.lrTotalPower;
+arrPower2[6] := prgCS2.fbAlfen6.stDataECS.lrTotalPower;
+arrPower2[7] := prgCS2.fbAlfen7.stDataECS.lrTotalPower;
+arrPower2[8] := prgCS2.fbAlfen8.stDataECS.lrTotalPower;
+arrPower2[9] := prgCS2.fbAlfen9.stDataECS.lrTotalPower;
+arrPower2[10] := prgCS2.fbAlfen10.stDataECS.lrTotalPower;
+
+arrPower3[1] := prgCS3.fbAlfen1.stDataECS.lrTotalPower;
+arrPower3[2] := prgCS3.fbAlfen2.stDataECS.lrTotalPower;
+arrPower3[3] := prgCS3.fbAlfen3.stDataECS.lrTotalPower;
+arrPower3[4] := prgCS3.fbAlfen4.stDataECS.lrTotalPower;
+arrPower3[5] := prgCS3.fbAlfen5.stDataECS.lrTotalPower;
+arrPower3[6] := prgCS3.fbAlfen6.stDataECS.lrTotalPower;
+arrPower3[7] := prgCS3.fbAlfen7.stDataECS.lrTotalPower;
+arrPower3[8] := prgCS3.fbAlfen8.stDataECS.lrTotalPower;
+arrPower3[9] := prgCS3.fbAlfen9.stDataECS.lrTotalPower;
+arrPower3[10] := prgCS3.fbAlfen10.stDataECS.lrTotalPower;
+
+arrPower4[1] := prgCS4.fbAlfen1.stDataECS.lrTotalPower;
+arrPower4[2] := prgCS4.fbAlfen2.stDataECS.lrTotalPower;
+arrPower4[3] := prgCS4.fbAlfen3.stDataECS.lrTotalPower;
+arrPower4[4] := prgCS4.fbAlfen4.stDataECS.lrTotalPower;
+arrPower4[5] := prgCS4.fbAlfen5.stDataECS.lrTotalPower;
+arrPower4[6] := prgCS4.fbAlfen6.stDataECS.lrTotalPower;
+arrPower4[7] := prgCS4.fbAlfen7.stDataECS.lrTotalPower;
+arrPower4[8] := prgCS4.fbAlfen8.stDataECS.lrTotalPower;
+arrPower4[9] := prgCS4.fbAlfen9.stDataECS.lrTotalPower;
+arrPower4[10] := prgCS4.fbAlfen10.stDataECS.lrTotalPower;
+
+arrPower5[1] := prgCS5.fbAlfen1.stDataECS.lrTotalPower;
+arrPower5[2] := prgCS5.fbAlfen2.stDataECS.lrTotalPower;
+arrPower5[3] := prgCS5.fbAlfen3.stDataECS.lrTotalPower;
+arrPower5[4] := prgCS5.fbAlfen4.stDataECS.lrTotalPower;
+arrPower5[5] := prgCS5.fbAlfen5.stDataECS.lrTotalPower;
+arrPower5[6] := prgCS5.fbAlfen6.stDataECS.lrTotalPower;
+arrPower5[7] := prgCS5.fbAlfen7.stDataECS.lrTotalPower;
+arrPower5[8] := prgCS5.fbAlfen8.stDataECS.lrTotalPower;
+arrPower5[9] := prgCS5.fbAlfen9.stDataECS.lrTotalPower;
+arrPower5[10] := prgCS5.fbAlfen10.stDataECS.lrTotalPower;
+
+arrPower6[1] := prgCS6.fbAlfen1.stDataECS.lrTotalPower;
+arrPower6[2] := prgCS6.fbAlfen2.stDataECS.lrTotalPower;
+arrPower6[3] := prgCS6.fbAlfen3.stDataECS.lrTotalPower;
+arrPower6[4] := prgCS6.fbAlfen4.stDataECS.lrTotalPower;
+arrPower6[5] := prgCS6.fbAlfen5.stDataECS.lrTotalPower;
+arrPower6[6] := prgCS6.fbAlfen6.stDataECS.lrTotalPower;
+arrPower6[7] := prgCS6.fbAlfen7.stDataECS.lrTotalPower;
+arrPower6[8] := prgCS6.fbAlfen8.stDataECS.lrTotalPower;
+arrPower6[9] := prgCS6.fbAlfen9.stDataECS.lrTotalPower;
+arrPower6[10] := prgCS6.fbAlfen10.stDataECS.lrTotalPower;
+
+arrPower7[1] := prgCS7.fbAlfen1.stDataECS.lrTotalPower;
+arrPower7[2] := prgCS7.fbAlfen2.stDataECS.lrTotalPower;
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="7" Count="24" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="46" Count="2" />
+      <LineId Id="50" Count="10" />
+      <LineId Id="62" Count="10" />
+      <LineId Id="74" Count="9" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="85" Count="9" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="96" Count="9" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="107" Count="9" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="118" Count="1" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="146" Count="68" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="49" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

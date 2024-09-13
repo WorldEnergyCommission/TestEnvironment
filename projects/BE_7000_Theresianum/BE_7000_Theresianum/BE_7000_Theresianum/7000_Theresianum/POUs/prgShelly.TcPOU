@@ -1,0 +1,352 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgShelly" Id="{426db738-ab55-4ee8-b24b-86c8e4548cd2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgShelly
+VAR
+// Theresianum, Diverse Steckdosen
+	fbShelly1					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly1		: LREAL;
+	lrPowerTotal_Shelly1_kW		: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 2, Patchkasten, EDV-Steckdosen
+	
+	fbShelly2					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly2		: LREAL;
+	lrPowerTotal_Shelly2_kW		: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 3, Klausur KG
+	
+	fbShelly3					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly3		: LREAL;
+	lrPowerTotal_Shelly3_kW		: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 4, Klausur EG
+	
+	fbShelly4					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly4		: LREAL;
+	lrPowerTotal_Shelly4_kW		: LREAL;			//{#lynus.ag#()}
+
+	//Messung 5, Klausur ZWG
+	
+	fbShelly5					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly5		: LREAL;
+	lrPowerTotal_Shelly5_kW		: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 6, Klausur OG
+	
+	fbShelly6					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly6		: LREAL;
+	lrPowerTotal_Shelly6_kW		: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 7, Klausur F27
+	
+	fbShelly7					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly7		: LREAL;
+	lrPowerTotal_Shelly7_kW		: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 8, Klausur F28
+	
+	fbShelly8					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly8		: LREAL;
+	lrPowerTotal_Shelly8_kW		: LREAL;			//{#lynus.ag#()}
+
+	//Messung 9
+	
+	fbShelly9					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly9		: LREAL;
+	lrPowerTotal_Shelly9_kW		: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 10
+	
+	fbShelly10					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly10		: LREAL;
+	lrPowerTotal_Shelly10_kW	: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 11
+	
+	fbShelly11					: FB_Shelly_Pro3EM;
+	lrPowerTotal_Shelly11		: LREAL;
+	lrPowerTotal_Shelly11_kW	: LREAL;			//{#lynus.ag#()}
+	
+	//Messung 12
+	
+	fbShelly12					: FB_Shelly_Pro3EM;	
+	lrPowerTotal_Shelly12		: LREAL;
+	lrPowerTotal_Shelly12_kW	: LREAL;			//{#lynus.ag#()}
+	
+	// other
+	
+	lrPowerV16_Kitchen_kW		: LREAL;			//{#lynus.ag#()}
+	fbKitchenCounter			: FB_EnergyCounter;
+	
+
+END_VAR
+
+VAR PERSISTENT
+	
+// trigger command execution
+	bEnable_Shelly1				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly2				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly3				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly4				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly5				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly6				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly7				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly8				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly9				: BOOL:=TRUE;				//{#lynus.ag#()}
+	bEnable_Shelly10			: BOOL:=FALSE;				//{#lynus.ag#()}
+	bEnable_Shelly11			: BOOL:=FALSE;				//{#lynus.ag#()}
+	bEnable_Shelly12			: BOOL:=FALSE;				//{#lynus.ag#()}
+	
+	lrCounterKitchen			: LREAL;					//{#lynus.ag#()}
+	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Grid Div 3-phase, 400V
+fbShelly1(
+	bStart:= bEnable_Shelly1, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.210', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpowertotal=> lrPowerTotal_Shelly1);
+
+// re-calc to kW
+lrPowerTotal_Shelly1_kW := lrPowerTotal_Shelly1 / 1000;
+
+fbShelly2(
+	bStart:= bEnable_Shelly2, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.211', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly2);
+
+// re-calc to kW
+lrPowerTotal_Shelly2_kW := lrPowerTotal_Shelly2 / 1000;
+
+fbShelly3(							//UV9 F11
+	bStart:= bEnable_Shelly3, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.212', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly3);
+// re-calc to kW
+lrPowerTotal_Shelly3_kW := lrPowerTotal_Shelly3 / 1000;
+
+fbShelly4(							//UV9 F21
+	bStart:= bEnable_Shelly4, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.213', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly4);
+
+// re-calc to kW
+lrPowerTotal_Shelly4_kW := lrPowerTotal_Shelly4 / 1000;
+
+fbShelly5(							//UV9 F31
+	bStart:= bEnable_Shelly5, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.214', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly5);
+
+// re-calc to kW
+lrPowerTotal_Shelly5_kW := lrPowerTotal_Shelly5 / 1000;
+
+fbShelly6(						//UV9 F41 
+	bStart:= bEnable_Shelly6, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.215', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly6);
+
+// re-calc to kW
+lrPowerTotal_Shelly6_kW := lrPowerTotal_Shelly6 / 1000;
+
+fbShelly7(						//UV16 F28
+	bStart:= bEnable_Shelly7, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.216', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly7);
+
+// re-calc to kW
+lrPowerTotal_Shelly7_kW := lrPowerTotal_Shelly7 / -1000; //Invertiert
+
+fbShelly8(						//UV16 F29
+	bStart:= bEnable_Shelly8, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.217', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly8);
+
+// re-calc to kW
+lrPowerTotal_Shelly8_kW := lrPowerTotal_Shelly8 / 1000;
+
+fbShelly9(						//UV16 F30
+	bStart:= bEnable_Shelly9, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.178.218', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly9);
+
+// re-calc to kW
+lrPowerTotal_Shelly9_kW := lrPowerTotal_Shelly9 / 1000;
+
+(*
+
+// Messung 10
+fbShelly10(
+	bStart:= bEnable_Shelly10, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '10.0.0.173', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly10);
+
+// re-calc to kW
+lrPowerTotal_Shelly10_kW := lrPowerTotal_Shelly10 / 1000;
+
+// Messung 11
+fbShelly11(
+	bStart:= bEnable_Shelly11, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '10.0.0.173', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly11);
+
+// re-calc to kW
+lrPowerTotal_Shelly11_kW := lrPowerTotal_Shelly11 / 1000;
+
+// Messung 12
+fbShelly12(
+	bStart:= bEnable_Shelly12, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '10.0.0.173', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrPowerTotal=> lrPowerTotal_Shelly12);
+	
+// re-calc to kW
+lrPowerTotal_Shelly12_kW := lrPowerTotal_Shelly12 / 1000;
+// sum-up energy
+//lrEnergy_M12_Total :=  lrEnergy_M12_L1 + lrEnergy_M12_L2 + lrEnergy_M12_L3;
+
+*)
+
+//other
+
+lrPowerV16_Kitchen_kW := lrPowerTotal_Shelly7_kW + lrPowerTotal_Shelly8_kW + lrPowerTotal_Shelly9_kW;
+
+fbKitchenCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerV16_Kitchen_kW, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+IF fbKitchenCounter.lrTotalCounterEnergy_Consumption > lrPowerV16_Kitchen_kW THEN  	
+	lrCounterKitchen := fbKitchenCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgShelly">
+      <LineId Id="732" Count="0" />
+      <LineId Id="78" Count="9" />
+      <LineId Id="109" Count="2" />
+      <LineId Id="115" Count="10" />
+      <LineId Id="147" Count="2" />
+      <LineId Id="153" Count="5" />
+      <LineId Id="1189" Count="0" />
+      <LineId Id="160" Count="3" />
+      <LineId Id="186" Count="1" />
+      <LineId Id="324" Count="9" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="356" Count="2" />
+      <LineId Id="429" Count="10" />
+      <LineId Id="461" Count="2" />
+      <LineId Id="466" Count="10" />
+      <LineId Id="498" Count="2" />
+      <LineId Id="504" Count="10" />
+      <LineId Id="536" Count="2" />
+      <LineId Id="542" Count="10" />
+      <LineId Id="574" Count="2" />
+      <LineId Id="580" Count="9" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="612" Count="2" />
+      <LineId Id="1458" Count="1" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="618" Count="10" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="651" Count="1" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="656" Count="10" />
+      <LineId Id="1236" Count="0" />
+      <LineId Id="689" Count="1" />
+      <LineId Id="692" Count="0" />
+      <LineId Id="694" Count="10" />
+      <LineId Id="726" Count="3" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="1461" Count="0" />
+      <LineId Id="1460" Count="0" />
+      <LineId Id="1335" Count="0" />
+      <LineId Id="1334" Count="0" />
+      <LineId Id="1337" Count="0" />
+      <LineId Id="1336" Count="0" />
+      <LineId Id="1343" Count="0" />
+      <LineId Id="1348" Count="10" />
+      <LineId Id="1344" Count="3" />
+      <LineId Id="1342" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

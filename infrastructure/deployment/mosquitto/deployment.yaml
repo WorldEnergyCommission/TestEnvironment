@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-mosquitto
+  namespace: lynus
+data:
+  mosquitto.conf: |
+    listener 9001
+    protocol websockets
+    max_qos 2
+    max_connections -1
+    max_packet_size 1048576
+    max_inflight_bytes 0
+    max_inflight_messages 0
+    max_queued_bytes 0
+    max_queued_messages 0
+    allow_anonymous true
+
+    listener 1883
+    protocol mqtt
+    max_qos 2
+    max_connections -1
+    max_packet_size 1048576
+    max_inflight_bytes 0
+    max_inflight_messages 0
+    max_queued_bytes 0
+    max_queued_messages 0
+    allow_anonymous true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  namespace: lynus
+spec:
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      containers:
+        - name: mosquitto
+          image: library/eclipse-mosquitto:2.0.18
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9001
+              name: websockets
+            - containerPort: 1883
+              name: mqtt
+          volumeMounts:
+            - mountPath: /mosquitto/config/
+              name: config
+        - name: exporter
+          image: sapcc/mosquitto-exporter:0.8.0
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9234
+              name: metrics
+          args: ["--endpoint", "tcp://mosquitto:1883"]
+      nodeSelector:
+        nodetype: large
+      volumes:
+        - name: config
+          configMap:
+            name: config-mosquitto
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto
+  namespace: lynus
+spec:
+  selector:
+    app: mosquitto
+  ports:
+    - port: 9001
+      targetPort: 9001
+      name: websocket
+    - port: 1883
+      targetPort: 1883
+      name: mqtt
+    - port: 9234
+      targetPort: 9234
+      name: metrics
+  type: ClusterIP

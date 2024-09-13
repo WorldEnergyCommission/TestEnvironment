@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="ST_FirmerPvInverter_Data" Id="{ecb5cc65-693e-4c9f-aad0-6d28fbfbd908}">
+    <Declaration><![CDATA[TYPE ST_FirmerPvInverter_Data :
+STRUCT
+	///Operating State
+	eOperatingState: eFirmerOperatingState;
+	///Eventfield
+	eEvent1: eFirmerEvent;
+	///Vendor Event 1
+	eVendorEvent1: eFirmerVendorEvent1;
+	///Vendor Event 2
+	eVendorEvent2: eFirmerVendorEvent2;
+	///Vendor Event 3
+	eVendorEvent3: eFirmerVendorEvent3;
+	///Total DC Power in kW from the MPPT
+	rTotalMPPTPower: REAL;
+	///Cabinet Temperature
+	rCabinetTemp: REAL;
+	///Heat Sink Temperature
+	rHeatSinkTemp: REAL;
+	///Each MPPT DC Power in kW (Max 6 MPPT)
+	arrMPPTPower: ARRAY[1..6] OF REAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

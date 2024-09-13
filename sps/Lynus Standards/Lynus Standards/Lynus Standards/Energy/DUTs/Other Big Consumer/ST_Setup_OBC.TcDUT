@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Setup_OBC" Id="{25683af0-cbf9-491d-b287-3c6b9e223dd6}">
+    <Declaration><![CDATA[TYPE ST_Setup_OBC :
+STRUCT
+	bOnEmergPowerOff				: BOOL;										//When emergency power is active then user can choose if the device is on or switch automatic off
+	bManualyOn						: BOOL;										//Switch the device manualy on
+	byManualyTargetPower			: BYTE;										//% of the max Power in kW when the Device is manually on
+	byPriority						: BYTE; 									//{#lynus.ag#()} //Priority of the device if controlled via the EMS block = 1 2 3 (If 0 then this device does not exist for the EMS block)
+	byEnableSOC						: BYTE; 									//{#lynus.ag#()} //Enable the device when the battery SOC is greater than equal this value
+	byDisableSOC					: BYTE; 									//{#lynus.ag#()} //Disable the device when the battery SOC is smaler than equal this value 
+	rMaxPower						: REAL; 									//{#lynus.ag#()} //Max. power from the big consumer with unit kW
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

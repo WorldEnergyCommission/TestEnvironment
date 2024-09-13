@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCalc" Id="{323b95c0-48b6-42d5-83da-8e9a5d861f73}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCalc
+VAR
+	//Sum of all CEE32 Measurements
+	fbEMTotalCounter		: FB_EnergyCounter;
+	lr_RealPower_Total		: LREAL;					//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+	lr_EnergyCounter_Total	: LREAL;					//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+lr_RealPower_Total := 	prgEM.lr_RealPower_EM1 + 
+						prgEM.lr_RealPower_EM2 + 
+						prgEM.lr_RealPower_EM3 + 
+						prgEM.lr_RealPower_EM4 + 
+						prgEM.lr_RealPower_EM5 + 
+						prgEM.lr_RealPower_EM6 + 
+						prgEM.lr_RealPower_EM7 + 
+						prgEM.lr_RealPower_EM8 + 
+						prgEM.lr_RealPower_EM9;
+
+fbEMTotalCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lr_RealPower_Total, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbEMTotalCounter.lrTotalCounterEnergy_Consumption > lr_EnergyCounter_Total THEN  	
+	lr_EnergyCounter_Total := fbEMTotalCounter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgCalc">
+      <LineId Id="20" Count="1" />
+      <LineId Id="35" Count="7" />
+      <LineId Id="22" Count="12" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-minio
+  namespace: lynus
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: lynus
+spec:
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      initContainers:
+        - name: create-minio-buckets
+          image: alpine:3.18.4
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args: ["mkdir -p /data/assets && mkdir -p /data/documents"]
+          volumeMounts:
+            - mountPath: /data
+              name: data
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2024-03-07T00-43-48Z
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          args:
+            - server
+            - /data
+          imagePullPolicy: Always
+          env:
+            - name: DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: DOMAIN
+                  name: lynus-credentials
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  key: MINIO_USERNAME
+                  name: lynus-credentials
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MINIO_PASSWORD
+                  name: lynus-credentials
+            - name: MINIO_PROMETHEUS_AUTH_TYPE
+              value: public
+          volumeMounts:
+            - mountPath: /data
+              name: data
+          ports:
+            - containerPort: 9000
+              protocol: TCP
+      nodeSelector:
+        nodetype: large
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data-minio
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: lynus
+  labels:
+    app: minio
+spec:
+  selector:
+    app: minio
+  ports:
+    - port: 9000
+      targetPort: 9000
+  type: ClusterIP

@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgMain" Id="{03f43f79-b52a-4c77-9c92-6164c90e71c1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMain
+VAR
+	m_Command_Thiersheim_RESET					: BOOL;							//{#lynus.ag#()}
+	m_out1								AT%Q* 	: BOOL;
+	m_In1								AT%I* 	: BOOL;
+	m_In2								AT%I* 	: BOOL;
+	m_Input_Beacon_Thiersheim					: BOOL;							//{#lynus.ag#()}
+	m_Input_Siren_Thiersheim						: BOOL;							//{#lynus.ag#()}
+	r_tigt_Start_Reset: R_trig;
+	tof_Reset: Tof;
+	m_LiveBit_5min_Thiersheim						: BOOL;							//{#lynus.ag#()}
+	ton_5Min: Ton;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[r_tigt_Start_Reset( CLK := m_Command_Thiersheim_RESET);
+
+tof_Reset(	IN:= r_tigt_Start_Reset.Q, 
+			PT:= T#2S , 
+			Q=> m_out1, 
+			ET=> );
+
+ m_Input_Beacon_Thiersheim		:= 			m_In1;
+ m_Input_Siren_Thiersheim		:= 			m_In2;
+ 
+   ton_5Min(	In := NOT ton_5min.Q	,
+	 		PT := T#5M);
+			
+IF ton_5min.Q AND m_LiveBit_5min_Thiersheim THEN
+	m_LiveBit_5min_Thiersheim := FALSE;
+ELSIF  ton_5min.Q AND NOT m_LiveBit_5min_Thiersheim THEN
+	m_LiveBit_5min_Thiersheim := TRUE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgMain">
+      <LineId Id="5" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="2" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="48" Count="6" />
+      <LineId Id="47" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

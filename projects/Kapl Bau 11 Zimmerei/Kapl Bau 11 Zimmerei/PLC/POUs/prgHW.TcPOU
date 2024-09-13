@@ -1,0 +1,1211 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgHW" Id="{fb8718a3-389b-4d9b-b3ed-ea76bac0641c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHW
+VAR
+	// IOs for EL3443
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Voltage Sign Bit'}
+	MDP5001_341_L1_Status_Voltage_Sign_Bit   	AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Overvoltage'}
+	MDP5001_341_L1_Status_Overvoltage			AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Overcurrent'}
+	MDP5001_341_L1_Status_Overcurrent			AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Inaccurate Voltage'}	
+	MDP5001_341_L1_Status_Inaccurate_Voltage	AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Inaccurate Current'}
+	MDP5001_341_L1_Status_Inaccurate_Current	AT%I*  : BOOL;  // linked via attribute 	
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Voltage Guard Warning'}
+	MDP5001_341_L1_Status_Voltage_Guard_Warning	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Voltage Guard Error'}
+	MDP5001_341_L1_Status_Voltage_Guard_Error	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Current Guard Warning'}
+	MDP5001_341_L1_Status_Current_Guard_Warning AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^Current Guard Error'}
+	MDP5001_341_L1_Status_Current_Guard_Error	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Status^TxPDO Toggle'}
+	MDP5001_341_L1_Status_TxPDO_Toggle			AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Basic^Voltage'}
+	MDP5001_341_L1_Basic_Voltage				AT%I*  : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Basic^Current'}
+	MDP5001_341_L1_Basic_Current				AT%I*  : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Power^Active Power'}
+	MDP5001_341_L1_Power_Active_Power			AT%I*  : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Power^Apparent Power'}
+	MDP5001_341_L1_Power_Apparent_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Power^Reactive Power'}
+	MDP5001_341_L1_Power_Reactive_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L1 Power^Power Factor'}
+	MDP5001_341_L1_Power_Power_Factor			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Voltage Sign Bit'}
+	MDP5001_341_L2_Status_Voltage_Sign_Bit   	AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Overvoltage'}
+	MDP5001_341_L2_Status_Overvoltage			AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Overcurrent'}
+	MDP5001_341_L2_Status_Overcurrent			AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Inaccurate Voltage'}	
+	MDP5001_341_L2_Status_Inaccurate_Voltage	AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Inaccurate Current'}
+	MDP5001_341_L2_Status_Inaccurate_Current	AT%I*  : BOOL;  // linked via attribute 	
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Voltage Guard Warning'}
+	MDP5001_341_L2_Status_Voltage_Guard_Warning	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Voltage Guard Error'}
+	MDP5001_341_L2_Status_Voltage_Guard_Error	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Current Guard Warning'}
+	MDP5001_341_L2_Status_Current_Guard_Warning AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^Current Guard Error'}
+	MDP5001_341_L2_Status_Current_Guard_Error	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Status^TxPDO Toggle'}
+	MDP5001_341_L2_Status_TxPDO_Toggle			AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Basic^Voltage'}
+	MDP5001_341_L2_Basic_Voltage				AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Basic^Current'}
+	MDP5001_341_L2_Basic_Current				AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Power^Active Power'}
+	MDP5001_341_L2_Power_Active_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Power^Apparent Power'}
+	MDP5001_341_L2_Power_Apparent_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Power^Reactive Power'}
+	MDP5001_341_L2_Power_Reactive_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L2 Power^Power Factor'}
+	MDP5001_341_L2_Power_Power_Factor			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Voltage Sign Bit'}
+	MDP5001_341_L3_Status_Voltage_Sign_Bit   	AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Overvoltage'}
+	MDP5001_341_L3_Status_Overvoltage			AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Overcurrent'}
+	MDP5001_341_L3_Status_Overcurrent			AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Inaccurate Voltage'}	
+	MDP5001_341_L3_Status_Inaccurate_Voltage	AT%I*  : BOOL;  // linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Inaccurate Current'}
+	MDP5001_341_L3_Status_Inaccurate_Current	AT%I*  : BOOL;  // linked via attribute 	
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Voltage Guard Warning'}
+	MDP5001_341_L3_Status_Voltage_Guard_Warning	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Voltage Guard Error'}
+	MDP5001_341_L3_Status_Voltage_Guard_Error	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Current Guard Warning'}
+	MDP5001_341_L3_Status_Current_Guard_Warning AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^Current Guard Error'}
+	MDP5001_341_L3_Status_Current_Guard_Error	AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Status^TxPDO Toggle'}
+	MDP5001_341_L3_Status_TxPDO_Toggle			AT%I*  : BOOL;  // linked via attribute
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Basic^Voltage'}
+	MDP5001_341_L3_Basic_Voltage				AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Basic^Current'}
+	MDP5001_341_L3_Basic_Current				AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Power^Active Power'}
+	MDP5001_341_L3_Power_Active_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Power^Apparent Power'}
+	MDP5001_341_L3_Power_Apparent_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Power^Reactive Power'}
+	MDP5001_341_L3_Power_Reactive_Power			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^L3 Power^Power Factor'}
+	MDP5001_341_L3_Power_Power_Factor			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^System State'}
+	MDP5001_341_Total_Status_System_State				AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Grid Direction'}
+	MDP5001_341_Total_Status_Grid_Direction				AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Frequency Guard Warning'}
+	MDP5001_341_Total_Status_Frequency_Guard_Warning	AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Frequency Guard Error'}
+	MDP5001_341_Total_Status_Frequency_Guard_Error		AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Neutral Current Guard Warning'}
+	MDP5001_341_Total_Status_Neutral_Current_Guard_Warning	AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Neutral Current Guard Error'}
+	MDP5001_341_Total_Status_Neutral_Current_Guard_Error	AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Active Power Guard Warning'}
+	MDP5001_341_Total_Status_Active_Power_Guard_Warning		AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Active Power Guard Error'}
+	MDP5001_341_Total_Status_Active_Power_Guard_Error		AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Apparent Power Guard Warning'}
+	MDP5001_341_Total_Status_Apparent_Power_Guard_Warning	AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Apparent Power Guard Error'}
+	MDP5001_341_Total_Status_Apparent_Power_Guard_Error		AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Power Quality Guard Warning'}
+	MDP5001_341_Total_Status_Power_Quality_Guard_Warning	AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Power Quality Guard Error'}
+	MDP5001_341_Total_Status_Power_Quality_Guard_Error		AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^TxPDO State'}
+	MDP5001_341_Total_Status_TxPDO_State					AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^TxPDO Toggle'}
+	MDP5001_341_Total_Status_TxPDO_Toggle					AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Status^Power Quality Factor'}
+	MDP5001_341_Total_Status_Power_Quality_Factor			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Basic^Frequency'}
+	MDP5001_341_Total_Basic_Frequency						AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Basic^Power Factor'}
+	MDP5001_341_Total_Basic_Power_Factor					AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Basic^Calculated Neutral Line Current'}
+	MDP5001_341_Total_Basic_Calculated_Neutral_Line_Current	AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^TxPDO Toggle'}
+	MDP5001_341_Total_Variant_Value_In_TxPDO_Toggle			AT%I* : BOOL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Index 1 REAL'}
+	MDP5001_341_Total_Variant_Value_In_Index_1_REAL			AT%I* : UINT;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Value 1 REAL'}
+	MDP5001_341_Total_Variant_Value_In_Value_1_REAL			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Index 2 REAL'}
+	MDP5001_341_Total_Variant_Value_In_Index_2_REAL			AT%I* : UINT;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Value 2 REAL'}
+	MDP5001_341_Total_Variant_Value_In_Value_2_REAL			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Index 3 REAL'}
+	MDP5001_341_Total_Variant_Value_In_Index_3_REAL			AT%I* : UINT;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Value 3 REAL'}
+	MDP5001_341_Total_Variant_Value_In_Value_3_REAL			AT%I* : REAL;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Index 4 ULINT'}
+	MDP5001_341_Total_Variant_Value_In_Index_4_ULINT		AT%I* : UINT;		// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value In^Value 4 ULINT'}
+	MDP5001_341_Total_Variant_Value_In_Value_4_ULINT		AT%I* : ULINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 1'}
+	MDP5001_341_DPM_Data_Data_1								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 2'}
+	MDP5001_341_DPM_Data_Data_2								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 3'}
+	MDP5001_341_DPM_Data_Data_3								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 4'}
+	MDP5001_341_DPM_Data_Data_4								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 5'}
+	MDP5001_341_DPM_Data_Data_5								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 6'}
+	MDP5001_341_DPM_Data_Data_6								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 7'}
+	MDP5001_341_DPM_Data_Data_7								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 8'}
+	MDP5001_341_DPM_Data_Data_8								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 9'}
+	MDP5001_341_DPM_Data_Data_9								AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 10'}
+	MDP5001_341_DPM_Data_Data_10							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 11'}
+	MDP5001_341_DPM_Data_Data_11							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 12'}
+	MDP5001_341_DPM_Data_Data_12							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 13'}
+	MDP5001_341_DPM_Data_Data_13							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 14'}
+	MDP5001_341_DPM_Data_Data_14							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 15'}
+	MDP5001_341_DPM_Data_Data_15							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 16'}
+	MDP5001_341_DPM_Data_Data_16							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 17'}
+	MDP5001_341_DPM_Data_Data_17							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 18'}
+	MDP5001_341_DPM_Data_Data_18							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 19'}
+	MDP5001_341_DPM_Data_Data_19							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^DPM Data^Data 20'}
+	MDP5001_341_DPM_Data_Data_20							AT%I* : UDINT;	// linked via attribute 
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value Out^Index 1 REAL'}
+	MDP5001_341_Total_Variant_Value_Out_Index_1_REAL	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value Out^Index 2 REAL'}
+	MDP5001_341_Total_Variant_Value_Out_Index_2_REAL	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value Out^Index 3 REAL'}
+	MDP5001_341_Total_Variant_Value_Out_Index_3_REAL	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Variant Value Out^Index 4 ULINT'}
+	MDP5001_341_Total_Variant_Value_Out_Index_4_ULINT	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 2 (EL3443)^Total Interval^Reset Interval'}
+	MDP5001_341_Total_Interval_Reset_Interval			AT%Q* : BOOL;
+	
+// IOs for EL3446
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Overcurrent'}
+	MDP5001_342_I1_Channel_Overcurrent_1						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Inaccurate Current'}
+	MDP5001_342_I1_Channel_Inaccurate_Current_1				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Current Guard Warning'}
+	MDP5001_342_I1_Channel_Current_Guard_Warning_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Current Guard Error'}
+	MDP5001_342_I1_Channel_Current_Guard_Error_1				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I1_Channel_Apparent_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I1_Channel_Apparent_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Active Power Guard Warning'}
+	MDP5001_342_I1_Channel_Active_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Active Power Guard Error'}
+	MDP5001_342_I1_Channel_Active_Power_Guard_Error_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I1_Channel_Reactive_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I1_Channel_Reactive_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^DPM Inaccurate'}
+	MDP5001_342_I1_Channel_DPM_Inaccurate_1					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^DPM Timeout'}
+	MDP5001_342_I1_Channel_DPM_Timeout_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^TxPDO Toggle'}
+	MDP5001_342_I1_Channel_TxPDO_Toggle_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Current'}
+	MDP5001_342_I1_Channel_Current_1							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Active Power'}
+	MDP5001_342_I1_Channel_Active_Power_1						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Apparent Power'}
+	MDP5001_342_I1_Channel_Apparent_Power_1					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I1_Channel_Reactive_Power_Fundamental_1		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I1 Channel^Active Energy'}
+	MDP5001_342_I1_Channel_Active_Energy_1					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Overcurrent'}
+	MDP5001_342_I2_Channel_Overcurrent_1						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Inaccurate Current'}
+	MDP5001_342_I2_Channel_Inaccurate_Current_1				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Current Guard Warning'}
+	MDP5001_342_I2_Channel_Current_Guard_Warning_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Current Guard Error'}
+	MDP5001_342_I2_Channel_Current_Guard_Error_1				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I2_Channel_Apparent_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I2_Channel_Apparent_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Active Power Guard Warning'}
+	MDP5001_342_I2_Channel_Active_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Active Power Guard Error'}
+	MDP5001_342_I2_Channel_Active_Power_Guard_Error_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I2_Channel_Reactive_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I2_Channel_Reactive_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^DPM Inaccurate'}
+	MDP5001_342_I2_Channel_DPM_Inaccurate_1					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^DPM Timeout'}
+	MDP5001_342_I2_Channel_DPM_Timeout_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^TxPDO Toggle'}
+	MDP5001_342_I2_Channel_TxPDO_Toggle_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Current'}
+	MDP5001_342_I2_Channel_Current_1							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Active Power'}
+	MDP5001_342_I2_Channel_Active_Power_1						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Apparent Power'}
+	MDP5001_342_I2_Channel_Apparent_Power_1					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I2_Channel_Reactive_Power_Fundamental_1		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I2 Channel^Active Energy'}
+	MDP5001_342_I2_Channel_Active_Energy_1					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Overcurrent'}
+	MDP5001_342_I3_Channel_Overcurrent_1						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Inaccurate Current'}
+	MDP5001_342_I3_Channel_Inaccurate_Current_1				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Current Guard Warning'}
+	MDP5001_342_I3_Channel_Current_Guard_Warning_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Current Guard Error'}
+	MDP5001_342_I3_Channel_Current_Guard_Error_1				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I3_Channel_Apparent_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I3_Channel_Apparent_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Active Power Guard Warning'}
+	MDP5001_342_I3_Channel_Active_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Active Power Guard Error'}
+	MDP5001_342_I3_Channel_Active_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I3_Channel_Reactive_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I3_Channel_Reactive_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^DPM Inaccurate'}
+	MDP5001_342_I3_Channel_DPM_Inaccurate_1					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^DPM Timeout'}
+	MDP5001_342_I3_Channel_DPM_Timeout_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^TxPDO Toggle'}
+	MDP5001_342_I3_Channel_TxPDO_Toggle_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Current'}
+	MDP5001_342_I3_Channel_Current_1							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Active Power'}
+	MDP5001_342_I3_Channel_Active_Power_1						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Apparent Power'}
+	MDP5001_342_I3_Channel_Apparent_Power_1					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I3_Channel_Reactive_Power_Fundamental_1		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I3 Channel^Active Energy'}
+	MDP5001_342_I3_Channel_Active_Energy_1					AT%I*  : DINT;	
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Overcurrent'}
+	MDP5001_342_I4_Channel_Overcurrent_1						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Inaccurate Current'}
+	MDP5001_342_I4_Channel_Inaccurate_Current_1				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Current Guard Warning'}
+	MDP5001_342_I4_Channel_Current_Guard_Warning_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Current Guard Error'}
+	MDP5001_342_I4_Channel_Current_Guard_Error_1				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I4_Channel_Apparent_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I4_Channel_Apparent_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Active Power Guard Warning'}
+	MDP5001_342_I4_Channel_Active_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Active Power Guard Error'}
+	MDP5001_342_I4_Channel_Active_Power_Guard_Error_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I4_Channel_Reactive_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I4_Channel_Reactive_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^DPM Inaccurate'}
+	MDP5001_342_I4_Channel_DPM_Inaccurate_1					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^DPM Timeout'}
+	MDP5001_342_I4_Channel_DPM_Timeout_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^TxPDO Toggle'}
+	MDP5001_342_I4_Channel_TxPDO_Toggle_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Current'}
+	MDP5001_342_I4_Channel_Current_1							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Active Power'}
+	MDP5001_342_I4_Channel_Active_Power_1						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Apparent Power'}
+	MDP5001_342_I4_Channel_Apparent_Power_1					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I4_Channel_Reactive_Power_Fundamental_1		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I4 Channel^Active Energy'}
+	MDP5001_342_I4_Channel_Active_Energy_1					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Overcurrent'}
+	MDP5001_342_I5_Channel_Overcurrent_1						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Inaccurate Current'}
+	MDP5001_342_I5_Channel_Inaccurate_Current_1				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Current Guard Warning'}
+	MDP5001_342_I5_Channel_Current_Guard_Warning_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Current Guard Error'}
+	MDP5001_342_I5_Channel_Current_Guard_Error_1				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I5_Channel_Apparent_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I5_Channel_Apparent_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Active Power Guard Warning'}
+	MDP5001_342_I5_Channel_Active_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Active Power Guard Error'}
+	MDP5001_342_I5_Channel_Active_Power_Guard_Error_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I5_Channel_Reactive_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I5_Channel_Reactive_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^DPM Inaccurate'}
+	MDP5001_342_I5_Channel_DPM_Inaccurate_1					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^DPM Timeout'}
+	MDP5001_342_I5_Channel_DPM_Timeout_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^TxPDO Toggle'}
+	MDP5001_342_I5_Channel_TxPDO_Toggle_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Current'}
+	MDP5001_342_I5_Channel_Current_1							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Active Power'}
+	MDP5001_342_I5_Channel_Active_Power_1						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Apparent Power'}
+	MDP5001_342_I5_Channel_Apparent_Power_1					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I5_Channel_Reactive_Power_Fundamental_1		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I5 Channel^Active Energy'}
+	MDP5001_342_I5_Channel_Active_Energy_1					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Overcurrent'}
+	MDP5001_342_I6_Channel_Overcurrent_1						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Inaccurate Current'}
+	MDP5001_342_I6_Channel_Inaccurate_Current_1				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Current Guard Warning'}
+	MDP5001_342_I6_Channel_Current_Guard_Warning_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Current Guard Error'}
+	MDP5001_342_I6_Channel_Current_Guard_Error_1				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I6_Channel_Apparent_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I6_Channel_Apparent_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Active Power Guard Warning'}
+	MDP5001_342_I6_Channel_Active_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Active Power Guard Error'}
+	MDP5001_342_I6_Channel_Active_Power_Guard_Error_1			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I6_Channel_Reactive_Power_Guard_Warning_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I6_Channel_Reactive_Power_Guard_Error_1		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^DPM Inaccurate'}
+	MDP5001_342_I6_Channel_DPM_Inaccurate_1					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^DPM Timeout'}
+	MDP5001_342_I6_Channel_DPM_Timeout_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^TxPDO Toggle'}
+	MDP5001_342_I6_Channel_TxPDO_Toggle_1						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Current'}
+	MDP5001_342_I6_Channel_Current_1							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Active Power'}
+	MDP5001_342_I6_Channel_Active_Power_1						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Apparent Power'}
+	MDP5001_342_I6_Channel_Apparent_Power_1					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I6_Channel_Reactive_Power_Fundamental_1		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^I6 Channel^Active Energy'}
+	MDP5001_342_I6_Channel_Active_Energy_1					AT%I*  : DINT;	
+	
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^TxPDO Toggle'}
+	MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_1			AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Index 1 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_1			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Value 1 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Value_1_REAL_1			AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Index 2 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Index_2_REAL_1			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Value 2 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Value_2_REAL_1			AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Index 3 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Index_3_REAL_1			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Value 3 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Value_3_REAL_1			AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Index 4 ULINT'}
+	MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT_1			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value In^Value 4 ULINT'}
+	MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_1			AT%I*  : ULINT;
+
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value Out^Index 1 REAL'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_1_REAL_1	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value Out^Index 2 REAL'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_2_REAL_1	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value Out^Index 3 REAL'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_3_REAL_1	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Variant Value Out^Index 4 ULINT'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_4_ULINT_1	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 1'}
+	MDP5001_342_DPM_Data_Data_1_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 2'}
+	MDP5001_342_DPM_Data_Data_2_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 3'}
+	MDP5001_342_DPM_Data_Data_3_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 4'}
+	MDP5001_342_DPM_Data_Data_4_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 5'}
+	MDP5001_342_DPM_Data_Data_5_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 6'}
+	MDP5001_342_DPM_Data_Data_6_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 7'}
+	MDP5001_342_DPM_Data_Data_7_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 8'}
+	MDP5001_342_DPM_Data_Data_8_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 9'}
+	MDP5001_342_DPM_Data_Data_9_1						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 10'}
+	MDP5001_342_DPM_Data_Data_10_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 11'}
+	MDP5001_342_DPM_Data_Data_11_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 12'}
+	MDP5001_342_DPM_Data_Data_12_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 13'}
+	MDP5001_342_DPM_Data_Data_13_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 14'}
+	MDP5001_342_DPM_Data_Data_14_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 15'}
+	MDP5001_342_DPM_Data_Data_15_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 16'}
+	MDP5001_342_DPM_Data_Data_16_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 17'}
+	MDP5001_342_DPM_Data_Data_17_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 18'}
+	MDP5001_342_DPM_Data_Data_18_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 19'}
+	MDP5001_342_DPM_Data_Data_19_1					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 3 (EL3446)^DPM Data^Data 20'}
+	MDP5001_342_DPM_Data_Data_20_1					AT%Q* : UDINT;
+
+
+
+// IOs for EL3446
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Overcurrent'}
+	MDP5001_342_I1_Channel_Overcurrent_2						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Inaccurate Current'}
+	MDP5001_342_I1_Channel_Inaccurate_Current_2				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Current Guard Warning'}
+	MDP5001_342_I1_Channel_Current_Guard_Warning_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Current Guard Error'}
+	MDP5001_342_I1_Channel_Current_Guard_Error_2				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I1_Channel_Apparent_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I1_Channel_Apparent_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Active Power Guard Warning'}
+	MDP5001_342_I1_Channel_Active_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Active Power Guard Error'}
+	MDP5001_342_I1_Channel_Active_Power_Guard_Error_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I1_Channel_Reactive_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I1_Channel_Reactive_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^DPM Inaccurate'}
+	MDP5001_342_I1_Channel_DPM_Inaccurate_2					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^DPM Timeout'}
+	MDP5001_342_I1_Channel_DPM_Timeout_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^TxPDO Toggle'}
+	MDP5001_342_I1_Channel_TxPDO_Toggle_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Current'}
+	MDP5001_342_I1_Channel_Current_2							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Active Power'}
+	MDP5001_342_I1_Channel_Active_Power_2						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Apparent Power'}
+	MDP5001_342_I1_Channel_Apparent_Power_2					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I1_Channel_Reactive_Power_Fundamental_2		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I1 Channel^Active Energy'}
+	MDP5001_342_I1_Channel_Active_Energy_2					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Overcurrent'}
+	MDP5001_342_I2_Channel_Overcurrent_2						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Inaccurate Current'}
+	MDP5001_342_I2_Channel_Inaccurate_Current_2				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Current Guard Warning'}
+	MDP5001_342_I2_Channel_Current_Guard_Warning_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Current Guard Error'}
+	MDP5001_342_I2_Channel_Current_Guard_Error_2				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I2_Channel_Apparent_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I2_Channel_Apparent_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Active Power Guard Warning'}
+	MDP5001_342_I2_Channel_Active_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Active Power Guard Error'}
+	MDP5001_342_I2_Channel_Active_Power_Guard_Error_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I2_Channel_Reactive_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I2_Channel_Reactive_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^DPM Inaccurate'}
+	MDP5001_342_I2_Channel_DPM_Inaccurate_2					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^DPM Timeout'}
+	MDP5001_342_I2_Channel_DPM_Timeout_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^TxPDO Toggle'}
+	MDP5001_342_I2_Channel_TxPDO_Toggle_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Current'}
+	MDP5001_342_I2_Channel_Current_2							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Active Power'}
+	MDP5001_342_I2_Channel_Active_Power_2						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Apparent Power'}
+	MDP5001_342_I2_Channel_Apparent_Power_2					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I2_Channel_Reactive_Power_Fundamental_2		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I2 Channel^Active Energy'}
+	MDP5001_342_I2_Channel_Active_Energy_2					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Overcurrent'}
+	MDP5001_342_I3_Channel_Overcurrent_2						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Inaccurate Current'}
+	MDP5001_342_I3_Channel_Inaccurate_Current_2				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Current Guard Warning'}
+	MDP5001_342_I3_Channel_Current_Guard_Warning_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Current Guard Error'}
+	MDP5001_342_I3_Channel_Current_Guard_Error_2				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I3_Channel_Apparent_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I3_Channel_Apparent_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Active Power Guard Warning'}
+	MDP5001_342_I3_Channel_Active_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Active Power Guard Error'}
+	MDP5001_342_I3_Channel_Active_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I3_Channel_Reactive_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I3_Channel_Reactive_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^DPM Inaccurate'}
+	MDP5001_342_I3_Channel_DPM_Inaccurate_2					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^DPM Timeout'}
+	MDP5001_342_I3_Channel_DPM_Timeout_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^TxPDO Toggle'}
+	MDP5001_342_I3_Channel_TxPDO_Toggle_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Current'}
+	MDP5001_342_I3_Channel_Current_2							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Active Power'}
+	MDP5001_342_I3_Channel_Active_Power_2						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Apparent Power'}
+	MDP5001_342_I3_Channel_Apparent_Power_2					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I3_Channel_Reactive_Power_Fundamental_2		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I3 Channel^Active Energy'}
+	MDP5001_342_I3_Channel_Active_Energy_2					AT%I*  : DINT;	
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Overcurrent'}
+	MDP5001_342_I4_Channel_Overcurrent_2						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Inaccurate Current'}
+	MDP5001_342_I4_Channel_Inaccurate_Current_2				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Current Guard Warning'}
+	MDP5001_342_I4_Channel_Current_Guard_Warning_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Current Guard Error'}
+	MDP5001_342_I4_Channel_Current_Guard_Error_2				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I4_Channel_Apparent_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I4_Channel_Apparent_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Active Power Guard Warning'}
+	MDP5001_342_I4_Channel_Active_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Active Power Guard Error'}
+	MDP5001_342_I4_Channel_Active_Power_Guard_Error_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I4_Channel_Reactive_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I4_Channel_Reactive_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^DPM Inaccurate'}
+	MDP5001_342_I4_Channel_DPM_Inaccurate_2					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^DPM Timeout'}
+	MDP5001_342_I4_Channel_DPM_Timeout_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^TxPDO Toggle'}
+	MDP5001_342_I4_Channel_TxPDO_Toggle_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Current'}
+	MDP5001_342_I4_Channel_Current_2							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Active Power'}
+	MDP5001_342_I4_Channel_Active_Power_2						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Apparent Power'}
+	MDP5001_342_I4_Channel_Apparent_Power_2					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I4_Channel_Reactive_Power_Fundamental_2		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I4 Channel^Active Energy'}
+	MDP5001_342_I4_Channel_Active_Energy_2					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Overcurrent'}
+	MDP5001_342_I5_Channel_Overcurrent_2						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Inaccurate Current'}
+	MDP5001_342_I5_Channel_Inaccurate_Current_2				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Current Guard Warning'}
+	MDP5001_342_I5_Channel_Current_Guard_Warning_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Current Guard Error'}
+	MDP5001_342_I5_Channel_Current_Guard_Error_2				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I5_Channel_Apparent_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I5_Channel_Apparent_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Active Power Guard Warning'}
+	MDP5001_342_I5_Channel_Active_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Active Power Guard Error'}
+	MDP5001_342_I5_Channel_Active_Power_Guard_Error_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I5_Channel_Reactive_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I5_Channel_Reactive_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^DPM Inaccurate'}
+	MDP5001_342_I5_Channel_DPM_Inaccurate_2					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^DPM Timeout'}
+	MDP5001_342_I5_Channel_DPM_Timeout_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^TxPDO Toggle'}
+	MDP5001_342_I5_Channel_TxPDO_Toggle_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Current'}
+	MDP5001_342_I5_Channel_Current_2							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Active Power'}
+	MDP5001_342_I5_Channel_Active_Power_2						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Apparent Power'}
+	MDP5001_342_I5_Channel_Apparent_Power_2					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I5_Channel_Reactive_Power_Fundamental_2		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I5 Channel^Active Energy'}
+	MDP5001_342_I5_Channel_Active_Energy_2					AT%I*  : DINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Overcurrent'}
+	MDP5001_342_I6_Channel_Overcurrent_2						AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Inaccurate Current'}
+	MDP5001_342_I6_Channel_Inaccurate_Current_2				AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Current Guard Warning'}
+	MDP5001_342_I6_Channel_Current_Guard_Warning_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Current Guard Error'}
+	MDP5001_342_I6_Channel_Current_Guard_Error_2				AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Apparent Power Guard Warning'}
+	MDP5001_342_I6_Channel_Apparent_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Apparent Power Guard Error'}
+	MDP5001_342_I6_Channel_Apparent_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Active Power Guard Warning'}
+	MDP5001_342_I6_Channel_Active_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Active Power Guard Error'}
+	MDP5001_342_I6_Channel_Active_Power_Guard_Error_2			AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Reactive Power Guard Warning'}
+	MDP5001_342_I6_Channel_Reactive_Power_Guard_Warning_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Reactive Power Guard Error'}
+	MDP5001_342_I6_Channel_Reactive_Power_Guard_Error_2		AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^DPM Inaccurate'}
+	MDP5001_342_I6_Channel_DPM_Inaccurate_2					AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^DPM Timeout'}
+	MDP5001_342_I6_Channel_DPM_Timeout_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^TxPDO Toggle'}
+	MDP5001_342_I6_Channel_TxPDO_Toggle_2						AT%I*  : bool;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Current'}
+	MDP5001_342_I6_Channel_Current_2							AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Active Power'}
+	MDP5001_342_I6_Channel_Active_Power_2						AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Apparent Power'}
+	MDP5001_342_I6_Channel_Apparent_Power_2					AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Reactive Power Fundamental'}
+	MDP5001_342_I6_Channel_Reactive_Power_Fundamental_2		AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^I6 Channel^Active Energy'}
+	MDP5001_342_I6_Channel_Active_Energy_2					AT%I*  : DINT;	
+	
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^TxPDO Toggle'}
+	MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_2			AT%I*  : BOOL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Index 1 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_2			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Value 1 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Value_1_REAL_2			AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Index 2 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Index_2_REAL_2			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Value 2 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Value_2_REAL_2			AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Index 3 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Index_3_REAL_2			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Value 3 REAL'}
+	MDP5001_342_DPM_Variant_Value_In_Value_3_REAL_2			AT%I*  : REAL;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Index 4 ULINT'}
+	MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT_2			AT%I*  : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value In^Value 4 ULINT'}
+	MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_2			AT%I*  : ULINT;
+
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value Out^Index 1 REAL'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_1_REAL_2	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value Out^Index 2 REAL'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_2_REAL_2	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value Out^Index 3 REAL'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_3_REAL_2	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Variant Value Out^Index 4 ULINT'}
+	MDP5001_342_DPM_Variant_Value_Out_Index_4_ULINT_2	AT%Q* : UINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 1'}
+	MDP5001_342_DPM_Data_Data_1_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 2'}
+	MDP5001_342_DPM_Data_Data_2_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 3'}
+	MDP5001_342_DPM_Data_Data_3_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 4'}
+	MDP5001_342_DPM_Data_Data_4_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 5'}
+	MDP5001_342_DPM_Data_Data_5_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 6'}
+	MDP5001_342_DPM_Data_Data_6_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 7'}
+	MDP5001_342_DPM_Data_Data_7_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 8'}
+	MDP5001_342_DPM_Data_Data_8_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 9'}
+	MDP5001_342_DPM_Data_Data_9_2						AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 10'}
+	MDP5001_342_DPM_Data_Data_10_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 11'}
+	MDP5001_342_DPM_Data_Data_11_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 12'}
+	MDP5001_342_DPM_Data_Data_12_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 13'}
+	MDP5001_342_DPM_Data_Data_13_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 14'}
+	MDP5001_342_DPM_Data_Data_14_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 15'}
+	MDP5001_342_DPM_Data_Data_15_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 16'}
+	MDP5001_342_DPM_Data_Data_16_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 17'}
+	MDP5001_342_DPM_Data_Data_17_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 18'}
+	MDP5001_342_DPM_Data_Data_18_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 19'}
+	MDP5001_342_DPM_Data_Data_19_2					AT%Q* : UDINT;
+	{attribute 'TcLinkTo' := 'TIID^Gerät 2 (EtherCAT)^Klemme 1 (EK1200)^Klemme 4 (EL3446)^DPM Data^Data 20'}
+	MDP5001_342_DPM_Data_Data_20_2					AT%Q* : UDINT;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// copy HW Data to FBs accordingly
+//EL3443
+
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Voltage_Sign_Bit 		:= MDP5001_341_L1_Status_Voltage_Sign_Bit;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Overvoltage			:= MDP5001_341_L1_Status_Overvoltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Overcurrent			:= MDP5001_341_L1_Status_Overcurrent;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Inaccurate_Voltage	:= MDP5001_341_L1_Status_Inaccurate_Voltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Inaccurate_Current	:= MDP5001_341_L1_Status_Inaccurate_Current;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Voltage_Guard_Warning	:= MDP5001_341_L1_Status_Voltage_Guard_Warning;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Voltage_Guard_Error	:= MDP5001_341_L1_Status_Voltage_Guard_Error;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Current_Guard_Warning	:= MDP5001_341_L1_Status_Current_Guard_Warning;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Current_Guard_Error	:= MDP5001_341_L1_Status_Current_Guard_Error;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_TxPDO_Toggle			:= MDP5001_341_L1_Status_TxPDO_Toggle;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Basic_Voltage				:= MDP5001_341_L1_Basic_Voltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Basic_Current				:= MDP5001_341_L1_Basic_Current;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Power_Active_Power			:= MDP5001_341_L1_Power_Active_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Power_Apparent_Power			:= MDP5001_341_L1_Power_Apparent_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Power_Reactive_Power			:= MDP5001_341_L1_Power_Reactive_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Power_Power_Factor			:= MDP5001_341_L1_Power_Power_Factor;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Voltage_Sign_Bit 		:= MDP5001_341_L2_Status_Voltage_Sign_Bit;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Overvoltage			:= MDP5001_341_L2_Status_Overvoltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Overcurrent			:= MDP5001_341_L2_Status_Overcurrent;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Inaccurate_Voltage	:= MDP5001_341_L2_Status_Inaccurate_Voltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Inaccurate_Current	:= MDP5001_341_L2_Status_Inaccurate_Current;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Voltage_Guard_Warning	:= MDP5001_341_L2_Status_Voltage_Guard_Warning;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Voltage_Guard_Error	:= MDP5001_341_L2_Status_Voltage_Guard_Error;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Current_Guard_Warning	:= MDP5001_341_L2_Status_Current_Guard_Warning;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Current_Guard_Error	:= MDP5001_341_L2_Status_Current_Guard_Error;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_TxPDO_Toggle			:= MDP5001_341_L2_Status_TxPDO_Toggle;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Basic_Voltage				:= MDP5001_341_L2_Basic_Voltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Basic_Current				:= MDP5001_341_L2_Basic_Current;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Power_Active_Power			:= MDP5001_341_L2_Power_Active_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Power_Apparent_Power			:= MDP5001_341_L2_Power_Apparent_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Power_Reactive_Power			:= MDP5001_341_L2_Power_Reactive_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Power_Power_Factor			:= MDP5001_341_L2_Power_Power_Factor;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Voltage_Sign_Bit 		:= MDP5001_341_L3_Status_Voltage_Sign_Bit;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Overvoltage			:= MDP5001_341_L3_Status_Overvoltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Overcurrent			:= MDP5001_341_L3_Status_Overcurrent;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Inaccurate_Voltage	:= MDP5001_341_L3_Status_Inaccurate_Voltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Inaccurate_Current	:= MDP5001_341_L3_Status_Inaccurate_Current;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Voltage_Guard_Warning	:= MDP5001_341_L3_Status_Voltage_Guard_Warning;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Voltage_Guard_Error	:= MDP5001_341_L3_Status_Voltage_Guard_Error;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Current_Guard_Warning	:= MDP5001_341_L3_Status_Current_Guard_Warning;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Current_Guard_Error	:= MDP5001_341_L3_Status_Current_Guard_Error;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_TxPDO_Toggle			:= MDP5001_341_L3_Status_TxPDO_Toggle;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Basic_Voltage				:= MDP5001_341_L3_Basic_Voltage;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Basic_Current				:= MDP5001_341_L3_Basic_Current;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Power_Active_Power			:= MDP5001_341_L3_Power_Active_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Power_Apparent_Power			:= MDP5001_341_L3_Power_Apparent_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Power_Reactive_Power			:= MDP5001_341_L3_Power_Reactive_Power;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Power_Power_Factor			:= MDP5001_341_L3_Power_Power_Factor;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_System_State		:= MDP5001_341_Total_Status_System_State  ;	
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Grid_Direction		:= MDP5001_341_Total_Status_Grid_Direction ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Frequency_Guard_Warning 		:= MDP5001_341_Total_Status_Frequency_Guard_Warning ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Frequency_Guard_Error 			:= MDP5001_341_Total_Status_Frequency_Guard_Error  ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Neutral_Current_Guard_Warning	:= MDP5001_341_Total_Status_Neutral_Current_Guard_Warning ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Neutral_Current_Guard_Error	:= MDP5001_341_Total_Status_Neutral_Current_Guard_Error;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Active_Power_Guard_Warning		:= MDP5001_341_Total_Status_Active_Power_Guard_Warning ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Active_Power_Guard_Error		:= MDP5001_341_Total_Status_Active_Power_Guard_Error ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Apparent_Power_Guard_Warning	:= MDP5001_341_Total_Status_Apparent_Power_Guard_Warning ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Apparent_Power_Guard_Error		:= MDP5001_341_Total_Status_Apparent_Power_Guard_Error ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Power_Quality_Guard_Warning	:= MDP5001_341_Total_Status_Power_Quality_Guard_Warning ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Power_Quality_Guard_Error		:= MDP5001_341_Total_Status_Power_Quality_Guard_Error ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_TxPDO_State					:= MDP5001_341_Total_Status_TxPDO_State ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_TxPDO_Toggle					:= MDP5001_341_Total_Status_TxPDO_Toggle ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Power_Quality_Factor			:= MDP5001_341_Total_Status_Power_Quality_Factor ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Basic_Frequency						:= MDP5001_341_Total_Basic_Frequency;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Basic_Power_Factor					:= MDP5001_341_Total_Basic_Power_Factor  ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Basic_Calculated_Neutral_Line_Current	:= MDP5001_341_Total_Basic_Calculated_Neutral_Line_Current ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_TxPDO_Toggle			:= MDP5001_341_Total_Variant_Value_In_TxPDO_Toggle ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_1_REAL			:= MDP5001_341_Total_Variant_Value_In_Index_1_REAL ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_1_REAL			:= MDP5001_341_Total_Variant_Value_In_Value_1_REAL ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_2_REAL			:= MDP5001_341_Total_Variant_Value_In_Index_2_REAL ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_2_REAL			:= MDP5001_341_Total_Variant_Value_In_Value_2_REAL ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_3_REAL			:= MDP5001_341_Total_Variant_Value_In_Index_3_REAL ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_3_REAL			:= MDP5001_341_Total_Variant_Value_In_Value_3_REAL ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_4_ULINT		:= MDP5001_341_Total_Variant_Value_In_Index_4_ULINT ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_4_ULINT		:= MDP5001_341_Total_Variant_Value_In_Value_4_ULINT ;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_1			:= MDP5001_341_DPM_Data_Data_1;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_2			:= MDP5001_341_DPM_Data_Data_2;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_3			:= MDP5001_341_DPM_Data_Data_3;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_4			:= MDP5001_341_DPM_Data_Data_4;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_5			:= MDP5001_341_DPM_Data_Data_5;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_6			:= MDP5001_341_DPM_Data_Data_6;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_7			:= MDP5001_341_DPM_Data_Data_7;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_8			:= MDP5001_341_DPM_Data_Data_8;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_9			:= MDP5001_341_DPM_Data_Data_9;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_10		:= MDP5001_341_DPM_Data_Data_10;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_11		:= MDP5001_341_DPM_Data_Data_11;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_12		:= MDP5001_341_DPM_Data_Data_12;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_13		:= MDP5001_341_DPM_Data_Data_13;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_14		:= MDP5001_341_DPM_Data_Data_14;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_15		:= MDP5001_341_DPM_Data_Data_15;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_16		:= MDP5001_341_DPM_Data_Data_16;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_17		:= MDP5001_341_DPM_Data_Data_17;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_18		:= MDP5001_341_DPM_Data_Data_18;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_19		:= MDP5001_341_DPM_Data_Data_19;
+prgEM.stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_20		:= MDP5001_341_DPM_Data_Data_20;
+MDP5001_341_Total_Variant_Value_Out_Index_1_REAL	:= prgEM.stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_1_REAL;
+MDP5001_341_Total_Variant_Value_Out_Index_2_REAL	:= prgEM.stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_2_REAL;
+MDP5001_341_Total_Variant_Value_Out_Index_3_REAL	:= prgEM.stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_3_REAL;
+MDP5001_341_Total_Variant_Value_Out_Index_4_ULINT	:= prgEM.stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_4_ULINT;
+MDP5001_341_Total_Interval_Reset_Interval			:= prgEM.stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Interval_Reset_Interval;
+
+// EL3446
+
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Overcurrent					:=	MDP5001_342_I1_Channel_Overcurrent_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Inaccurate_Current			:=	MDP5001_342_I1_Channel_Inaccurate_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Current_Guard_Warning		:=	MDP5001_342_I1_Channel_Current_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Current_Guard_Error			:=	MDP5001_342_I1_Channel_Current_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I1_Channel_Apparent_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I1_Channel_Apparent_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I1_Channel_Active_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I1_Channel_Active_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I1_Channel_Reactive_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I1_Channel_Reactive_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_DPM_Inaccurate				:=	MDP5001_342_I1_Channel_DPM_Inaccurate_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_DPM_Timeout					:=	MDP5001_342_I1_Channel_DPM_Timeout_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_TxPDO_Toggle					:=	MDP5001_342_I1_Channel_TxPDO_Toggle_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Current						:=	MDP5001_342_I1_Channel_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Power					:=	MDP5001_342_I1_Channel_Active_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Apparent_Power				:=	MDP5001_342_I1_Channel_Apparent_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I1_Channel_Reactive_Power_Fundamental_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Energy				:=	MDP5001_342_I1_Channel_Active_Energy_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Overcurrent					:=	MDP5001_342_I2_Channel_Overcurrent_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Inaccurate_Current			:=	MDP5001_342_I2_Channel_Inaccurate_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Current_Guard_Warning		:=	MDP5001_342_I2_Channel_Current_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Current_Guard_Error			:=	MDP5001_342_I2_Channel_Current_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I2_Channel_Apparent_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I2_Channel_Apparent_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I2_Channel_Active_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I2_Channel_Active_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I2_Channel_Reactive_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I2_Channel_Reactive_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_DPM_Inaccurate				:=	MDP5001_342_I2_Channel_DPM_Inaccurate_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_DPM_Timeout					:=	MDP5001_342_I2_Channel_DPM_Timeout_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_TxPDO_Toggle					:=	MDP5001_342_I2_Channel_TxPDO_Toggle_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Current						:=	MDP5001_342_I2_Channel_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Power					:=	MDP5001_342_I2_Channel_Active_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Apparent_Power				:=	MDP5001_342_I2_Channel_Apparent_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I2_Channel_Reactive_Power_Fundamental_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Energy				:=	MDP5001_342_I2_Channel_Active_Energy_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Overcurrent					:=	MDP5001_342_I3_Channel_Overcurrent_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Inaccurate_Current			:=	MDP5001_342_I3_Channel_Inaccurate_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Current_Guard_Warning		:=	MDP5001_342_I3_Channel_Current_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Current_Guard_Error			:=	MDP5001_342_I3_Channel_Current_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I3_Channel_Apparent_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I3_Channel_Apparent_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I3_Channel_Active_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I3_Channel_Active_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I3_Channel_Reactive_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I3_Channel_Reactive_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_DPM_Inaccurate				:=	MDP5001_342_I3_Channel_DPM_Inaccurate_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_DPM_Timeout					:=	MDP5001_342_I3_Channel_DPM_Timeout_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_TxPDO_Toggle					:=	MDP5001_342_I3_Channel_TxPDO_Toggle_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Current						:=	MDP5001_342_I3_Channel_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Power					:=	MDP5001_342_I3_Channel_Active_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Apparent_Power				:=	MDP5001_342_I3_Channel_Apparent_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I3_Channel_Reactive_Power_Fundamental_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Energy				:=	MDP5001_342_I3_Channel_Active_Energy_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Overcurrent					:=	MDP5001_342_I4_Channel_Overcurrent_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Inaccurate_Current			:=	MDP5001_342_I4_Channel_Inaccurate_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Current_Guard_Warning		:=	MDP5001_342_I4_Channel_Current_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Current_Guard_Error			:=	MDP5001_342_I4_Channel_Current_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I4_Channel_Apparent_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I4_Channel_Apparent_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I4_Channel_Active_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I4_Channel_Active_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I4_Channel_Reactive_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I4_Channel_Reactive_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_DPM_Inaccurate				:=	MDP5001_342_I4_Channel_DPM_Inaccurate_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_DPM_Timeout					:=	MDP5001_342_I4_Channel_DPM_Timeout_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_TxPDO_Toggle					:=	MDP5001_342_I4_Channel_TxPDO_Toggle_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Current						:=	MDP5001_342_I4_Channel_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Power					:=	MDP5001_342_I4_Channel_Active_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Apparent_Power				:=	MDP5001_342_I4_Channel_Apparent_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I4_Channel_Reactive_Power_Fundamental_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Energy				:=	MDP5001_342_I4_Channel_Active_Energy_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Overcurrent					:=	MDP5001_342_I5_Channel_Overcurrent_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Inaccurate_Current			:=	MDP5001_342_I5_Channel_Inaccurate_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Current_Guard_Warning		:=	MDP5001_342_I5_Channel_Current_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Current_Guard_Error			:=	MDP5001_342_I5_Channel_Current_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I5_Channel_Apparent_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I5_Channel_Apparent_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I5_Channel_Active_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I5_Channel_Active_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I5_Channel_Reactive_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I5_Channel_Reactive_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_DPM_Inaccurate				:=	MDP5001_342_I5_Channel_DPM_Inaccurate_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_DPM_Timeout					:=	MDP5001_342_I5_Channel_DPM_Timeout_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_TxPDO_Toggle					:=	MDP5001_342_I5_Channel_TxPDO_Toggle_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Current						:=	MDP5001_342_I5_Channel_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Power					:=	MDP5001_342_I5_Channel_Active_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Apparent_Power				:=	MDP5001_342_I5_Channel_Apparent_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I5_Channel_Reactive_Power_Fundamental_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Energy				:=	MDP5001_342_I5_Channel_Active_Energy_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Overcurrent					:=	MDP5001_342_I6_Channel_Overcurrent_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Inaccurate_Current			:=	MDP5001_342_I6_Channel_Inaccurate_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Current_Guard_Warning		:=	MDP5001_342_I6_Channel_Current_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Current_Guard_Error			:=	MDP5001_342_I6_Channel_Current_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I6_Channel_Apparent_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I6_Channel_Apparent_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I6_Channel_Active_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I6_Channel_Active_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I6_Channel_Reactive_Power_Guard_Warning_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I6_Channel_Reactive_Power_Guard_Error_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_DPM_Inaccurate				:=	MDP5001_342_I6_Channel_DPM_Inaccurate_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_DPM_Timeout					:=	MDP5001_342_I6_Channel_DPM_Timeout_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_TxPDO_Toggle					:=	MDP5001_342_I6_Channel_TxPDO_Toggle_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Current						:=	MDP5001_342_I6_Channel_Current_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Power					:=	MDP5001_342_I6_Channel_Active_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Apparent_Power				:=	MDP5001_342_I6_Channel_Apparent_Power_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I6_Channel_Reactive_Power_Fundamental_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Energy				:=	MDP5001_342_I6_Channel_Active_Energy_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle		:=	MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_1_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Value_1_REAL_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_2_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Index_2_REAL_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_2_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Value_2_REAL_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_3_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Index_3_REAL_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_3_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Value_3_REAL_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT		:=	MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT_1;
+prgEM.stEL3446_IO_1.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT		:=	MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_1;
+
+MDP5001_342_DPM_Variant_Value_Out_Index_1_REAL_1	:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_1_REAL	;
+MDP5001_342_DPM_Variant_Value_Out_Index_2_REAL_1	:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_2_REAL	;	
+MDP5001_342_DPM_Variant_Value_Out_Index_3_REAL_1	:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_3_REAL	;
+MDP5001_342_DPM_Variant_Value_Out_Index_4_ULINT_1	:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_4_ULINT	;
+MDP5001_342_DPM_Data_Data_1_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_1	;
+MDP5001_342_DPM_Data_Data_2_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_2	;
+MDP5001_342_DPM_Data_Data_3_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_3	;
+MDP5001_342_DPM_Data_Data_4_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_4	;
+MDP5001_342_DPM_Data_Data_5_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_5	;
+MDP5001_342_DPM_Data_Data_6_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_6	;
+MDP5001_342_DPM_Data_Data_7_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_7	;
+MDP5001_342_DPM_Data_Data_8_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_8	;
+MDP5001_342_DPM_Data_Data_9_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_9	;
+MDP5001_342_DPM_Data_Data_10_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_10	;
+MDP5001_342_DPM_Data_Data_11_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_11	;
+MDP5001_342_DPM_Data_Data_12_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_12	;
+MDP5001_342_DPM_Data_Data_13_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_13	;
+MDP5001_342_DPM_Data_Data_14_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_14	;
+MDP5001_342_DPM_Data_Data_15_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_15	;
+MDP5001_342_DPM_Data_Data_16_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_16	;
+MDP5001_342_DPM_Data_Data_17_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_17	;
+MDP5001_342_DPM_Data_Data_18_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_18	;
+MDP5001_342_DPM_Data_Data_19_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_19	;
+MDP5001_342_DPM_Data_Data_20_1						:= 		prgEM.stEL3446_IO_1.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_20	;
+
+
+
+
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Overcurrent					:=	MDP5001_342_I1_Channel_Overcurrent_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Inaccurate_Current			:=	MDP5001_342_I1_Channel_Inaccurate_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Current_Guard_Warning		:=	MDP5001_342_I1_Channel_Current_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Current_Guard_Error			:=	MDP5001_342_I1_Channel_Current_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I1_Channel_Apparent_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I1_Channel_Apparent_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I1_Channel_Active_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I1_Channel_Active_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I1_Channel_Reactive_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I1_Channel_Reactive_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_DPM_Inaccurate				:=	MDP5001_342_I1_Channel_DPM_Inaccurate_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_DPM_Timeout					:=	MDP5001_342_I1_Channel_DPM_Timeout_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_TxPDO_Toggle					:=	MDP5001_342_I1_Channel_TxPDO_Toggle_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Current						:=	MDP5001_342_I1_Channel_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Power					:=	MDP5001_342_I1_Channel_Active_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Apparent_Power				:=	MDP5001_342_I1_Channel_Apparent_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I1_Channel_Reactive_Power_Fundamental_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I1_Channel_Active_Energy				:=	MDP5001_342_I1_Channel_Active_Energy_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Overcurrent					:=	MDP5001_342_I2_Channel_Overcurrent_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Inaccurate_Current			:=	MDP5001_342_I2_Channel_Inaccurate_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Current_Guard_Warning		:=	MDP5001_342_I2_Channel_Current_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Current_Guard_Error			:=	MDP5001_342_I2_Channel_Current_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I2_Channel_Apparent_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I2_Channel_Apparent_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I2_Channel_Active_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I2_Channel_Active_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I2_Channel_Reactive_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I2_Channel_Reactive_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_DPM_Inaccurate				:=	MDP5001_342_I2_Channel_DPM_Inaccurate_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_DPM_Timeout					:=	MDP5001_342_I2_Channel_DPM_Timeout_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_TxPDO_Toggle					:=	MDP5001_342_I2_Channel_TxPDO_Toggle_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Current						:=	MDP5001_342_I2_Channel_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Power					:=	MDP5001_342_I2_Channel_Active_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Apparent_Power				:=	MDP5001_342_I2_Channel_Apparent_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I2_Channel_Reactive_Power_Fundamental_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I2_Channel_Active_Energy				:=	MDP5001_342_I2_Channel_Active_Energy_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Overcurrent					:=	MDP5001_342_I3_Channel_Overcurrent_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Inaccurate_Current			:=	MDP5001_342_I3_Channel_Inaccurate_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Current_Guard_Warning		:=	MDP5001_342_I3_Channel_Current_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Current_Guard_Error			:=	MDP5001_342_I3_Channel_Current_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I3_Channel_Apparent_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I3_Channel_Apparent_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I3_Channel_Active_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I3_Channel_Active_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I3_Channel_Reactive_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I3_Channel_Reactive_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_DPM_Inaccurate				:=	MDP5001_342_I3_Channel_DPM_Inaccurate_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_DPM_Timeout					:=	MDP5001_342_I3_Channel_DPM_Timeout_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_TxPDO_Toggle					:=	MDP5001_342_I3_Channel_TxPDO_Toggle_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Current						:=	MDP5001_342_I3_Channel_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Power					:=	MDP5001_342_I3_Channel_Active_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Apparent_Power				:=	MDP5001_342_I3_Channel_Apparent_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I3_Channel_Reactive_Power_Fundamental_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I3_Channel_Active_Energy				:=	MDP5001_342_I3_Channel_Active_Energy_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Overcurrent					:=	MDP5001_342_I4_Channel_Overcurrent_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Inaccurate_Current			:=	MDP5001_342_I4_Channel_Inaccurate_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Current_Guard_Warning		:=	MDP5001_342_I4_Channel_Current_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Current_Guard_Error			:=	MDP5001_342_I4_Channel_Current_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I4_Channel_Apparent_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I4_Channel_Apparent_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I4_Channel_Active_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I4_Channel_Active_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I4_Channel_Reactive_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I4_Channel_Reactive_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_DPM_Inaccurate				:=	MDP5001_342_I4_Channel_DPM_Inaccurate_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_DPM_Timeout					:=	MDP5001_342_I4_Channel_DPM_Timeout_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_TxPDO_Toggle					:=	MDP5001_342_I4_Channel_TxPDO_Toggle_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Current						:=	MDP5001_342_I4_Channel_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Power					:=	MDP5001_342_I4_Channel_Active_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Apparent_Power				:=	MDP5001_342_I4_Channel_Apparent_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I4_Channel_Reactive_Power_Fundamental_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I4_Channel_Active_Energy				:=	MDP5001_342_I4_Channel_Active_Energy_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Overcurrent					:=	MDP5001_342_I5_Channel_Overcurrent_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Inaccurate_Current			:=	MDP5001_342_I5_Channel_Inaccurate_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Current_Guard_Warning		:=	MDP5001_342_I5_Channel_Current_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Current_Guard_Error			:=	MDP5001_342_I5_Channel_Current_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I5_Channel_Apparent_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I5_Channel_Apparent_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I5_Channel_Active_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I5_Channel_Active_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I5_Channel_Reactive_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I5_Channel_Reactive_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_DPM_Inaccurate				:=	MDP5001_342_I5_Channel_DPM_Inaccurate_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_DPM_Timeout					:=	MDP5001_342_I5_Channel_DPM_Timeout_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_TxPDO_Toggle					:=	MDP5001_342_I5_Channel_TxPDO_Toggle_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Current						:=	MDP5001_342_I5_Channel_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Power					:=	MDP5001_342_I5_Channel_Active_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Apparent_Power				:=	MDP5001_342_I5_Channel_Apparent_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I5_Channel_Reactive_Power_Fundamental_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I5_Channel_Active_Energy				:=	MDP5001_342_I5_Channel_Active_Energy_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Overcurrent					:=	MDP5001_342_I6_Channel_Overcurrent_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Inaccurate_Current			:=	MDP5001_342_I6_Channel_Inaccurate_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Current_Guard_Warning		:=	MDP5001_342_I6_Channel_Current_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Current_Guard_Error			:=	MDP5001_342_I6_Channel_Current_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Apparent_Power_Guard_Warning	:=	MDP5001_342_I6_Channel_Apparent_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Apparent_Power_Guard_Error	:=	MDP5001_342_I6_Channel_Apparent_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Power_Guard_Warning	:=	MDP5001_342_I6_Channel_Active_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Power_Guard_Error		:=	MDP5001_342_I6_Channel_Active_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Reactive_Power_Guard_Warning	:=	MDP5001_342_I6_Channel_Reactive_Power_Guard_Warning_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Reactive_Power_Guard_Error	:=	MDP5001_342_I6_Channel_Reactive_Power_Guard_Error_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_DPM_Inaccurate				:=	MDP5001_342_I6_Channel_DPM_Inaccurate_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_DPM_Timeout					:=	MDP5001_342_I6_Channel_DPM_Timeout_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_TxPDO_Toggle					:=	MDP5001_342_I6_Channel_TxPDO_Toggle_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Current						:=	MDP5001_342_I6_Channel_Current_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Power					:=	MDP5001_342_I6_Channel_Active_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Apparent_Power				:=	MDP5001_342_I6_Channel_Apparent_Power_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Reactive_Power_Fundamental	:=	MDP5001_342_I6_Channel_Reactive_Power_Fundamental_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_I6_Channel_Active_Energy				:=	MDP5001_342_I6_Channel_Active_Energy_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle		:=	MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_1_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Value_1_REAL_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_2_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Index_2_REAL_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_2_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Value_2_REAL_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_3_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Index_3_REAL_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_3_REAL		:=	MDP5001_342_DPM_Variant_Value_In_Value_3_REAL_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT		:=	MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT_2;
+prgEM.stEL3446_IO_2.MDP5001_342_Input.MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT		:=	MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_2;
+       
+MDP5001_342_DPM_Variant_Value_Out_Index_1_REAL_2	:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_1_REAL	;
+MDP5001_342_DPM_Variant_Value_Out_Index_2_REAL_2	:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_2_REAL	;	
+MDP5001_342_DPM_Variant_Value_Out_Index_3_REAL_2	:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_3_REAL	;
+MDP5001_342_DPM_Variant_Value_Out_Index_4_ULINT_2	:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Variant_Value_Out_Index_4_ULINT	;
+MDP5001_342_DPM_Data_Data_1_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_1	;
+MDP5001_342_DPM_Data_Data_2_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_2	;
+MDP5001_342_DPM_Data_Data_3_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_3	;
+MDP5001_342_DPM_Data_Data_4_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_4	;
+MDP5001_342_DPM_Data_Data_5_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_5	;
+MDP5001_342_DPM_Data_Data_6_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_6	;
+MDP5001_342_DPM_Data_Data_7_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_7	;
+MDP5001_342_DPM_Data_Data_8_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_8	;
+MDP5001_342_DPM_Data_Data_9_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_9	;
+MDP5001_342_DPM_Data_Data_10_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_10	;
+MDP5001_342_DPM_Data_Data_11_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_11	;
+MDP5001_342_DPM_Data_Data_12_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_12	;
+MDP5001_342_DPM_Data_Data_13_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_13	;
+MDP5001_342_DPM_Data_Data_14_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_14	;
+MDP5001_342_DPM_Data_Data_15_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_15	;
+MDP5001_342_DPM_Data_Data_16_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_16	;
+MDP5001_342_DPM_Data_Data_17_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_17	;
+MDP5001_342_DPM_Data_Data_18_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_18	;
+MDP5001_342_DPM_Data_Data_19_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_19	;
+MDP5001_342_DPM_Data_Data_20_2						:= 		prgEM.stEL3446_IO_2.MDP5001_342_Output.MDP5001_342_DPM_Data_Data_20	;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgHW">
+      <LineId Id="5" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="910" Count="0" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="669" Count="14" />
+      <LineId Id="690" Count="31" />
+      <LineId Id="591" Count="0" />
+      <LineId Id="722" Count="1" />
+      <LineId Id="725" Count="9" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="737" Count="13" />
+      <LineId Id="752" Count="18" />
+      <LineId Id="779" Count="3" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="786" Count="0" />
+      <LineId Id="784" Count="0" />
+      <LineId Id="3431" Count="116" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="3548" Count="0" />
+      <LineId Id="1065" Count="23" />
+      <LineId Id="3841" Count="119" />
+      <LineId Id="2122" Count="0" />
+      <LineId Id="4247" Count="0" />
+      <LineId Id="4249" Count="22" />
+      <LineId Id="4246" Count="0" />
+      <LineId Id="4558" Count="0" />
+      <LineId Id="4557" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

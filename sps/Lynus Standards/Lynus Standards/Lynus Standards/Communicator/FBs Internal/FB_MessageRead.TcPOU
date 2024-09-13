@@ -1,0 +1,315 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_MessageRead" Id="{6d37c682-e5ad-4b5a-860e-99987f79fc0c}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_MessageRead
+VAR_INPUT
+	{attribute 'hide'}
+	sReceivedMessageDoc    			: STRING(7000);																			//Received Message File from external code
+	{attribute 'hide'}
+	arrVarInfos						: ARRAY[1..10,1..Constants_Communicator.udiArraySizeMarkedSymobls] OF ST_Var_Info_GV;	//Infos from each plc variable		
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stInfoFromReceivedMessage		: ST_Message_Out;																		//Output structer from the received Message file from input
+	{attribute 'hide'}
+	bError							: BOOL;																					//Error flag
+	{attribute 'hide'}
+	bMuchMoreInformationReceived	: BOOL;																					//Much more Information received
+	eErrorMessage_Out				: eErrorMessage;																		//Enum with the Error states
+END_VAR
+VAR
+	fbJsonRead					    : FB_JsonDomParser;																		//FB Json Dom reader
+ 	jsonDocInit  					: SJsonValue;																			//Json value
+	jsonDoc		  					: SJsonValue;																			//Json value
+	jsonPropID   					: SJsonValue;																			//Json value
+	jsonPropValue  					: SJsonValue;																			//Json value
+	jsonPropValueOut				: SJsonValue;																			//Json value
+	jsonIteratorInit				: SJsonAIterator;																		//Json AIterator
+	jsonIterator 					: SJsonAIterator;																		//Json AIterator
+	eJsonType						: EJsonType;																			//Json Type
+	arrStringValueFloat				: ARRAY[0..Constants_Communicator.bySizeOfReceivedValueArrayInJson] OF STRING(510);		//Copy received value string in this variable to check the received lengh	
+	arrErrorIntern					: ARRAY[0..Constants_Communicator.bySizeOfReceivedValueArrayInJson] OF BOOL;			//Array with Error flag	
+	bDetected						: BOOL;																					//True if the symbol Name is found in the internal array
+	bErrorIntern					: BOOL;																					//Error flag
+	byLPCheckSymbolType				: BYTE;																					//Loop to check if the symbol exist in the plc
+	uiLPClearOutValues				: UINT;																					//Loop to clear output values
+	udiLPCheckSymbolType			: UDINT;																				//Loop to check symbol type
+	udiLPWriteValueArrayOUT			: UDINT;																				//Loop to write array value		
+	udiArraySizeReceived			: UDINT;																				//Array Size from received jso	
+	udiLPErrorArrayTrue				: UDINT;																				//Loop to fill the error array initial with true
+	udiLPErrorArrayCheck			: UDINT;																				//Loop to check at the end of the code its 1 error flag is remained at true	
+	lrFloatValue					: LREAL;																				//Float Value LREAL
+	rFloatValue						: REAL;																					//Float Value REAL
+	sFindMemberValue				: STRING(2);																			//Member for the value	
+	(*--------------------------------------------------Not in use-----------------------------------------------------------------------*)
+	jsonXMLName						: SJsonValue;																			//Json value (-)
+	jsonLink						: SJsonValue;																			//Json value (l)
+	jsonBaseName					: SJsonValue;																			//Json value (bn)
+	jsonBaseTime					: SJsonValue;																			//Json value (bt)
+	jsonBaseUnit					: SJsonValue;																			//Json value (bu)
+	jsonBaseVersion					: SJsonValue;																			//Json value (bver)
+	jsonBaseValue					: SJsonValue;																			//Json value (bv)
+	jsonBaseSum						: SJsonValue;																			//Json value (bs)
+	jsonUnit						: SJsonValue;																			//Json value (u)
+	jsonTime						: SJsonValue;																			//Json value (t)
+	jsonUpateTime					: SJsonValue;																			//Json value (ut)
+	jsonDataValue					: SJsonValue;																			//Json value (vd)
+	jsonBoolValue					: SJsonValue;																			//Json value (vb)
+	jsonSum							: SJsonValue;																			//Json value (s)										
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 01.04.2020
+//Version : 1.0.0.0
+
+//With this function its possible to read a json file in SenML Format
+//The function produce a error if the received symbol name not exist in the internal list from the plc
+//Read json files with every standart data type with single symbols and 1 dimension arrays.
+
+(*-------------------------------------------------------------------------JSON READ--------------------------------------------------------------------------*)
+//Clear output befor start to encode the received json
+stInfoFromReceivedMessage.sFullSymbolName := '';
+	stInfoFromReceivedMessage.sSymbolType := '';
+		FOR uiLPClearOutValues := 0 TO Constants_Communicator.bySizeOfReceivedValueArrayInJson BY 1 DO
+			stInfoFromReceivedMessage.arrValue[uiLPClearOutValues] := '';
+				arrStringValueFloat[uiLPClearOutValues] := '';	
+		END_FOR	
+
+//Find 1 content in array because the received mesage is in SenML Format
+jsonDocInit := fbJsonRead.ParseDocument(sReceivedMessageDoc);
+
+IF jsonDocInit <> 0 THEN
+	IF fbJsonRead.IsArray(jsonDocInit) AND fbJsonRead.GetArraySize(jsonDocInit) = 1 THEN
+		jsonIteratorInit := fbJsonRead.ArrayBegin(jsonDocInit);
+			jsonDoc := fbJsonRead.GetArrayValue(jsonIteratorInit);
+	ELSE
+		jsonDoc := 0;
+	END_IF
+ELSE
+	jsonDoc := 0;
+END_IF
+
+bDetected := FALSE;
+
+stInfoFromReceivedMessage.byReadWriteArrayNumber := LIMIT(1,stInfoFromReceivedMessage.byReadWriteArrayNumber,10);
+
+IF jsonDoc <> 0 THEN
+
+	jsonPropID := fbJsonRead.FindMember(jsonDoc, 'n');
+	IF (jsonPropID <> 0) AND fbJsonRead.IsString(jsonPropID) THEN
+	  stInfoFromReceivedMessage.sFullSymbolName := fbJsonRead.GetString(jsonPropID);
+	END_IF
+		//Check for accordance 
+		bDetected := FALSE;
+		
+		IF GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN
+			FOR byLPCheckSymbolType := 1 TO GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO   
+				IF GVL_Communicator.arrCounterVariableInArray[byLPCheckSymbolType] <= Constants_Communicator.udiArraySizeMarkedSymobls THEN 
+					FOR udiLPCheckSymbolType := 1 TO GVL_Communicator.arrCounterVariableInArray[byLPCheckSymbolType] BY 1 DO
+						IF arrVarInfos[byLPCheckSymbolType,udiLPCheckSymbolType].sFullSymbolName = stInfoFromReceivedMessage.sFullSymbolName THEN 
+							stInfoFromReceivedMessage.sSymbolType := arrVarInfos[byLPCheckSymbolType,udiLPCheckSymbolType].sSymbolType; 
+								stInfoFromReceivedMessage.uiSizeArray := arrVarInfos[byLPCheckSymbolType,udiLPCheckSymbolType].uiSizeArray;
+									stInfoFromReceivedMessage.byReadWriteArrayNumber := byLPCheckSymbolType;	
+										bDetected := TRUE;
+											EXIT; 
+						END_IF 
+					END_FOR	
+				END_IF
+			END_FOR
+		END_IF
+
+			stInfoFromReceivedMessage.byReadWriteArrayNumber := LIMIT(1,stInfoFromReceivedMessage.byReadWriteArrayNumber,10);
+				bErrorIntern := FALSE;
+	
+				IF FIND(stInfoFromReceivedMessage.sSymbolType,'STRING(30)') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF STRING(30)') <> 0 THEN
+					sFindMemberValue := 'vs';
+				ELSE
+					sFindMemberValue := 'v';
+				END_IF
+			 	
+	//Single variable
+	IF FIND(stInfoFromReceivedMessage.sSymbolType,'ARRAY') = 0 AND bDetected THEN
+		arrErrorIntern[0] := TRUE;
+			jsonPropValue := fbJsonRead.FindMember(jsonDoc,sFindMemberValue);
+		IF (jsonPropValue <> 0) THEN
+			eJsonType := fbJsonRead.GetType(jsonPropValue);
+				//Float
+				IF (stInfoFromReceivedMessage.sSymbolType = 'REAL' AND eJsonType = 6 AND fbJsonRead.IsDouble(jsonPropValue)) OR (stInfoFromReceivedMessage.sSymbolType = 'REAL' AND eJsonType = 6 AND fbJsonRead.IsInt(jsonPropValue)) THEN
+					lrFloatValue := fbJsonRead.GetDouble(jsonPropValue);
+						IF lrFloatValue >= -3.402823E+38 AND lrFloatValue <= 3.402823E+38 THEN  
+							rFloatValue := LREAL_TO_REAL(lrFloatValue);
+								IF IsFinite(F_REAL(rFloatValue)) THEN
+									arrStringValueFloat[0] := REAL_TO_STRING(rFloatValue);
+										IF LEN(arrStringValueFloat[0]) <= 30 THEN
+											arrErrorIntern[0] := FALSE;
+												stInfoFromReceivedMessage.arrValue[0] := arrStringValueFloat[0];
+										END_IF
+								END_IF
+						END_IF
+				END_IF
+					IF (stInfoFromReceivedMessage.sSymbolType = 'LREAL' AND eJsonType = 6 AND fbJsonRead.IsDouble(jsonPropValue)) OR (stInfoFromReceivedMessage.sSymbolType = 'LREAL' AND eJsonType = 6 AND fbJsonRead.IsInt64(jsonPropValue)) THEN
+						lrFloatValue := fbJsonRead.GetDouble(jsonPropValue);
+							IF lrFloatValue >= -1.7976931348623157E+307 AND lrFloatValue <= 1.7976931348623157E+307 AND IsFinite(F_LREAL(lrFloatValue)) THEN
+								arrStringValueFloat[0] := LREAL_TO_STRING(lrFloatValue);
+									IF LEN(arrStringValueFloat[0]) <= 30 THEN
+										arrErrorIntern[0] := FALSE;
+											stInfoFromReceivedMessage.arrValue[0] := arrStringValueFloat[0];
+									END_IF
+							END_IF
+					END_IF
+						IF (stInfoFromReceivedMessage.sSymbolType = 'BOOL' OR stInfoFromReceivedMessage.sSymbolType = 'BYTE' OR stInfoFromReceivedMessage.sSymbolType = 'WORD' OR stInfoFromReceivedMessage.sSymbolType = 'DWORD' OR 
+								stInfoFromReceivedMessage.sSymbolType = 'USINT' OR stInfoFromReceivedMessage.sSymbolType = 'UINT' OR stInfoFromReceivedMessage.sSymbolType = 'UDINT' OR stInfoFromReceivedMessage.sSymbolType = 'ULINT' OR 
+									stInfoFromReceivedMessage.sSymbolType = 'LWORD' OR stInfoFromReceivedMessage.sSymbolType = 'TIME' OR stInfoFromReceivedMessage.sSymbolType = 'TIME_OF_DAY' OR stInfoFromReceivedMessage.sSymbolType = 'DATE' OR 
+										stInfoFromReceivedMessage.sSymbolType = 'DATE_AND_TIME') AND eJsonType = 6 AND fbJsonRead.IsUint64(jsonPropValue) THEN
+											arrStringValueFloat[0] := ULINT_TO_STRING(fbJsonRead.GetUint64(jsonPropValue));
+												IF LEN(arrStringValueFloat[0]) <= 30 THEN arrErrorIntern[0] := FALSE; stInfoFromReceivedMessage.arrValue[0] := arrStringValueFloat[0]; END_IF
+													IF (LEN(stInfoFromReceivedMessage.arrValue[0]) > 10 AND (stInfoFromReceivedMessage.sSymbolType = 'DATE_AND_TIME' OR stInfoFromReceivedMessage.sSymbolType = 'DATE')) THEN
+														stInfoFromReceivedMessage.arrValue[0] := REPLACE(stInfoFromReceivedMessage.arrValue[0],'000',3,11);
+													END_IF		   
+							END_IF
+								IF (stInfoFromReceivedMessage.sSymbolType = 'SINT' OR stInfoFromReceivedMessage.sSymbolType = 'INT' OR stInfoFromReceivedMessage.sSymbolType = 'DINT' OR stInfoFromReceivedMessage.sSymbolType = 'LINT') AND eJsonType = 6 AND fbJsonRead.IsInt64(jsonPropValue) THEN
+									arrStringValueFloat[0] := LINT_TO_STRING(fbJsonRead.GetInt64(jsonPropValue));
+										IF LEN(arrStringValueFloat[0]) <= 30 THEN arrErrorIntern[0] := FALSE; stInfoFromReceivedMessage.arrValue[0] := arrStringValueFloat[0]; END_IF
+								END_IF
+									IF stInfoFromReceivedMessage.sSymbolType = 'STRING(30)' AND eJsonType = 5 AND fbJsonRead.IsString(jsonPropValue) THEN 		
+										arrStringValueFloat[0] := fbJsonRead.GetString(jsonPropValue);
+											IF LEN(arrStringValueFloat[0]) <= 30 THEN arrErrorIntern[0] := FALSE; stInfoFromReceivedMessage.arrValue[0] := arrStringValueFloat[0]; END_IF
+											IF LEN(arrStringValueFloat[0]) = 0 THEN arrErrorIntern[0] := FALSE; stInfoFromReceivedMessage.arrValue[0] := '#EMPTY#'; END_IF 
+									END_IF
+										jsonXMLName := fbJsonRead.FindMember(jsonDoc,'-');
+										jsonLink := fbJsonRead.FindMember(jsonDoc,'l');
+										jsonBaseName := fbJsonRead.FindMember(jsonDoc,'bn');
+										jsonBaseTime := fbJsonRead.FindMember(jsonDoc,'bt');
+										jsonBaseUnit := fbJsonRead.FindMember(jsonDoc,'bu');
+										jsonBaseVersion := fbJsonRead.FindMember(jsonDoc,'bver');
+										jsonBaseValue := fbJsonRead.FindMember(jsonDoc,'bv'); 
+										jsonBaseSum := fbJsonRead.FindMember(jsonDoc,'bs'); 
+										jsonUnit := fbJsonRead.FindMember(jsonDoc,'u');
+										jsonTime := fbJsonRead.FindMember(jsonDoc,'t');
+										jsonUpateTime := fbJsonRead.FindMember(jsonDoc,'ut');
+										jsonDataValue := fbJsonRead.FindMember(jsonDoc,'vd'); 
+										jsonBoolValue := fbJsonRead.FindMember(jsonDoc,'vb');  
+										jsonSum := fbJsonRead.FindMember(jsonDoc,'s');  
+											IF jsonXMLName <> 0 OR jsonLink <> 0 OR jsonBaseName <> 0 OR jsonBaseTime <> 0 OR jsonBaseUnit <> 0 OR jsonBaseVersion <> 0 OR jsonBaseValue <> 0 OR
+												 jsonBaseSum <> 0 OR jsonUnit <> 0 OR jsonTime <> 0 OR jsonUpateTime <> 0 OR jsonDataValue <> 0 OR jsonBoolValue <> 0 OR jsonSum <> 0 THEN 
+													bMuchMoreInformationReceived := TRUE; 
+											ELSE 
+													bMuchMoreInformationReceived := FALSE; 
+											END_IF	
+		END_IF
+		
+	ELSE
+	
+		IF bDetected THEN
+			FOR udiLPErrorArrayTrue := 0 TO Constants_Communicator.bySizeOfReceivedValueArrayInJson BY 1 DO  
+				arrErrorIntern[udiLPErrorArrayTrue] := TRUE;
+			END_FOR
+			//Array
+			jsonPropValue := fbJsonRead.FindMember(jsonDoc,sFindMemberValue);
+				IF fbJsonRead.IsArray(jsonPropValue) AND jsonPropValue <> 0 THEN
+					udiArraySizeReceived := fbJsonRead.GetArraySize(jsonPropValue) - 1;
+						IF udiArraySizeReceived <= Constants_Communicator.bySizeOfReceivedValueArrayInJson AND (udiArraySizeReceived + 1) = stInfoFromReceivedMessage.uiSizeArray THEN
+							jsonIterator := fbJsonRead.ArrayBegin(jsonPropValue);
+								FOR udiLPWriteValueArrayOUT := 0 TO udiArraySizeReceived BY 1 DO
+									jsonPropValueOut := fbJsonRead.GetArrayValueByIdx(jsonPropValue,udiLPWriteValueArrayOUT);
+										IF jsonPropValueOut <> 0 THEN
+											eJsonType := fbJsonRead.GetType(jsonPropValueOut);
+											//Float values
+											IF (FIND(stInfoFromReceivedMessage.sSymbolType,'OF REAL') <> 0 AND eJsonType = 6 AND fbJsonRead.IsDouble(jsonPropValueOut)) OR (FIND(stInfoFromReceivedMessage.sSymbolType,'OF REAL') <> 0 AND eJsonType = 6 AND fbJsonRead.IsInt(jsonPropValueOut)) THEN
+												lrFloatValue := fbJsonRead.GetDouble(jsonPropValueOut);
+													IF lrFloatValue >= -3.402823E+38 AND lrFloatValue <= 3.402823E+38 THEN
+														rFloatValue := LREAL_TO_REAL(lrFloatValue);
+															IF IsFinite(F_REAL(rFloatValue)) THEN
+																arrStringValueFloat[udiLPWriteValueArrayOUT] := REAL_TO_STRING(rFloatValue); 	
+																	IF LEN(arrStringValueFloat[udiLPWriteValueArrayOUT]) <= 30 THEN
+																		arrErrorIntern[udiLPWriteValueArrayOUT] := FALSE;
+																			stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT] := arrStringValueFloat[udiLPWriteValueArrayOUT];
+																	END_IF
+															END_IF
+													END_IF
+											END_IF
+												//Float values
+												IF (FIND(stInfoFromReceivedMessage.sSymbolType,'OF LREAL') <> 0 AND eJsonType = 6 AND fbJsonRead.IsDouble(jsonPropValueOut)) OR (FIND(stInfoFromReceivedMessage.sSymbolType,'OF LREAL') <> 0 AND eJsonType = 6 AND fbJsonRead.IsInt64(jsonPropValueOut)) THEN
+													lrFloatValue := fbJsonRead.GetDouble(jsonPropValueOut);
+														IF lrFloatValue >= -1.7976931348623157E+307 AND lrFloatValue <= 1.7976931348623157E+307 AND IsFinite(F_LREAL(lrFloatValue)) THEN
+															arrStringValueFloat[udiLPWriteValueArrayOUT] := LREAL_TO_STRING(lrFloatValue); 	
+																IF LEN(arrStringValueFloat[udiLPWriteValueArrayOUT]) <= 30 THEN
+																	arrErrorIntern[udiLPWriteValueArrayOUT] := FALSE;
+																		stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT] := arrStringValueFloat[udiLPWriteValueArrayOUT];
+																END_IF
+														END_IF
+												END_IF
+													//only positiv values
+													IF (FIND(stInfoFromReceivedMessage.sSymbolType,'OF BOOL') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF BYTE') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF WORD') <> 0 OR
+															FIND(stInfoFromReceivedMessage.sSymbolType,'OF DWORD') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF USINT') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF UINT') <> 0 OR 
+																FIND(stInfoFromReceivedMessage.sSymbolType,'OF UDINT') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF ULINT') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF LWORD') <> 0 OR
+																	FIND(stInfoFromReceivedMessage.sSymbolType,'OF TIME') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF TIME_OF_DAY') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF DATE') <> 0 OR 
+																		FIND(stInfoFromReceivedMessage.sSymbolType,'OF DATE_AND_TIME') <> 0) AND eJsonType = 6 AND fbJsonRead.IsUint64(jsonPropValueOut) THEN 
+																			arrStringValueFloat[udiLPWriteValueArrayOUT] := ULINT_TO_STRING(fbJsonRead.GetUint64(jsonPropValueOut));
+																				IF LEN(arrStringValueFloat[udiLPWriteValueArrayOUT]) <= 30 THEN arrErrorIntern[udiLPWriteValueArrayOUT] := FALSE; stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT] := arrStringValueFloat[udiLPWriteValueArrayOUT]; END_IF
+																					IF (LEN(stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT]) > 10 AND (FIND(stInfoFromReceivedMessage.sSymbolType,'OF DATE_AND_TIME') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF DATE') <> 0)) THEN
+																						stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT] := REPLACE(stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT],'000',3,11);
+																					END_IF
+													END_IF
+														//positiv and negativ values
+														IF (FIND(stInfoFromReceivedMessage.sSymbolType,'OF SINT') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF INT') <> 0 OR FIND(stInfoFromReceivedMessage.sSymbolType,'OF DINT') <> 0 OR
+																FIND(stInfoFromReceivedMessage.sSymbolType,'OF LINT') <> 0) AND eJsonType = 6 AND fbJsonRead.IsInt64(jsonPropValueOut) THEN 
+																	arrStringValueFloat[udiLPWriteValueArrayOUT] := LINT_TO_STRING(fbJsonRead.GetInt64(jsonPropValueOut));
+																IF LEN(arrStringValueFloat[udiLPWriteValueArrayOUT]) <= 30 THEN arrErrorIntern[udiLPWriteValueArrayOUT] := FALSE; stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT] := arrStringValueFloat[udiLPWriteValueArrayOUT]; END_IF
+														END_IF
+															//All string values
+															IF (FIND(stInfoFromReceivedMessage.sSymbolType,'OF STRING(30)') <> 0) AND eJsonType = 5 AND fbJsonRead.IsString(jsonPropValueOut) THEN
+																arrStringValueFloat[udiLPWriteValueArrayOUT] := fbJsonRead.GetString(jsonPropValueOut);
+																	IF LEN(arrStringValueFloat[udiLPWriteValueArrayOUT]) <= 30 THEN arrErrorIntern[udiLPWriteValueArrayOUT] := FALSE; stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT] := arrStringValueFloat[udiLPWriteValueArrayOUT]; END_IF
+																	IF LEN(arrStringValueFloat[udiLPWriteValueArrayOUT]) = 0 THEN arrErrorIntern[udiLPWriteValueArrayOUT] := FALSE; stInfoFromReceivedMessage.arrValue[udiLPWriteValueArrayOUT] := '#EMPTY#'; END_IF
+															END_IF
+																jsonXMLName := fbJsonRead.FindMember(jsonDoc,'-');
+																jsonLink := fbJsonRead.FindMember(jsonDoc,'l');
+																jsonBaseName := fbJsonRead.FindMember(jsonDoc,'bn');
+																jsonBaseTime := fbJsonRead.FindMember(jsonDoc,'bt');
+																jsonBaseUnit := fbJsonRead.FindMember(jsonDoc,'bu');
+																jsonBaseVersion := fbJsonRead.FindMember(jsonDoc,'bver');
+																jsonBaseValue := fbJsonRead.FindMember(jsonDoc,'bv'); 
+																jsonBaseSum := fbJsonRead.FindMember(jsonDoc,'bs'); 
+																jsonUnit := fbJsonRead.FindMember(jsonDoc,'u');
+																jsonTime := fbJsonRead.FindMember(jsonDoc,'t');
+																jsonUpateTime := fbJsonRead.FindMember(jsonDoc,'ut');
+																jsonDataValue := fbJsonRead.FindMember(jsonDoc,'vd'); 
+																jsonBoolValue := fbJsonRead.FindMember(jsonDoc,'vb');  
+																jsonSum := fbJsonRead.FindMember(jsonDoc,'s');  
+																	IF jsonXMLName <> 0 OR jsonLink <> 0 OR jsonBaseName <> 0 OR jsonBaseTime <> 0 OR jsonBaseUnit <> 0 OR jsonBaseVersion <> 0 OR jsonBaseValue <> 0 OR
+																			jsonBaseSum <> 0 OR jsonUnit <> 0 OR jsonTime <> 0 OR jsonUpateTime <> 0 OR jsonDataValue <> 0 OR jsonBoolValue <> 0 OR jsonSum <> 0 THEN 
+																			bMuchMoreInformationReceived := TRUE; 
+																	ELSE 
+																			bMuchMoreInformationReceived := FALSE; 
+																	END_IF
+										END_IF							jsonIterator := fbJsonRead.NextArray(jsonIterator);		
+								END_FOR	
+						END_IF				
+				END_IF	
+		END_IF		 	
+	END_IF	
+END_IF
+
+//Error flag
+FOR udiLPErrorArrayCheck := 0 TO Constants_Communicator.bySizeOfReceivedValueArrayInJson BY 1 DO
+	IF arrErrorIntern[udiLPErrorArrayCheck] THEN bErrorIntern := TRUE; END_IF 
+END_FOR 
+
+IF NOT bDetected OR bErrorIntern OR (jsonDoc = 0 AND sReceivedMessageDoc <> '') THEN bError := TRUE; END_IF
+IF (bDetected AND NOT bErrorIntern) OR (jsonDoc = 0 AND sReceivedMessageDoc = '') THEN bError := FALSE; END_IF 
+
+IF bErrorIntern OR bError THEN eErrorMessage_Out := eErrorMessage.eReceivedMessageWithError; 
+ELSIF NOT bDetected AND bError THEN eErrorMessage_Out := eErrorMessage.eReceivedMessageIncompatibility;  
+ELSE eErrorMessage_Out := eErrorMessage.eNoError; END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MessageRead">
+      <LineId Id="2389" Count="243" />
+      <LineId Id="1097" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

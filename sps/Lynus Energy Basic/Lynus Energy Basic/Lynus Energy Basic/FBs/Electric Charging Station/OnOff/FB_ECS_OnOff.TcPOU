@@ -1,0 +1,452 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ECS_OnOff" Id="{ae2aabae-dc9d-4847-9c6f-66b2f5f78a84}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ECS_OnOff
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;											//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bPowerDataInvers						: BOOL;											//With True its possible to invert all received power data from the electric meter
+	byElectricFuseLine						: BYTE; 										//Electric Fuse Line on wich the ECS is connected => 1 2 3 (If 0 then this charging station is not connected to a Electric Fuse Line)
+	diNrOfEMS_IN							: DINT;											//Number of EMS what control this Device.
+	diNrOfEM_IN_CS							: DINT;											//Number of the electric meter for incoming power data. (Power Data for this Device)
+	stSetupECS								: ST_Setup_ECS;									//{#lynus.ag#()} //Setup charging station
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataECS								: ST_ECS_Output;								//{#lynus.ag#()} //Electric charging station output data
+	diNrOfECS_OUT							: DINT;											//Active Number from the Electric charging Function for using on other functions
+	rTargetPowerForExtFunc					: REAL;											//Target Power from 0% to +100% to use on a external Function
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbCS									: FB_ElectricChargingStation;					//Function block for electric charging station
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	fbDIExternalLock						: FB_XL1XXX_DI;									//Digital Input from external loock signal
+	fbDOOnOffCS								: FB_XL2XXX_DO;									//Digital Output to swtich on and off the charging station
+	{attribute 'hide'}
+	timDissableFunctions					: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD									: ARRAY[1..14] OF FB_PersistentData_Number;		//Function to save persistent data 
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;											//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData							: INT;											//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diNumberOfActiveBatterys				: DINT;											//Number of active batterys
+	{attribute 'hide'}
+	diNumberOfBatteryInverterInEPO			: DINT;											//Number of battery inverters that work in Emergency Power operation 
+	{attribute 'hide'}
+	diCounterForGVL							: DINT;											//Counter to clean old data on GVL
+	{attribute 'hide'}
+	diLPForGVL								: DINT;											//Loop to clean old data on GVL
+	{attribute 'hide'}
+	dwSumSOC								: DWORD;										//Sum of the SOC from all batterys	
+	{attribute 'hide'}
+	liLPBatteryData							: LINT;											//Loop to check some data from batterys
+	{attribute 'hide'}
+	liLPInEPO								: LINT;											//Loop to check if 1 or more battery inverters build a island grid
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	diNrOfEMS_IN_CP							: DINT;											//Number of EMS what control this Device to compare with the original
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 19.05.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to switch on and off a charging station
+//The output signal to switch on and off is a digital output signal
+//With this function block its not possible to control the CS with a target power value because we didn't have a active communication to the CS
+//With the Nr from the Electric Meter its possible to send the data fromt the electric meter directly to the CS function to display it
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+	diNrOfEM_IN_CS := LIMIT(0,diNrOfEM_IN_CS,Constants_Energy.diMaxNumberOfElectricMeters);
+		byElectricFuseLine := LIMIT(0,byElectricFuseLine,30);	
+			
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+//Energy Session Input data
+fbCS.bCalculateEnergySession := FALSE;
+fbCS.arrSocketPowerECS[1] := 0;
+fbCS.arrSocketPowerECS[2] := 0;
+fbCS.arrSocketPowerECS[3] := 0;
+fbCS.arrSocketPowerECS[4] := 0;
+fbCS.arrSocketEnergySession[1] := 0;
+fbCS.arrSocketEnergySession[2] := 0;
+fbCS.arrSocketEnergySession[3] := 0;
+fbCS.arrSocketEnergySession[4] := 0;
+
+IF NOT bPowerDataInvers THEN
+	fbCS.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Production * 1000;
+	fbCS.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Production * 1000;
+	fbCS.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+	fbCS.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+	fbCS.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Production * 1000;
+	fbCS.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Consumption * 1000;
+		fbCS.lrTotalPowerECS := (Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrPower * 1000) * - 1;
+ELSE
+	fbCS.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+	fbCS.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Consumption * 1000;
+	fbCS.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Production * 1000;
+	fbCS.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Production * 1000;
+	fbCS.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Consumption * 1000;
+	fbCS.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Production * 1000;
+		fbCS.lrTotalPowerECS := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrPower * 1000;
+END_IF
+
+(*-------------------------------------------------------------Calcualte the number of ECS---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricChargingStations, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfECS_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := diNrOfECS_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+
+IF timDissableFunctions.Q THEN fbCS.bWarning := TRUE; fbCS.iWarningCode := 0; ELSE fbCS.bWarning := FALSE; END_IF   
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS > Constants_Energy.diMaxNumberOfElectricChargingStations THEN 
+		fbCS.bError := TRUE;
+			fbCS.iErrorCode := 1; 
+	ELSE 
+		fbCS.bError := FALSE;
+			fbCS.iErrorCode := 0; 
+	END_IF
+
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+
+//Calcualte the total SOC if we have more then 1 battery in our system
+diNumberOfActiveBatterys := 0;
+	dwSumSOC := 0;
+		FOR liLPBatteryData := 1 TO Constants_Energy.diMaxNumberOfBatterys BY 1 DO
+			IF Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].bEnabled THEN diNumberOfActiveBatterys := diNumberOfActiveBatterys + 1; END_IF
+				dwSumSOC := dwSumSOC + Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].dwSOC;
+		END_FOR
+	
+IF diNumberOfActiveBatterys > 0 THEN
+	fbCS.dwBatterySOC := DINT_TO_DWORD(DWORD_TO_DINT(dwSumSOC) / diNumberOfActiveBatterys);
+ELSE
+	fbCS.dwBatterySOC := 100;	//When we have no battery in the ems system
+END_IF
+
+//Check if one or more Batterysystems or batteryinverter make island mode
+diNumberOfBatteryInverterInEPO := 0;
+	FOR liLPInEPO := 1 TO Constants_Energy.diMaxNumberOfBatteryInverters BY 1 DO
+		IF Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,liLPInEPO].bWorkOnIslandMode THEN fbCS.bEPOIsActive := TRUE; diNumberOfBatteryInverterInEPO := diNumberOfBatteryInverterInEPO + 1; END_IF
+	END_FOR 
+		IF diNumberOfBatteryInverterInEPO <= 0 THEN fbCS.bEPOIsActive := FALSE; END_IF
+
+//Digital input for external lock signal
+fbDIExternalLock(bInvers:= FALSE, bSignal=> );
+
+//Functionblock ECS
+fbCS.stSetupECS.bManualyOn := stSetupECS.bManualyOn;
+	IF fbCS.stSetupECS.bManualyOn THEN fbCS.stSetupECS.byManualyTargetPower := 100; ELSE fbCS.stSetupECS.byManualyTargetPower := 0; END_IF
+		fbCS.stSetupECS.bOnEmergPowerOff := stSetupECS.bOnEmergPowerOff;
+			fbCS.stSetupECS.byDisableSOC := stSetupECS.byDisableSOC;
+				fbCS.stSetupECS.byEnableSOC := stSetupECS.byEnableSOC;
+					fbCS.stSetupECS.byCSMinPower := stSetupECS.byCSMinPower;
+						fbCS.stSetupECS.byPriority := stSetupECS.byPriority;
+							fbCS.stSetupECS.rMaxPower := stSetupECS.rMaxPower;
+
+//Car SOC, charging Time and Mode 3
+fbCS.arrSOCCar[1] := 0;
+fbCS.arrSOCCar[2] := 0;
+fbCS.arrSOCCar[3] := 0;
+fbCS.arrSOCCar[4] := 0;
+	fbCS.arrSocketChargingTimeInput[1] := 0;
+	fbCS.arrSocketChargingTimeInput[2] := 0;
+	fbCS.arrSocketChargingTimeInput[3] := 0;
+	fbCS.arrSocketChargingTimeInput[4] := 0;
+		fbCS.arrSocketMode3StateECS[1] := '';
+		fbCS.arrSocketMode3StateECS[2] := '';
+		fbCS.arrSocketMode3StateECS[3] := '';
+		fbCS.arrSocketMode3StateECS[4] := '';							
+							
+fbCS(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEPOIsActive:= , 
+	bExternalLock:= fbDIExternalLock.bSignal, 
+	bCarConnected:= FALSE, 
+	bWriteWithDelay:= TRUE, 
+	bCalculateEnergySession:= ,
+	iErrorCode:= , 
+	iWarningCode:= , 
+	arrSocketChargingTimeInput:= , 
+	arrSOCCar:= , 
+	dwBatterySOC:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrTotalPowerECS:= ,
+	arrSocketEnergySession:= , 
+	rTargetPower:= Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].rTargetPowerEMS, 
+	rSupplyVoltage:= 692, 
+	rMinCurrent:= 0, 
+	tTimDelayOutput:= T#5S, 
+	tDelayError:= T#5S,
+	arrSocketMode3StateECS:= ,
+	arrSocketPowerECS:= ,
+	stSetupECS:= , 
+	stDataECSOut=> , 
+	stDataECSOutDelay=> stDataECS);
+
+//Target Power, to use this on a external Function
+rTargetPowerForExtFunc := fbCS.stDataECSOut.rTargetPower;	
+	
+(*-------------------------------------------------------------------------Output----------------------------------------------------------------------*)
+
+fbDOOnOffCS(bInvers:= FALSE, bSignal:= fbCS.stDataECSOut.bOutputOnOff);
+							
+(*-----------------------------------------------------------Handle data to Global structure for electric charging stations-----------------------------------------------------------------*)
+
+//Delte al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN iStateGVLData := 10; END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO 
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].bIsControllable := FALSE;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].byErrorWarning := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].byPriority := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].lrPower := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].lrPowerConsumption := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].lrPowerProduction := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].rMaxPower := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].byElectricFuseLine := 0;
+												//Set also the target value from ems back here to 0 and not in EMS function because EMS is in Standy when we have a online change (Problem when we delete a ems function and make a online change)
+												Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].rTargetPowerEMS := 0;	
+		END_FOR
+			diCounterForGVL := diCounterForGVL + 1;
+				diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricChargingStations);
+					//Back to the init step
+					IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricChargingStations THEN iStateGVLData := 0; END_IF
+
+	10://Clear old Data on GVL 		
+		Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].bIsControllable := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byErrorWarning := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byPriority := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPower := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPowerConsumption := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPowerProduction := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].rMaxPower := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byElectricFuseLine := 0;
+									
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+			//Back to the init step
+			iStateGVLData := 0;
+
+END_CASE 	 
+
+IF diNrOfECS_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].bEnabled := fbCS.stDataECSOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].bIsControllable := FALSE;
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byErrorWarning := fbCS.stDataECSOut.byErrorWarning;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byPriority := fbCS.stDataECSOut.byPriority;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPower := fbCS.stDataECSOut.lrTotalPower;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPowerConsumption := fbCS.stDataECSOut.lrTotalPowerConsumption;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPowerProduction := fbCS.stDataECSOut.lrTotalPowerProduction;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].rMaxPower := fbCS.stDataECSOut.rMaxPower;	
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byElectricFuseLine := byElectricFuseLine;
+END_IF 
+		
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_CS), bEventBasedActive=> );
+arrPD[5](lrValue:= BOOL_TO_LREAL(stSetupECS.bManualyOn), bEventBasedActive=> );
+arrPD[6](lrValue:= BOOL_TO_LREAL(stSetupECS.bOnEmergPowerOff), bEventBasedActive=> );
+arrPD[7](lrValue:= BYTE_TO_LREAL(stSetupECS.byCSMinPower), bEventBasedActive=> );
+arrPD[8](lrValue:= BYTE_TO_LREAL(stSetupECS.byDisableSOC), bEventBasedActive=> );
+arrPD[9](lrValue:= BYTE_TO_LREAL(stSetupECS.byEnableSOC), bEventBasedActive=> );
+arrPD[10](lrValue:= BYTE_TO_LREAL(stSetupECS.byManualyTargetPower), bEventBasedActive=> );
+arrPD[11](lrValue:= BYTE_TO_LREAL(stSetupECS.byPriority), bEventBasedActive=> );
+arrPD[12](lrValue:= REAL_TO_LREAL(stSetupECS.rMaxPower), bEventBasedActive=> );
+arrPD[13](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );
+arrPD[14](lrValue:= BYTE_TO_LREAL(byElectricFuseLine), bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ECS_OnOff">
+      <LineId Id="750" Count="2" />
+      <LineId Id="748" Count="0" />
+      <LineId Id="755" Count="3" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="763" Count="0" />
+      <LineId Id="765" Count="0" />
+      <LineId Id="764" Count="0" />
+      <LineId Id="1257" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="761" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="762" Count="0" />
+      <LineId Id="1596" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="1704" Count="0" />
+      <LineId Id="1706" Count="8" />
+      <LineId Id="1705" Count="0" />
+      <LineId Id="53" Count="5" />
+      <LineId Id="489" Count="1" />
+      <LineId Id="768" Count="1" />
+      <LineId Id="771" Count="5" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="837" Count="1" />
+      <LineId Id="1168" Count="0" />
+      <LineId Id="1170" Count="18" />
+      <LineId Id="1169" Count="0" />
+      <LineId Id="1308" Count="0" />
+      <LineId Id="1310" Count="1" />
+      <LineId Id="1377" Count="4" />
+      <LineId Id="1309" Count="0" />
+      <LineId Id="943" Count="0" />
+      <LineId Id="1317" Count="9" />
+      <LineId Id="1194" Count="0" />
+      <LineId Id="945" Count="0" />
+      <LineId Id="831" Count="0" />
+      <LineId Id="833" Count="0" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="778" Count="0" />
+      <LineId Id="72" Count="1" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="544" Count="1" />
+      <LineId Id="83" Count="2" />
+      <LineId Id="787" Count="2" />
+      <LineId Id="786" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="790" Count="0" />
+      <LineId Id="1036" Count="1" />
+      <LineId Id="815" Count="1" />
+      <LineId Id="822" Count="0" />
+      <LineId Id="825" Count="4" />
+      <LineId Id="1715" Count="0" />
+      <LineId Id="1717" Count="11" />
+      <LineId Id="1197" Count="0" />
+      <LineId Id="1716" Count="0" />
+      <LineId Id="1199" Count="6" />
+      <LineId Id="1649" Count="0" />
+      <LineId Id="1206" Count="2" />
+      <LineId Id="1729" Count="0" />
+      <LineId Id="1210" Count="7" />
+      <LineId Id="1650" Count="0" />
+      <LineId Id="1218" Count="3" />
+      <LineId Id="1487" Count="0" />
+      <LineId Id="1651" Count="0" />
+      <LineId Id="1730" Count="0" />
+      <LineId Id="1222" Count="1" />
+      <LineId Id="1198" Count="0" />
+      <LineId Id="1433" Count="0" />
+      <LineId Id="1435" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="1434" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="864" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="885" Count="1" />
+      <LineId Id="877" Count="0" />
+      <LineId Id="889" Count="2" />
+      <LineId Id="897" Count="0" />
+      <LineId Id="881" Count="3" />
+      <LineId Id="941" Count="0" />
+      <LineId Id="940" Count="0" />
+      <LineId Id="893" Count="1" />
+      <LineId Id="939" Count="0" />
+      <LineId Id="898" Count="6" />
+      <LineId Id="892" Count="0" />
+      <LineId Id="1540" Count="0" />
+      <LineId Id="1000" Count="0" />
+      <LineId Id="999" Count="0" />
+      <LineId Id="906" Count="0" />
+      <LineId Id="905" Count="0" />
+      <LineId Id="907" Count="0" />
+      <LineId Id="909" Count="0" />
+      <LineId Id="908" Count="0" />
+      <LineId Id="911" Count="0" />
+      <LineId Id="910" Count="0" />
+      <LineId Id="912" Count="6" />
+      <LineId Id="895" Count="0" />
+      <LineId Id="1541" Count="0" />
+      <LineId Id="919" Count="1" />
+      <LineId Id="922" Count="0" />
+      <LineId Id="921" Count="0" />
+      <LineId Id="880" Count="0" />
+      <LineId Id="879" Count="0" />
+      <LineId Id="953" Count="0" />
+      <LineId Id="955" Count="8" />
+      <LineId Id="1542" Count="0" />
+      <LineId Id="954" Count="0" />
+      <LineId Id="1055" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="862" Count="1" />
+      <LineId Id="923" Count="0" />
+      <LineId Id="925" Count="1" />
+      <LineId Id="929" Count="8" />
+      <LineId Id="1543" Count="0" />
+      <LineId Id="153" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

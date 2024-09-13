@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-migration-clean-up-job
+  namespace: lynus
+spec:
+  template:
+    spec:
+      containers:
+        - name: minio-migration-clean-up-job
+          image: alpine:3.19.0
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          command: ["/bin/sh", "-c"]
+          args: [
+              "echo 'ls /from/assets';
+              ls /from/assets;
+              echo 'ls /to';
+              ls /to;
+              echo ' deleting old files';
+              rm -r /to/
+              echo 'cp -rf /from/ /to';
+              cp -rfv /from/* /to",
+            ]
+          volumeMounts:
+            - mountPath: /from
+              name: from
+            - mountPath: /to
+              name: to
+      volumes:
+        - name: from
+          persistentVolumeClaim:
+            claimName: data-minio-migrator
+        - name: to
+          persistentVolumeClaim:
+            claimName: data-minio
+      restartPolicy: Never

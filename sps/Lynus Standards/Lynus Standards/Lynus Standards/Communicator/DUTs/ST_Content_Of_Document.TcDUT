@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Content_Of_Document" Id="{b6306848-5b89-4162-9f93-46bac394edb0}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_Content_Of_Document :
+STRUCT
+	{attribute 'hide'}
+	sSymbolName				: STRING(48);																				//Symbol Name
+	{attribute 'hide'}
+	eSymbolType				: eSymbolTypeFromDocument;																	//Symbol Type (Enum, Struct or FB)
+	{attribute 'hide'}
+	arrSubItemName			: ARRAY[1..Constants_Communicator.uiArraySizeOfMarkedSubItems] OF STRING(48);				//Name from the Subitems
+	{attribute 'hide'}
+	arrSubItemSymbolType	: ARRAY[1..Constants_Communicator.uiArraySizeOfMarkedSubItems] OF STRING(255);				//Type from the Subitems
+	{attribute 'hide'}
+	arrSubItemUnit			: ARRAY[1..Constants_Communicator.uiArraySizeOfMarkedSubItems] OF STRING(255);				//Unit from the SubItem
+	{attribute 'hide'}
+	arrSubItemTextEnum		: ARRAY[1..Constants_Communicator.uiArraySizeOfMarkedSubItems] OF STRING(48);				//Text from Enum
+	{attribute 'hide'}
+	arrSubItemIndexEnum		: ARRAY[1..Constants_Communicator.uiArraySizeOfMarkedSubItems] OF STRING(6);				//Index-Value from Enum
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

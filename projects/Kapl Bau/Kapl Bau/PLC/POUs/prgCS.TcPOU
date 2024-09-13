@@ -1,0 +1,423 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{39d41974-4499-4f07-97d8-9902fd008e9a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fb_CS1 :	fb_ECS_KEBA_P30_noWrite;	
+	fb_CS2 :	fb_ECS_KEBA_P30_noWrite;	
+	fb_CS3 :	fb_ECS_KEBA_P30_noWrite;	
+	fb_CS4 :	fb_ECS_KEBA_P30_noWrite;
+	fb_CS5 :	fb_ECS_KEBA_P30_noWrite;	
+	fb_CS6 :	fb_ECS_KEBA_P30_noWrite;
+	fb_CS7 :	fb_ECS_KEBA_P30_noWrite;	
+	fb_CS8 :	fb_ECS_KEBA_P30_noWrite;
+	fb_CS9 :	fb_ECS_KEBA_P30_noWrite;	
+	fb_CS10 :	fb_ECS_KEBA_P30_noWrite;
+
+	lr_Power_CS1			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS1		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS1	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS2			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS2		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS2	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS3			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS3		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS3	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS4			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS4		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS4	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS5			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS5		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS5	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS6			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS6		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS6	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS7			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS7		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS7	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS8			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS8		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS8	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS9			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS9		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS9	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS10			: LREAL;						//{#lynus.ag#()}
+	lr_EnergyTotal_CS10		: LREAL;						//{#lynus.ag#()}
+	bool_CarConnected_CS10	: BOOL;							//{#lynus.ag#()}
+	lr_Power_CS_total		: LREAL;						//{#lynus.ag#()}
+	usint_CarConnected_CS1	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS2	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS3	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS4	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS5	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS6	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS7	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS8	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS9	: USINT;						//{#lynus.ag#()}
+	usint_CarConnected_CS10	: USINT;						//{#lynus.ag#()}
+	r_ChargeTime_CS1		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS2		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS3		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS4		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS5		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS6		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS7		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS8		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS9		: REAL;							//{#lynus.ag#()}
+	r_ChargeTime_CS10		: REAL;							//{#lynus.ag#()}
+	lr_EnergySession_CS1	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS2	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS3	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS4	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS5	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS6	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS7	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS8	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS9	: LREAL;						//{#lynus.ag#()}
+	lr_EnergySession_CS10	: LREAL;						//{#lynus.ag#()}
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fb_CS1(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.1', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS1 			:= fb_CS1.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS1		:= fb_CS1.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS1	:= fb_CS1.stDataECS.bCarConnected;
+r_ChargeTime_CS1		:= fb_CS1.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS1	:= fb_CS1.stDataECS.arrSocketEnergySession[1]/10;
+
+fb_CS2(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.2', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS2 			:= fb_CS2.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS2		:= fb_CS2.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS2	:= fb_CS2.stDataECS.bCarConnected;
+r_ChargeTime_CS2		:= fb_CS2.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS2	:= fb_CS2.stDataECS.arrSocketEnergySession[1]/10;
+	
+fb_CS3(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.3', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS3 			:= fb_CS3.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS3		:= fb_CS3.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS3	:= fb_CS3.stDataECS.bCarConnected;
+r_ChargeTime_CS3		:= fb_CS3.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS3	:= fb_CS3.stDataECS.arrSocketEnergySession[1]/10;
+	
+fb_CS4(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.4', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS4 			:= fb_CS4.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS4		:= fb_CS4.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS4	:= fb_CS4.stDataECS.bCarConnected;
+r_ChargeTime_CS4		:= fb_CS4.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS4	:= fb_CS4.stDataECS.arrSocketEnergySession[1]/10;
+	
+fb_CS5(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.5', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS5 			:= fb_CS5.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS5		:= fb_CS5.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS5	:= fb_CS5.stDataECS.bCarConnected;
+r_ChargeTime_CS5		:= fb_CS5.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS5	:= fb_CS5.stDataECS.arrSocketEnergySession[1]/10;
+
+fb_CS6(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.6', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS6 			:= fb_CS6.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS6		:= fb_CS6.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS6	:= fb_CS6.stDataECS.bCarConnected;
+r_ChargeTime_CS6		:= fb_CS6.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS6   	:= fb_CS6.stDataECS.arrSocketEnergySession[1]/10;
+
+fb_CS7(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.7', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS7			:= fb_CS7.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS7		:= fb_CS7.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS7	:= fb_CS7.stDataECS.bCarConnected;
+r_ChargeTime_CS7		:= fb_CS7.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS7	:= fb_CS7.stDataECS.arrSocketEnergySession[1]/10;
+
+fb_CS8(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.8', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS8 			:= fb_CS8.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS8		:= fb_CS8.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS8	:= fb_CS8.stDataECS.bCarConnected;
+r_ChargeTime_CS8		:= fb_CS8.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS8	:= fb_CS8.stDataECS.arrSocketEnergySession[1]/10;
+
+fb_CS9(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.9', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS9 			:= fb_CS9.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS9		:= fb_CS9.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS9	:= fb_CS9.stDataECS.bCarConnected;
+r_ChargeTime_CS9		:= fb_CS9.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS9	:= fb_CS9.stDataECS.arrSocketEnergySession[1]/10;
+
+fb_CS10(
+	bEnable:= TRUE, 
+	bEnable_write := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	uiFailsafeCurrent:= , 
+	uiFailsafeTimeOut:= , 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.30.140.10', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+lr_Power_CS10 			:= fb_CS10.stDataECS.lrTotalPower;
+lr_EnergyTotal_CS10		:= fb_CS10.stDataECS.lrCounterEnergyT1_Consumption/10;
+bool_CarConnected_CS10	:= fb_CS10.stDataECS.bCarConnected;
+r_ChargeTime_CS10		:= fb_CS10.stDataECS.arrChargingTimeInMin[1];
+lr_EnergySession_CS10	:= fb_CS10.stDataECS.arrSocketEnergySession[1]/10;
+
+
+lr_Power_CS_total := lr_Power_CS1 + lr_Power_CS2 + lr_Power_CS3 + lr_Power_CS4 + lr_Power_CS5 + lr_Power_CS6 + lr_Power_CS7 + lr_Power_CS8 + lr_Power_CS9 + lr_Power_CS10;
+
+
+IF bool_CarConnected_CS1 THEN 
+	usint_CarConnected_CS1 := 251;
+ELSE
+	usint_CarConnected_CS1 := 0;
+END_IF
+IF bool_CarConnected_CS2 THEN 
+	usint_CarConnected_CS2 := 251;
+ELSE
+	usint_CarConnected_CS2 := 0;
+END_IF
+IF bool_CarConnected_CS3 THEN 
+	usint_CarConnected_CS3 := 251;
+ELSE
+	usint_CarConnected_CS3 := 0;
+END_IF
+IF bool_CarConnected_CS4 THEN 
+	usint_CarConnected_CS4 := 251;
+ELSE
+	usint_CarConnected_CS4 := 0;
+END_IF
+IF bool_CarConnected_CS5 THEN 
+	usint_CarConnected_CS5 := 251;
+ELSE
+	usint_CarConnected_CS5 := 0;
+END_IF
+IF bool_CarConnected_CS6 THEN 
+	usint_CarConnected_CS6 := 251;
+ELSE
+	usint_CarConnected_CS6 := 0;
+END_IF
+IF bool_CarConnected_CS7 THEN 
+	usint_CarConnected_CS7 := 251;
+ELSE
+	usint_CarConnected_CS7 := 0;
+END_IF
+IF bool_CarConnected_CS8 THEN 
+	usint_CarConnected_CS8 := 251;
+ELSE
+	usint_CarConnected_CS8 := 0;
+END_IF
+IF bool_CarConnected_CS9 THEN 
+	usint_CarConnected_CS9 := 251;
+ELSE
+	usint_CarConnected_CS9 := 0;
+END_IF
+IF bool_CarConnected_CS10 THEN 
+	usint_CarConnected_CS10 := 251;
+ELSE
+	usint_CarConnected_CS10 := 0;
+END_IF
+	
+	
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="26" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="10" Count="9" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="245" Count="1" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="36" Count="12" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="247" Count="1" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="61" Count="12" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="250" Count="1" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="76" Count="12" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="253" Count="2" />
+      <LineId Id="406" Count="1" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="119" Count="12" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="256" Count="2" />
+      <LineId Id="408" Count="1" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="132" Count="12" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="259" Count="2" />
+      <LineId Id="410" Count="1" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="145" Count="12" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="262" Count="2" />
+      <LineId Id="412" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="158" Count="12" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="265" Count="2" />
+      <LineId Id="414" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="171" Count="12" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="268" Count="2" />
+      <LineId Id="416" Count="1" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="184" Count="12" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="271" Count="2" />
+      <LineId Id="418" Count="1" />
+      <LineId Id="113" Count="5" />
+      <LineId Id="331" Count="3" />
+      <LineId Id="336" Count="3" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="341" Count="3" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="346" Count="3" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="351" Count="3" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="356" Count="3" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="361" Count="3" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="366" Count="3" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="371" Count="3" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="376" Count="3" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="90" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

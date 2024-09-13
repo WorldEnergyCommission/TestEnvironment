@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_EL3443_DPM_Phase" Id="{b142d1d0-7a3f-4d12-807f-612a5fda4d77}">
+    <Declaration><![CDATA[(*This enum is equivalent to the selectors from the documentation " Confirmation of variable output values 1 - 4"*)
+{attribute 'qualified_only'}
+TYPE E_EL3443_DPM_Phase :
+(
+    nPhaseL1_OFFSET := 256,      //Offset Channel 1(Phase L1). The offset is added to the base selector     
+    nPhaseL2_OFFSET := 512,      //Offset Channel 2(Phase L2). The offset is added to the base selector
+    nPhaseL3_OFFSET := 768,      //Offset Channel 3(Phase L3). The offset is added to the base selector
+    
+    U_RMS := 1,                  // [V] (Real Selector: 1 (Examp.: 257 = 1 + 256 for ch. 1)) RMS value of the voltage
+    U_peak := 2,                 // [V] (Real Selector: 2 (Examp.: 770 = 2 + 768 for ch. 3)) Peak value of the instantaneous voltage in the last interval
+    U_Last_Zero_Cross := 3,      // [V] (UINT Selector: 3) DC time of the penultimate voltage zero crossing
+    U_RMS_Minimum := 4,          // [V] (Real Selector: 4) Minimum RMS value of the voltage in the last interval
+    U_RMS_Maximum := 5,          // [V] (Real Selector: 5) Maximum RMS value of the voltage in the last interval
+    ULL := 6,                    // [V] (Real Selector: 6) RMS value of the phase-to-phase voltage (Channel 1: U_L1L2; Channel 1: U_L2L3; Channel 3: U_L3L1) 
+    I_RMS := 8,                  // [A] (Real Selector: 8) RMS value of the current
+    I_peak := 9,                 // [A] (Real Selector: 9) Peak value of the instantaneous current in the last interval
+    I_RMS_Minimum := 11,         // [A] (Real Selector: 11) Minimum RMS value of the current in the last interval
+    I_RMS_Maximum := 12,         // [A] (Real Selector: 12) Maximum RMS value of the current in the last interval
+    Frequency := 17,             // [Hz] (Real Selector: 17) Frequency of this phase
+    Phi := 21,                   // [°] (Real Selector: 21) Phase angle of the fundamental wave
+    Cos_phi := 22,               // [-] (Real Selector: 22) Cosine of the fundamental wave phase angle
+    Power_Factor := 23,          // [-] (Real Selector: 23) Power factor
+    P := 26,                     // [W] (Real Selector: 26) Active power
+    Pavg := 27,                  // [W] (Real Selector: 27) Average active power during the last interval
+    Pmin := 28,                  // [W] (Real Selector: 28) Minimum active power in the last interval
+    Pmax := 29,                  // [W] (Real Selector: 29) Maximum active power in the last interval
+    S_ := 32,                    // [VA] (Real Selector: 32) Apparent power
+    Savg := 33,                  // [VA] (Real Selector: 33) Average apparent power during the last interval
+    Smin := 34,                  // [VA] (Real Selector: 34) Minimum apparent power in last interval
+    Smax := 35,                  // [VA] (Real Selector: 35) Minimum apparent power in last interval
+    Q := 38,                     // [Var] (Real Selector: 38) Reactive power
+    Qavg := 39,                  // [Var] (Real Selector: 39) Average reactive power average during the last interval
+    Qmin := 40,                  // [Var] (Real Selector: 40) Minimum reactive power in the last interval
+    Qmax := 41,                  // [Var] (Real Selector: 41) Maximum reactive power in the last interval
+    EP := 45,                    // [mhW] (UINT Selector: 45) Recorded active energy
+    EP_pos := 46,                // [mhW] (UINT Selector: 46) Received active energy
+    EP_neg := 47,                // [mhW] (UINT Selector: 47) Supplied active energy
+	EP_interval := 48, 			// [mhW] (UINT Selector: 48) Recorded active energy in the last interval
+	EP_pos_interval := 49, 		// [mhW] (UINT Selector: 49) Received active energy in the last interval
+	EP_neg_interval := 50, 		// [mhW] (UINT Selector: 50) Supplied active energy in the last interval
+    ES := 51,                    // [mhW] (UINT Selector: 51) Apparent energy
+    ES_pos := 52,                // [mhW] (UINT Selector: 52) Apparent energy
+    ES_neg := 53,                // [mhW] (UINT Selector: 53) Apparent energy
+	ES_interval := 54, 			// [mhW] (UINT Selector: 54) Apparent energy in the last interval
+	ES_pos_interval := 55, 		// [mhW] (UINT Selector: 55) Apparent energy in the last interval
+	ES_neg_interval := 56, 		// [mhW] (UINT Selector: 56) Apparent energy in the last interval
+    EQ_ := 57,                   // [mhW] (UINT Selector: 57) Reactive energy
+    EQ_pos := 58,                // [mhW] (UINT Selector: 58) Reactive energy
+    EQ_neg := 59,                // [mhW] (UINT Selector: 59) Reactive energy
+	EQ_interval := 60, 			// [mhW] (UINT Selector: 60) Reactive energy in the last interval
+	EQ_pos_interval := 61, 		// [mhW] (UINT Selector: 62) Reactive energy in the last interval
+	EQ_neg_interval := 62, 		// [mhW] (UINT Selector: 63) Reactive energy in the last interval
+    THD_U := 95,                 // [-] (Real Selector: 95) "Total Harmonic Distortion" is the distortion factor of the voltage. It indicates the ratio of the harmonic components of an oscillation relative to its fundamental.
+    RMS_fund_U := 98,            // [V] (Real Selector: 98) Amplitude of the fundamental wave
+    F_Ref_U := 99,               // [Hz] (Real Selector: 99) Reference frequency of the voltage harmonic: Specifies the underlying fundamental frequency, e.g.: 50 or 60 Hz.
+    Harmonics_U := 100,          // [% of the fundamental wave] (Real Selector: 100-163) 0 => DC component, 1 => fundamental wave, 2=> 2nd harmonic, 3=> 3rd harmonic
+    THD_I := 165,                // [-] (Real Selector: 165) "Total Harmonic Distortion" is the distortion factor of the current. It indicates the ratio of the harmonic components of an oscillation relative to its fundamental.
+    TDD_I := 166,                // [% of the maximum current] (Real Selector: 166) "Total Demand Distortion" indicates the ratio between the current harmonics and the maximum current (EL3443: 1A and EL3443-0010: 5A)
+    RMS_fund_I := 168,           // [A] (Real Selector: 168) Amplitude of the fundamental wave
+    F_Ref_I := 169,              // [Hz] (Real Selector: 169) Reference frequency of the current harmonic: Specifies the underlying fundamental frequency, e.g.: 50 or 60 Hz.
+    Harmonics_I := 170,          // [% of the fundamental wave] (Real Selector: 170-233) 0 => DC component, 1 => fundamental wave, 2=> 2nd harmonic, 3=> 3rd harmonic
+    Error_INDEX_Not_Valid := 255 // [-] (Real Selector: 255) Error message: The selected index is not available.
+)UINT;
+END_TYPE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,266 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{52a4cf08-62d2-4b94-900b-2ea0759cae15}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	
+	fbPV_1						: FB_Symo_PV_Inverter_FLOAT_1_DM_InclDisable;
+	fbPV_2						: FB_Symo_PV_Inverter_FLOAT_1_DM_InclDisable;
+	fbPV_3						: FB_Symo_PV_Inverter_FLOAT_1_DM_InclDisable;
+	fbPV_4						: FB_SunSpec_PV_Inverter;
+	                			
+	fbPVInt						: FB_PV_Power_Ext_Input;
+	fbPVCounter					: FB_EnergyCounter;
+	fbPVCounter_1				: FB_EnergyCounter;
+	fbPVCounter_2				: FB_EnergyCounter;
+	fbPVCounter_3				: FB_EnergyCounter;
+	fbPVCounter_4				: FB_EnergyCounter;
+	
+	lrPowerPV					: LREAL;					//{#lynus.ag#()}
+	lrPowerPV_1					: LREAL;					//{#lynus.ag#()}
+	lrPowerPV_2					: LREAL;					//{#lynus.ag#()}
+	lrPowerPV_3					: LREAL;					//{#lynus.ag#()}
+	lrPowerPV_4					: LREAL;					//{#lynus.ag#()}
+
+	m_EnableWrite1				: BOOL;
+	m_EnableWrite2				: BOOL;
+	m_EnableWrite3				: BOOL;
+	m_EnableWrite4				: BOOL;
+	
+	m_Disable_Inverter1			: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter2			: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter3			: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter4			: BOOL;						//{#lynus.ag#()}
+	
+	FB_PID_Inverter 			:FB_PID;
+	rPValue: REAL := 0.5;
+	udint_IValue: UDINT:=250;
+	udint_DValue: UDINT:=30;
+
+	unit_Temp: UINT;
+	real_max: REAL:=1000;
+	real_min: REAL:=10;
+	
+	int_SetPointInverter		: INT;						//{#lynus.ag#()}
+	int_SetPointInverter_array	: ARRAY[1..4] OF INT;
+	
+	real_ActualLoadPercent_PV1	: REAL;						//{#lynus.ag#()}
+	real_ActualLoadPercent_PV2	: REAL;						//{#lynus.ag#()}
+	real_ActualLoadPercent_PV3	: REAL;						//{#lynus.ag#()}
+	real_ActualLoadPercent_PV4	: REAL;						//{#lynus.ag#()}
+
+	byErrorWarningPV			: BYTE;						//{#lynus.ag#()}
+
+END_VAR
+VAR PERSISTENT
+	lrCounterPV					: LREAL;					//{#lynus.ag#()}
+	lrCounterPV_1				: LREAL;					//{#lynus.ag#()}
+	lrCounterPV_2				: LREAL;					//{#lynus.ag#()}
+	lrCounterPV_3				: LREAL;					//{#lynus.ag#()}
+	lrCounterPV_4				: LREAL;					//{#lynus.ag#()}
+	m_Direction: BOOL := true;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Fronius Tauro ECO 50-3-D 50kW
+fbPV_1(
+	bEnable				:= TRUE, 
+	sIPAdress			:= '10.11.90.20', 			// modify IP Adress
+	b_enableWrite		:= m_EnableWrite1,
+	m_DisableInverter	:= m_Disable_Inverter1,
+	int_InverterSetpoint:= LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV1*110)) * 10,
+	stDataSymo10		=> ,
+	stDataEMPower_PV	=> , 
+	stDataEMCounter_PV	=> , 
+	diNrOfEM_OUT_PV		=> );
+
+// Fronius Tauro ECO 50-3-D 50kW
+fbPV_2(
+	bEnable				:= TRUE, 
+	sIPAdress			:= '10.11.90.21', 			// modify IP Adress
+	b_enableWrite		:= m_EnableWrite2,
+	m_DisableInverter	:= m_Disable_Inverter2,
+	int_InverterSetpoint:= LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV2*110)) * 10,
+	stDataSymo10		=> ,
+	stDataEMPower_PV	=> , 
+	stDataEMCounter_PV	=> , 
+	diNrOfEM_OUT_PV		=> );	
+
+// Fronius Symo Advanced 17.5-3-M 17.5kW
+fbPV_3(
+	bEnable				:= TRUE, 
+	sIPAdress			:= '10.11.90.22', 			// modify IP Adress
+	b_enableWrite		:= m_EnableWrite3,
+	m_DisableInverter	:= m_Disable_Inverter3,
+	int_InverterSetpoint:= LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV3*110)),
+	stDataSymo10		=> ,
+	stDataEMPower_PV	=> , 
+	stDataEMCounter_PV	=> , 
+	diNrOfEM_OUT_PV		=> );
+	
+// SolarEdge 27.6kW
+fbPV_4(
+	bEnable:= TRUE, 
+	sIPAdress:= '10.11.90.23', 
+	byUnitID_Inverter:= 1, 
+	stDataSunSpec=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+lrPowerPV_1 := fbPV_1.stDataEMPower_PV.lrPowerTotal;
+lrPowerPV_2 := fbPV_2.stDataEMPower_PV.lrPowerTotal;
+lrPowerPV_3 := fbPV_3.stDataEMPower_PV.lrPowerTotal;
+lrPowerPV_4 := fbPV_4.stDataEMPower_PV.lrPowerTotal;
+
+// PV Regulation
+
+// calculate maximum regulator value by looking at the nomal inverter power 
+// nominal inverter Values	PV1: 50kW / PV2: 50kW / PV3: 17kW
+real_ActualLoadPercent_PV1 := LREAL_TO_REAL(lrPowerPV_1) / 50*100;
+real_ActualLoadPercent_PV2 := LREAL_TO_REAL(lrPowerPV_2) / 50*100;
+real_ActualLoadPercent_PV3 := LREAL_TO_REAL(lrPowerPV_3) / 17.5*100;
+real_ActualLoadPercent_PV4 := LREAL_TO_REAL(lrPowerPV_4) / 27.6*100;
+
+FB_PID_Inverter(
+		bEnable:= TRUE, 
+		rSetpoint:= -prgGrid.rSizeGridDelivery, 
+		udiIValue:= udint_IValue, 
+		udiDValue:= udint_DValue, 
+		udiDamping:= 0, 
+		rPValue:= rPValue, 
+		rMaxValue:= real_max, 
+		rMinValue:= real_min, 
+		rNeutralZone:= 1, 
+		bDirection:= m_Direction, 
+		rActualValue:=  LREAL_TO_REAL(prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal),
+		rQController=> );
+int_SetPointInverter := REAL_TO_INT(FB_PID_Inverter.rQController);
+
+// EnergyCounter
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+fbPVCounter_1(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_1, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter_1.lrTotalCounterEnergy_Production > lrCounterPV_1 THEN  	
+	lrCounterPV_1 := fbPVCounter_1.lrTotalCounterEnergy_Production;
+END_IF
+
+fbPVCounter_2(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_2, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter_2.lrTotalCounterEnergy_Production > lrCounterPV_2 THEN  	
+	lrCounterPV_2 := fbPVCounter_2.lrTotalCounterEnergy_Production;
+END_IF
+
+fbPVCounter_3(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_3, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter_3.lrTotalCounterEnergy_Production > lrCounterPV_3 THEN  	
+	lrCounterPV_3 := fbPVCounter_3.lrTotalCounterEnergy_Production;
+END_IF
+
+fbPVCounter_4(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV_4, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter_4.lrTotalCounterEnergy_Production > lrCounterPV_4 THEN  	
+	lrCounterPV_4 := fbPVCounter_4.lrTotalCounterEnergy_Production;
+END_IF
+
+// PV Int
+fbPVInt(
+	bEnable:= TRUE, 
+	bExtErrorPV := , 
+	lrExtPvPower := lrPowerPV_1 + lrPowerPV_2 + lrPowerPV_3 + lrPowerPV_4, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+	
+lrPowerPV := fbPVInt.stDataPv.lrPower;
+	byErrorWarningPV := fbPVInt.stDataPv.byErrorWarning;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="209" Count="0" />
+      <LineId Id="200" Count="8" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="237" Count="8" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="248" Count="10" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="28" Count="6" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="261" Count="1" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="385" Count="5" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="405" Count="11" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="274" Count="12" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="288" Count="12" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="301" Count="12" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="315" Count="12" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="328" Count="12" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="46" Count="7" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="101" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

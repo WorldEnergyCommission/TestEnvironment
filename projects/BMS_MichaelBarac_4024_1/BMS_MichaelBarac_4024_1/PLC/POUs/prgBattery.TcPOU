@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgBattery" Id="{a742e2b4-8e0c-4f86-960b-eaa67f503c17}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgBattery
+VAR PERSISTENT
+	bEnableBattery				: BOOL:= true;					//{#lynus.ag#()}
+	byPrioBattery				: BYTE;							//{#lynus.ag#()}
+	lrMaxCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	lrCounterBattProd			: LREAL;						//{#lynus.ag#()}
+	lrCounterBattCons			: LREAL;						//{#lynus.ag#()}
+	str_IP						: STRING(15):='10.11.90.180';
+
+END_VAR
+VAR
+	fbBattery					: FB_Xelectrix_Powerbox_v2;
+	fbBattCounter				: FB_EnergyCounter;
+	bIsEnabledBattery			: BOOL;							//{#lynus.ag#()}
+	bResetBattery				: BOOL;							//{#lynus.ag#()}
+	bSResetBattery				: BOOL;							//{#lynus.ag#()}
+	byErrorWarningBattery		: BYTE;							//{#lynus.ag#()}
+	dwSOCBattery				: DWORD;						//{#lynus.ag#()}
+	rTargetPowerBattery			: REAL;							//{#lynus.ag#()}
+	lrPowerBattery				: LREAL;						//{#lynus.ag#()}
+	lrActualCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	byBatteryModbusError		: BOOL;							//{#lynus.ag#()}
+	lrBatteryCons				: LREAL;						//{#lynus.ag#()}
+	lrBatteryProd				: LREAL;						//{#lynus.ag#()}
+	mtest						: BOOL;
+	x: REAL;
+	byBatteryIslandOperation	: BOOL;							//{#lynus.ag#()}
+	byBatteryBypassOperation	: BOOL;							//{#lynus.ag#()}
+	lrPowerGridBattery			: LREAL;						//{#lynus.ag#()}
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF mtest THEN
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[1,1].rTargetPowerEMS:=x;
+END_IF
+fbBattery(
+	bEnable:= bEnableBattery, 
+	bActivateControl:=TRUE , 
+	byUnitID:= 1, 
+	byPriority:= byPrioBattery, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	lrMaxCapacityBattery:= lrMaxCapacityBattery, 
+	sIPAdress:= str_IP, 						// modify IP Adress
+	bReset:= bResetBattery, 
+	m_ManualSetpointEnable:= , 
+	i_SetpointPower_Manual_kW:= , 
+	m_ManualChargeDischargeMax:= , 
+	r_MaxChargePower_W:= , 
+	r_MaxDischargePower_W:= , 
+	m_go_to_online:= , 
+	m_go_to_bypass:= , 
+	stDataXelectrix=> , 
+	stDataBatt=> , 
+	stDataBattInverter=> , 
+	stDataEMPower_Grid=> , 
+	stDataEMCounter_Grid=> , 
+	diNrOfBatt_OUT=> , 
+	diNrOfBattInverter_OUT=> , 
+	diNrOfEM_OUT_Grid=> , 
+	lrMaxCapacityBattery_OUT=> , 
+	iSetpointPower_Info=> , 
+	dw_BatterySOC_notZero=> );
+//Out
+bIsEnabledBattery := fbBattery.stDataBatt.bEnabled;
+bSResetBattery := fbBattery.stDataBattInverter.bStateReset;
+dwSOCBattery := fbBattery.dw_BatterySOC_notZero;
+rTargetPowerBattery := fbBattery.stDataBattInverter.rTargetPower;
+lrPowerBattery := fbBattery.stDataBatt.lrPower;
+lrActualCapacityBattery := fbBattery.lrMaxCapacityBattery_OUT;	
+byErrorWarningBattery := fbBattery.stDataBatt.byErrorWarning;
+byBatteryModbusError := fbBattery.stDataXelectrix.eErrorState = 1;
+lrBatteryCons := fbBattery.stDataBatt.lrPowerConsumption;
+lrBatteryProd := fbBattery.stDataBatt.lrPowerProduction;				
+lrPowerGridBattery := 	fbBattery.stDataEMPower_Grid.lrPowerTotal;
+					
+// EnergyCounter
+fbBattCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerBattery, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbBattCounter.lrTotalCounterEnergy_Production > lrCounterBattProd THEN  	
+	lrCounterBattProd := fbBattCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+IF fbBattCounter.lrTotalCounterEnergy_Consumption > lrCounterBattCons THEN  	
+	lrCounterBattCons := fbBattCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+byBatteryIslandOperation := fbBattery.stDataXelectrix.eGridState=2;
+byBatteryBypassOperation := NOT (fbBattery.stDataXelectrix.eBatteryState=4 OR fbBattery.stDataXelectrix.eBatteryState=5); ]]></ST>
+    </Implementation>
+    <LineIds Name="prgBattery">
+      <LineId Id="181" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="428" Count="7" />
+      <LineId Id="409" Count="16" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="133" Count="8" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="143" Count="16" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="366" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

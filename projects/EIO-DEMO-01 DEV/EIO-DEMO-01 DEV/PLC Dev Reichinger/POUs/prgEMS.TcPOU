@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEMS" Id="{32a5e1c6-4c3e-4d9c-acff-c2561826fcf0}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR
+	bIsEnableEMS				: BOOL;							//{#lynus.ag#()}
+	bStateAllowChrgFromGrid		: BOOL;							//{#lynus.ag#()}
+	rHeartbeatEMS				: REAL;							//{#lynus.ag#()}
+	rErrorWarningEMS			: REAL;							//{#lynus.ag#()}
+	rReadyEMS					: REAL;							//{#lynus.ag#()}
+	iOperationModeEMS			: INT;							//{#lynus.ag#()}
+	byMaxDepthOfDischrgEPO		: BYTE;							//{#lynus.ag#()}
+	byReserveSOCEPO				: BYTE;							//{#lynus.ag#()}
+	byPrioMinChrgBattSOCInEPO	: BYTE;							//{#lynus.ag#()}
+	byResChrgfromGridToBatt		: BYTE;							//{#lynus.ag#()}
+	uiUpdateTime				: UINT;							//{#lynus.ag#()}
+	bEnableEMS					: BOOL;							//{#lynus.ag#()}
+	rNewBatteryPowerEMS			: REAL;							//{#lynus.ag#()}
+	bHPActivate					: BOOL;							//{#lynus.ag#()}
+	bAllowChrgFromGrid			: BOOL;							//{#lynus.ag#()}
+	bControllingState			: BOOL;							//{#lynus.ag#()}
+	rMainFuseCSEMS				: REAL;							//{#lynus.ag#()}
+	iMessageEMS					: INT;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[ bIsEnableEMS					:=		prg_ADS.struct_received.bIsEnableEMS			;
+ bStateAllowChrgFromGrid		:=		prg_ADS.struct_received.bStateAllowChrgFromGrid			;
+ rHeartbeatEMS					:=		prg_ADS.struct_received.rHeartbeatEMS			;
+ rErrorWarningEMS				:=		prg_ADS.struct_received.rErrorWarningEMS			;
+ rReadyEMS						:=		prg_ADS.struct_received.rReadyEMS			;
+ iOperationModeEMS				:=		prg_ADS.struct_received.iOperationModeEMS			;
+ byMaxDepthOfDischrgEPO			:=		prg_ADS.struct_received.byMaxDepthOfDischrgEPO			;
+ byReserveSOCEPO				:=		prg_ADS.struct_received.byReserveSOCEPO			;
+ byPrioMinChrgBattSOCInEPO		:=		prg_ADS.struct_received.byPrioMinChrgBattSOCInEPO			;
+ byResChrgfromGridToBatt		:=		prg_ADS.struct_received.byResChrgfromGridToBatt			;
+ uiUpdateTime					:=		prg_ADS.struct_received.uiUpdateTime			;
+ bEnableEMS						:=		prg_ADS.struct_received.bEnableEMS			;
+ rNewBatteryPowerEMS			:=		prg_ADS.struct_received.rNewBatteryPowerEMS			;
+ bHPActivate					:=		prg_ADS.struct_received.bHPActivate			;
+ bAllowChrgFromGrid				:=		prg_ADS.struct_received.bAllowChrgFromGrid			;
+ bControllingState				:=		prg_ADS.struct_received.bControllingState			;
+ rMainFuseCSEMS					:=		prg_ADS.struct_received.rMainFuseCSEMS			;
+iMessageEMS						:=		prg_ADS.struct_received.iMessageEMS ;]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="6" Count="16" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

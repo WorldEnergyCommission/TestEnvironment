@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_PV_Production" Id="{482bb2d9-0ca6-4988-bb94-0d5b2646c33c}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_PV_Production
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;						//Enable or dissable the function
+	{attribute 'hide'}
+	bError								: BOOL;						//Error Pv system
+	{attribute 'hide'}
+	bWarning							: BOOL;						//Warning Pv system
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;						//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	iErrorCode							: INT;						//Error Code from external PV
+	{attribute 'hide'}
+	iWarningCode						: INT;						//Warning Code from external PV
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;					//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;					//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;					//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;					//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;					//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;					//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrPvPower							: LREAL;					//Input Value from the power of the Pv system with unit W
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;				//Delay Time to write some Data to the Output
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataPvOut							: ST_PV_Output;				//Pv system output data
+	{attribute 'hide'}
+	stDataPvOutDelay					: ST_PV_Output;				//Pv system output data with delay
+END_VAR
+VAR
+	FPEnable							: R_TRIG;					//Internal positive Edge
+	FNEnable							: F_TRIG;					//Internal negative Edge
+	timDelayOutputs						: TON;						//Timer to send Data with Delay to the outputs
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 29.05.2021
+//Version : 1.0.0.0
+
+//With this function its possible to handel the most popular values from a pv system
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrPvPower := LIMIT(-999999999999999,lrPvPower,999999999999999);
+
+(*---------------------------------------------------------------Enable-------------------------------------------------------------------------------*)
+stDataPvOut.bEnabled := bEnable;
+
+(*---------------------------------------------------------------Power data-------------------------------------------------------------------------------*)
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+
+IF bEnable THEN
+	stDataPvOut.lrPower := LINT_TO_LREAL(LREAL_TO_LINT((lrPvPower / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataPvOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataPvOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataPvOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataPvOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataPvOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataPvOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF 
+					
+		IF stDataPvOut.lrPower > 0 THEN
+				stDataPvOut.lrPowerProduction := stDataPvOut.lrPower;
+				stDataPvOut.lrPowerConsumption := 0;
+		ELSIF stDataPvOut.lrPower < 0 THEN
+				stDataPvOut.lrPowerProduction := 0;
+				stDataPvOut.lrPowerConsumption := (stDataPvOut.lrPower * - 1);
+		ELSIF stDataPvOut.lrPower = 0 THEN
+				stDataPvOut.lrPowerProduction := 0;
+				stDataPvOut.lrPowerConsumption := 0;
+		END_IF															
+ELSE																	
+	stDataPvOut.lrPower := 0;
+		stDataPvOut.lrCounterEnergyT1_Consumption := 0;
+			stDataPvOut.lrCounterEnergyT2_Consumption := 0;
+				stDataPvOut.lrCounterEnergyT1_Production := 0;
+					stDataPvOut.lrCounterEnergyT2_Production := 0;
+						stDataPvOut.lrPowerProduction := 0;
+							stDataPvOut.lrPowerConsumption := 0;
+								stDataPvOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataPvOut.lrTotalCounterEnergy_Production := 0;
+END_IF	
+
+(*---------------------------------------------------------------Error and Warning-------------------------------------------------------------------------------*)
+
+stDataPvOut.byErrorWarning := 0;
+	IF bWarning THEN stDataPvOut.byErrorWarning := 1; END_IF  
+	IF bError THEN stDataPvOut.byErrorWarning := 2;	END_IF
+
+//Messages and Error Codes
+IF stDataPvOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataPvOut.eMessage := E_Message_PV.eNoConnectionToBackend; 
+ELSIF stDataPvOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataPvOut.eMessage := E_Message_PV.ePvError;
+ELSIF stDataPvOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataPvOut.eMessage := E_Message_PV.eTooMuchPV;
+ELSE stDataPvOut.eMessage := E_Message_PV.eNoMessage; 
+END_IF
+
+(*---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataPvOutDelay := stDataPvOut; 
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PV_Production">
+      <LineId Id="643" Count="2" />
+      <LineId Id="641" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="603" Count="1" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="790" Count="4" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="646" Count="1" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="681" Count="1" />
+      <LineId Id="686" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="795" Count="4" />
+      <LineId Id="582" Count="0" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="387" Count="1" />
+      <LineId Id="390" Count="1" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="393" Count="1" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="284" Count="1" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="583" Count="1" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="744" Count="0" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="561" Count="1" />
+      <LineId Id="668" Count="1" />
+      <LineId Id="745" Count="0" />
+      <LineId Id="670" Count="2" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="697" Count="1" />
+      <LineId Id="693" Count="3" />
+      <LineId Id="692" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

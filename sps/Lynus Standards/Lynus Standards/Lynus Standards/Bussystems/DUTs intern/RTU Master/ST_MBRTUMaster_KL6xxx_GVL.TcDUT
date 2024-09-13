@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="ST_MBRTUMaster_KL6xxx_GVL" Id="{942d3ba0-8b6b-4dbb-bb77-c6ffeef0ded9}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_MBRTUMaster_KL6xxx_GVL :
+STRUCT
+	{attribute 'hide'}
+	bSlaveStartReadOrWrite				: BOOL;																		//RTU Slave send to the RTU Master the start for read or write command
+	{attribute 'hide'}
+	bTerminalIsConfigured				: BOOL;																		//The RTU Master set this Flag to True when the Terminal is successfully configured
+	{attribute 'hide'}	
+	bReadWriteIsDone					: BOOL;																		//The Slave Set this to True when all Registers are done. (For Eg. in the Last Step of the Statemachine) The Master Reset this Flag. So then next Modbus Adress can be processed.
+	{attribute 'hide'}
+	bMasterIsBusy						: BOOL;																		//RTU Master is busy. 
+	{attribute 'hide'}
+	bNoNewMBusAdress					: BOOL;																		//When this Flag is true, the Client Functions not can set a new Modbus Slave Adress
+	{attribute 'hide'}
+	byErrorWarning						: BYTE;																		//Error Warning State
+	{attribute 'hide'}
+	byActualMBAdressInProgrss			: BYTE;																		//Actual Modbus Slave Adress what is in Progress at the moment
+	{attribute 'hide'}
+	byNumberOfSlaves					: BYTE;																		//Number of Slaves on several Line
+	{attribute 'hide'}
+	wModbusRegister						: WORD;																		//The Modbus Register from the Slave for the Master to read/write
+	{attribute 'hide'}	
+	wNumberOfRegister					: WORD;																		//Number of Registers from the Slave to the Master for read/write 
+	{attribute 'hide'}
+	arrAllModbusSlaveAdresses			: ARRAY[1..247] OF BYTE;													//Array with all Modbuis Slave Adresses				
+	{attribute 'hide'}
+	arrReadOutData						: ARRAY[1..Constants_Bussystems.wQuantityOfRegistersMBRTUMaster] OF WORD;	//Data after Reading to send from the Master to the Slave
+	{attribute 'hide'}
+	arrWriteOutData						: ARRAY[1..Constants_Bussystems.wQuantityOfRegistersMBRTUMaster] OF WORD;	//Data to send from the Save to the Master for writing
+	{attribute 'hide'}
+	eMBRTUReadWriteMode					: E_MBRTUMaster_ReadWriteMode;												//Choose between the different Modbus Actions
+	{attribute 'hide'}
+	eMBRTUDeviceType					: E_MBRTUMaster_DeviceType;													//The Slave send to the Master the Device Type. Only the same Device Types are Allowed on 1 Backhoff Terminal
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

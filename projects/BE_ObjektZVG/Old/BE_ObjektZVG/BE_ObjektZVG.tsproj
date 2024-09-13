@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.32">
+	<Project ProjectGUID="{A776575D-379A-4953-9E5B-FEF4B516B79D}" TargetNetId="5.109.229.195.1.1" ShowHideConfigurations="#x106">
+		<System>
+			<Settings RouterMemory="67108864"/>
+			<Licenses IgnoreProjectLicenses="true">
+				<Target BkhfOrder="00933509" CustomOrder="60000492">
+					<ManualSelect>{6952449D-F68C-49A2-ADE4-8639D85B33A4}</ManualSelect>
+				</Target>
+			</Licenses>
+			<Tasks>
+				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>PlcTask</Name>
+				</Task>
+				<Task Id="4" Priority="6" CycleTime="50000" AmsPort="351" AdtTasks="true">
+					<Name>FastTask</Name>
+				</Task>
+				<Task Id="5" Priority="8" CycleTime="100000" AmsPort="352" AdtTasks="true">
+					<Name>MiddleTask</Name>
+				</Task>
+				<Task Id="6" Priority="10" CycleTime="200000" AmsPort="353" AdtTasks="true">
+					<Name>SlowTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project GUID="{F629C70D-F479-4230-9909-9DF1B4BE2E3B}" Name="BE_ObjektZVG" PrjFilePath="BE_ObjektZVG\BE_ObjektZVG.plcproj" TmcFilePath="BE_ObjektZVG\BE_ObjektZVG.tmc" ReloadTmc="true" AmsPort="852" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502040" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="BE_ObjektZVG\BE_ObjektZVG.tmc" TmcHash="{0535CBCE-4B73-C250-84E5-85D0C6B2FD5F}">
+					<Name>BE_ObjektZVG Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Contexts>
+						<Context>
+							<Id NeedCalleeCall="true">0</Id>
+							<Name>FastTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>6</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id NeedCalleeCall="true">1</Id>
+							<Name>MiddleTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>8</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id NeedCalleeCall="true">2</Id>
+							<Name>SlowTask</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>10</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="6" OTCID="#x08502041"/>
+						<TaskPouOid Prio="8" OTCID="#x08502042"/>
+						<TaskPouOid Prio="10" OTCID="#x08502043"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+		</Plc>
+	</Project>
+</TcSmProject>

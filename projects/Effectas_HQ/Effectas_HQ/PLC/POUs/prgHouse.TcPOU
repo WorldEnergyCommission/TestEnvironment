@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgHouse" Id="{2627c3a1-fabe-46fd-8396-cc823b8dfb91}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHouse
+VAR
+	lrHousePower					: LREAL;								//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[lrHousePower := prgGrid.lrGridPower + prgPv.lrPower_PV1 + prgPv.lrPower_PV2 + prgPv.lrPower_PV3;]]></ST>
+    </Implementation>
+    <LineIds Name="prgHouse">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

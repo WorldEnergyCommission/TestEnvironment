@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM_Aussen" Id="{3dc4cc04-aac0-4135-8866-9b92abf24d27}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM_Aussen
+VAR
+	fbGrid				: FB_Measurement_EL3403_v1;
+	lr_RealPower_Grid	: LREAL;						//{#lynus.ag#()}
+	lr_ApparentPower_Grid: LREAL;						//{#lynus.ag#()}
+	lr_ReactivePower_Grid: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_Grid	: LREAL;						//{#lynus.ag#()}
+
+	lr_Voltage_L1N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1L2		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2L3		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3L1		: LREAL;						//{#lynus.ag#()}
+ 	lr_Current_L1		: LREAL;						//{#lynus.ag#()}
+	lr_Current_L2		: LREAL;						//{#lynus.ag#()}
+	lr_Current_L3		: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lr_EnergyCounter_Grid	: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+fbGrid(
+	bEnable:= TRUE, 
+	bInvers_CH1:= , 
+	bInvers_CH2:= , 
+	bInvers_CH3:= , 
+	uiCurrentTransformerRatio:= 300, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> );
+
+
+
+lr_RealPower_Grid 		:= LIMIT(0,fbGrid.stDataEMPower.lrPowerTotal,1000); 	
+lr_ApparentPower_Grid 	:= fbGrid.stDataEMPower.lrApparentPowerTotal;
+lr_ReactivePower_Grid	:= fbGrid.stDataEMPower.lrReactivePowerTotal;
+lr_Frequency_Grid		:= fbGrid.stDataEMPower.lrFrequency;
+lr_Voltage_L1N			:= fbGrid.stDataEMPower.lrVoltageL1N;
+lr_Voltage_L2N			:= fbGrid.stDataEMPower.lrVoltageL2N;
+lr_Voltage_L3N			:= fbGrid.stDataEMPower.lrVoltageL3N;
+lr_Voltage_L1L2			:= fbGrid.stDataEMPower.lrVoltageL1L2;
+lr_Voltage_L2L3			:= fbGrid.stDataEMPower.lrVoltageL2L3;
+lr_Voltage_L3L1			:= fbGrid.stDataEMPower.lrVoltageL3L1;
+lr_EnergyCounter_Grid	:= fbGrid.stDataEMCounter.lrTotalCounterEnergy_Consumption;
+lr_Current_L1			:= fbGrid.stDataEMPower.lrCurrentL1;
+lr_Current_L2			:= fbGrid.stDataEMPower.lrCurrentL2;
+lr_Current_L3			:= fbGrid.stDataEMPower.lrCurrentL3;
+	 
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM_Aussen">
+      <LineId Id="1732" Count="10" />
+      <LineId Id="1729" Count="2" />
+      <LineId Id="1394" Count="15" />
+      <LineId Id="1283" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

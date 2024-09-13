@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgRoomVentilaton" Id="{749a0d89-f959-40d8-91f6-c9d2b66792a6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgRoomVentilaton
+VAR
+	real_Ventialtor_Speed		: REAL;									//{#lynus.ag#()}
+	real_Temp_Extract_Air		: REAL;									//{#lynus.ag#()}
+	real_Temp_Exhaust_Air		: REAL;									//{#lynus.ag#()}
+	real_Temp_Outdoor_Air		: REAL;									//{#lynus.ag#()}
+	real_Temp_Supply_Cell_Air	: REAL;									//{#lynus.ag#()}
+	real_Temp_Supply_Air		: REAL;									//{#lynus.ag#()}
+	real_Humidity				: REAL;									//{#lynus.ag#()}
+	real_CO2					: REAL;									//{#lynus.ag#()}
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MODBUS_RTU_Vallox();
+IF (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[3])-27315)/100 <> 0 AND (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[10]))/1 <> 0 THEN 
+	real_Ventialtor_Speed := WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[0]);
+	real_Temp_Extract_Air := (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[1])-27315)/100;
+	real_Temp_Exhaust_Air := (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[2])-27315)/100;
+	real_Temp_Outdoor_Air := (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[3])-27315)/100;
+	real_Temp_Supply_Cell_Air := (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[4])-27315)/100;
+	real_Temp_Supply_Air := (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[5])-27315)/100;
+	real_Humidity		 := (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[10]))/1;
+	real_CO2			 := (WORD_TO_REAL(MODBUS_RTU_Vallox.structArrayModbusRTU[1].wArrayReceiveBuffer[11]))/1;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgRoomVentilaton">
+      <LineId Id="5" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="22" Count="3" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="30" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

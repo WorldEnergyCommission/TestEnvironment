@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_GridConnection_Output" Id="{85f1c84f-c221-4f26-8bde-6df5584ea948}">
+    <Declaration><![CDATA[TYPE ST_GridConnection_Output :
+STRUCT
+	byErrorWarning								: BYTE;									//Show if the function has a Error or a Warning
+	bEnabled									: BOOL;									//Grid function is enabled
+	lrTotalCounterEnergy_Consumption			: LREAL;								//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production				: LREAL;								//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption				: LREAL;								//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption				: LREAL;								//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production				: LREAL;								//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production				: LREAL;								//Total counter for energy Tariff 2 production with unit kWh
+	lrPower										: LREAL;								//{#lynus.ag#()} //Actual power from the grid with unit kW
+	lrPowerConsumption							: LREAL;								//Consumption grid with unit kW
+	lrPowerProduction							: LREAL;								//Production grid with unit kW
+	rSizeGridConn								: REAL;									//Max size from the grid connection with unit KW
+	eMessage									: E_Message_Grid;						//Message from the Grid
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

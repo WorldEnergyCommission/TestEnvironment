@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: databaserestore
+  namespace: lynus
+spec:
+  selector:
+    matchLabels:
+      app: databaserestore
+  template:
+    metadata:
+      labels:
+        app: databaserestore
+    spec:
+      containers:
+        - name: databaserestore
+          image: timescale/timescaledb-ha:pg14.9-ts2.12.1-all
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "500m"
+            limits:
+              memory: "12096Mi"
+              cpu: "3000m"
+          imagePullPolicy: Always
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: data
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: databaserestore
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: databaserestore
+  namespace: lynus
+  labels:
+    app: databaserestore
+spec:
+  selector:
+    app: databaserestore
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: psql
+  type: ClusterIP

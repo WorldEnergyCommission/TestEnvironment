@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{4b435e5a-7e5b-4068-9482-ecd4636f4602}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR PERSISTENT
+	bEnabledCS				: BOOL;									//{#lynus.ag#()}
+	byPrioCS				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS				: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS				: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS				: REAL;									//{#lynus.ag#()}
+	lrCounterCS				: LREAL;								//{#lynus.ag#()}
+	byManualyTargetPower	: BYTE;									//{#lynus.ag#()}
+	bManualyOn				: BOOL;									//{#lynus.ag#()}
+END_VAR
+VAR
+	fbCS					: FB_ECS_Alpitronic_Hypercharger;
+	fbCSCounter				: FB_EnergyCounter;
+	bIsEnabledCS			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS			: REAL;									//{#lynus.ag#()}
+	bCarConnected			: BOOL;									//{#lynus.ag#()}
+	rChrgTime				: REAL;									//{#lynus.ag#()}
+	lrPowerCS				: LREAL;								//{#lynus.ag#()}
+	bSManualyOn				: BOOL;									//{#lynus.ag#()}
+	bySManualyTargetPower	: BYTE;									//{#lynus.ag#()}
+	b_CS_ModbusFault		: BOOL;									//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCS.stSetupECS.byDisableSOC := bySOC_D_CS;
+fbCS.stSetupECS.byEnableSOC := bySOC_E_CS;
+fbCS.stSetupECS.byPriority := byPrioCS;
+fbCS.stSetupECS.rMaxPower := rMaxPowerCS;
+fbCS.stSetupECS.byCSMinPower := byMinPowerCS;
+fbCS.stSetupECS.bManualyOn := bManualyOn;
+fbCS.stSetupECS.byManualyTargetPower := byManualyTargetPower;
+
+fbCS(
+	bEnable:= bEnabledCS, 
+	bPowerDataInvers:= , 
+	byUnitID:= 1,				//Allways 1 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.11.90.140',			//192.168.0.100', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bIsEnabledCS := fbCS.stDataECS.bEnabled;
+byStateMinPowerCS := fbCS.stDataECS.bySCSMinPower;
+rTargetPowerCS := fbCS.stDataECS.rTargetPower;	
+byErrorWarningCS := fbCS.stDataECS.byErrorWarning;
+bCarConnected := fbCS.stDataECS.bCarConnected;
+rChrgTime := fbCS.stDataECS.arrChargingTimeInMin[1];
+lrPowerCS := fbCS.stDataECS.lrTotalPower;
+bSManualyOn := fbCS.stDataECS.bSManualyOn;
+bySManualyTargetPower := fbCS.stDataECS.bySManualyTargetPower;
+						
+// EnergyCounter
+fbCSCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerCS, 
+	lrTotalCounterEnergy_Consumption=> );
+	
+IF fbCSCounter.lrTotalCounterEnergy_Consumption > lrCounterCS THEN  	
+	lrCounterCS := fbCSCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+b_CS_ModbusFault := fbCS.bMBTCPError;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="23" Count="4" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="29" Count="16" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="7" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="106" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

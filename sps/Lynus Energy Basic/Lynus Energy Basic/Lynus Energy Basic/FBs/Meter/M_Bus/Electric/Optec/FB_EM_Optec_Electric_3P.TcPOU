@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_EM_Optec_Electric_3P" Id="{cb82852d-e107-45d6-a7ae-b2149279a4f8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EM_Optec_Electric_3P
+VAR_INPUT PERSISTENT
+	bEnable							: BOOL;											//Enable the function
+	usiPrimAddress					: USINT;										//Primary Address from the Meter
+	iTimeReadOutInterval			: INT := 900;									//Delay in seconds to read out the electric meter
+	diNrOfMBusMasterLine_IN			: DINT;											//Active Number from the MBus Master Function for using on other functions
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataEMPower					: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data)
+	stDataEMCounter					: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data)
+	stDataEMPowerRealTime			: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data RealTime)
+	stDataEMCounterRealTime			: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data RealTime)
+	diNrOfEM_OUT					: DINT;											//Active Number from the Electric Meter for using on other functions
+END_VAR
+VAR
+	{attribute 'conditionalshow'}
+	fbEM							: FB_ElectricMeter;								//Electric Meter Function
+	{attribute 'hide'}
+	fbNumberDevice					: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	fbMBusGeneral					: FB_MBUS_General;								//M-Bus Function
+	{attribute 'hide'}
+	timDissableFunctions			: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL			: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD							: ARRAY[1..4] OF FB_PersistentData_Number;		//Function to save persistent data
+	{attribute 'hide'}
+	bErrorMbus						: BOOL;											//Error from the M-Bus Function
+	{attribute 'hide'}
+	byWaitInStep					: BYTE;											//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData					: INT;											//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diCounterForGVL					: DINT;											//Counter to clean old data on GVL
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 30.08.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to read out a Electric Meter from the Factory Optec.
+//This Function Block read out the Default Values from the Electric Meter. He didn't change the read out Format.
+//This function can only be used for 3-phase meters. (_3P)
+//This Function block support only Primary Adress Mode.
+//Version according to which was implemented : 2.1
+//This Function not send the SND_NKE Telegramm and support only the default firt Telegramm from the Meter
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+iTimeReadOutInterval := LIMIT(1,iTimeReadOutInterval,3600);
+	diNrOfMBusMasterLine_IN := LIMIT(0,diNrOfMBusMasterLine_IN,Constants_Bussystems.diMaxNumberOfMBusMasterKL6781);
+		usiPrimAddress := LIMIT(0,usiPrimAddress,250);
+
+(*-------------------------------------------------------------Calcualte the number of EM---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := diNrOfEM_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*----------------------------------------------------------------------------------------M-Bus Communication----------------------------------------------------------------------------------------------*)
+			
+fbMBusGeneral(
+	usiAddress:= usiPrimAddress, 
+	stSecAdr:= , 
+	eBaudrate:= Lynus_Standards.GVL_Bussystems.stDataOfMBusMasterKL6781[diNrOfMBusMasterLine_IN].eBaudrateMBusKL6781, 
+	bStart:= fbEM.bReadOutMeter, 
+	bSND_NKE:= FALSE, 
+	bReadInit:= TRUE, 
+	tMinSendTime:= T#0S, 
+	usiUnit:= 1, 
+	bDisabled:= FALSE, 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	arrData=> , 
+	stCom:= Lynus_Standards.GVL_Bussystems.stDataOfMBusMasterKL6781[diNrOfMBusMasterLine_IN].stDataMBusCommunicationKL6781);
+
+(*----------------------------------------------------------------------------------------Electric Meter Function for Pv----------------------------------------------------------------------------------------------*)
+
+IF fbMBusGeneral.bError THEN bErrorMbus := TRUE; ELSE bErrorMbus := FALSE; END_IF
+
+//Error
+IF timDissableFunctions.Q THEN fbEM.bWarning := TRUE; fbEM.iWarningCode := 0; ELSE fbEM.bWarning := FALSE; END_IF 
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters OR bErrorMbus THEN fbEM.bError := TRUE; ELSE fbEM.bError := FALSE; END_IF
+		IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN fbEM.iErrorCode := 1;
+		ELSIF bErrorMbus THEN fbEM.iErrorCode := 0;
+		END_IF
+
+//Function
+fbEM(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= TRUE, 
+	bWriteWithDelay:= TRUE, 
+	bPowerDataInvers:= TRUE,
+	bReadOutDataDone:= fbMBusGeneral.bBusy,
+	iTimeReadOutInterval:= iTimeReadOutInterval, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= STRING_TO_LREAL(fbMBusGeneral.arrData[7].sValue) + STRING_TO_LREAL(fbMBusGeneral.arrData[11].sValue), 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= STRING_TO_LREAL(fbMBusGeneral.arrData[7].sValue), 
+	lrCounterEnergyT2_Consumption:= STRING_TO_LREAL(fbMBusGeneral.arrData[11].sValue), 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= STRING_TO_LREAL(fbMBusGeneral.arrData[25].sValue), 
+	lrVoltageL1N:= STRING_TO_LREAL(fbMBusGeneral.arrData[22].sValue), 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= STRING_TO_LREAL(fbMBusGeneral.arrData[14].sValue) * 1000, 
+	lrCurrentL2:= STRING_TO_LREAL(fbMBusGeneral.arrData[26].sValue), 
+	lrVoltageL2N:= STRING_TO_LREAL(fbMBusGeneral.arrData[23].sValue), 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= STRING_TO_LREAL(fbMBusGeneral.arrData[15].sValue) * 1000, 
+	lrCurrentL3:= STRING_TO_LREAL(fbMBusGeneral.arrData[27].sValue), 
+	lrVoltageL3N:= STRING_TO_LREAL(fbMBusGeneral.arrData[24].sValue), 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= STRING_TO_LREAL(fbMBusGeneral.arrData[16].sValue) * 1000, 
+	lrPowerTotal:= fbEM.lrPowerL1 + fbEM.lrPowerL2 + fbEM.lrPowerL3, 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= STRING_TO_LREAL(fbMBusGeneral.arrData[18].sValue) * 1000 + STRING_TO_LREAL(fbMBusGeneral.arrData[19].sValue) * 1000 + STRING_TO_LREAL(fbMBusGeneral.arrData[20].sValue) * 1000, 
+	lrApparentPowerTotal:= 0, 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> stDataEMPowerRealTime, 
+	stDataEMOutPowerDelay=> stDataEMPower, 
+	stDataEMOutCounter=> stDataEMCounterRealTime,
+	stDataEMOutCounterDelay=> stDataEMCounter,
+	bReadOutMeter=> );
+	
+(*-----------------------------------------------------------Handle data to Global structure for Electric Meter-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].bEnabled := FALSE;	
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Consumption := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Production := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Consumption := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Production := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPower := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerProduction := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Consumption := 0;
+												Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Production := 0;
+		
+		//Electric Meters
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricMeters);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricMeters THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+//Write Data on GVL for Electric Meter
+IF diNrOfEM_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].bEnabled := fbEM.stDataEMOutPower.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].byErrorWarning := fbEM.stDataEMOutPower.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT1_Consumption := fbEM.stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT1_Production := fbEM.stDataEMOutCounter.lrCounterEnergyT1_Production;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT2_Consumption := fbEM.stDataEMOutCounter.lrCounterEnergyT2_Consumption;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT2_Production := fbEM.stDataEMOutCounter.lrCounterEnergyT2_Production;		
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrPower := fbEM.stDataEMOutPower.lrPowerTotal;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrPowerConsumption := fbEM.stDataEMOutPower.lrPowerConsumption;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrPowerProduction := fbEM.stDataEMOutPower.lrPowerProduction;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrTotalCounterEnergy_Consumption := fbEM.stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrTotalCounterEnergy_Production := fbEM.stDataEMOutCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= INT_TO_LREAL(iTimeReadOutInterval), bEventBasedActive=> );
+arrPD[3](lrValue:= USINT_TO_LREAL(usiPrimAddress), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfMBusMasterLine_IN), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EM_Optec_Electric_3P">
+      <LineId Id="276" Count="4" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="285" Count="7" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="16" Count="15" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="297" Count="3" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="428" Count="4" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="301" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="312" Count="21" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="367" Count="1" />
+      <LineId Id="47" Count="14" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="62" Count="25" />
+      <LineId Id="491" Count="2" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="100" Count="12" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="152" Count="6" />
+      <LineId Id="160" Count="3" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="172" Count="3" />
+      <LineId Id="211" Count="1" />
+      <LineId Id="243" Count="14" />
+      <LineId Id="308" Count="3" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="337" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

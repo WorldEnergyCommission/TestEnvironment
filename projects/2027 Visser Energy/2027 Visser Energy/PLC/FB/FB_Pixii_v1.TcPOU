@@ -1,0 +1,1249 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Pixii_v1" Id="{60097b18-65ad-4358-ad4a-363945aa06c5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Pixii_v1
+VAR_INPUT PERSISTENT
+	bEnable							: BOOL;											//{#lynus.ag#()} //True = Function is enabled, FALSE = Function is dissabled, no new Data
+	bActivateControl				: BOOL;											//Activate the control  over Modbus TCP (False = Inverter work by himself)
+	byUnitID						: BYTE:=1;										//Unit ID fromt the Inverter (0 to 255)
+	byPriority						: BYTE;											//{#lynus.ag#()} //Priority of the Device
+	diNrOfEMS_IN					: DINT;											//Number of EMS what control this Device.
+	lrMaxCapacityBattery			: LREAL;										//{#lynus.ag#()} //Max Capacity from the Battery in kWh. Here on this Function this Input Value cames from Inside of the Function.
+	sIPAdress						: STRING(15);									//IP Adress from the Inverter
+END_VAR
+VAR_INPUT
+	bReset							: BOOL;											//{#lynus.ag#()} //Reset the device after a Error or a Warning
+	m_ManualSetpointEnable			: BOOL;											// enable the manual setpoint operation
+	i_SetpointPower_Manual_kW		: INT;											// Battery Setpoint, for testing purpose *100=[W]
+	m_ManualChargeDischargeMax		: BOOL;											// Enable max charge/Discharge power instead of storage read out vaules
+	r_MaxChargePower_W				: REAL;											// max charge power in [W]
+	r_MaxDischargePower_W			: REAL;											// max discharge power in [W]
+	
+END_VAR
+VAR_OUTPUT
+	stDataPixii						: ST_Pixii_OutData;								//Shows the specific output data from the Xelectric device
+	stDataBatt						: ST_Battery_Output;							//{#lynus.ag#()} //Output structure with Data from Battery
+	stDataBattInverter				: ST_BatteryInverter_Output;					//{#lynus.ag#()} //Output structure with Data from Battery Inverter
+	stDataEMPower					: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter Grid (Power Data)
+	stDataEMCounter					: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter Grid (Counter Data)
+	diNrOfBatt_OUT					: DINT;											//Active Number from the Battery Function for using on other functions
+	diNrOfBattInverter_OUT			: DINT;											//Active Number from the Battery Inverter Function for using on other functions
+	diNrOfEM_OUT_Grid				: DINT;											//Active Number from the Electric Meter for using on other functions
+	lrMaxCapacityBattery_OUT		: LREAL;										//Max kWh from the Battery system. The Pixii System deliver this value.
+	iSetpointPower_Info				: INT;											// Battery Setpoint, for monitoring purpose
+	r_SOC							: real;
+END_VAR
+VAR
+	
+	fbBattery						: FB_Battery;									//Function block for battery
+	
+	fbBatteryInverter				: FB_BatteryInverter;							//Function block for battery inveter
+	
+	fbEMPower						: FB_ElectricMeter;								//Electric Meter Function 
+	
+	fbPIDChrgStandby				: FB_PID;										//Controller to control the battery current on 0 in the standby mode	
+	
+	fbNumberDeviceBattery			: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	
+	fbNumberDeviceBatteryInvert		: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	
+	fbNumberDeviceGrid				: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	
+	fbMBRead_FC3					: FB_MBReadRegs;								//Modbus Read Function (FC3)
+	
+	fbMBWrite_FC6					: FB_MBWriteSingleReg;								//Modbus Write Function (FC6)
+	
+	fbConvertData					: FB_CV_WORD_TO_DWORD;							//Convert 2 Words in a Dword
+	
+	timDelay						: TON;											//Timer for Delay between Requests
+	
+	timTimeout						: TON;											//Timer for Timeout
+	
+	timDissableFunctions			: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	
+	timResetConnectionOnGVL			: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	
+	timReset						: TON;											//Timer to reset the Inverter after a Error
+	
+	timErrorMTCP					: TON;											//Delay when Error on Modbus TCP
+	
+	timSetStandbyCntrl				: TOF;											//Timer to set the Standby Controller
+	
+	FPEnable						: R_TRIG;										//Internal positive Edge
+	
+	FPError_FC_3					: R_TRIG;										//Internal positive Edge
+	
+	FPError_FC_6					: R_TRIG;										//Internal positive Edge
+	
+	FPActivateControl				: R_TRIG;										//Internal positive Edge
+	
+	FNTimDissable					: F_TRIG;										//Internal negative Edge
+	
+	PD_String						: FB_PersistentData_String;						//Function to save persistent data
+	
+	arrPD							: ARRAY[1..7] OF FB_PersistentData_Number;		//Function to save persistent data
+	
+	arrBuffer_FC3					: ARRAY[1..125] OF WORD;							//Buffer with Data from FC3
+	
+	wordBuffer_FC6					: WORD;								//Buffer with Data from FC16
+	
+	arrCounterForGVL				: ARRAY[1..3] OF DINT;							//Counter to clean old data on GVL
+	
+	bEnergyGridConsReceived			: BOOL;											//Energy Consumption from Grid first time received
+	
+	bEnergyGridProdReceived			: BOOL;											//Energy Production from Grid first time received
+	
+	byWaitInStep					: BYTE;											//Wait in Step before start to clean data on PLC
+	
+	byLPWorkAroundACDevice			: BYTE;											//Loop for Workaround
+	
+//	byNumberOfZero					: BYTE;											//Number with 0 Value from AC Messurement
+	
+	iSetpointPower					: INT;											//Power Setpoint in W
+	
+	iStateGVLData					: INT;											//State machine to handle the data on the GVL
+	
+	iStateModbusRead				: INT;											//State variable for Statemachine
+	
+	iStateModbusWrite				: INT;											//State variable for Statemachine
+	
+	iStateModbusError				: INT;											//State variable for Statemachine
+	
+	iStateModbus_CP					: INT;											//Compare State variable
+	
+	iMaxDcDischargeCurrentBattery	: INT;											//Variable to convert from negative to positive value
+	
+	diLPForGVL						: DINT;											//Loop to clean old data on GVL
+	
+	lrEnergyGridConsumption_CP		: LREAL;										//Energy Consumption from Grid for calculation for Workaround why Pixii send sometimes big value 
+	
+	lrEnergyGridProduction_CP		: LREAL;										//Energy Production from Grid for calculation for Workaround why Pixii send sometimes big value 
+	int_Handshake_Counter: INT;
+	i: INT;
+	mtest_write: BOOL;
+	ton_wait_write2: Ton;
+	time_WriteDelay: TIME:=t#2s;
+	int_count: INT;
+	rtrig_countWrite: R_trig;
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	usintSign					: USINT;						// converstion dword to real	
+	intExponent					: INT;							// converstion dword to real
+	realMantisse				: REAL;							// converstion dword to real
+
+END_VAR
+VAR PERSISTENT
+	diNrOfEMS_IN_CP					: DINT;											//Number of EMS what control this Device to compare with the original
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner (based on Pixii V2.3)
+//Company : EfficientIO
+//Date : 02.06.2024
+//Version : 1.0.0.0
+
+//With this function its possible to read out values from the Pixii Powerbox from the factory Pixii
+//Its also possible to controll the power in and out from Battery if its necessary.
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------------------------------------General Input Part---------------------------------------------------------------------------------------------*)
+
+//Check limitation
+diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+	
+(*-------------------------------------------------------------Calcualte the number of Battery system---------------------------------------------------------------*)
+
+fbNumberDeviceBattery(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatterys, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfBatterys, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfBatt_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDeviceBattery.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatterys := fbNumberDeviceBattery.diNumberOfTotalDevices;	
+END_IF
+
+//Delete old Number on GVL
+IF fbNumberDeviceBattery.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatterys := diNrOfBatt_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+fbNumberDeviceBatteryInvert(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatteryInverters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfBatteryInverters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfBattInverter_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDeviceBatteryInvert.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatteryInverters := fbNumberDeviceBatteryInvert.diNumberOfTotalDevices;	
+END_IF
+
+//Delete old Number on GVL
+IF fbNumberDeviceBatteryInvert.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatteryInverters := diNrOfBattInverter_OUT;	
+	iStateGVLData := 1; 
+END_IF
+
+fbNumberDeviceGrid(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT_Grid, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDeviceGrid.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDeviceGrid.diNumberOfTotalDevices;	
+END_IF			
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backend for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(	IN:= NOT timResetConnectionOnGVL.Q, 
+							PT:= T#1H, 
+							Q=> , 
+							ET=> );
+IF timResetConnectionOnGVL.Q THEN 
+	Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; 
+END_IF
+IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN 
+	timDissableFunctions.IN := TRUE; 
+ELSE 
+	timDissableFunctions.IN := FALSE; 
+END_IF  
+timDissableFunctions(	IN:= , 
+						PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, 
+						Q=> ,
+						ET=> );
+
+ton_wait_write2 (	In:=,
+					PT:= time_WriteDelay
+,
+					Q=> ,
+					ET=>);			
+(*------------------------------------------------------------------------------------------State Machine Read---------------------------------------------------------------------------------------------*)
+
+//When the function is not enabled then the fronius control by himself without modbus tcp connection
+IF NOT bEnable OR timDissableFunctions.Q THEN 
+	bActivateControl := FALSE; 
+END_IF
+
+// limit manual setpoint +/- 320 kW
+i_SetpointPower_Manual_kW:=LIMIT(-320,i_SetpointPower_Manual_kW,320);
+
+//Start the Statemachine
+FPEnable(CLK:= bEnable, Q=> );
+FPActivateControl(CLK:= bActivateControl, Q=> );
+FNTimDissable(CLK:= timDissableFunctions.Q, Q=> );
+IF (FPEnable.Q AND iStateModbusRead = 0 AND iStateModbusRead = 0 AND iStateModbusError = 0) OR
+	(bEnable AND FPActivateControl.Q AND iStateModbusRead = 0 AND iStateModbusRead = 0 AND iStateModbusError = 0) OR
+	(bEnable AND FNTimDissable.Q AND iStateModbusRead = 0 AND iStateModbusRead = 0 AND iStateModbusError = 0) THEN 
+		iStateModbusRead := 1; 
+END_IF
+IF NOT bEnable OR NOT bActivateControl THEN 
+	iStateModbusRead := 0; 
+	iStateModbusWrite := 0; 
+	iStateModbusError := 0; 
+END_IF
+
+//Timer for delay
+timDelay(	IN:= , 
+			PT:= T#500MS, 
+			Q=> , 
+			ET=> );
+
+//Timer for Timeout in Statemachine
+IF 	(iStateModbusRead > 0 AND iStateModbusRead <= 2 AND iStateModbusRead = iStateModbus_CP) OR
+	(iStateModbusWrite > 0 AND iStateModbusWrite <= 1 AND iStateModbusWrite = iStateModbus_CP) THEN
+		timTimeout.IN := TRUE;
+ELSE	
+		timTimeout.IN := FALSE;
+END_IF 
+IF iStateModbusRead = 0 AND iStateModbusWrite = 0 THEN 
+	timTimeout.IN := FALSE; 
+END_IF
+timTimeout(	IN:= , 
+			PT:= T#20S, 
+			Q=> , 
+			ET=> );
+
+CASE iStateModbusRead OF
+	
+	0://Init State
+		iStateModbus_CP := 0;
+		timDelay.IN := FALSE;
+			
+		stDataPixii.eBatteryState := E_Pixii_BatteryState.eNoDataReceived;
+		stDataPixii.eOperatingState := E_Pixii_OperatingState.eNoDataReceived;	
+		stDataPixii.bFunctionIsActive := FALSE;
+			
+		fbMBRead_FC3.bExecute := FALSE;
+		fbMBWrite_FC6.bExecute := FALSE;
+		// clear buffer	
+		FOR i:= 1 TO 125 BY 1 DO
+			arrBuffer_FC3[i] := 0;
+		END_FOR
+	1://Read first data part
+		stDataPixii.bFunctionIsActive := TRUE;
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Reset Write
+		fbMBWrite_FC6.bExecute := FALSE;
+		wordBuffer_FC6 := 0; 
+		
+		//Start Read
+		fbMBRead_FC3.nQuantity := 80;
+		fbMBRead_FC3.nMBAddr := 40121;
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			
+		
+			//Max Charge Power (in W)
+			fbBatteryInverter.rMaxChargePowerBattInverter := LREAL_TO_REAL(INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[5])) * EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[55])))); 
+			//Max Discharge Power (in W)
+			fbBatteryInverter.rMaxDischargePowerBattInverter := LREAL_TO_REAL(INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[6])) * EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[55])))); 
+			
+			
+			r_MaxChargePower_W := LIMIT (0,r_MaxChargePower_W,fbBatteryInverter.rMaxChargePowerBattInverter);
+			r_MaxDischargePower_W := LIMIT (0,r_MaxDischargePower_W,fbBatteryInverter.rMaxDischargePowerBattInverter);
+			
+			IF m_ManualChargeDischargeMax THEN
+				fbBatteryInverter.rMaxChargePowerBattInverter := r_MaxChargePower_W;
+				fbBatteryInverter.rMaxDischargePowerBattInverter := r_MaxDischargePower_W;
+			END_IF
+				
+			//Battery State
+			CASE  arrBuffer_FC3[22] OF
+				0: stDataPixii.eBatteryState := E_Pixii_BatteryState.eNoDataReceived;
+				1: stDataPixii.eBatteryState := E_Pixii_BatteryState.eDisconnected;
+				2: stDataPixii.eBatteryState := E_Pixii_BatteryState.eInitializing;
+				4: stDataPixii.eBatteryState := E_Pixii_BatteryState.eConnected;
+				8: stDataPixii.eBatteryState := E_Pixii_BatteryState.eStandby;
+				16: stDataPixii.eBatteryState := E_Pixii_BatteryState.eSoCProtection;
+				32: stDataPixii.eBatteryState := E_Pixii_BatteryState.eSuspending;
+				64: stDataPixii.eBatteryState := E_Pixii_BatteryState.eFault;			
+			END_CASE
+
+			//Battery Capacity in Wh (in Wh), but make the calculation for kWh
+			lrMaxCapacityBattery_OUT := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[4])) * EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[54]))); 
+			lrMaxCapacityBattery_OUT := lrMaxCapacityBattery_OUT / 1000;
+			//Battery Current (in A)
+			fbBattery.lrBatteryCurrent := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[45])) * EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[62]))); 
+			
+			//Change the sign because in view from the Battery - is discharge and + is charge. But we use vice versa	
+			fbBattery.lrBatteryCurrent := fbBattery.lrBatteryCurrent * - 1; 
+			
+			//Battery Voltage 
+			fbBattery.rBatteryVoltage := LREAL_TO_REAL(INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[35])) * EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[60])))); 
+			//Max Charge Current (in A)
+			fbBattery.rMaxDcChargeCurrentBattery := LREAL_TO_REAL(INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[46])) * EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[63])))); 
+
+			//Max Discharge Current (in A)
+			fbBattery.rMaxDcDischargeCurrentBattery := lreal_to_real(INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[47])) * EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[63])))); 
+// not needed for pixii			//Its allways a negative raw value
+// not needed for pixii				iMaxDcDischargeCurrentBattery := iMaxDcDischargeCurrentBattery * - 1;
+//					fbBattery.rMaxDcDischargeCurrentBattery := INT_TO_REAL(iMaxDcDischargeCurrentBattery) * 100; 
+					
+			CASE  arrBuffer_FC3[70] OF
+				0: stDataPixii.eBasicAggregatorState := E_Pixii_BasicAggregatorState.eUnkown;
+				1: stDataPixii.eBasicAggregatorState := E_Pixii_BasicAggregatorState.eOff;
+				2: stDataPixii.eBasicAggregatorState := E_Pixii_BasicAggregatorState.eOn;
+				3: stDataPixii.eBasicAggregatorState := E_Pixii_BasicAggregatorState.eFull;
+				4: stDataPixii.eBasicAggregatorState := E_Pixii_BasicAggregatorState.eFault;
+	
+			END_CASE
+
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;		
+			iStateModbusRead := 2;
+		END_IF
+		
+//			Not needed I think
+//			//Pixii Battery Error
+//			IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND stDataPixii.eBatteryState = E_Pixii_BatteryState. THEN
+//				iStateModbusError := 300;
+//				stDataPixii.eErrorState := E_Pixii_Error.ePixiiError;
+//			END_IF
+		
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+			stDataPixii.eErrorState := E_Pixii_Error.eModbusTCPError;
+		END_IF
+	
+	2://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+		// clear buffer	
+		FOR i:= 1 TO 125 BY 1 DO
+			arrBuffer_FC3[i] := 0;
+		END_FOR		
+		iStateModbusRead := 10;	
+		
+	10://Read second data part
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Start Read
+		fbMBRead_FC3.nQuantity := 51;
+		fbMBRead_FC3.nMBAddr := 40069;
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			
+			//inverter Temperature (in °C)
+			fbBattery.lrBatteryTemp := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[34])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[38])))  ;
+			//Operating State
+			CASE  arrBuffer_FC3[39] OF
+				0:	stDataPixii.eOperatingState := E_Pixii_OperatingState.eNoDataReceived;
+				1:	stDataPixii.eOperatingState := E_Pixii_OperatingState.eSleeping;
+				2:	stDataPixii.eOperatingState := E_Pixii_OperatingState.eStarting;
+				3:	stDataPixii.eOperatingState := E_Pixii_OperatingState.eMPPT;
+				4:  stDataPixii.eOperatingState := E_Pixii_OperatingState.eThrottled;
+				5: stDataPixii.eOperatingState := E_Pixii_OperatingState.eShuttingDown;
+				6: stDataPixii.eOperatingState := E_Pixii_OperatingState.eFault;
+				7: stDataPixii.eOperatingState := E_Pixii_OperatingState.eStandby;
+			END_CASE
+(*					eNoDataReceived := 0,
+					eSleeping := 1,
+					eStarting := 2,
+					eMPPT := 3,
+					eThrottled := 4,
+					eShuttingDown := 5,
+					eFault := 6,
+					eStandby := 7 *)
+
+			fbEMPower.lrCurrentL1 := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[4])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[7])))  ;
+			fbEMPower.lrCurrentL2 := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[5])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[7])))  ;
+			fbEMPower.lrCurrentL3 := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[6])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[7])))  ;
+			fbEMPower.lrVoltageL1N := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[11])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[14])))  ;
+			fbEMPower.lrVoltageL2N := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[12])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[14])))  ;
+			fbEMPower.lrVoltageL3N := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[13])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[14])))  ;
+			fbEMPower.lrVoltageL1L2 := fbEMPower.lrVoltageL1N * 1.73;
+			fbEMPower.lrVoltageL2L3 := fbEMPower.lrVoltageL2N * 1.73;
+			fbEMPower.lrVoltageL3L1 := fbEMPower.lrVoltageL3N * 1.73;
+			// *-1 because for pixii positive power is charging
+//			fbEMPower.lrPowerTotal	:= -INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[15])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[16])))  ;
+//			fbEMPower.lrFrequency	:= INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[17])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[18])))  ;
+//			fbEMPower.lrApparentPowerTotal := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[19])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[20])))  ;
+//			fbEMPower.lrReactivePowerTotal := INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[21])) *  EXPT(10,INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[22])))  ;
+			
+			
+			
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;		
+			iStateModbusRead := 11;
+		END_IF
+		
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+			stDataPixii.eErrorState := E_Pixii_Error.eModbusTCPError;
+		END_IF
+	
+
+	11://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+		// clear buffer	
+		FOR i:= 1 TO 125 BY 1 DO
+			arrBuffer_FC3[i] := 0;
+		END_FOR		
+		iStateModbusRead := 20;	
+		
+	20://Read third data part
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Start Read
+		fbMBRead_FC3.nQuantity := 125;
+		fbMBRead_FC3.nMBAddr := 39903;
+		fbMBRead_FC3.bExecute := TRUE;
+			
+		IF fbMBRead_FC3.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			
+			// positive is discharging / negative is charging
+			// this is the cabinet vaule, not the total. known problem in the pixii modbus list
+		//	fbEMPower.lrPowerTotal	:= INT_TO_REAL(WORD_TO_INT(arrBuffer_FC3[10]))  ;
+			//SOC ( Scalefactor 1/10. Is %)	
+			fbBattery.dwBatterySOC := UINT_TO_DWORD(WORD_TO_UINT(arrBuffer_FC3[13]))/10  ;
+			fbBatteryInverter.dwBatterSOC := fbBattery.dwBatterySOC;
+			r_SOC := UINT_TO_REAL(WORD_TO_UINT(arrBuffer_FC3[13]))/10;  
+
+			// power dword in W
+			// positive is discharging / negative is charging
+			fbConvertWordToDword(wInputValue_1:= arrBuffer_FC3[50], wInputValue_2:= arrBuffer_FC3[51], eByteOrderForConvert:= eByteOrder.eBigEndian , dwOutputValue=> );
+			
+			
+			fbEMPower.lrPowerTotal := DINT_TO_LREAL(DWORD_TO_DINT(fbConvertWordToDword.dwOutputValue))/1000;
+			
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+			timDelay.IN := FALSE;		
+			iStateModbusRead := 21;
+		END_IF
+		
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+			stDataPixii.eErrorState := E_Pixii_Error.eModbusTCPError;
+		END_IF
+	
+	21://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+	
+			iStateModbusWrite := 1;
+			iStateModbusRead := - 1;	
+						
+END_CASE
+
+(*----------------------------------------------------------------------------------------Battery Inverter Function----------------------------------------------------------------------------------------------*)
+
+//Error and Reset
+timErrorMTCP(	IN:= stDataPixii.bError AND stDataPixii.eErrorState = E_Pixii_Error.eModbusTCPError, 
+				PT:= T#5S, 
+				Q=> , 
+				ET=> );
+
+IF timDissableFunctions.Q THEN 
+	fbBatteryInverter.bWarning := TRUE; 
+	fbBatteryInverter.iWarningCode := 0; 
+ELSE 
+	fbBatteryInverter.bWarning := FALSE; 
+END_IF 
+IF (stDataPixii.bError  OR timErrorMTCP.Q OR Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatteryInverters > Constants_Energy.diMaxNumberOfBatteryInverters) THEN 
+	fbBatteryInverter.bError := TRUE; 
+ELSE 
+	fbBatteryInverter.bError := FALSE; 
+END_IF	
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatteryInverters > Constants_Energy.diMaxNumberOfBatteryInverters THEN 
+	fbBatteryInverter.iErrorCode := 1;
+ELSIF stDataPixii.bError THEN 
+	fbBatteryInverter.iErrorCode := 0; 
+END_IF  
+
+//Autoreset after Error, because Pixii deleiver somtimes a Error and they dont know why.....
+timReset(	IN:= stDataBattInverter.byErrorWarning <> 0 AND NOT timReset.Q, 
+			PT:= T#1S, 
+			Q=> , 
+			ET=> );	
+		
+//Island mode active  ---> no island mode for pixii
+fbBatteryInverter.bWorkOnIslandMode := FALSE; 
+
+		
+//Function
+fbBatteryInverter(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bInverterOnOff:= TRUE, 
+	bError:= , 
+	bWarning:= , 
+	bReset:= bReset OR timReset.Q,  
+	bWorkOnIslandMode:= , 
+	bWriteWithDelay:= TRUE, 
+	byPriority:= byPriority, 
+	byReserveSOCEPO:= Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].byReserveSOCEPO, 
+	byMaxDepthOfDischargeEPO:= Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].byMaxDepthOfDischargeEPO, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	dwBatterSOC:= , 
+	rTargetPower:= Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].rTargetPowerEMS, 
+	lrActualBatteryPower:= fbEMPower.lrPowerTotal, 
+	rMaxChargePowerBattInverter:= , 
+	rMaxDischargePowerBattInverter:= , 
+	lrBattInverterPowerOnIslandMode:= 0, 
+	lrBattInverterPowerOnNormalMode:= 0, 
+	tTimDelayOutput:= T#5S, 
+	stDataBattInvertOut=> , 
+	stDataBattInvertOutDelay=> stDataBattInverter);
+
+//Controller to hold the Battery Current to 0 and take the rest from the Grid. (Avoid discharge in standby or when reaching the reserve charge for EPO)
+timSetStandbyCntrl(	IN:= fbBatteryInverter.stDataBattInvertOut.rTargetPower = 0, 
+					PT:= T#5S, 
+					Q=> , 
+					ET=> );
+
+IF timSetStandbyCntrl.Q AND bEnable AND bActivateControl THEN
+	fbPIDChrgStandby.bEnable := TRUE;
+	//Charge the Battery when its under the reserve for SOC
+	IF fbBatteryInverter.dwBatterSOC < fbBatteryInverter.byReserveSOCEPO THEN
+		fbPIDChrgStandby.rSetpoint := (fbBattery.stDataBatteryOut.rMaxDcChargeCurrent * 0.1) * - 1; 	
+	ELSE
+		fbPIDChrgStandby.rSetpoint := 0;	
+	END_IF		 
+ELSE
+	fbPIDChrgStandby.bEnable := FALSE;
+END_IF
+
+fbPIDChrgStandby( 
+	bEnable:= , 
+	rSetpoint:= , 
+	udiIValue:= 750, 
+	udiDValue:= 0, 
+	udiDamping:= 0, 
+	rPValue:= 0.32, 
+	rMaxValue:= 0, 
+	rMinValue:= ((fbBatteryInverter.rMaxChargePowerBattInverter / 100) * - 1) / 2, 
+	rNeutralZone:= 0.1, 
+	bDirection:= FALSE, 
+	rActualValue:= LREAL_TO_REAL(fbBattery.stDataBatteryOut.lrCurrent), 
+	rQController=> );	
+
+//Set the Target power to a fixed value when the controller is acitve
+IF fbPIDChrgStandby.bEnable THEN 
+	stDataBattInverter.rTargetPower := - 1;
+END_IF
+	
+(*----------------------------------------------------------------------------------------Battery Function----------------------------------------------------------------------------------------------*)
+
+//Error
+IF timDissableFunctions.Q THEN 
+	fbBattery.bWarning := TRUE; 
+	fbBattery.iWarningCode := 0; 
+ELSE 
+	fbBattery.bWarning := FALSE; 
+END_IF 
+IF (stDataPixii.bError AND stDataPixii.eBatteryState = E_Pixii_BatteryState.eFault) OR timErrorMTCP.Q OR Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatterys > Constants_Energy.diMaxNumberOfBatterys THEN 
+	fbBattery.bError := TRUE; 
+ELSE 
+	fbBattery.bError := FALSE; 
+END_IF
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfBatterys > Constants_Energy.diMaxNumberOfBatterys THEN 
+	fbBattery.iErrorCode := 1;
+ELSIF stDataPixii.bError THEN 
+	fbBattery.iErrorCode := 0; 
+END_IF
+
+//Function
+fbBattery(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bWarning:= , 
+	bCalculatePower:= FALSE, 
+	bReset:= bReset OR timReset.Q, 
+	bWriteWithDelay:= TRUE, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	dwBatterySOC:= , 
+	dwBatterySOH:= 0, 
+	rBatteryVoltage:= , 
+	rMaxDcChargeCurrentBattery:= , 
+	rMaxDcDischargeCurrentBattery:= , 
+	rMaxChargeVoltage:= 0, 
+	lrMaxCapacityBattery:= lrMaxCapacityBattery, 
+	lrBatteryPower:= fbEMPower.lrPowerTotal*1000, 
+	lrBatteryCurrent:= , 
+	lrBatteryTemp:= , 
+	tTimDelayOutput:= T#5S, 
+	stDataBatteryOut=> , 
+	stDataBatteryOutDelay=> stDataBatt);
+
+
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+	
+CASE iStateModbusWrite OF	
+	
+	1://Setpoint for Power 
+		iStateModbus_CP := iStateModbusWrite;	
+		
+		//fbMBWrite_FC6.nQuantity := 2;
+		fbMBWrite_FC6.nMBAddr := 39904;
+		fbMBWrite_FC6.bExecute := TRUE;
+	
+		//Setpoint for the Power when discharge (in kW on the Inverter) 
+		IF fbBatteryInverter.stDataBattInvertOut.rTargetPower >= 0 THEN
+			IF 	((fbBatteryInverter.stDataBattInvertOut.rMaxDischargePower /100) * (fbBatteryInverter.stDataBattInvertOut.rTargetPower * 100)) >= - 32768 AND 
+				((fbBatteryInverter.stDataBattInvertOut.rMaxDischargePower /100) * (fbBatteryInverter.stDataBattInvertOut.rTargetPower * 100)) <= 32767 THEN
+					iSetpointPower := REAL_TO_INT((fbBatteryInverter.stDataBattInvertOut.rMaxDischargePower / 100) * (fbBatteryInverter.stDataBattInvertOut.rTargetPower * 100));  
+					wordBuffer_FC6 := INT_TO_WORD(iSetpointPower);
+			END_IF
+		END_IF
+		//Setpoint for the Power when charge (in kW on the Inverter) 
+		IF fbBatteryInverter.stDataBattInvertOut.rTargetPower < 0 OR fbPIDChrgStandby.bEnable THEN
+			IF 	((fbBatteryInverter.stDataBattInvertOut.rMaxChargePower / 100) * (fbBatteryInverter.stDataBattInvertOut.rTargetPower * 100)) >= - 32768 AND 
+				((fbBatteryInverter.stDataBattInvertOut.rMaxChargePower / 100) * (fbBatteryInverter.stDataBattInvertOut.rTargetPower * 100)) <= 32767 THEN
+					iSetpointPower := REAL_TO_INT((fbBatteryInverter.stDataBattInvertOut.rMaxChargePower / 100) * (fbBatteryInverter.stDataBattInvertOut.rTargetPower * 100));  
+					//Take the Setpoint from the Standby Controller
+					IF fbPIDChrgStandby.bEnable AND fbPIDChrgStandby.rQController <= 0 AND fbPIDChrgStandby.rQController >= -32768 THEN
+						iSetpointPower := REAL_TO_INT(fbPIDChrgStandby.rQController);  
+					END_IF
+					wordBuffer_FC6 := INT_TO_WORD(iSetpointPower); 
+			END_IF
+		END_IF
+		//manual operation setpoint, for testing pupose only!
+		IF m_ManualSetpointEnable THEN
+			wordBuffer_FC6 := INT_TO_WORD(i_SetpointPower_Manual_kW); 
+		END_IF
+		iSetpointPower_Info := WORD_TO_INT(WordBuffer_FC6);
+		
+		IF fbMBWrite_FC6.bBusy THEN 
+			timDelay.IN := TRUE; 
+		END_IF
+
+		//Wait for Delay and then next step
+		IF NOT fbMBWrite_FC6.bBusy AND NOT fbMBWrite_FC6.bError AND timDelay.Q THEN
+			fbMBWrite_FC6.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			stDataPixii.bError := FALSE; 
+			stDataPixii.eErrorState := E_Pixii_Error.eNormal;
+			//Restart from new with the Read out part
+			iStateModbusRead := 0;
+			iStateModbusWrite := 10;
+		END_IF
+				
+		//Error or Timout
+		IF FPError_FC_6.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+			stDataPixii.eErrorState := E_Pixii_Error.eModbusTCPError;
+		END_IF
+
+	10:// waite one cycle and count handshake counter +1
+		ton_wait_write2.IN := TRUE;
+		IF ton_wait_write2.Q THEN 
+			ton_wait_write2.IN := FALSE;
+			int_Handshake_Counter := int_Handshake_Counter+1;
+			fbMBWrite_FC6.bExecute := FALSE;
+			iStateModbusWrite := 11;
+		END_IF
+	11:// write handshake timeout 
+		iStateModbus_CP := iStateModbusWrite;	
+		
+		//fbMBWrite_FC6.nQuantity := 2;
+		fbMBWrite_FC6.nMBAddr := 39903;
+		fbMBWrite_FC6.bExecute := TRUE;
+	
+		wordBuffer_FC6 := INT_TO_WORD(int_Handshake_Counter); 
+		
+//		IF fbMBWrite_FC6.bBusy THEN 
+			timDelay.IN := TRUE; 
+//		END_IF
+
+		//Wait for Delay and then next step
+		IF NOT fbMBWrite_FC6.bBusy AND NOT fbMBWrite_FC6.bError AND timDelay.Q THEN
+			fbMBWrite_FC6.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			stDataPixii.bError := FALSE; 
+			stDataPixii.eErrorState := E_Pixii_Error.eNormal;
+			//Restart from new with the Read out part
+			iStateModbusRead := 1;
+			iStateModbusWrite := 0;
+		END_IF
+				
+		//Error or Timout
+		IF FPError_FC_6.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+			stDataPixii.eErrorState := E_Pixii_Error.eModbusTCPError;
+		END_IF
+
+END_CASE
+
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+		timDelay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		fbMBWrite_FC6.bExecute := FALSE;
+		stDataPixii.bError := TRUE;	
+		//Restart from new with the Read out part after an Error
+		iStateModbusRead := 1;	
+		iStateModbusError := 0;
+		iStateModbusWrite := 0;
+END_CASE
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(	sIPAddr:= sIPAdress, 
+				nUnitID := byUnitID, 
+				nTCPPort:= 502, 
+				cbLength:= SIZEOF(arrBuffer_FC3), 
+				pDestAddr:= ADR(arrBuffer_FC3), 
+				tTimeout:= T#10S );
+FPError_FC_3(	CLK:= fbMBRead_FC3.bError, 
+				Q=> );
+
+fbMBWrite_FC6(	sIPAddr:= sIPAdress, 
+				nTCPPort:= 502, 
+				nUnitID:= byUnitID, 
+				nMBAddr:= , 
+				nValue:= wordBuffer_FC6, 
+				bExecute:= , 
+				tTimeout:=  T#10S, 
+				bBusy=> , 
+				bError=> , 
+				nErrId=> );				
+
+FPError_FC_6(	CLK:= fbMBWrite_FC6.bError, 
+				Q=> );
+
+
+				
+//Function
+fbEMPower(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= FALSE, 
+	bWriteWithDelay:= TRUE, 
+	bPowerDataInvers:= FALSE,
+	bReadOutDataDone:= ,
+	iTimeReadOutInterval:= , 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= , 
+	lrVoltageL1N:= , 
+	lrVoltageL1L2:= , 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= , 
+	lrVoltageL2N:= , 
+	lrVoltageL2L3:= , 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= , 
+	lrVoltageL3N:= , 
+	lrVoltageL3L1:= , 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= , 
+	lrReactivePowerTotal:= , 
+	lrApparentPowerTotal:= 0, 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> , 
+	stDataEMOutPowerDelay=> stDataEMPower, 
+	stDataEMOutCounter=> ,
+	stDataEMOutCounterDelay=> stDataEMCounter,  
+	bReadOutMeter=> );
+(*-----------------------------------------------------------Handle data to Global structure for al Devices that are included in this function-----------------------------------------------------------------*)
+
+//Delete al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN 
+	iStateGVLData := 10; 
+END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+		arrCounterForGVL[1] := 1; arrCounterForGVL[2] := 1; arrCounterForGVL[3] := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+		IF (byWaitInStep >= 4 AND (fbNumberDeviceBattery.bNumberIsCalculatet OR fbNumberDeviceBatteryInvert.bNumberIsCalculatet OR fbNumberDeviceGrid.bNumberIsCalculatet)) THEN 
+			iStateGVLData := 2; 
+		END_IF
+		//To much Devices, back to the Init step
+		IF byWaitInStep >= 4 AND NOT fbNumberDeviceBattery.bNumberIsCalculatet AND NOT fbNumberDeviceBatteryInvert.bNumberIsCalculatet AND NOT fbNumberDeviceGrid.bNumberIsCalculatet THEN 
+			iStateGVLData := 0; 
+		END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO
+			//Battery Inverters 
+			IF fbNumberDeviceBatteryInvert.bNumberIsCalculatet THEN 
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].bOnOff := FALSE;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].bWorkOnIslandMode := FALSE;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].byPriority := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].dwBatterySOC := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].lrPowerOnIslandMode := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].rMaxChargePower := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].rMaxDischargePower := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].lrPowerNormalMode := 0;
+				//Set also the target value from ems back here to 0 and not in EMS function because EMS is in Standy when we have a online change (Problem when we delete a ems function and make a online change)
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].rTargetPowerEMS := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].byMaxDepthOfDischargeEPO := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diLPForGVL,arrCounterForGVL[1]].byReserveSOCEPO := 0;
+			END_IF
+			//Batterys 
+			IF fbNumberDeviceBattery.bNumberIsCalculatet THEN 
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].dwSOC := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].dwSOH := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].lrCapacity := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].lrCurrent := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].lrPower := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].lrPowerConsumption := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].lrPowerProduction := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].lrTemp := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].rMaxChargeVoltage := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].rMaxDcChargeCurrent := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].rMaxDcDischargeCurrent := 0;
+				Lynus_Standards.GVL_Energy.stDataOfBatterys[diLPForGVL,arrCounterForGVL[2]].rVoltage := 0;
+			END_IF
+		END_FOR
+		//Electric Meter Grid
+		IF fbNumberDeviceGrid.bNumberIsCalculatet THEN 
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].bEnabled := FALSE;	
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].byErrorWarning := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrCounterEnergyT1_Consumption := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrCounterEnergyT1_Production := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrCounterEnergyT2_Consumption := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrCounterEnergyT2_Production := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrPower := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrPowerConsumption := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrPowerProduction := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrTotalCounterEnergy_Consumption := 0;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[3]].lrTotalCounterEnergy_Production := 0;
+		END_IF
+		
+		//Counter for Battery Inverter
+		arrCounterForGVL[1] := arrCounterForGVL[1] + 1;
+		arrCounterForGVL[1] := LIMIT(0,arrCounterForGVL[1],Constants_Energy.diMaxNumberOfBatteryInverters);
+		//Counter for Batterys
+		arrCounterForGVL[2] := arrCounterForGVL[2] + 1;
+		arrCounterForGVL[2] := LIMIT(0,arrCounterForGVL[2],Constants_Energy.diMaxNumberOfBatterys);
+		//Electric Meters
+		arrCounterForGVL[3] := arrCounterForGVL[3] + 1;
+		arrCounterForGVL[3] := LIMIT(0,arrCounterForGVL[3],Constants_Energy.diMaxNumberOfElectricMeters);
+		//Back to the init step
+		IF arrCounterForGVL[1] >= Constants_Energy.diMaxNumberOfBatteryInverters AND arrCounterForGVL[2] >= Constants_Energy.diMaxNumberOfBatterys AND arrCounterForGVL[3] >= Constants_Energy.diMaxNumberOfElectricMeters THEN 
+			iStateGVLData := 0; 
+		END_IF
+
+	10://Clear old Data on GVL 		
+		//Battery Inverter
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].bEnabled := FALSE;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].bOnOff := FALSE;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].bWorkOnIslandMode := FALSE;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].byErrorWarning := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].byPriority := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].dwBatterySOC := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].lrPowerOnIslandMode := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].rMaxChargePower := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].rMaxDischargePower := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN_CP,diNrOfBattInverter_OUT].lrPowerNormalMode := 0;
+		//Batterys		
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].bEnabled := FALSE;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].byErrorWarning := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].dwSOC := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].dwSOH := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].lrCapacity := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].lrCurrent := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].lrPower := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].lrPowerConsumption := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].lrPowerProduction := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].lrTemp := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].rMaxChargeVoltage := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].rMaxDcChargeCurrent := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].rMaxDcDischargeCurrent := 0;
+		Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN_CP,diNrOfBatt_OUT].rVoltage := 0;
+									
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+		//Back to the init step
+		iStateGVLData := 0;
+
+END_CASE 	 
+
+//Write Data on GVL for Battery Inverter
+IF diNrOfBattInverter_OUT > 0 AND fbNumberDeviceBatteryInvert.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].bEnabled := fbBatteryInverter.stDataBattInvertOut.bEnabled;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].bOnOff := fbBatteryInverter.stDataBattInvertOut.bOnOff;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].bWorkOnIslandMode := fbBatteryInverter.stDataBattInvertOut.bWorkOnIslandMode;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].byErrorWarning := fbBatteryInverter.stDataBattInvertOut.byErrorWarning;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].byPriority := fbBatteryInverter.stDataBattInvertOut.byPriority;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].dwBatterySOC := fbBatteryInverter.dwBatterSOC;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].lrPowerOnIslandMode := fbBatteryInverter.stDataBattInvertOut.lrPowerOnIslandMode;	
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].rMaxChargePower := fbBatteryInverter.stDataBattInvertOut.rMaxChargePower;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].rMaxDischargePower := fbBatteryInverter.stDataBattInvertOut.rMaxDischargePower;
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,diNrOfBattInverter_OUT].lrPowerNormalMode := fbBatteryInverter.stDataBattInvertOut.lrPowerNormalMode;	
+END_IF 
+//Write Data on GVL for Batterys
+IF diNrOfBatt_OUT > 0 AND fbNumberDeviceBattery.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].bEnabled := fbBattery.stDataBatteryOut.bEnabled;	
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].byErrorWarning := fbBattery.stDataBatteryOut.byErrorWarning;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].dwSOC := fbBattery.stDataBatteryOut.dwSOC;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].dwSOH := fbBattery.stDataBatteryOut.dwSOH;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].lrCapacity := fbBattery.stDataBatteryOut.lrCapacity;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].lrCurrent := fbBattery.stDataBatteryOut.lrCurrent;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].lrPower := fbBattery.stDataBatteryOut.lrPower;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].lrPowerConsumption := fbBattery.stDataBatteryOut.lrPowerConsumption;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].lrPowerProduction := fbBattery.stDataBatteryOut.lrPowerProduction;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].lrTemp := fbBattery.stDataBatteryOut.lrTemp;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].rMaxChargeVoltage := fbBattery.stDataBatteryOut.rMaxChargeVoltage;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].rMaxDcChargeCurrent := fbBattery.stDataBatteryOut.rMaxDcChargeCurrent;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].rMaxDcDischargeCurrent := fbBattery.stDataBatteryOut.rMaxDcDischargeCurrent;
+	Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,diNrOfBatt_OUT].rVoltage := fbBattery.stDataBatteryOut.rBatteryVoltage;
+END_IF
+(*
+//Write Data on GVL for Electric Meter (Grid)
+IF diNrOfEM_OUT_Grid > 0 AND fbNumberDeviceGrid.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].bEnabled := fbEMGrid.stDataEMOutPower.bEnabled;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].byErrorWarning := fbEMGrid.stDataEMOutPower.byErrorWarning;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrCounterEnergyT1_Consumption := fbEMGrid.stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrCounterEnergyT1_Production := fbEMGrid.stDataEMOutCounter.lrCounterEnergyT1_Production;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrCounterEnergyT2_Consumption := fbEMGrid.stDataEMOutCounter.lrCounterEnergyT2_Consumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrCounterEnergyT2_Production := fbEMGrid.stDataEMOutCounter.lrCounterEnergyT2_Production;		
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrPower := fbEMGrid.stDataEMOutPower.lrPowerTotal;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrPowerConsumption := fbEMGrid.stDataEMOutPower.lrPowerConsumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrPowerProduction := fbEMGrid.stDataEMOutPower.lrPowerProduction;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrTotalCounterEnergy_Consumption := fbEMGrid.stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_Grid].lrTotalCounterEnergy_Production := fbEMGrid.stDataEMOutCounter.lrTotalCounterEnergy_Production;
+END_IF
+*)
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bActivateControl), bEventBasedActive=> );
+arrPD[3](lrValue:= BYTE_TO_LREAL(byUnitID), bEventBasedActive=> );
+arrPD[4](lrValue:= BYTE_TO_LREAL(byPriority), bEventBasedActive=> );
+arrPD[5](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[6](lrValue:= lrMaxCapacityBattery, bEventBasedActive=> );
+arrPD[7](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );
+PD_String(sText:= sIPAdress, bEventBasedActive=> );
+
+rtrig_countWrite (clk:= fbMBWrite_FC6.bBusy AND iStateModbusWrite = 11);
+
+
+
+IF rtrig_countWrite.Q THEN 
+	int_count:= int_count+1;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Pixii_v1">
+      <LineId Id="4070" Count="1" />
+      <LineId Id="5733" Count="0" />
+      <LineId Id="4073" Count="3" />
+      <LineId Id="4082" Count="73" />
+      <LineId Id="5856" Count="2" />
+      <LineId Id="4156" Count="0" />
+      <LineId Id="5859" Count="1" />
+      <LineId Id="4157" Count="0" />
+      <LineId Id="5861" Count="3" />
+      <LineId Id="4158" Count="0" />
+      <LineId Id="5865" Count="2" />
+      <LineId Id="6678" Count="0" />
+      <LineId Id="4159" Count="0" />
+      <LineId Id="6679" Count="0" />
+      <LineId Id="6682" Count="0" />
+      <LineId Id="6680" Count="1" />
+      <LineId Id="4160" Count="3" />
+      <LineId Id="5868" Count="1" />
+      <LineId Id="5477" Count="1" />
+      <LineId Id="5480" Count="0" />
+      <LineId Id="4164" Count="10" />
+      <LineId Id="5870" Count="3" />
+      <LineId Id="4175" Count="2" />
+      <LineId Id="5874" Count="2" />
+      <LineId Id="4178" Count="8" />
+      <LineId Id="5877" Count="1" />
+      <LineId Id="4187" Count="0" />
+      <LineId Id="5879" Count="2" />
+      <LineId Id="4188" Count="8" />
+      <LineId Id="4198" Count="3" />
+      <LineId Id="6365" Count="0" />
+      <LineId Id="4202" Count="0" />
+      <LineId Id="6362" Count="1" />
+      <LineId Id="4203" Count="13" />
+      <LineId Id="5882" Count="1" />
+      <LineId Id="4217" Count="2" />
+      <LineId Id="4226" Count="0" />
+      <LineId Id="4260" Count="5" />
+      <LineId Id="5607" Count="3" />
+      <LineId Id="5600" Count="0" />
+      <LineId Id="5605" Count="0" />
+      <LineId Id="5611" Count="0" />
+      <LineId Id="5606" Count="0" />
+      <LineId Id="5599" Count="0" />
+      <LineId Id="4271" Count="1" />
+      <LineId Id="5885" Count="0" />
+      <LineId Id="5899" Count="5" />
+      <LineId Id="5897" Count="1" />
+      <LineId Id="5915" Count="0" />
+      <LineId Id="4285" Count="4" />
+      <LineId Id="4292" Count="0" />
+      <LineId Id="5918" Count="0" />
+      <LineId Id="4293" Count="1" />
+      <LineId Id="5919" Count="0" />
+      <LineId Id="4295" Count="2" />
+      <LineId Id="5922" Count="0" />
+      <LineId Id="4300" Count="0" />
+      <LineId Id="4302" Count="1" />
+      <LineId Id="6096" Count="0" />
+      <LineId Id="4304" Count="0" />
+      <LineId Id="4307" Count="0" />
+      <LineId Id="6372" Count="5" />
+      <LineId Id="6380" Count="1" />
+      <LineId Id="4332" Count="6" />
+      <LineId Id="4344" Count="0" />
+      <LineId Id="6361" Count="0" />
+      <LineId Id="4345" Count="12" />
+      <LineId Id="6366" Count="2" />
+      <LineId Id="4358" Count="1" />
+      <LineId Id="4361" Count="0" />
+      <LineId Id="6170" Count="0" />
+      <LineId Id="6172" Count="1" />
+      <LineId Id="6177" Count="0" />
+      <LineId Id="6179" Count="10" />
+      <LineId Id="6206" Count="0" />
+      <LineId Id="6209" Count="11" />
+      <LineId Id="6287" Count="0" />
+      <LineId Id="6298" Count="5" />
+      <LineId Id="6295" Count="0" />
+      <LineId Id="6232" Count="0" />
+      <LineId Id="6346" Count="2" />
+      <LineId Id="6252" Count="0" />
+      <LineId Id="6349" Count="2" />
+      <LineId Id="6253" Count="0" />
+      <LineId Id="6352" Count="0" />
+      <LineId Id="6508" Count="0" />
+      <LineId Id="6353" Count="1" />
+      <LineId Id="6357" Count="0" />
+      <LineId Id="6360" Count="0" />
+      <LineId Id="6359" Count="0" />
+      <LineId Id="6355" Count="1" />
+      <LineId Id="6254" Count="4" />
+      <LineId Id="6265" Count="6" />
+      <LineId Id="6582" Count="0" />
+      <LineId Id="6585" Count="22" />
+      <LineId Id="6639" Count="0" />
+      <LineId Id="6992" Count="0" />
+      <LineId Id="6640" Count="0" />
+      <LineId Id="6666" Count="2" />
+      <LineId Id="6645" Count="0" />
+      <LineId Id="6823" Count="1" />
+      <LineId Id="6991" Count="0" />
+      <LineId Id="6982" Count="1" />
+      <LineId Id="6989" Count="1" />
+      <LineId Id="6838" Count="0" />
+      <LineId Id="6647" Count="16" />
+      <LineId Id="6277" Count="0" />
+      <LineId Id="4368" Count="4" />
+      <LineId Id="5126" Count="0" />
+      <LineId Id="5923" Count="2" />
+      <LineId Id="5125" Count="0" />
+      <LineId Id="4373" Count="0" />
+      <LineId Id="5926" Count="4" />
+      <LineId Id="4374" Count="0" />
+      <LineId Id="5935" Count="0" />
+      <LineId Id="5933" Count="1" />
+      <LineId Id="5931" Count="0" />
+      <LineId Id="4375" Count="0" />
+      <LineId Id="5936" Count="0" />
+      <LineId Id="4376" Count="0" />
+      <LineId Id="5937" Count="0" />
+      <LineId Id="4377" Count="0" />
+      <LineId Id="5009" Count="0" />
+      <LineId Id="4378" Count="0" />
+      <LineId Id="5014" Count="0" />
+      <LineId Id="5938" Count="2" />
+      <LineId Id="5010" Count="0" />
+      <LineId Id="4379" Count="0" />
+      <LineId Id="5941" Count="1" />
+      <LineId Id="4382" Count="26" />
+      <LineId Id="5353" Count="0" />
+      <LineId Id="5943" Count="2" />
+      <LineId Id="4409" Count="25" />
+      <LineId Id="4896" Count="1" />
+      <LineId Id="4899" Count="0" />
+      <LineId Id="4898" Count="0" />
+      <LineId Id="4900" Count="0" />
+      <LineId Id="4435" Count="4" />
+      <LineId Id="5946" Count="4" />
+      <LineId Id="4440" Count="0" />
+      <LineId Id="5954" Count="0" />
+      <LineId Id="5952" Count="1" />
+      <LineId Id="5951" Count="0" />
+      <LineId Id="4441" Count="0" />
+      <LineId Id="5955" Count="0" />
+      <LineId Id="4442" Count="0" />
+      <LineId Id="5956" Count="0" />
+      <LineId Id="4443" Count="25" />
+      <LineId Id="4520" Count="16" />
+      <LineId Id="4544" Count="0" />
+      <LineId Id="4546" Count="6" />
+      <LineId Id="4560" Count="0" />
+      <LineId Id="4562" Count="5" />
+      <LineId Id="5473" Count="3" />
+      <LineId Id="5598" Count="0" />
+      <LineId Id="4570" Count="1" />
+      <LineId Id="6097" Count="1" />
+      <LineId Id="4572" Count="16" />
+      <LineId Id="6165" Count="0" />
+      <LineId Id="6167" Count="0" />
+      <LineId Id="6672" Count="1" />
+      <LineId Id="6684" Count="0" />
+      <LineId Id="6168" Count="0" />
+      <LineId Id="6504" Count="0" />
+      <LineId Id="6169" Count="0" />
+      <LineId Id="6166" Count="0" />
+      <LineId Id="6110" Count="6" />
+      <LineId Id="6133" Count="0" />
+      <LineId Id="6142" Count="20" />
+      <LineId Id="4589" Count="21" />
+      <LineId Id="5958" Count="4" />
+      <LineId Id="4611" Count="0" />
+      <LineId Id="5957" Count="0" />
+      <LineId Id="6099" Count="1" />
+      <LineId Id="6102" Count="7" />
+      <LineId Id="4612" Count="0" />
+      <LineId Id="5967" Count="0" />
+      <LineId Id="4614" Count="0" />
+      <LineId Id="5968" Count="0" />
+      <LineId Id="6304" Count="0" />
+      <LineId Id="4615" Count="0" />
+      <LineId Id="6306" Count="0" />
+      <LineId Id="6308" Count="37" />
+      <LineId Id="6307" Count="0" />
+      <LineId Id="4616" Count="3" />
+      <LineId Id="5969" Count="1" />
+      <LineId Id="4620" Count="9" />
+      <LineId Id="5971" Count="1" />
+      <LineId Id="4630" Count="1" />
+      <LineId Id="5974" Count="0" />
+      <LineId Id="5973" Count="0" />
+      <LineId Id="4632" Count="63" />
+      <LineId Id="4697" Count="67" />
+      <LineId Id="5975" Count="0" />
+      <LineId Id="4765" Count="22" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="6690" Count="0" />
+      <LineId Id="6685" Count="0" />
+      <LineId Id="6693" Count="0" />
+      <LineId Id="6691" Count="0" />
+      <LineId Id="6686" Count="0" />
+      <LineId Id="6677" Count="0" />
+      <LineId Id="6687" Count="1" />
+      <LineId Id="6676" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

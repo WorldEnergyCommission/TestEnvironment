@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgGrid" Id="{a8b7bea9-4b66-4291-bbc0-9cb0942a8c9d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR
+	
+
+	lrPowerGrid		: LREAL;						//{#lynus.ag#()}
+	rSizeGridConn		: REAL;							//{#lynus.ag#()}
+	lrCounterGridProd			: LREAL;								//{#lynus.ag#()}
+	lrCounterGridCons			: LREAL;								//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[prgGrid.lrPowerGrid				:=	prg_ADS.struct_received.lrPowerGrid			;
+prgGrid.rSizeGridConn			:=	prg_ADS.struct_received.rSizeGridConn			;
+lrCounterGridProd				:= 	prg_ADS.struct_received.lrCounterGridProd ;
+lrCounterGridCons				:= 	prg_ADS.struct_received.lrCounterGridCons	;]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="63" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

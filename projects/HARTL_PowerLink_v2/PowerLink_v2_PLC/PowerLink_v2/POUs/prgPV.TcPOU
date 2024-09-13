@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{52a4cf08-62d2-4b94-900b-2ea0759cae15}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV						: FB_Hoymiles_DTU_ProS_PV_Inverter_inclWrite;
+//	fbPV						: FB_Hoymiles_DTU_ProS_PV_Inverter;
+	fbEnphase					: FB_Enphase;
+	fbPVCounter					: FB_EnergyCounter;
+	lrPowerPVEnphase_W			: LREAL;
+	lrPowerPV					: LREAL;						//{#lynus.ag#()}
+	byErrorWarningPV			: BYTE;							//{#lynus.ag#()}
+	fbEM						: FB_EM_Beckhoff_KL3403;
+	byte_Setpoint				: BYTE := 100;
+END_VAR
+VAR_INPUT
+	m_Hoymiles_DTU_ProS_PV_Inverter		: BOOL;
+	m_Enphase							: BOOL;
+	m_KL3403							: BOOL;	
+END_VAR
+VAR PERSISTENT
+	lrCounterPV					: LREAL;						//{#lynus.ag#()}
+	bEnable						: BOOL;
+	str_IP						: STRING(15);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// To-Do:
+// adopt FB Declaration, change to correct FB
+// adopt FB Definition, change to correct in/out Vars
+// correct lrPowerPV definition
+// correct lrCounterPV definition
+// correct byErrorWarningPV definition
+
+
+// PV config for external Inverter
+
+IF m_Hoymiles_DTU_ProS_PV_Inverter = TRUE THEN
+	fbPV(
+		bEnable:= bEnable, 
+		sIPAdress:= str_IP, 
+		byUnitID_Inverter:= 101, 
+		byte_Setpoint:= byte_Setpoint, 
+		DataHoymiles_DTU_Pro_Total=> , 
+		arrDataHoymiles_DTU_Pro=> , 
+		stDataEMPower_PV=> , 
+		stDataEMCounter_PV=> , 
+		diNrOfEM_OUT_PV=> );
+
+	// operation state of the inverter is unclear if that is ok, no documentation from Hoymiles
+	
+	lrPowerPV := fbPV.DataHoymiles_DTU_Pro_Total.lrPowerAcInverter;
+	byErrorWarningPV := fbPV.stDataEMPower_PV.byErrorWarning;
+	
+	IF fbPV.stDataEMCounter_PV.lrCounterEnergyT1_Production > lrCounterPV THEN  	
+		lrCounterPV := fbPV.stDataEMCounter_PV.lrCounterEnergyT1_Production;
+	END_IF
+
+END_IF
+
+
+// PV config for Enphase Gateway			--> only PowerLink #2
+IF m_Enphase THEN
+	
+	fbEnphase(
+		bStart:= TRUE, 
+		tDelayRequest:= T#3S, 
+//		sHostname:= '192.168.1.231', 		EIOPL020003 / Stuttgart
+		sHostname:= '192.168.1.30',  
+		bValidResult=> , 
+		bBusy=> , 
+		bError=> , 
+		bDone=> , 
+		hrErrorCode=> ,
+		lrpowerprod => lrPowerPVEnphase_W );
+		
+	// re-calc Power to kW
+	lrPowerPV := lrPowerPVEnphase_W / 1000;
+	
+	fbPVCounter(
+		byActiveTariff:= 1, 
+		lrPowerInput:= lrPowerPV, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+		
+	IF fbPVCounter.lrTotalCounterEnergy_Consumption > lrCounterPV THEN  	
+		lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Consumption;
+	END_IF
+END_IF
+
+IF m_KL3403 THEN 
+	fbEM(
+		bEnable:= TRUE, 
+		bChannel1Invers:= FALSE,
+		bChannel2Invers:= FALSE,
+		bChannel3Invers:= FALSE,
+		uiCurrentTransformerRatioL1:= 35, 
+		uiCurrentTransformerRatioL2:= 35, 
+		uiCurrentTransformerRatioL3:= 35, 
+		uiKBusState_IN:= prgEM.fbKBusState.uiKBusState_OUT, 
+		stDataEMPower=> , 
+		stDataEMCounter=> , 
+		stDataEMPowerRealTime=> , 
+		stDataEMCounterRealTime=> , 
+		diNrOfEM_OUT=> );
+		
+	lrPowerPV := fbEM.stDataEMPower.lrPowerProduction;
+	
+	fbPVCounter(
+		byActiveTariff:= 1, 
+		lrPowerInput:= lrPowerPV, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+		
+	IF fbPVCounter.lrTotalCounterEnergy_Consumption > lrCounterPV THEN  	
+		lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Consumption;
+	END_IF
+	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="124" Count="3" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="307" Count="8" />
+      <LineId Id="305" Count="1" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="175" Count="1" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="198" Count="1" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="155" Count="2" />
+      <LineId Id="283" Count="1" />
+      <LineId Id="159" Count="5" />
+      <LineId Id="166" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="180" Count="12" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="230" Count="14" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="247" Count="15" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="245" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

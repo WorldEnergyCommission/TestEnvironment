@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEMS" Id="{85e4df10-28e7-42e2-93d1-2ede1a4e787c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR	
+	b_Manual_On_CH1		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH1	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH2		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH2	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH3		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH3	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH4		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH4	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH5		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH5	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_Coffee_CH6		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_Coffee_CH6		: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_Vent_CH7		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_Vent_CH7		: BOOL;						//{#lynus.ag#()}
+	mtest: BOOL;
+
+	b_LoadOn_CH1	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH2	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH3	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH4	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH5	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH6	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH7	: BOOL;						//{#lynus.ag#()}
+	b_Input_KeySwitch		: BOOL;						//{#lynus.ag#()}
+	b_Input_Spare			: BOOL;						//{#lynus.ag#()}
+	m_UnderGroundMode		: BOOL;						//{#lynus.ag#()}
+// opening hours
+	byte_MoFr_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Open_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Close_Hour	:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Close_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Open_Minute		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Close_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Close_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_So_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_So_Open_Minute		:BYTE;					//{#lynus.ag#()}
+	byte_So_Close_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_So_Close_Minute	:BYTE;					//{#lynus.ag#()}
+// offset CH1 in hours			
+	b_Enable_Control_CH1		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH1		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH1		:REAL;				//{#lynus.ag#()}
+// offset CH2 in hours			
+	b_Enable_Control_CH2		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH2		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH2		:REAL;				//{#lynus.ag#()}
+// offset CH3 in hours			
+	b_Enable_Control_CH3		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH3		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH3		:REAL;				//{#lynus.ag#()}
+// offset CH4 in hours			
+	b_Enable_Control_CH4		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH4		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH4		:REAL;				//{#lynus.ag#()}
+// offset CH5 in hours			
+	b_Enable_Control_CH5		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH5		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH5		:REAL;				//{#lynus.ag#()}
+// offset CH6 in hours			
+	b_Enable_Control_Coffee_CH6	:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_Coffee_CH6:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_Coffee_CH6	:REAL;				//{#lynus.ag#()}
+// offset CH7 in hours			
+	b_Enable_Control_Vent_CH7	:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH7		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH7		:REAL;				//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[b_Manual_On_CH1	:=	prg_ADS.struct_received.b_Manual_On_CH1	;
+b_Manual_Off_CH1	:=	prg_ADS.struct_received.b_Manual_Off_CH1	;
+b_Manual_On_CH2	:=	prg_ADS.struct_received.b_Manual_On_CH2	;
+b_Manual_Off_CH2	:=	prg_ADS.struct_received.b_Manual_Off_CH2	;
+b_Manual_On_CH3	:=	prg_ADS.struct_received.b_Manual_On_CH3	;
+b_Manual_Off_CH3	:=	prg_ADS.struct_received.b_Manual_Off_CH3	;
+b_Manual_On_CH4	:=	prg_ADS.struct_received.b_Manual_On_CH4	;
+b_Manual_Off_CH4	:=	prg_ADS.struct_received.b_Manual_Off_CH4	;
+b_Manual_On_CH5	:=	prg_ADS.struct_received.b_Manual_On_CH5	;
+b_Manual_Off_CH5	:=	prg_ADS.struct_received.b_Manual_Off_CH5	;
+b_Manual_On_Coffee_CH6	:=	prg_ADS.struct_received.b_Manual_On_Coffee_CH6	;
+b_Manual_Off_Coffee_CH6	:=	prg_ADS.struct_received.b_Manual_Off_Coffee_CH6	;
+b_Manual_On_Vent_CH7	:=	prg_ADS.struct_received.b_Manual_On_Vent_CH7	;
+b_Manual_Off_Vent_CH7	:=	prg_ADS.struct_received.b_Manual_Off_Vent_CH7	;
+b_LoadOn_CH1	:=	prg_ADS.struct_received.b_LoadOn_CH1	;
+b_LoadOn_CH2	:=	prg_ADS.struct_received.b_LoadOn_CH2	;
+b_LoadOn_CH3	:=	prg_ADS.struct_received.b_LoadOn_CH3	;
+b_LoadOn_CH4	:=	prg_ADS.struct_received.b_LoadOn_CH4	;
+b_LoadOn_CH5	:=	prg_ADS.struct_received.b_LoadOn_CH5	;
+b_LoadOn_CH6	:=	prg_ADS.struct_received.b_LoadOn_CH6	;
+b_LoadOn_CH7	:=	prg_ADS.struct_received.b_LoadOn_CH7	;
+byte_MoFr_Open_Hour	:=	prg_ADS.struct_received.byte_MoFr_Open_Hour	;
+byte_MoFr_Open_Minute	:=	prg_ADS.struct_received.byte_MoFr_Open_Minute	;
+byte_MoFr_Close_Hour	:=	prg_ADS.struct_received.byte_MoFr_Close_Hour	;
+byte_MoFr_Close_Minute	:=	prg_ADS.struct_received.byte_MoFr_Close_Minute	;
+byte_Sa_Open_Hour	:=	prg_ADS.struct_received.byte_Sa_Open_Hour	;
+byte_Sa_Open_Minute	:=	prg_ADS.struct_received.byte_Sa_Open_Minute	;
+byte_Sa_Close_Hour	:=	prg_ADS.struct_received.byte_Sa_Close_Hour	;
+byte_Sa_Close_Minute	:=	prg_ADS.struct_received.byte_Sa_Close_Minute	;
+byte_So_Open_Hour	:=	prg_ADS.struct_received.byte_So_Open_Hour	;
+byte_So_Open_Minute	:=	prg_ADS.struct_received.byte_So_Open_Minute	;
+byte_So_Close_Hour	:=	prg_ADS.struct_received.byte_So_Close_Hour	;
+byte_So_Close_Minute	:=	prg_ADS.struct_received.byte_So_Close_Minute	;
+b_Enable_Control_CH1	:=	prg_ADS.struct_received.b_Enable_Control_CH1	;
+real_Offset_Start_CH1	:=	prg_ADS.struct_received.real_Offset_Start_CH1	;
+real_Offset_Stop_CH1	:=	prg_ADS.struct_received.real_Offset_Stop_CH1	;
+b_Enable_Control_CH2	:=	prg_ADS.struct_received.b_Enable_Control_CH2	;
+real_Offset_Start_CH2	:=	prg_ADS.struct_received.real_Offset_Start_CH2	;
+real_Offset_Stop_CH2	:=	prg_ADS.struct_received.real_Offset_Stop_CH2	;
+b_Enable_Control_CH3	:=	prg_ADS.struct_received.b_Enable_Control_CH3	;
+real_Offset_Start_CH3	:=	prg_ADS.struct_received.real_Offset_Start_CH3	;
+real_Offset_Stop_CH3	:=	prg_ADS.struct_received.real_Offset_Stop_CH3	;
+b_Enable_Control_CH4	:=	prg_ADS.struct_received.b_Enable_Control_CH4	;
+real_Offset_Start_CH4	:=	prg_ADS.struct_received.real_Offset_Start_CH4	;
+real_Offset_Stop_CH4	:=	prg_ADS.struct_received.real_Offset_Stop_CH4	;
+b_Enable_Control_CH5	:=	prg_ADS.struct_received.b_Enable_Control_CH5	;
+real_Offset_Start_CH5	:=	prg_ADS.struct_received.real_Offset_Start_CH5	;
+real_Offset_Stop_CH5	:=	prg_ADS.struct_received.real_Offset_Stop_CH5	;
+b_Enable_Control_Coffee_CH6	:=	prg_ADS.struct_received.b_Enable_Control_Coffee_CH6	;
+real_Offset_Start_Coffee_CH6	:=	prg_ADS.struct_received.real_Offset_Start_Coffee_CH6	;
+real_Offset_Stop_Coffee_CH6	:=	prg_ADS.struct_received.real_Offset_Stop_Coffee_CH6	;
+b_Enable_Control_Vent_CH7	:=	prg_ADS.struct_received.b_Enable_Control_Vent_CH7	;
+real_Offset_Start_CH7	:=	prg_ADS.struct_received.real_Offset_Start_CH7	;
+real_Offset_Stop_CH7	:=	prg_ADS.struct_received.real_Offset_Stop_CH7	;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="204" Count="53" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="79" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

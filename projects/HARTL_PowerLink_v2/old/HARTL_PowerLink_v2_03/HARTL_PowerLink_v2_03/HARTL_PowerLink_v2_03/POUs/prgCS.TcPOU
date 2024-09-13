@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCS" Id="{17859a96-3cb0-4ed2-bbf5-f9c982d3f006}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbCS						: FB_EM24_DIN; 
+	fbCSCounter					: FB_EnergyCounter;
+	lrPowerCS					: LREAL;						//{#lynus.ag#()}
+	// udintErrorWarningCS			: UDINT;
+	FB_MB_Test :FB_ModBus_100Registers_FC3_inclID;
+	
+END_VAR
+VAR PERSISTENT
+	lrCounterCS					: LREAL;						//{#lynus.ag#()}
+	lrCounterCSeIO				: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// To-Do:
+// adopt FB Declaration, change to new FB for ENERGYMID
+// adopt FB Definition, change to correct in/out Vars for ENERGYMID
+// correct lrPowerCS definition
+// correct lrCounterCS definition
+// correct byErrorWarningCS definition
+fbCS(
+	m_Enable:= , 
+	str_IPAdress:= '192.168.1.20', 
+	real_RealPower_kW=> , 
+	real_RealPowerL1_kW=> , 
+	real_RealPowerL2_kW=> , 
+	real_RealPowerL3_kW=> , 
+	real_ReactivePower_kVAr=> , 
+	real_ApparentPower_kVA=> , 
+	real_Frequency_Hz=> , 
+	real_VoltageL1N_V=> , 
+	real_VoltageL2N_V=> , 
+	real_VoltageL3N_V=> , 
+	real_VoltageL1L2_V=> , 
+	real_VoltageL2L3_V=> , 
+	real_VoltageL3L1_V=> , 
+	real_CurrentL1_A=> , 
+	real_CurrentL2_A=> , 
+	real_CurrentL3_A=> , 
+	real_EnergyTotal_Import_kWh=> , 
+	real_EnergyTotal_Export_kWh=> , 
+	real_EnergyTotal_ExportT1_kWh=> , 
+	real_EnergyTotal_ExportT2_kWh=> , 
+	real_EnergyTotal_ExportT3_kWh=> , 
+	real_EnergyTotal_ExportT4_kWh=> , 
+	m_PollSuccessful=> , 
+	udint_Error_ID=> );
+(*fbCS(
+	m_Enable:= , //TRUE, 
+	str_IPAdress:= '192.168.1.20', 
+	real_EnergyTotal_Wh => , 
+	real_RealPower_W => ,
+	udint_Error_ID =>);*)
+
+lrPowerCS := fbCS.real_RealPower_kW;
+// uErrorWarningCS := fbCS.udint_Error_ID;
+
+// MID conform Counter, read from Energymeter
+IF fbCS.real_EnergyTotal_Import_kWh > lrCounterCS THEN  	
+	lrCounterCS := fbCS.real_EnergyTotal_Import_kWh;
+END_IF
+
+// internal Counter, for comparing purpose
+fbCSCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerCS, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCSCounter.lrTotalCounterEnergy_Consumption > lrCounterCSeIO THEN  	
+	lrCounterCSeIO := fbCSCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+FB_MB_Test(
+	m_Enable:= , 
+	str_IPAdress:= '192.168.1.20', 
+	w_Adress:= , 
+	usint_Quantity:= , 
+	usint_ID:= , 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="183" Count="70" />
+      <LineId Id="101" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

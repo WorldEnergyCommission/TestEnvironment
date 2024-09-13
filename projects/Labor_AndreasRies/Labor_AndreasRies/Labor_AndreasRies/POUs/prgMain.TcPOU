@@ -1,0 +1,273 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgMain" Id="{8f00e3ff-1afc-41a3-b392-cc29c5d99365}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMain
+VAR
+	int_Temp_1_1 	AT%I*	: INT;
+	int_Temp_1_2 	AT%I*	: INT;
+	int_Temp_1_3 	AT%I*	: INT;
+	int_Temp_1_4 	AT%I*	: INT;
+	int_Temp_2_1 	AT%I*	: INT;
+	int_Temp_2_2 	AT%I*	: INT;
+	int_Temp_2_3 	AT%I*	: INT;
+	int_Temp_2_4 	AT%I*	: INT;	
+	real_Temp_K1			: REAL;											//{#lynus.ag#()}
+	real_Temp_K2			: REAL;											//{#lynus.ag#()}
+	real_Temp_W11			: REAL;											//{#lynus.ag#()}
+	real_Temp_W12			: REAL;											//{#lynus.ag#()}
+	real_Temp_W21			: REAL;											//{#lynus.ag#()}
+	real_Temp_W22			: REAL;											//{#lynus.ag#()}
+	real_Temp_WZ			: REAL;											//{#lynus.ag#()}
+// Kanal 2.2
+	fb_Config_22			: FB_KL320xConfig;
+	stInData_22   AT%I*		: ST_KL320xInData;
+	stOutData_22  AT%Q*		: ST_KL320xOutData;
+// Kanal 2.4
+	fb_Config_24			: FB_KL320xConfig;
+	stInData_24   AT%I*		: ST_KL320xInData;
+	stOutData_24  AT%Q*		: ST_KL320xOutData;
+	fb_curve				: fb_CurveRead;
+	fb_curve2				: fb_CurveRead;
+// Kanal W22
+	fb_Config_W22			: FB_KL320xConfig;
+	stInData_W22   AT%I*		: ST_KL320xInData;
+	stOutData_W22  AT%Q*		: ST_KL320xOutData;
+	mTest:BOOL;
+	
+	real_Temp_Outside: REAL;												//{#lynus.ag#()}
+	fbShelly1					: FB_Shelly_Pro4PM;
+	fbShelly2					: FB_Shelly_Pro2pm;
+	bPro4pmCH1_on				: BOOL;											//{#lynus.ag#()}
+	bPro4pmCH2_on				: BOOL;											//{#lynus.ag#()}
+	bPro4pmCH3_on				: BOOL;											//{#lynus.ag#()}
+	bPro4pmCH4_on				: BOOL;											//{#lynus.ag#()}
+	bPro2pmCH1_on				: BOOL;											//{#lynus.ag#()}
+	bPro2pmCH2_on				: BOOL;											//{#lynus.ag#()}
+	
+	int_liveCount: INT;
+	
+
+
+	int_Temp_W2_2: INT;
+	fb_curveW22				: fb_CurveRead;
+
+END_VAR
+VAR PERSISTENT
+	int_Offset_W22: INT;														//{#lynus.ag#()}
+	int_Offset_Outside: INT;													//{#lynus.ag#()}
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[int_liveCount := int_liveCount +1;
+
+
+real_Temp_K1 	:= INT_TO_REAL(int_Temp_1_1)/10;
+real_Temp_K2 	:= INT_TO_REAL(int_Temp_1_3)/10;
+real_Temp_W11 	:= INT_TO_REAL(int_Temp_1_2)/10;
+real_Temp_W12 	:= INT_TO_REAL(int_Temp_1_4)/10;
+real_Temp_W21 	:= INT_TO_REAL(int_Temp_2_1)/10;
+real_Temp_W22 	:= INT_TO_REAL(REAL_TO_INT(fb_curveW22.real_y*10))/10;
+real_Temp_WZ	:= INT_TO_REAL(REAL_TO_INT(fb_curve.real_y*10))/10;
+real_Temp_Outside := INT_TO_REAL(REAL_TO_INT(fb_curve2.real_y*10))/10;
+
+int_Temp_2_2 := stInData_22.iDataIn;
+int_Temp_2_4 := stInData_24.iDataIn;
+int_Temp_W2_2 := stInData_W22.iDataIn;
+
+fb_Config_22(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_22 , 
+	stOutData:= stOutData_22);
+	
+fb_Config_24(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_24, 
+	stOutData:= stOutData_24);
+
+fb_Config_W22(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_W22 , 
+	stOutData:= stOutData_W22);	
+	
+// interpolation NTC 1.8k zwischen 10°C - 40°C
+fb_curve(
+	real_x:= (INT_TO_REAL(int_Temp_2_4)/2) , 
+	real_x1:= 1040, 
+	real_y1:= 40, 
+	real_x2:= 1480, 
+	real_y2:= 30, 
+	real_x3:= 2200 , 
+	real_y3:= 20, 
+	real_x4:= 3330 , 
+	real_y4:= 10, 
+	real_y=> , 
+	m_x_Outside=> );
+	
+// interpolation PT100 mit 6,5Ohm Leitungswiederstand zwischen -20°C und +40°C
+fb_curve2(
+	real_x:= (INT_TO_REAL(int_Temp_2_2))/10-int_Offset_Outside , 
+	real_x1:= 92, 
+	real_y1:= -20, 
+	real_x2:= 100, 
+	real_y2:= 0, 
+	real_x3:= 107.79 , 
+	real_y3:= 20, 
+	real_x4:= 115.54 , 
+	real_y4:= 40, 
+	real_y=> , 
+	m_x_Outside=> );
+
+
+// interpolation PT100 mit 10Ohm Leitungswiederstand zwischen -20°C und +40°C
+fb_curveW22(
+	real_x:= (INT_TO_REAL(int_Temp_W2_2))/10-int_Offset_W22 , 
+	real_x1:= 92, 
+	real_y1:= -20, 
+	real_x2:= 100, 
+	real_y2:= 0, 
+	real_x3:= 107.79 , 
+	real_y3:= 20, 
+	real_x4:= 115.54 , 
+	real_y4:= 40, 
+	real_y=> , 
+	m_x_Outside=> );	
+	// Shelly pro 4 pm
+	
+fbShelly1(
+	bStart:= TRUE, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.1.20', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpowerP1=> , 
+	lrvoltageP1=> , 
+	lrenergyP1=> ,
+	lrpowerP2=> , 
+	lrvoltageP2=> , 
+	lrenergyP2=> ,
+	bOnP1:= bPro4pmCH1_on,
+	bOffP1:= NOT bPro4pmCH1_on ,
+	bStateP1=> ,
+	bOnP2:= bPro4pmCH2_on ,
+	bOffP2:= NOT bPro4pmCH2_on ,
+	bStateP2=> ,
+	bOnP3:= bPro4pmCH3_on ,
+	bOffP3:= NOT bPro4pmCH3_on ,
+	bStateP3=>  ,
+	bOnP4:= bPro4pmCH4_on ,
+	bOffP4:= NOT bPro4pmCH4_on ,
+	bStateP4=>  );	
+// shelly pr 2pm
+
+fbShelly2(
+	bStart:= TRUE , 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.1.21', 
+	bOnP1:= bPro2pmCH1_on, 
+	bOffP1:= NOT bPro2pmCH1_on, 
+	bOnP2:= bPro2pmCH2_on , 
+	bOffP2:= not bPro2pmCH2_on, 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	bConnected=> , 
+	hrErrorCode=> , 
+	lrpowerP1=> , 
+	lrvoltageP1=> , 
+	lrenergyP1=> , 
+	lrpowerP2=> , 
+	lrvoltageP2=> , 
+	lrenergyP2=> , 
+	bStateP1=> , 
+	bStateP2=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMain">
+      <LineId Id="381" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="78" Count="16" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="97" Count="16" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="432" Count="17" />
+      <LineId Id="141" Count="2" />
+      <LineId Id="145" Count="10" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="228" Count="11" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="450" Count="13" />
+      <LineId Id="275" Count="2" />
+      <LineId Id="279" Count="19" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="333" Count="1" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="305" Count="21" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="193" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

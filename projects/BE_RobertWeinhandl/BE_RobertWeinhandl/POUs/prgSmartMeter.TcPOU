@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgSmartMeter" Id="{c9c25a81-16a4-48e9-8568-6d2b8c776c23}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgSmartMeter
+VAR
+//	fbSmartMeter	: FB_KL6781_MBus_Master;	
+	int_LiveCount		: INT;	//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// fbSmartMeter(eBaudrateMBus := 9600);
+logic ();
+int_LiveCount:=int_LiveCount+1;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgSmartMeter">
+      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

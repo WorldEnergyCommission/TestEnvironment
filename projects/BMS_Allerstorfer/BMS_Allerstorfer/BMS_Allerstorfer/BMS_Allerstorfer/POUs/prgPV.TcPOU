@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{0f584aec-3d9c-42c2-ab3e-af92cfc33484}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR PERSISTENT
+	lrCounterPV				: LREAL;									//{#lynus.ag#()}
+	str_IP_PV_1				: STRING(15):= '10.11.90.100';
+	arr_b_EnableWrite			: ARRAY[1..30] OF BOOL;								// Enable write function
+	arr_m_DisableInverter		: ARRAY[1..30] OF BOOL;								// disable inverter 
+	arr_int_InverterSetpoint	: ARRAY[1..30] OF INT;								// inverter setpoint i[1/100 %] 
+	real_MainsSetpointRegulate	: REAL:=-20;							//{#lynus.ag#()}
+	real_Factor_Calc: REAL:=110;
+	rPValue: REAL := 2;
+	udint_IValue: UDINT:=250;
+	uditn_DValue: UDINT:=30;
+	realMaxGridPower_1: REAL:=-35;
+	realMaxGridPower_2: REAL:=-40;
+END_VAR
+VAR
+	fbPV_1					: FB_Symo_PV_Inverter_FLOAT_1_DM_30_InclDisable;
+	fbPVCounter				: FB_EnergyCounter;
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV		: BYTE;					//{#lynus.ag#()}
+	
+	// extend or reduce amount of PV Inverters
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+
+	int_SetPointInverter	:INT;					//{#lynus.ag#()}
+
+	real_ActualLoadPercent_PV1: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV2: REAL;				//{#lynus.ag#()}
+	real_RegulatroMaxValue_Calc: REAL;				//{#lynus.ag#()}
+	FB_PID_Inverter :FB_PID_T;
+	ton_PV_On_Delay_after_Off :ARRAY[1..2]OF Ton;
+	
+	real_Setpoint_PID_In: REAL;					//{#lynus.ag#()}
+	real_RegulatroMaxValue_Limit: REAL;				//{#lynus.ag#()}
+		
+	i: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// write setpoints to PV array
+arr_int_InverterSetpoint[1] := int_SetPointInverter;
+arr_int_InverterSetpoint[2] := int_SetPointInverter;
+
+// limit mains regulator setpoint
+real_MainsSetpointRegulate := LIMIT(-30,real_MainsSetpointRegulate,0); 
+ 
+
+fbPV_1.arrUnitID_Inverter[1]:=1;
+fbPV_1.arr_b_EnableWrite[1] := arr_b_EnableWrite[1];
+fbPV_1.arr_m_DisableInverter[1] := arr_m_DisableInverter[1];
+fbPV_1.arr_int_InverterSetpoint[1] := arr_int_InverterSetpoint[1];
+
+fbPV_1.arrUnitID_Inverter[2]:=2;
+fbPV_1.arr_b_EnableWrite[2] := arr_b_EnableWrite[2];
+fbPV_1.arr_m_DisableInverter[2] := arr_m_DisableInverter[2];
+fbPV_1.arr_int_InverterSetpoint[2] := arr_int_InverterSetpoint[2];
+
+
+fbPV_1.arrUnitID_Inverter[1] :=1;
+fbPV_1(
+	bEnable				:= TRUE, 
+	sIPAdress			:= str_IP_PV_1, 			// modify IP Adress
+	arrUnitID_Inverter	:= ,
+	arr_b_EnableWrite	:=,
+	arr_m_DisableInverter := ,
+	arrDataSymo10		=> ,
+	stDataEMPower_PV	=> , 
+	stDataEMCounter_PV	=> , 
+	diNrOfEM_OUT_PV		=> );
+
+lrPowerPV_1 := fbPV_1.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_2 := fbPV_1.arrDataSymo10[2].lrPowerAcInverter;
+
+
+
+
+lrPowerPV := lrPowerPV_1 + lrPowerPV_2 ;
+
+// EnergyCounter
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+// calculate maximum regulator value by looking at the nomal inverter power 
+// nominal inverter Values	PV1: 27kW / PV2: 27kW 
+real_ActualLoadPercent_PV1 := LREAL_TO_REAL(lrPowerPV_1) / 27*100;
+real_ActualLoadPercent_PV2 := LREAL_TO_REAL(lrPowerPV_2) / 27*100;
+
+real_RegulatroMaxValue_Calc := 	MAX(real_ActualLoadPercent_PV1,real_ActualLoadPercent_PV2);
+real_RegulatroMaxValue_Calc := LIMIT(1,real_RegulatroMaxValue_Calc,100);
+real_RegulatroMaxValue_Limit := LIMIT(0,real_RegulatroMaxValue_Calc*real_Factor_Calc,10000);	// add 20% regualtion margin
+FB_PID_Inverter.rMaxValue := real_RegulatroMaxValue_Limit;
+
+// mains parallel operation
+
+FB_PID_Inverter.bEnable := TRUE;
+FB_PID_Inverter.rSetpoint := LREAL_TO_REAL(- real_MainsSetpointRegulate); 
+int_SetPointInverter := REAL_TO_INT(FB_PID_Inverter.rQController);
+FB_PID_Inverter.rActualValue:= LREAL_TO_REAL( -prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal);
+
+
+FB_PID_Inverter(
+	bEnable:= , 
+	rSetpoint:= , 
+	udiIValue:= udint_IValue, 
+	udiDValue:= uditn_DValue, 
+	udiDamping:= 0, 
+	rPValue:= rPValue, 
+	rMaxValue:= , 
+	rMinValue:= 100, 
+	rNeutralZone:= 1, 
+	bDirection:= FALSE, 
+	rActualValue:= ,
+	rQController=> );
+	
+
+real_Setpoint_PID_In := FB_PID_Inverter.rSetpoint;
+
+
+
+// disable inverters in case of mains power too big
+IF prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal < realMaxGridPower_1 THEN
+	arr_m_DisableInverter[1] := TRUE;
+ELSIF prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal < realMaxGridPower_2 THEN
+	arr_m_DisableInverter[2] := TRUE;
+END_IF
+IF prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal < -50 THEN
+	arr_m_DisableInverter[1] := TRUE;
+	arr_m_DisableInverter[2] := TRUE;
+END_IF
+FOR i:= 1 TO 2 BY 1 DO
+	IF arr_m_DisableInverter[i] = TRUE THEN
+		ton_PV_On_Delay_after_Off[i].IN := TRUE;
+	END_IF
+	IF ton_PV_On_Delay_after_Off[i].Q THEN
+		ton_PV_On_Delay_after_Off[i].IN := FALSE;
+		arr_m_DisableInverter[i] := FALSE;
+	END_IF
+		
+END_FOR
+ton_PV_On_Delay_after_Off[1]( PT := T#30S); 	
+ton_PV_On_Delay_after_Off[2]( PT := T#60S); 	
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="1473" Count="2" />
+      <LineId Id="1484" Count="2" />
+      <LineId Id="1471" Count="0" />
+      <LineId Id="1492" Count="0" />
+      <LineId Id="1494" Count="8" />
+      <LineId Id="1493" Count="0" />
+      <LineId Id="1472" Count="0" />
+      <LineId Id="952" Count="10" />
+      <LineId Id="1555" Count="2" />
+      <LineId Id="1469" Count="0" />
+      <LineId Id="972" Count="0" />
+      <LineId Id="1057" Count="17" />
+      <LineId Id="1503" Count="4" />
+      <LineId Id="1075" Count="0" />
+      <LineId Id="1511" Count="0" />
+      <LineId Id="1515" Count="0" />
+      <LineId Id="1641" Count="1" />
+      <LineId Id="1519" Count="0" />
+      <LineId Id="1558" Count="2" />
+      <LineId Id="1562" Count="1" />
+      <LineId Id="1566" Count="0" />
+      <LineId Id="1568" Count="23" />
+      <LineId Id="1595" Count="0" />
+      <LineId Id="1600" Count="0" />
+      <LineId Id="1605" Count="2" />
+      <LineId Id="1619" Count="0" />
+      <LineId Id="1638" Count="0" />
+      <LineId Id="1620" Count="11" />
+      <LineId Id="1520" Count="0" />
+      <LineId Id="1076" Count="0" />
+      <LineId Id="1388" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

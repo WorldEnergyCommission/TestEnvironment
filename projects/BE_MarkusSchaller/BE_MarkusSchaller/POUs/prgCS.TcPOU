@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgCS" Id="{cf38982a-1a4e-4f90-87d5-58e8c65a1cce}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbCS		: FB_ECS_Keba_P30;
+	bEnableCS	: BOOL;
+	lrPowerCS	: LREAL;
+END_VAR
+VAR PERSISTENT
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCS(
+	bEnable := bEnableCS,
+	bPowerDataInvers := FALSE,
+	byElectricFuseLine := 1,
+	uiFailsafeCurrent := ,
+	uiFailsafeTimeOut := ,
+	diNrOfEMS_IN := ,
+	diNrOfEM_IN_CS := ,
+	sIPAdress := '192.168.178.51',
+	stSetupECS := ,
+	stDataECS => ,
+	diNrOfECS_OUT => ,
+	lrTotalPowerECSRealTime => lrPowerCS );]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="5" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="41" Count="2" />
+      <LineId Id="50" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

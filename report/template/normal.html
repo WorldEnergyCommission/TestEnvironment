@@ -1,0 +1,116 @@
+<head>
+  <meta charset="utf-8" />
+</head>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    margin: 0;
+    font-family: "Arial", sans-serif;
+    -webkit-print-color-adjust: exact;
+    color: #1a1a1a;
+  }
+
+  .sheet {
+    margin: 0;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    page-break-after: always;
+    width: 210mm;
+    height: 297mm;
+    padding: 15mm;
+    position: relative;
+  }
+
+  @media screen {
+    body {
+      background: #e0e0e0;
+    }
+
+    .sheet {
+      background: white;
+      box-shadow: 0 0.5mm 2mm rgba(0, 0, 0, 0.3);
+      margin: 5mm auto;
+    }
+  }
+
+  @media print {
+    body {
+      width: 210mm;
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  td,
+  th {
+    padding: 8px 0;
+  }
+
+  tr {
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  tr:last-child {
+    border-bottom: none;
+  }
+
+  h1,
+  h2 {
+    font-weight: 600;
+  }
+
+  th {
+    background-color: #1a1a1a;
+    color: white;
+  }
+</style>
+
+<body>
+  <div class="sheet">
+    <div style="display: flex; align-items: center; margin-bottom: 56px">
+      <h1 style="margin: 0; flex: 1">{{.Name}}</h1>
+      <span style="text-align: right; font-size: 80%;">
+        {{.Street}}<br />
+        {{.City}}<br />
+        {{.Country}}
+      </span>
+      {{if .ImageUrl}}
+        <img src="{{.ImageUrl}}" style="width: 8em; max-height: 4em; display: inline-block; object-fit: contain; margin-left: 1em;" alt="">
+      {{end}}
+    </div>
+    <table style="width: 100%; text-align: right">
+      <thead>
+        <tr>
+          <th></th>
+          <th>{{.Start.Format "15:04 02/01/06"}}</th>
+          <th>{{.End.Format "15:04 02/01/06"}}</th>
+          <th>Differenz</th>
+          <th>Kosten</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range $el := .Variables}}
+        <tr>
+          {{if eq $el.Title ""}}
+          <td>{{$el.Name}}</td>
+          {{else}}
+          <td>{{$el.Title}}</td>
+          {{end}}
+          <td>{{round $el.Start}} {{$el.Unit}}</td>
+          <td>{{round $el.End}} {{$el.Unit}}</td>
+          <td>{{round $el.Diff}} {{$el.Unit}}</td>
+          <td>{{round $el.Cost}} {{$el.Currency}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</body>

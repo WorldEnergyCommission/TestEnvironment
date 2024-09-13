@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Var_Info_ValueWrite_GV" Id="{3c0b2f5c-7529-4ebb-8d06-4c77ba8e8334}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_Var_Info_ValueWrite_GV :
+STRUCT
+	//Received from external to ads write function
+	{attribute 'hide'}
+	bWriteNewValue				: BOOL;																			//New Value received to write
+	{attribute 'hide'}
+	bSendFunctionOK				: BOOL;																			//Necessary to start read/write
+	{attribute 'hide'}
+	uiSizeArray					: UINT;																			//Size of actuall Array
+	{attribute 'hide'}
+	udiCountBuffer				: UDINT;																		//Return the counter of stored values in the reveived buffer
+	{attribute 'hide'}
+	sFullSymbolName				: STRING(48);																	//Full Symbol name of plc variable uncoded
+	{attribute 'hide'}
+	sSymbolType					: STRING(255);																	//Symbol type of plc variable uncoded	
+	{attribute 'hide'}
+	arrValue					: ARRAY[1..Constants_Communicator.bySizeOfValueArray] OF STRING(30);			//Value from the Variable
+	//State from ads write function to received function buffer
+	{attribute 'hide'}
+	bBusy						: BOOL;																			//Write Message is busy
+	{attribute 'hide'}
+	bErrorWrite					: BOOL;																			//After write the messege success a error		
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

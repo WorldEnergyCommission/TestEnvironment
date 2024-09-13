@@ -1,0 +1,52 @@
+version: "3.2"
+name: efficientio-ai-development
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbit-mq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+  proxy:
+    restart: unless-stopped
+    build:
+      context: ../scripts
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ${KUBECONFIG_PATH}:/app/config
+    ports:
+      - 5432:5432 # database
+      - 1883:1883 # mosquitto (SenML)
+      - 6379:6379 # redis
+      - 9000:9000 # empa
+      - 7000:7000 # longhorn-ui
+  main:
+    build:
+      context: ..
+      dockerfile: ./ai/Dockerfile
+    command: python -m debugpy --listen 0.0.0.0:5678 -m ai.server.start
+    ports:
+      - 8000:8000
+      - 5678:5678
+    volumes:
+      - .:/ai
+      
+    env_file:
+      - .env
+    depends_on:
+      - proxy
+      - rabbitmq
+  worker:
+    build:
+      context: ..
+      dockerfile: ./ai/worker.Dockerfile
+    command: python -m debugpy --listen 0.0.0.0:5678 -m ai.execution.workers
+    ports:
+      - 5679:5678
+    volumes:
+      - .:/ai
+    env_file:
+      - .env
+    depends_on:
+      - main
+      - rabbitmq

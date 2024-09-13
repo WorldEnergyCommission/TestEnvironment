@@ -1,0 +1,188 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_MBRTUMaster_Messages" Id="{1edae247-b251-4a9a-9c86-8c4fe43d573a}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_MBRTUMaster_Messages
+VAR_INPUT
+	{attribute 'hide'}
+	bTerminalConfigured					: BOOL;						//Shows that the terminal is configured 
+	{attribute 'hide'}
+	bError								: BOOL;						//Error from the RTU Function
+	{attribute 'hide'}
+	bWarning							: BOOL;						//Warning from the RTU Function
+	{attribute 'hide'}
+	iWarningCode						: INT;						//Warning Code
+	{attribute 'hide'}
+	iErrorCode							: INT;						//Error Code		
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	byErrorWarning						: BYTE;						//Error Warning State
+	eMessageMBRTUMaster					: E_Message_MBRTUMaster;	//Message from the RTU Master Function
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 08.07.2021
+//Version : 1.0.0.0
+
+//With this Funciton is possible to handel the Error and Warning Codes from the Modbus RTU Master.
+
+//Warnings
+IF bWarning AND iWarningCode = 0 THEN 
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eNoConnectionToBackend;
+END_IF
+
+//Errors
+IF bError AND iErrorCode = 1 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eTooMuchMBRTUMasters;
+ELSIF bError AND iErrorCode = 2 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eTerminalConfigurationError;
+ELSIF bError AND iErrorCode = 3 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorIllegalFunction;
+ELSIF bError AND iErrorCode = 4 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorIllegalDataAdress;
+ELSIF bError AND iErrorCode = 5 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorIllegalDataValue;
+ELSIF bError AND iErrorCode = 6 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorSlaveDeviceFailure;
+ELSIF bError AND iErrorCode = 7 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorAcknowledge;
+ELSIF bError AND iErrorCode = 8 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorSlaveDeviceBusy;
+ELSIF bError AND iErrorCode = 9 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorNegativeAcknowledge;
+ELSIF bError AND iErrorCode = 10 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorMemoryParity;
+ELSIF bError AND iErrorCode = 11 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorGatewayPathUnavailable;
+ELSIF bError AND iErrorCode = 12 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorGatewayTargetDeviceFailedToRespond;
+ELSIF bError AND iErrorCode = 13 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorCharrecTimeout;
+ELSIF bError AND iErrorCode = 14 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorIllegalDataSize;
+ELSIF bError AND iErrorCode = 15 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorIllegalDeviceAdress;
+ELSIF bError AND iErrorCode = 16 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorIllegalDestinationAdress;
+ELSIF bError AND iErrorCode = 17 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorIllegalDestinationSize;
+ELSIF bError AND iErrorCode = 18 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorNoResponse;
+ELSIF bError AND iErrorCode = 19 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorTxBufferOverrun;
+ELSIF bError AND iErrorCode = 20 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorSendTimeout;
+ELSIF bError AND iErrorCode = 21 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorDataSizeOverrun;
+ELSIF bError AND iErrorCode = 22 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorStringOverrun;
+ELSIF bError AND iErrorCode = 23 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorInvalidPointer;
+ELSIF bError AND iErrorCode = 24 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorCRC;
+ELSIF bError AND iErrorCode = 25 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorInvalidMemoryAdress;
+ELSIF bError AND iErrorCode = 26 THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eModbusErrorTransmitBufferTooSmal;
+END_IF 
+
+IF bWarning THEN 
+	byErrorWarning := 1;
+END_IF	
+	IF bError THEN
+		byErrorWarning := 2;
+	END_IF
+
+//All ok
+IF NOT bError AND NOT bWarning THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eAllOk;
+		byErrorWarning := 0;
+END_IF
+
+//No Configuration
+IF NOT bError AND NOT bTerminalConfigured THEN
+	eMessageMBRTUMaster := E_Message_MBRTUMaster.eNoTerminalConfiguration;
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MBRTUMaster_Messages">
+      <LineId Id="88" Count="2" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="91" Count="1" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="109" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="161" Count="2" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="104" Count="2" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="107" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEMS_H1" Id="{6f701af2-5d23-45b1-901b-ca5d2d305ed9}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS_H1
+VAR PERSISTENT
+	byMaxDepthOfDischrgEPO		: BYTE;							//{#lynus.ag#()}
+	byPrioMinChrgBattSOCInEPO	: BYTE;							//{#lynus.ag#()}
+	byResChrgfromGridToBatt		: BYTE;							//{#lynus.ag#()}
+	byReserveSOCEPO				: BYTE;							//{#lynus.ag#()}
+	uiUpdateTime				: UINT;							//{#lynus.ag#()}
+	bEnableEMS					: BOOL;							//{#lynus.ag#()}
+	bAllowChrgFromGrid			: BOOL;							//{#lynus.ag#()}
+	rMainFuseCSEMS				: REAL;							//{#lynus.ag#()}
+	iOperationModeEMS			: INT;							//{#lynus.ag#()}
+END_VAR
+VAR
+	fbEMS						: FB_EMS_T;
+	bIsEnableEMS				: BOOL;							//{#lynus.ag#()}
+	bStateAllowChrgFromGrid		: BOOL;							//{#lynus.ag#()}
+	bHPActivate					: BOOL;							//{#lynus.ag#()}
+	bControllingState			: BOOL;							//{#lynus.ag#()}
+	iMessageEMS					: INT;							//{#lynus.ag#()}
+	rHeartbeatEMS				: REAL;							//{#lynus.ag#()}
+	rErrorWarningEMS			: REAL;							//{#lynus.ag#()}
+	rReadyEMS					: REAL;							//{#lynus.ag#()}
+	rNewBatteryPowerEMS			: REAL;							//{#lynus.ag#()}
+	r_trig_b_StartManualCharging: R_trig;
+	r_trig_b_StartManualCharging_SOC: R_trig;
+	b_StartManualCharging						: BOOL;									//{#lynus.ag#()}
+	b_StartManualCharging_SOC					: BOOL;									//{#lynus.ag#()}
+	RS_ManualCharging: Rs;
+	RS_ManualCharging_SOC: Rs;
+	r_Charging_SOC_SetPoint						: REAL;									//{#lynus.ag#()}
+	b_TimeBasedReleaseChargingBattery			: BOOL;									//{#lynus.ag#()}
+	b_EnableBatteryChargingControl				: BOOL:=TRUE;							//{#lynus.ag#()}
+	b_StartReleaseBatteryCharging				: BOOL;									//{#lynus.ag#()}
+	b_StopReleaseBatteryCharging				: BOOL;									//{#lynus.ag#()}
+	TON_ManualCharging: Ton;
+	time_ManualCharging: TIME:=T#2H;
+	r_trig_ManualCharging: R_trig;
+	f_trig_ManualCharging: f_trig;
+	r_trig_ManualCharging_SOC: R_trig;
+	f_trig_ManualCharging_SOC: f_trig;
+
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbEMS.stSetupEMS.bAllowChrgFromGrid := bAllowChrgFromGrid;
+	fbEMS.stSetupEMS.byMaxDepthOfDischrgEPO := byMaxDepthOfDischrgEPO;
+		fbEMS.stSetupEMS.byPrioMinChrgBattSOCInEPO := byPrioMinChrgBattSOCInEPO;
+			fbEMS.stSetupEMS.byResChrgfromGridToBatt := byResChrgfromGridToBatt;
+				fbEMS.stSetupEMS.byReserveSOCEPO := byReserveSOCEPO;
+					fbEMS.stSetupEMS.rSizeMainFuseCS := rMainFuseCSEMS;
+						fbEMS.stSetupEMS.uiUpdateTime := uiUpdateTime;
+
+IF iOperationModeEMS = 0 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eAllOff;
+ELSIF iOperationModeEMS = 1 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eSelfConsumption;	
+ELSIF iOperationModeEMS = 2 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.ePeakLoadCapping;
+ELSIF iOperationModeEMS = 3 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eLoadManagement;			
+END_IF
+
+fbEMS(
+	bEnable:= bEnableEMS, 
+	diNrOfEM_IN_ECS:= , 
+	stSetupEMS:= , 
+	eOperationMode:= , 
+	eSpeedModeBackendController:= E_SpeedModeBackendController_EMS.eSlow, 
+	eSpeedModeLocalController:= E_SpeedModeLocalController_EMS.eSlow,
+	bActivateHP:= bHPActivate, 
+	bControllingState:= TRUE, //bControllingState, 
+	rHeartbeat:= rHeartbeatEMS, 
+	rErrorWarning:= rErrorWarningEMS, 
+	rEnergyOptReady:= rReadyEMS, 
+	rNewBattPower:= rNewBatteryPowerEMS, 
+
+	b_EnableBatteryChargingControl	:= b_EnableBatteryChargingControl,
+	b_StartReleaseBatteryCharging 	:= b_StartReleaseBatteryCharging OR r_trig_ManualCharging.Q ,
+	b_StopReleaseBatteryCharging 	:= b_StopReleaseBatteryCharging OR (f_trig_ManualCharging.Q AND NOT b_StartReleaseBatteryCharging) OR (f_trig_ManualCharging_SOC.Q AND NOT b_StartReleaseBatteryCharging) ,
+	rMaxBattChargingPower			:= 100,
+	rPeakDetectionforCalculation 	:= 20,	// was original 3, caused issues that load management not caluculeted. see EMS line 313
+
+	eMessageEMS=> iMessageEMS, 
+	bStateEnable=> bIsEnableEMS, 
+	bStateAllowChrgFromGrid=> bStateAllowChrgFromGrid, 
+	bMissingPowerData=> , 
+	bSurplusAvailable=> , 
+	byProgress=> , 
+	uiState_OUT=> , 
+	diNrOfEMS_OUT=> , 
+	arrMinPrioReached=> , 
+	arrMaxPrioReached=> ,
+	b_TimeBasedReleaseChargingBattery => b_TimeBasedReleaseChargingBattery);
+	
+
+	
+// code for manual charging button, time hardcoded to 2h with variable 	time_ManualCharging
+	
+r_trig_b_StartManualCharging(clk:=b_StartManualCharging);
+r_trig_b_StartManualCharging_SOC(clk:=b_StartManualCharging_SOC);
+RS_ManualCharging_SOC(	Set := r_trig_b_StartManualCharging_SOC.Q AND NOT RS_ManualCharging_SOC.Q1 AND REAL_TO_DWORD(r_Charging_SOC_SetPoint) > prgBattery_H1.dwSOCBattery AND NOT b_TimeBasedReleaseChargingBattery AND NOT RS_ManualCharging.Q1,
+						Reset1 := (r_trig_b_StartManualCharging_SOC.Q AND RS_ManualCharging_SOC.Q1) OR REAL_TO_DWORD(r_Charging_SOC_SetPoint) <= prgBattery_H1.dwSOCBattery OR b_StartReleaseBatteryCharging);
+IF 	(r_trig_b_StartManualCharging.Q OR r_trig_b_StartManualCharging_SOC.Q) AND NOT b_TimeBasedReleaseChargingBattery AND NOT RS_ManualCharging.Q1 THEN
+	RS_ManualCharging.SET:=TRUE;
+ELSIF (r_trig_b_StartManualCharging.Q  AND RS_ManualCharging.Q1) OR (TON_ManualCharging.Q AND NOT RS_ManualCharging_SOC.Q1)  OR b_StartReleaseBatteryCharging OR f_trig_ManualCharging_SOC.Q THEN
+	RS_ManualCharging.RESET1:=TRUE;		
+END_IF
+TON_ManualCharging(	In:=RS_ManualCharging.Q1, PT:= time_ManualCharging);
+
+RS_ManualCharging();
+RS_ManualCharging.SET:=FALSE;
+RS_ManualCharging.RESET1:=FALSE;
+r_trig_ManualCharging(clk:=RS_ManualCharging.Q1);
+f_trig_ManualCharging(clk:=RS_ManualCharging.Q1);
+r_trig_ManualCharging_SOC(clk:=RS_ManualCharging_SOC.Q1);
+f_trig_ManualCharging_SOC(clk:=RS_ManualCharging_SOC.Q1);
+
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS_H1">
+      <LineId Id="3" Count="26" />
+      <LineId Id="132" Count="3" />
+      <LineId Id="68" Count="2" />
+      <LineId Id="30" Count="9" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="99" Count="20" />
+      <LineId Id="98" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

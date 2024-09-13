@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgEM" Id="{201ae5d4-7792-4db2-a6b6-eec0371420e1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbEMEMS1		: FB_EM_Electric_3P_Ext_Input;
+	timError1		: TON;
+	fbEMEMS2		: FB_EM_Electric_3P_Ext_Input;
+	timError2		: TON;
+	fbGridEMS1		: FB_Grid_Power;					//{#lynus.ag#()}
+	fbGridEMS2		: FB_Grid_Power;					//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Grid 1 for EMS 1
+//Error
+IF prgUV.fbUV1_1.stDataEMPower.byErrorWarning = 2 AND prgUV.fbUV1_2.stDataEMPower.byErrorWarning = 2 AND prgUV.fbUV2_1.stDataEMPower.byErrorWarning = 2 AND prgUV.fbUV2_2.stDataEMPower.byErrorWarning = 2 AND
+	prgUV.fbUV2_3.stDataEMPower.byErrorWarning = 2 AND prgUV.fbUV2_4.stDataEMPower.byErrorWarning = 2 THEN
+		timError1.IN := TRUE;
+ELSE
+		timError1.IN := FALSE;		 	
+END_IF
+
+timError1(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbEMEMS1.lrPowerTotal := prgUV.fbUV1_1.stDataEMPower.lrPowerTotal + prgUV.fbUV1_2.stDataEMPower.lrPowerTotal + prgUV.fbUV2_1.stDataEMPower.lrPowerTotal + prgUV.fbUV2_2.stDataEMPower.lrPowerTotal + prgUV.fbUV2_3.stDataEMPower.lrPowerTotal +
+							prgUV.fbUV2_4.stDataEMPower.lrPowerTotal;
+	fbEMEMS1.lrPowerTotal := fbEMEMS1.lrPowerTotal * 1000;							
+
+fbEMEMS1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError1.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+
+fbGridEMS1(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= prgEMS.fbEMS1.diNrOfEMS_OUT, 
+	diNrOfEM_IN_Grid:= fbEMEMS1.diNrOfEM_OUT, 
+	rSizeGridConn:= , 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );	
+	
+//Grid 2 for EMS 2
+//Error
+IF prgUV.fbUV3_1.stDataEMPower.byErrorWarning = 2 AND prgUV.fbUV3_2.stDataEMPower.byErrorWarning = 2 AND prgUV.fbUV3_3.stDataEMPower.byErrorWarning = 2 AND prgUV.fbUV3_4.stDataEMPower.byErrorWarning = 2 THEN
+	timError2.IN := TRUE;
+ELSE
+	timError2.IN := FALSE;		 	
+END_IF
+
+timError2(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbEMEMS2.lrPowerTotal := prgUV.fbUV3_1.stDataEMPower.lrPowerTotal + prgUV.fbUV3_2.stDataEMPower.lrPowerTotal + prgUV.fbUV3_3.stDataEMPower.lrPowerTotal + prgUV.fbUV3_4.stDataEMPower.lrPowerTotal;
+	fbEMEMS2.lrPowerTotal := fbEMEMS2.lrPowerTotal * 1000;
+
+fbEMEMS2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError2.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+fbGridEMS2(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= prgEMS.fbEMS2.diNrOfEMS_OUT, 
+	diNrOfEM_IN_Grid:= fbEMEMS2.diNrOfEM_OUT, 
+	rSizeGridConn:= , 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="5" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="140" Count="2" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="158" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="12" Count="28" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="80" Count="5" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="160" Count="1" />
+      <LineId Id="163" Count="8" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="96" Count="28" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="88" Count="2" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="92" Count="1" />
+      <LineId Id="87" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

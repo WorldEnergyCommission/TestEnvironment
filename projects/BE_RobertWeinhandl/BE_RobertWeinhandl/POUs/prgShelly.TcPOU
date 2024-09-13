@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgShelly" Id="{f6120397-4820-491d-a8dc-486c02f9638b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgShelly
+VAR
+	// Charging Cabel 3-phase, 400V
+	fbCS						: FB_Shelly_3EM;
+	
+	lrPowerCSTotal				: LREAL;	//{#lynus.ag#()}
+	lrPowerCSTotalkW			: LREAL;	//{#lynus.ag#()}
+	lrEnergyCSTotal				: LREAL;	//{#lynus.ag#()}
+	lrPowerCSL1					: LREAL;	//{#lynus.ag#()}
+	lrPowerCSL2					: LREAL;	//{#lynus.ag#()}
+	lrPowerCSL3					: LREAL;	//{#lynus.ag#()}
+	lrCurrentCSL1				: LREAL;	//{#lynus.ag#()}
+	lrCurrentCSL2				: LREAL;	//{#lynus.ag#()}
+	lrCurrentCSL3				: LREAL;	//{#lynus.ag#()}
+	lrVoltageCSL1				: LREAL;	//{#lynus.ag#()}
+	lrVoltageCSL2				: LREAL;	//{#lynus.ag#()}
+	lrVoltageCSL3				: LREAL;	//{#lynus.ag#()}
+	lrEnergyCSL1				: LREAL;	//{#lynus.ag#()}
+	lrEnergyCSL2				: LREAL;	//{#lynus.ag#()}
+	lrEnergyCSL3				: LREAL;	//{#lynus.ag#()}
+	
+	// Garage and Pool
+	fbGarage					: FB_Shelly_3EM;
+	
+	lrPowerGarageTotal			: LREAL;	//{#lynus.ag#()}
+	lrPowerGarageTotalkW		: LREAL;	//{#lynus.ag#()}
+	lrEnergyGarageTotal			: LREAL;	//{#lynus.ag#()}
+	lrPowerGarageL1				: LREAL;	//{#lynus.ag#()}
+	lrPowerGarageL2				: LREAL;	//{#lynus.ag#()}
+	lrPowerGarageL3				: LREAL;	//{#lynus.ag#()}
+	lrCurrentGarageL1			: LREAL;	//{#lynus.ag#()}
+	lrCurrentGarageL2			: LREAL;	//{#lynus.ag#()}
+	lrCurrentGarageL3			: LREAL;	//{#lynus.ag#()}
+	lrVoltageGarageL1			: LREAL;	//{#lynus.ag#()}
+	lrVoltageGarageL2			: LREAL;	//{#lynus.ag#()}
+	lrVoltageGarageL3			: LREAL;	//{#lynus.ag#()}
+	lrEnergyGarageL1			: LREAL;	//{#lynus.ag#()}
+	lrEnergyGarageL2			: LREAL;	//{#lynus.ag#()}
+	lrEnergyGarageL3			: LREAL;	//{#lynus.ag#()}
+		
+	// UV Keller
+	fbUVKeller						: FB_Shelly_3EM;
+	fbUVKellerCounter				: FB_EnergyCounter;
+	
+	lrPowerUVKellerTotal			: LREAL;	//{#lynus.ag#()}
+	lrPowerUVKellerTotalkW			: LREAL;	//{#lynus.ag#()}
+	lrEnergyUVKellerTotal			: LREAL;	//{#lynus.ag#()}
+	lrPowerUVKellerL1				: LREAL;	//{#lynus.ag#()}
+	lrPowerUVKellerL2				: LREAL;	//{#lynus.ag#()}
+	lrPowerUVKellerL3				: LREAL;	//{#lynus.ag#()}
+	lrCurrentUVKellerL1			: LREAL;	//{#lynus.ag#()}
+	lrCurrentUVKellerL2			: LREAL;	//{#lynus.ag#()}
+	lrCurrentUVKellerL3			: LREAL;	//{#lynus.ag#()}
+	lrVoltageUVKellerL1			: LREAL;	//{#lynus.ag#()}
+	lrVoltageUVKellerL2			: LREAL;	//{#lynus.ag#()}
+	lrVoltageUVKellerL3			: LREAL;	//{#lynus.ag#()}
+	lrEnergyUVKellerL1				: LREAL;	//{#lynus.ag#()}
+	lrEnergyUVKellerL2				: LREAL;	//{#lynus.ag#()}
+	lrEnergyUVKellerL3				: LREAL;	//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+// trigger command execution
+	bEnableCS 				: BOOL;		//{#lynus.ag#()}
+	bEnableGarage			: BOOL;		//{#lynus.ag#()}
+	bEnableUVKeller			: BOOL;		//{#lynus.ag#()}
+	lrCounterUVKeller		: LREAL;	//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Charging Cable 3-phase, 400V
+fbCS(
+	bStart:= bEnableCS, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.0.31', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> lrPowerCSTotal,
+	lrpowerL1=> lrPowerCSL1,
+	lrpowerL2=> lrPowerCSL2,
+	lrpowerL3=> lrPowerCSL3,
+	lrcurrentL1=> lrCurrentCSL1,
+	lrcurrentL2=> lrCurrentCSL2,
+	lrcurrentL3=> lrCurrentCSL3,
+	lrvoltageL1=> lrVoltageCSL1,
+	lrvoltageL2=> lrVoltageCSL2,
+	lrvoltageL3=> lrVoltageCSL3,
+	lrenergyL1=> lrEnergyCSL1,
+	lrenergyL2=> lrEnergyCSL2,
+	lrenergyL3=> lrEnergyCSL3 );
+
+	// re-calc to kW
+	lrPowerCSTotalkW := lrPowerCSTotal / 1000;
+	// sum-up energy
+	lrEnergyCSTotal :=  lrEnergyCSL1 + lrEnergyCSL2 + lrEnergyCSL3;
+
+
+// Garage and Pool
+fbGarage(
+	bStart:= bEnableGarage, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.0.30', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> lrPowerGarageTotal,
+	lrpowerL1=> lrPowerGarageL1,
+	lrpowerL2=> lrPowerGarageL2,
+	lrpowerL3=> lrPowerGarageL3,
+	lrcurrentL1=> lrCurrentGarageL1,
+	lrcurrentL2=> lrCurrentGarageL2,
+	lrcurrentL3=> lrCurrentGarageL3,
+	lrvoltageL1=> lrVoltageGarageL1,
+	lrvoltageL2=> lrVoltageGarageL2,
+	lrvoltageL3=> lrVoltageGarageL3,
+	lrenergyL1=> lrEnergyGarageL1,
+	lrenergyL2=> lrEnergyGarageL2,
+	lrenergyL3=> lrEnergyGarageL3 );
+
+	// re-calc to kW
+	lrPowerGarageTotalkW := lrPowerGarageTotal / 1000;
+	// sum-up energy
+	lrEnergyGarageTotal :=  lrEnergyGarageL1 + lrEnergyGarageL2 + lrEnergyGarageL3;
+
+	
+// UVKeller
+fbUVKeller(
+	bStart:= bEnableUVKeller, 
+	tDelayRequest:= T#20S, 
+	sHostname:= '192.168.0.35', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> ,
+	lrpowerL1=> ,
+	lrpowerL2=> ,
+	lrpowerL3=> ,
+	lrcurrentL1=> lrCurrentUVKellerL1,
+	lrcurrentL2=> lrCurrentUVKellerL2,
+	lrcurrentL3=> lrCurrentUVKellerL3,
+	lrvoltageL1=> lrVoltageUVKellerL1,
+	lrvoltageL2=> lrVoltageUVKellerL2,
+	lrvoltageL3=> lrVoltageUVKellerL3,
+	lrenergyL1=> lrEnergyUVKellerL1,
+	lrenergyL2=> lrEnergyUVKellerL2,
+	lrenergyL3=> lrEnergyUVKellerL3 );
+	
+lrPowerUVKellerTotal := fbUVKeller.lrtotalpower * (-1);
+
+	// re-calc to kW
+	lrPowerUVKellerTotalkW := lrPowerUVKellerTotal / 1000;
+
+// EnergyCounter UV Keller
+fbUVKellerCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerUVKellerTotalkW, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbUVKellerCounter.lrTotalCounterEnergy_Consumption > lrCounterUVKeller THEN  	
+	lrCounterUVKeller := fbUVKellerCounter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgShelly">
+      <LineId Id="8" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="9" Count="20" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="222" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="225" Count="25" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="279" Count="22" />
+      <LineId Id="508" Count="1" />
+      <LineId Id="302" Count="2" />
+      <LineId Id="577" Count="13" />
+      <LineId Id="252" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

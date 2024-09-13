@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: lynus
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: keycloak
+          image: ghcr.io/efficientio/efficientio/keycloak:TAG
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "500m"
+            limits:
+              memory: "4096Mi"
+              cpu: "2000m"
+          imagePullPolicy: Always
+          env:
+            - name: DB_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: DB_NAME
+              value: kc
+            - name: DB_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: DOMAIN
+                  name: lynus-credentials
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  key: KEYCLOAK_USERNAME
+                  name: lynus-credentials
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: KEYCLOAK_PASSWORD
+                  name: lynus-credentials
+            - name: KC_PROXY
+              value: "edge"
+            - name: KC_HOSTNAME
+              value: accounts.$(DOMAIN)
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://$(DB_ADDR):$(DB_PORT)/$(DB_NAME)"
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: KEYCLOAK_JDBC_PARAMS
+              value: "sslmode=$(DB_MODE)"
+            - name: KC_DB_POOL_MAX_SIZE
+              value: "8"
+          ports:
+            - containerPort: 8080
+      nodeSelector:
+        nodetype: large
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: lynus
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP

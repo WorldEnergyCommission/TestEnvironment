@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgLynus" Id="{23949ff9-89aa-4cb9-8aa3-23cc1fb93942}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgLynus
+VAR
+	fbRW1		: FB_ReadWrite_V2;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbRW1(
+	eUploadType:= eSelectDataUploadType.e_Change_Intervall5min , 
+	bBusy=> , 
+	bError=> , 
+	udiErrorCodeOut=> , 
+	eErrorReadWrite_Out=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgLynus">
+      <LineId Id="10" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,364 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+  name: admin-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: admin.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: admin-console
+                port:
+                  number: 80
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - admin.$DOMAIN
+      secretName: admin-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+  name: dashboard-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: dashboard.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: dashboard
+                port:
+                  number: 80
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - dashboard.$DOMAIN
+      secretName: dashboard-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/location-snippet: |
+      gzip off;
+      proxy_buffering off;
+    nginx.ingress.kubernetes.io/server-snippet: |
+      proxy_set_header Host $http_host;
+  name: monitoring-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: monitoring.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - monitoring.$DOMAIN
+      secretName: monitoring-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/location-snippet: |
+      gzip off;
+      proxy_set_header Host $http_host;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+  name: monitoring-live-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: monitoring.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000
+            path: /api/live/
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - monitoring.$DOMAIN
+      secretName: monitoring-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 20m
+    nginx.ingress.kubernetes.io/server-snippet: |
+      ignore_invalid_headers off;
+      proxy_buffering off;
+
+      location /minio/v2/metrics/cluster {
+                return 404;
+      }
+    nginx.ingress.kubernetes.io/location-snippet: |
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host $http_host;
+
+      proxy_connect_timeout 300;
+      proxy_http_version 1.1;
+      proxy_set_header Connection "";
+      chunked_transfer_encoding off;
+  name: s3-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: s3.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: minio
+                port:
+                  number: 9000
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - s3.$DOMAIN
+      secretName: s3-tls-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-static-noun
+  namespace: lynus
+spec:
+  externalName: static.thenounproject.com
+  type: ExternalName
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location ~ "^/icons/([0-9]{1,8}).(png|svg)" {
+        proxy_cache icons;
+
+        resolver 8.8.8.8;
+        proxy_ssl_server_name on;
+        proxy_set_header Host static.thenounproject.com;
+        proxy_pass https://static.thenounproject.com/png/$1-200.png;
+      }
+      location ~ "^/([0-9]{1,8}).(png|svg)" {
+        proxy_cache icons;
+
+        resolver 8.8.8.8;
+        proxy_ssl_server_name on;
+        proxy_set_header Host static.thenounproject.com;
+        proxy_pass https://static.thenounproject.com/png/$1-200.png;
+      }
+  name: static-ingress-icons
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: static.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: external-static-noun
+                port:
+                  number: 443
+            path: /icons
+            pathType: Prefix
+  tls:
+    - hosts:
+        - static.$DOMAIN
+      secretName: static-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+  name: static-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: static.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: api
+                port:
+                  number: 80
+            path: /assets/
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - static.$DOMAIN
+      secretName: static-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: accounts-ingress
+  namespace: lynus
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location = / {
+        # redirect traffic from the root url to /auth/ as nothing is served on the root url
+        return 301 /auth/;
+      }
+    nginx.ingress.kubernetes.io/location-snippet: |
+      # https://keycloak.discourse.group/t/keycloak-in-docker-behind-reverse-proxy/1195/13
+      # https://itnext.io/nginx-as-reverse-proxy-in-front-of-keycloak-21e4b3f8ec53
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection ‘upgrade’;
+      proxy_set_header Host $host;
+
+      # https://stackoverflow.com/a/57496495
+      proxy_buffer_size 128k;
+      proxy_buffers 4 256k;
+      proxy_busy_buffers_size 256k;
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: accounts.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: keycloak
+                port:
+                  number: 80
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - accounts.$DOMAIN
+      secretName: accounts-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    cert-manager.io/issuer-kind: ClusterIssuer
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/server-snippet: |
+      proxy_connect_timeout 600s;
+      proxy_send_timeout 600s;
+      proxy_read_timeout 600s;
+      send_timeout 600s;
+    nginx.org/location-snippets: |
+      limit_req zone=api_limit burst=64 nodelay;
+      limit_req_status 429;
+
+      #hopefully this enables sse to work (https://stackoverflow.com/a/13673298)
+      proxy_set_header Connection '';
+      proxy_http_version 1.1;
+      chunked_transfer_encoding off;
+      proxy_buffering off;
+      proxy_cache off;
+
+      proxy_set_header X-Forwarded-For $remote_addr;
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  name: api-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: api
+                port:
+                  number: 80
+            path: /v1(/|$)(?!notifications)(?!metrics)(.*)
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - api.$DOMAIN
+      secretName: api-tls-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/server-snippet: |
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "Upgrade";
+      proxy_set_header Host $host;
+  name: mqtt-ingress
+  namespace: lynus
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mqtt.$DOMAIN
+      http:
+        paths:
+          - backend:
+              service:
+                name: proxy
+                port:
+                  number: 9001
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - mqtt.$DOMAIN
+      secretName: mqtt-certificates

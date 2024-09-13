@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Shelly_3EM_Helper_not_tested" Id="{4603ed50-a0df-42b2-92c4-e5d4364093fe}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_3EM_Helper_not_tested
+VAR_INPUT
+	bSend				: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient			: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy				: BOOL;
+	bError				: BOOL;
+	lrtotalpower		: LREAL;
+	lrpowerL1			: LREAL;
+	lrcurrentL1			: LREAL;
+	lrvoltageL1			: LREAL;
+	lrenergyL1			: LREAL;
+	lrpowerL2			: LREAL;
+	lrcurrentL2			: LREAL;
+	lrvoltageL2			: LREAL;
+	lrenergyL2			: LREAL;
+	lrpowerL3			: LREAL;
+	lrcurrentL3			: LREAL;
+	lrvoltageL3			: LREAL;
+	lrenergyL3			: LREAL;
+END_VAR
+
+VAR
+	fbRequestStatus		: FB_IotHttpRequest;
+	fbRequestMeter0		: FB_IotHttpRequest;
+	fbRequestMeter1		: FB_IotHttpRequest;
+	fbRequestMeter2		: FB_IotHttpRequest;
+	fbJson				: FB_JsonDomParser;
+	nState				: UDINT;
+	RisingEdge			: R_TRIG;
+	timTimeout			: TON;
+	tTimeOut			: TIME := T#50S;
+	bGetContentResult	: BOOL;
+	sContentStatus		: STRING(511);
+	sContentM0			: STRING(511);
+	sContentM1			: STRING(511);
+	sContentM2			: STRING(511);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+	x: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN 
+		nState := 0;
+		bBusy := FALSE;
+	END_IF
+
+RisingEdge(CLK:= bSend );
+CASE nState OF
+0:	// wait for trigger
+	IF RisingEdge.Q THEN 
+		nState :=1;
+	END_IF
+
+1:	// first request	
+	bBusy:= TRUE;
+	bError:= FALSE;
+	IF	fbRequestStatus.SendRequest(sUri:='/status', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+		nState:= 2;
+		nReqCount:= nReqCount+1;
+	END_IF
+
+2:	// second request	
+	IF	fbRequestMeter0.SendRequest(sUri:='/emeter/0', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+		nState:= 3;
+		nReqCount:= nReqCount+1;
+	END_IF
+
+3:	// third request	
+	IF fbRequestMeter1.SendRequest(sUri:='/emeter/1', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+		nState:= 4;
+		nReqCount:= nReqCount+1;
+	END_IF
+
+4:	// fourth request	
+	IF  fbRequestMeter2.SendRequest(sUri:='/emeter/2', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+		nState:= 5;
+		nReqCount:= nReqCount+1;
+	END_IF
+
+5: //Convert Data
+	IF NOT fbRequestMeter0.bBusy AND NOT fbRequestMeter1.bBusy AND NOT fbRequestMeter2.bBusy AND NOT fbRequestStatus.bBusy THEN
+		bError:= TRUE;
+		IF NOT fbRequestMeter0.bError THEN				 
+			bGetContentResult:= fbRequestMeter0.GetContent(pContent:= ADR(sContentM0), nContentSize:= SIZEOF(sContentM0), bSetNullTermination:= TRUE);
+			IF fbRequestMeter0.nStatusCode >= 200 AND fbRequestMeter0.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestMeter0.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'power')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'power');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrpowerL1:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'current');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrcurrentL1:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrvoltageL1:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'total');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrenergyL1:= fbJson.GetDouble(jsonVal);									
+						END_IF	
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+		END_IF
+		
+		IF NOT fbRequestMeter1.bError THEN				 
+			bGetContentResult:= fbRequestMeter1.GetContent(pContent:= ADR(sContentM1), nContentSize:= SIZEOF(sContentM1), bSetNullTermination:= TRUE);
+			IF fbRequestMeter1.nStatusCode >= 200 AND fbRequestMeter1.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestMeter1.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'power')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'power');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrpowerL2:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'current');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrcurrentL2:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrvoltageL2:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'total');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrenergyL2:= fbJson.GetDouble(jsonVal);									
+						END_IF	
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+		END_IF
+		
+		IF NOT fbRequestMeter2.bError THEN				 
+			bGetContentResult:= fbRequestMeter2.GetContent(pContent:= ADR(sContentM2), nContentSize:= SIZEOF(sContentM2), bSetNullTermination:= TRUE);
+			IF fbRequestMeter2.nStatusCode >= 200 AND fbRequestMeter2.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestMeter2.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'power')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'power');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrpowerL3:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'current');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrcurrentL3:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'voltage');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrvoltageL3:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'total');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrenergyL3:= fbJson.GetDouble(jsonVal);									
+						END_IF	
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+		END_IF
+		
+		IF NOT fbRequestStatus.bError THEN				 
+			bGetContentResult:= fbRequestStatus.GetContent(pContent:= ADR(sContentStatus), nContentSize:= SIZEOF(sContentStatus), bSetNullTermination:= TRUE);
+			IF fbRequestStatus.nStatusCode >= 200 AND fbRequestStatus.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestStatus.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'total_power')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'total_power');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrtotalpower:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						bError:= FALSE;
+					END_IF
+				END_IF		
+				nResCount:= nResCount+1;			
+			END_IF
+		END_IF
+		
+		nState:= 0;
+		bBusy:= FALSE;
+		IF bError THEN
+			nErrCount:= nErrCount+1;
+		END_IF
+	END_IF  	
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_3EM_Helper_not_tested">
+      <LineId Id="421" Count="11" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="637" Count="0" />
+      <LineId Id="668" Count="0" />
+      <LineId Id="670" Count="0" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="646" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="647" Count="0" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="649" Count="10" />
+      <LineId Id="667" Count="0" />
+      <LineId Id="662" Count="4" />
+      <LineId Id="442" Count="135" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{c842405a-c1cc-4da8-98d1-398e47c34bd3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	//HYC_1
+	fb_HYC_1						: FB_ECS_Alpitronic_Hypercharger;
+	fb_Counter_HYC_1				: FB_EnergyCounter;
+	bIsEnabled_HYC_1				: BOOL;												//{#lynus.ag#()}
+	byErrorWarning_HYC_1			: BYTE;												//{#lynus.ag#()}
+	byStateMinPower_HYC_1			: BYTE;												//{#lynus.ag#()}
+	rTargetPower_HYC_1				: REAL;												//{#lynus.ag#()}
+	bCarConnected_HYC_1				: BOOL;												//{#lynus.ag#()}
+	rChrgTime_HYC_1					: REAL;												//{#lynus.ag#()}
+	lrPower_HYC_1					: LREAL;											//{#lynus.ag#()}
+	bSManualyOn_HYC_1				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower_HYC_1		: BYTE;												//{#lynus.ag#()}
+	rSOC_1_HYC_1					: REAL;												//{#lynus.ag#()}
+	rSOC_2_HYC_1					: REAL;												//{#lynus.ag#()}
+	bSOnEmergPowerOff_HYC_1			: BOOL;												//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+	//HYC_1
+	bEnabled_HYC_1					: BOOL;												//{#lynus.ag#()}
+	byPrio_HYC_1					: BYTE;												//{#lynus.ag#()}
+	bySOC_E_HYC_1					: BYTE;												//{#lynus.ag#()}
+	bySOC_D_HYC_1					: BYTE;												//{#lynus.ag#()}
+	byMinPower_HYC_1				: BYTE;												//{#lynus.ag#()}
+	rMaxPower_HYC_1					: REAL;												//{#lynus.ag#()}
+	lrCounter_HYC_1					: LREAL;											//{#lynus.ag#()}
+	bManualyOn_HYC_1				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPower_HYC_1		: BYTE;												//{#lynus.ag#()}
+	m_ChargingLimit_HYC_1			: BOOL;												//{#lynus.ag#()}
+	bOnEmergPowerOff_HYC_1			: BOOL;												//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+//HYC_1
+fb_HYC_1.stSetupECS.byDisableSOC := bySOC_D_HYC_1;
+fb_HYC_1.stSetupECS.byEnableSOC := bySOC_E_HYC_1;
+fb_HYC_1.stSetupECS.byPriority := byPrio_HYC_1;
+fb_HYC_1.stSetupECS.rMaxPower := rMaxPower_HYC_1;
+fb_HYC_1.stSetupECS.byCSMinPower := byMinPower_HYC_1;
+fb_HYC_1.stSetupECS.bManualyOn := bManualyOn_HYC_1;
+fb_HYC_1.stSetupECS.byManualyTargetPower := byManualyTargetPower_HYC_1;
+fb_HYC_1.stSetupECS.byCSMinPower := byMinPower_HYC_1;
+fb_HYC_1.stSetupECS.bOnEmergPowerOff := bOnEmergPowerOff_HYC_1;
+	
+fb_HYC_1(
+	bEnable:= bEnabled_HYC_1, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= 1, 
+	byUnitID:= 1,				//Allways 1 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.21', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bIsEnabled_HYC_1 := fb_HYC_1.stDataECS.bEnabled;
+byStateMinPower_HYC_1 := fb_HYC_1.stDataECS.bySCSMinPower;
+rTargetPower_HYC_1 := fb_HYC_1.stDataECS.rTargetPower;	
+byErrorWarning_HYC_1 := fb_HYC_1.stDataECS.byErrorWarning;
+bCarConnected_HYC_1 := fb_HYC_1.stDataECS.bCarConnected;
+rChrgTime_HYC_1 := MAX(fb_HYC_1.stDataECS.arrChargingTimeInMin[1],fb_HYC_1.stDataECS.arrChargingTimeInMin[2]);
+lrPower_HYC_1 := fb_HYC_1.stDataECS.lrTotalPower;
+bSManualyOn_HYC_1 := fb_HYC_1.stDataECS.bSManualyOn;
+bSOnEmergPowerOff_HYC_1 := fb_HYC_1.stDataECS.bSOnEmergPowerOff;
+
+bySManualyTargetPower_HYC_1 := fb_HYC_1.stDataECS.bySManualyTargetPower;
+rSOC_1_HYC_1	:= DWORD_TO_REAL(fb_HYC_1.stDataECS.arrSocketSOCCar[1]);
+rSOC_2_HYC_1	:= DWORD_TO_REAL(fb_HYC_1.stDataECS.arrSocketSOCCar[2]);						
+
+// EnergyCounter
+fb_Counter_HYC_1(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPower_HYC_1, 
+	lrTotalCounterEnergy_Consumption=> );
+	
+IF fb_Counter_HYC_1.lrTotalCounterEnergy_Consumption > lrCounter_HYC_1 THEN  	
+	lrCounter_HYC_1 := fb_Counter_HYC_1.lrTotalCounterEnergy_Consumption;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="1276" Count="0" />
+      <LineId Id="1228" Count="9" />
+      <LineId Id="1241" Count="34" />
+      <LineId Id="936" Count="0" />
+      <LineId Id="928" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

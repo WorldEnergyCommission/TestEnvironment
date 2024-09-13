@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCS" Id="{91d5cffb-995d-4f6e-8ea3-b4b543e3e39d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbCS1	:	FB_ECS_Keba_P30;
+	bEnableCS1	: BOOL:=TRUE;
+	
+	lr_CS1_TotalPower_KebaP30: LREAL;						//{#lynus.ag#()}
+	b_CS1_CarConnected: BOOL;								//{#lynus.ag#()}
+	i_CS1_CarConnectedInd: INT;								//{#lynus.ag#()}
+	b_CS1_Enabled: BOOL;									//{#lynus.ag#()}
+	b_CS1_OutputOn: BOOL;									//{#lynus.ag#()}
+	dw_CS1_ChargingState: DWORD;							//{#lynus.ag#()}
+	dw_CS1_ErrorCode: DWORD;								//{#lynus.ag#()}
+	lreal_CS1_TotalEnergyConsumption: LREAL;				//{#lynus.ag#()}
+	lreal_CS1_EnergySession: LREAL;							//{#lynus.ag#()}
+	lreal_CS1_Serial: LREAL;								//{#lynus.ag#()}
+
+	fbCS2	:	FB_ECS_Keba_P30;
+	bEnableCS2	: BOOL:=TRUE;
+	
+	lr_CS2_TotalPower_KebaP30: LREAL;						//{#lynus.ag#()}
+	b_CS2_CarConnected: BOOL;								//{#lynus.ag#()}
+	i_CS2_CarConnectedInd: INT;								//{#lynus.ag#()}
+	b_CS2_Enabled: BOOL;									//{#lynus.ag#()}
+	b_CS2_OutputOn: BOOL;									//{#lynus.ag#()}
+	dw_CS2_ChargingState: DWORD;							//{#lynus.ag#()}
+	dw_CS2_ErrorCode: DWORD;								//{#lynus.ag#()}
+	lreal_CS2_TotalEnergyConsumption: LREAL;				//{#lynus.ag#()}
+	lreal_CS2_EnergySession: LREAL;							//{#lynus.ag#()}
+	lreal_CS2_Serial: LREAL;								//{#lynus.ag#()}
+
+	fbCS3	:	FB_ECS_Keba_P30;
+	bEnableCS3	: BOOL:=TRUE;
+	
+	lr_CS3_TotalPower_KebaP30: LREAL;						//{#lynus.ag#()}
+	b_CS3_CarConnected: BOOL;								//{#lynus.ag#()}
+	i_CS3_CarConnectedInd: INT;								//{#lynus.ag#()}
+	b_CS3_Enabled: BOOL;									//{#lynus.ag#()}
+	b_CS3_OutputOn: BOOL;									//{#lynus.ag#()}
+	dw_CS3_ChargingState: DWORD;							//{#lynus.ag#()}
+	dw_CS3_ErrorCode: DWORD;								//{#lynus.ag#()}
+	lreal_CS3_TotalEnergyConsumption: LREAL;				//{#lynus.ag#()}
+	lreal_CS3_EnergySession: LREAL;							//{#lynus.ag#()}
+	lreal_CS3_Serial: LREAL;								//{#lynus.ag#()}
+
+	r_trig_Errror	:r_trig;
+	iCount: INT;
+	Str_IP: STRING(25);
+	i_ErrorCount: INT;
+	Str_IP_1: STRING(25):= '192.168.0.113';
+	Str_IP_2: STRING(25):= '192.168.0.114';
+	Str_IP_3: STRING(25):= '192.168.0.115';
+
+END_VAR
+VAR PERSISTENT
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCS1(
+	bEnable:= bEnableCS1, 
+	bPowerDataInvers:=TRUE , 
+	byElectricFuseLine:= ,
+	uiFailsafeCurrent:=32000,
+	uiFailsafeTimeOut:=600,
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= Str_IP_1,			// .113 = Seriennummer 17211656
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+	
+	
+	lr_CS1_TotalPower_KebaP30 			:=	fbCS1.lrTotalPowerECSRealTime;
+	b_CS1_CarConnected				 	:=	fbCS1.stDataECS.bCarConnected;
+	b_CS1_Enabled						:= 	fbCS1.stDataECS.bEnabled;
+	b_CS1_OutputOn						:=	fbCS1.stDataECS.bOutputOnOff;
+	dw_CS1_ChargingState				:=  fbCs1.dwChargingState;
+	dw_CS1_ErrorCode					:=  fbCs1.dwErrorCode;
+	lreal_CS1_TotalEnergyConsumption	:=	fbCS1.lrTotalCounterEnergy_Consumption/1000;
+	lreal_CS1_EnergySession				:=	fbCS1.lrChargedEnergySession;
+	lreal_CS1_Serial					:=  fbCS1.lr_Serial;
+	
+	IF b_CS1_CarConnected = TRUE THEN
+		i_CS1_CarConnectedInd := 251;
+		ELSE i_CS1_CarConnectedInd := 0;
+	END_IF
+
+	(*
+// zum probieren der IP
+
+// scan Modbus IP address
+
+r_trig_Errror(CLK:=fbCS1.fbMBRead_FC3.bError);
+
+IF r_trig_Errror.Q THEN
+	i_ErrorCount := i_ErrorCount+1;
+	IF i_ErrorCount>10 THEN 
+		i_ErrorCount:=0;
+		iCount:=iCount+1;
+		IF iCount <0 OR iCount >255 THEN
+			iCount := 1;
+		END_IF
+	ELSE
+		i_ErrorCount:=i_ErrorCount+1;
+	END_IF
+END_IF	
+
+Str_IP := concat('192.168.42.',INT_TO_STRING(iCount));
+*)	
+	
+	
+fbCS2(
+	bEnable:= bEnableCS2, 
+	bPowerDataInvers:=TRUE , 
+	byElectricFuseLine:= ,
+	uiFailsafeCurrent:=32000,
+	uiFailsafeTimeOut:=600,
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= Str_IP_2, 				// .114 = Seriennummer 17111777
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+	
+	
+	lr_CS2_TotalPower_KebaP30 			:=	fbCS2.lrTotalPowerECSRealTime;
+	b_CS2_CarConnected				 	:=	fbCS2.stDataECS.bCarConnected;
+	b_CS2_Enabled						:= 	fbCS2.stDataECS.bEnabled;
+	b_CS2_OutputOn						:=	fbCS2.stDataECS.bOutputOnOff;
+	dw_CS2_ChargingState				:=  fbCS2.dwChargingState;
+	dw_CS2_ErrorCode					:=  fbCS2.dwErrorCode;
+	lreal_CS2_TotalEnergyConsumption	:=	fbCS2.lrTotalCounterEnergy_Consumption/1000;
+	lreal_CS2_EnergySession				:=	fbCS2.lrChargedEnergySession;
+	lreal_CS2_Serial					:=  fbCS2.lr_Serial;
+	
+	IF b_CS2_CarConnected = TRUE THEN
+		i_CS2_CarConnectedInd := 251;
+		ELSE i_CS2_CarConnectedInd := 0;
+	END_IF
+	
+fbCS3(
+	bEnable:= bEnableCS3, 
+	bPowerDataInvers:=TRUE , 
+	byElectricFuseLine:= ,
+	uiFailsafeCurrent:=32000,
+	uiFailsafeTimeOut:=600,
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= Str_IP_3, 			// .115 = Seriennummer 19326220
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+	
+	
+	lr_CS3_TotalPower_KebaP30 			:=	fbCS3.lrTotalPowerECSRealTime;
+	b_CS3_CarConnected				 	:=	fbCS3.stDataECS.bCarConnected;
+	b_CS3_Enabled						:= 	fbCS3.stDataECS.bEnabled;
+	b_CS3_OutputOn						:=	fbCS3.stDataECS.bOutputOnOff;
+	dw_CS3_ChargingState				:=  fbCS3.dwChargingState;
+	dw_CS3_ErrorCode					:=  fbCS3.dwErrorCode;
+	lreal_CS3_TotalEnergyConsumption	:=	fbCS3.lrTotalCounterEnergy_Consumption/1000;
+	lreal_CS3_EnergySession				:=	fbCS3.lrChargedEnergySession;
+	lreal_CS3_Serial					:=  fbCS3.lr_Serial;
+	
+	IF b_CS3_CarConnected = TRUE THEN
+		i_CS3_CarConnectedInd := 251;
+		ELSE i_CS3_CarConnectedInd := 0;
+	END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="20" Count="3" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="28" Count="5" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="322" Count="2" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="385" Count="17" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="382" Count="1" />
+      <LineId Id="230" Count="21" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="327" Count="2" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="255" Count="21" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="333" Count="2" />
+      <LineId Id="332" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

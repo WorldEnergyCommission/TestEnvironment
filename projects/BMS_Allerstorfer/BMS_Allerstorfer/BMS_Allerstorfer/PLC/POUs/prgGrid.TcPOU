@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgGrid" Id="{1b207b46-7764-4afe-91fa-069750904aeb}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR PERSISTENT
+	rSizeGridConn				: REAL;									//{#lynus.ag#()}
+	lrCounterGridCon			: LREAL;							//{#lynus.ag#()}
+	lrCounterGridProd			: LREAL;							//{#lynus.ag#()}
+END_VAR
+VAR
+	fbKBusState					: FB_K_Bus_State;
+	fbEM1						: FB_EM_Beckhoff_KL3403;
+	fbGrid						: FB_Grid_Power;
+	fbGridCounter				: FB_EnergyCounter;
+	lrPowerGrid					: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_1				: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_2				: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_3				: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL1N_V			: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL2N_V			: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL3N_V			: LREAL;							//{#lynus.ag#()}
+
+	lrReactivePowerGrid			: LREAL;							//{#lynus.ag#()}
+	lrApparentPowerGrid			: LREAL;							//{#lynus.ag#()}
+	lrPowerGridCons				: LREAL;							//{#lynus.ag#()}
+	lrPowerGridProd				: LREAL;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+
+
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,				//Invert power data when transformer are mounted upside down
+	bChannel2Invers:= FALSE, 
+	bChannel3Invers:= false, 
+	uiCurrentTransformerRatioL1:= 300, // 300 / 5 A CTs mounted
+	uiCurrentTransformerRatioL2:= 300, 
+	uiCurrentTransformerRatioL3:= 300, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerGrid := fbEM1.stDataEMPower.lrPowerTotal;
+lrCounterGridCon := fbEM1.stDataEMCounter.lrTotalCounterEnergy_Consumption;	
+lrCounterGridProd := fbEM1.stDataEMCounter.lrTotalCounterEnergy_Production;	
+lrPowerEM1_1 := fbEM1.stDataEMPower.lrPowerL1;
+lrPowerEM1_2 := fbEM1.stDataEMPower.lrPowerL2;
+lrPowerEM1_3 := fbEM1.stDataEMPower.lrPowerL3;
+
+lrReactivePowerGrid:=fbEM1.stDataEMPower.lrReactivePowerTotal;
+lrApparentPowerGrid:=fbEM1.stDataEMPower.lrApparentPowerTotal;
+
+lr_GridVoltageL1N_V:=fbEM1.stDataEMPower.lrVoltageL1N;
+lr_GridVoltageL2N_V:=fbEM1.stDataEMPower.lrVoltageL2N;
+lr_GridVoltageL3N_V:=fbEM1.stDataEMPower.lrVoltageL3N;
+
+
+fbGrid(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_Grid:= fbEM1.diNrOfEM_OUT, 
+	rSizeGridConn:= rSizeGridConn, 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );
+	
+
+
+
+// EnergyCounter
+fbGridCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerGrid, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+
+IF fbGridCounter.lrTotalCounterEnergy_Production > lrCounterGridProd THEN  	
+		lrCounterGridProd := fbGridCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+IF fbGridCounter.lrTotalCounterEnergy_Consumption > lrCounterGridCon THEN  	
+	lrCounterGridCon := fbGridCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+lrPowerGridCons := fbEM1.stDataEMPower.lrPowerConsumption;
+lrPowerGridProd := fbEM1.stDataEMPower.lrPowerProduction;]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="108" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="109" Count="1" />
+      <LineId Id="56" Count="12" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="72" Count="13" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="4" Count="6" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="24" Count="18" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

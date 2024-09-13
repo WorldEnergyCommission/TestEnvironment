@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCS" Id="{c378a663-4727-4372-8964-04eba36a38f0}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbCSvirt	: FB_Light;
+	bCSOn		: BOOL; //{#lynus.ag#()}
+	bCSOff		: BOOL; //{#lynus.ag#()}
+	bStateCS	: BOOL; //{#lynus.ag#()}
+	lrCSpower	: LREAL; //{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCSvirt(bOn:=bCSOn, bOff:=bCSOff, bLight=>bStateCS);
+
+IF bStateCS THEN
+	lrCSpower := 11.02;
+	ELSE
+	lrCSpower := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="5" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

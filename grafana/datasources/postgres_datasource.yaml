@@ -1,0 +1,56 @@
+apiVersion: 1
+datasources:
+  - name: PostgresLynus
+    isDefault: false
+    access: proxy
+    editable: false
+    type: postgres
+    uid: postgres_lynus
+    url: ${POSTGRES_ADDRESS}:${POSTGRES_PORT}
+    database: lynus
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: ${POSTGRES_SSLMODE}
+      postgresVersion: 1200
+      timescaledb: true
+      maxOpenConns: 2
+      maxIdleConns: 2
+      connMaxLifetime: 60
+  - name: PostgresMpc
+    isDefault: false
+    access: proxy
+    editable: false
+    type: postgres
+    uid: postgres_mpc
+    url: ${POSTGRES_ADDRESS}:${POSTGRES_PORT}
+    database: mpc
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: ${POSTGRES_SSLMODE}
+      postgresVersion: 1200
+      timescaledb: true
+      maxOpenConns: 2
+      maxIdleConns: 2
+      connMaxLifetime: 60
+  - name: PostgresKeycloak
+    isDefault: false
+    access: proxy
+    editable: false
+    type: postgres
+    uid: postgres_keycloak
+    url: ${POSTGRES_ADDRESS}:${POSTGRES_PORT}
+    database: kc
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: ${POSTGRES_SSLMODE}
+      postgresVersion: 1200
+      timescaledb: true
+      maxOpenConns: 2
+      maxIdleConns: 2
+      connMaxLifetime: 60

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPersistent" Id="{108c7acc-615a-428d-9d84-0b842341dda8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPersistent
+VAR
+	fbUSV		: FB_WritePersistentData_CX81xx;
+
+	fb_Reboot		: NT_reboot;
+	m_Reboot		: BOOL:=FALSE;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbUSV(
+	eSaveModeData:= eUSVSaveMode.eSaveWhenPowerfail, 
+	bLoadPersistentDataOk=> , 
+	bPowerFailDetect=> , 
+	bError=> , 
+	bySaveProcess=> , 
+	dwStorageLast24h=> , 
+	udiErrorCode=> );
+	
+	
+		
+fb_Reboot(	netid := '',
+			delay := 2,
+			start := m_Reboot);
+
+IF prg_SystemTime.structSystemTime.wMinute=59 AND prg_SystemTime.structSystemTime.wSecond=59 THEN // prg_SystemTime.structSystemTime.wHour=1 AND 
+	m_Reboot:=TRUE;
+END_IF
+			]]></ST>
+    </Implementation>
+    <LineIds Name="prgPersistent">
+      <LineId Id="8" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="22" Count="3" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="34" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgMain" Id="{47f94d9f-5a1b-467a-abf5-8c83d9456fbc}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMain
+VAR
+	lrRealPower1_kW			: LREAL;						//{#lynus.ag#()}
+	lrReactivePower1_kVar	: LREAL;						//{#lynus.ag#()}
+	lrApparentPower1_VA		: LREAL;						//{#lynus.ag#()}
+	rVoltage1_L1N_V			: REAL;							//{#lynus.ag#()}
+	rVoltage1_L2N_V			: REAL;							//{#lynus.ag#()}
+	rVoltage1_L3N_V			: REAL;							//{#lynus.ag#()}
+	rVoltage1_L12_V			: REAL;							//{#lynus.ag#()}
+	rVoltage1_L23_V			: REAL;							//{#lynus.ag#()}
+	rVoltage1_L31_V			: REAL;							//{#lynus.ag#()}
+	rCurrent1_L1_A			: REAL;							//{#lynus.ag#()}
+	rCurrent1_L2_A			: REAL;							//{#lynus.ag#()}
+	rCurrent1_L3_A			: REAL;							//{#lynus.ag#()}
+
+	lrRealPower2_kW			: LREAL;						//{#lynus.ag#()}
+	lrReactivePower2_kVar	: LREAL;						//{#lynus.ag#()}
+	lrApparentPower2_VA		: LREAL;						//{#lynus.ag#()}
+	rVoltage2_L1N_V			: REAL;							//{#lynus.ag#()}
+	rVoltage2_L2N_V			: REAL;							//{#lynus.ag#()}
+	rVoltage2_L3N_V			: REAL;							//{#lynus.ag#()}
+	rVoltage2_L12_V			: REAL;							//{#lynus.ag#()}
+	rVoltage2_L23_V			: REAL;							//{#lynus.ag#()}
+	rVoltage2_L31_V			: REAL;							//{#lynus.ag#()}
+	rCurrent2_L1_A			: REAL;							//{#lynus.ag#()}
+	rCurrent2_L2_A			: REAL;							//{#lynus.ag#()}
+	rCurrent2_L3_A			: REAL;							//{#lynus.ag#()}
+	fbConvertEnergyRegister		: FB_CV_WORD_TO_DWORD;								//Convert function
+	fbGrid1Counter				: FB_EnergyCounter;
+	fbGrid2Counter				: FB_EnergyCounter;
+	fbKBusState					: FB_K_Bus_State;
+	
+END_VAR
+
+VAR PERSISTENT
+	lrCounterGrid1Prod		: LREAL;								//{#lynus.ag#()}
+	lrCounterGrid1Cons		: LREAL;								//{#lynus.ag#()}
+	lrCounterGrid2Prod		: LREAL;								//{#lynus.ag#()}
+	lrCounterGrid2Cons		: LREAL;								//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MODBUS_RTU_v0();
+
+
+(* Device 1 KBR Multimess NHSV 2*)
+
+rVoltage2_L1N_V :=	rVoltage2_L12_V/(SQRT(3));		// don't understand why I can't get the first voltage from reg 0
+rVoltage2_L2N_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[1],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[2]);
+rVoltage2_L3N_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[3],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[4]);				
+rVoltage2_L12_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[5],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[6]);
+rVoltage2_L23_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[7],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[8]);
+rVoltage2_L31_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[9],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[10]);
+rCurrent2_L1_A := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[11],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[12]);
+rCurrent2_L2_A := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[13],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[14]);
+rCurrent2_L3_A := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[15],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[16]);
+lrApparentPower2_VA := 	(F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[23],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[24])+
+						F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[25],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[26])+
+						F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[27],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[28]))/1000;
+lrRealPower2_kW		:= 	(F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[29],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[30])+
+						F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[31],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[32])+
+						F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[33],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[34]))/1000;											
+lrReactivePower2_kVar:= (F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[35],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[36])+
+						F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[37],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[38])+
+						F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[39],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[1].wArrayReceiveBuffer[40]))/1000;											
+
+// EnergyCounter
+fbGrid2Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrRealPower2_kW, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbGrid2Counter.lrTotalCounterEnergy_Production > lrCounterGrid2Prod THEN  	
+	lrCounterGrid2Prod := fbGrid2Counter.lrTotalCounterEnergy_Production;
+END_IF	
+IF fbGrid2Counter.lrTotalCounterEnergy_Consumption > lrCounterGrid2Cons THEN  	
+	lrCounterGrid2Cons := fbGrid2Counter.lrTotalCounterEnergy_Consumption;
+END_IF	
+
+//(* Device 2 Celsa TNM96 NHSV 1 *)
+
+rVoltage1_L1N_V :=	rVoltage1_L12_V/(SQRT(3));		// don't understand why I can't get the first voltage from reg 0
+rVoltage1_L2N_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[1],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[2]);
+rVoltage1_L3N_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[3],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[4]);				
+rVoltage1_L12_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[5],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[6]);
+rVoltage1_L23_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[7],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[8]);
+rVoltage1_L31_V := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[9],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[10]);
+rCurrent1_L1_A := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[11],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[12]);
+rCurrent1_L2_A := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[13],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[14]);
+rCurrent1_L3_A := 	F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[15],
+											word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[16]);
+lrRealPower1_kW		:= 	(F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[23],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[24]))/1000;											
+											
+lrApparentPower1_VA := 	(F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[31],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[32]))/1000;
+												
+lrReactivePower1_kVar:= (F_Convert_Reg_to_Real(	word_in1:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[39],
+												word_in2:=MODBUS_RTU_v0.structArrayModbusRTU[2].wArrayReceiveBuffer[40]))/1000;																		
+
+												
+												// EnergyCounter
+fbGrid1Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrRealPower1_kW, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbGrid1Counter.lrTotalCounterEnergy_Production > lrCounterGrid1Prod THEN  	
+	lrCounterGrid1Prod := fbGrid1Counter.lrTotalCounterEnergy_Production;
+END_IF	
+IF fbGrid1Counter.lrTotalCounterEnergy_Consumption > lrCounterGrid1Cons THEN  	
+	lrCounterGrid1Cons := fbGrid1Counter.lrTotalCounterEnergy_Consumption;
+END_IF	
+
+
+
+// kBus reset
+
+fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgMain">
+      <LineId Id="5" Count="0" />
+      <LineId Id="33" Count="1" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="76" Count="2" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="85" Count="5" />
+      <LineId Id="92" Count="5" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="102" Count="5" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="108" Count="6" />
+      <LineId Id="164" Count="8" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="199" Count="1" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="201" Count="1" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="116" Count="18" />
+      <LineId Id="153" Count="1" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="179" Count="9" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="203" Count="4" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="252" Count="2" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="256" Count="2" />
+      <LineId Id="255" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCalc" Id="{e932b323-3853-4286-8a1a-91154f2867e1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCalc
+VAR
+	iQuota_Total_PV				: INT;      //{#lynus.ag#()}
+	iQuota_Total_Battery		: INT;      //{#lynus.ag#()}
+	iQuota_Total_Grid			: INT;      //{#lynus.ag#()}
+	iQuota_Total_Sum			: INT;      //{#lynus.ag#()}
+	lrPower_TotalConsumption	: LREAL;      //{#lynus.ag#()}
+
+	fbCounter_SM1_PV			: FB_EnergyCounter;
+	fbCounter_SM1_Battery		: FB_EnergyCounter;
+	fbCounter_SM1_Grid			: FB_EnergyCounter;
+	fbCounter_SM1_Total			: FB_EnergyCounter;
+	lrPower_SM1_quota_PV		: LREAL;      //{#lynus.ag#()}
+	lrPower_SM1_quota_Battery	: LREAL;      //{#lynus.ag#()}
+	lrPower_SM1_quota_Grid		: LREAL;      //{#lynus.ag#()}
+	
+	lrPower_House_quota_PV		: LREAL;      //{#lynus.ag#()}
+	lrPower_House_quota_Battery	: LREAL;      //{#lynus.ag#()}
+	lrPower_House_quota_Grid		: LREAL;      //{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounter_SM1_PV		: LREAL;      //{#lynus.ag#()}
+	lrCounter_SM1_Battery	: LREAL;      //{#lynus.ag#()}
+	lrCounter_SM1_Grid		: LREAL;      //{#lynus.ag#()}
+	lrCounter_SM1_Total		: LREAL;      //{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// calc overall Energymix percentage stakes
+
+lrPower_TotalConsumption := LIMIT(0.001,(LIMIT(0,prgGrid.lrGridPower,9999) + prgPV.lrPowerPV + LIMIT(0,prgBattery.lrPowerBattery,9999)),9999);
+iQuota_Total_PV := LREAL_TO_INT((prgPV.lrPowerPV * 100) / lrPower_TotalConsumption);
+
+IF prgBattery.lrPowerBattery > 0 THEN  	
+	iQuota_Total_Battery := LREAL_TO_INT((prgBattery.lrPowerBattery * 100) / lrPower_TotalConsumption);
+ELSE
+	iQuota_Total_Battery := 0;
+END_IF
+
+IF prgGrid.lrGridPower > 0 THEN  	
+	iQuota_Total_Grid := LREAL_TO_INT((prgGrid.lrGridPower * 100) / lrPower_TotalConsumption);
+ELSE
+	iQuota_Total_Grid := 0;
+END_IF
+
+iQuota_Total_Sum := iQuota_Total_PV + iQuota_Total_Battery + iQuota_Total_Grid;
+
+// calc Energymix for SM1
+lrPower_SM1_quota_PV := prgEM.lrPower_SM1 * (iQuota_Total_PV/100);
+lrPower_SM1_quota_Battery := prgEM.lrPower_SM1 * (iQuota_Total_Battery/100);
+lrPower_SM1_quota_Grid := prgEM.lrPower_SM1 * (iQuota_Total_Grid/100);
+
+fbCounter_SM1_PV(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPower_SM1_quota_PV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounter_SM1_PV.lrTotalCounterEnergy_Consumption > lrCounter_SM1_PV THEN  	
+	lrCounter_SM1_PV := fbCounter_SM1_PV.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounter_SM1_Battery(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPower_SM1_quota_Battery, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounter_SM1_Battery.lrTotalCounterEnergy_Consumption > lrCounter_SM1_Battery THEN  	
+	lrCounter_SM1_Battery := fbCounter_SM1_Battery.lrTotalCounterEnergy_Consumption;
+END_IF
+
+fbCounter_SM1_Grid(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPower_SM1_quota_Grid, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbCounter_SM1_Grid.lrTotalCounterEnergy_Consumption > lrCounter_SM1_Grid THEN  	
+	lrCounter_SM1_Grid := fbCounter_SM1_Grid.lrTotalCounterEnergy_Consumption;
+END_IF
+
+// calc Energymix for House
+lrPower_House_quota_PV := prgEM.lrPowerVirtHouse * (iQuota_Total_PV/100);
+lrPower_House_quota_Battery := prgEM.lrPowerVirtHouse * (iQuota_Total_Battery/100);
+lrPower_House_quota_Grid := prgEM.lrPowerVirtHouse * (iQuota_Total_Battery/100);]]></ST>
+    </Implementation>
+    <LineIds Name="prgCalc">
+      <LineId Id="49" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="66" Count="5" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="72" Count="3" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="61" Count="2" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="7" Count="11" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="31" Count="12" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="82" Count="12" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="118" Count="3" />
+      <LineId Id="117" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

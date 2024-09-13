@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgBattery" Id="{b9813079-8955-4185-b141-8e4014abb196}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgBattery
+VAR
+	byBatteryIslandOperation	: BOOL;							//{#lynus.ag#()}
+	lrPowerBattery				: LREAL;						//{#lynus.ag#()}
+	dwSOCBattery				: DWORD;						//{#lynus.ag#()}
+	rTargetPowerBattery			: REAL;							//{#lynus.ag#()}
+	bIsEnabledBattery			: BOOL;							//{#lynus.ag#()}
+	bSResetBattery				: BOOL;							//{#lynus.ag#()}
+	lrActualCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	lrMaxCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	byPrioBattery				: BYTE;							//{#lynus.ag#()}
+	bEnableBattery				: BOOL;							//{#lynus.ag#()}
+	bResetBattery				: BOOL;							//{#lynus.ag#()}
+	byBatteryBypassOperation	: BOOL;							//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[ prgBattery.byBatteryIslandOperation		:=		prg_ADS.struct_received.byBatteryIslandOperation			;
+ prgBattery.lrPowerBattery					:=		prg_ADS.struct_received.lrPowerBattery			;
+ prgBattery.dwSOCBattery					:=		prg_ADS.struct_received.dwSOCBattery			;
+ prgBattery.rTargetPowerBattery				:=		prg_ADS.struct_received.rTargetPowerBattery			;
+ prgBattery.bIsEnabledBattery				:=		prg_ADS.struct_received.bIsEnabledBattery			;
+ prgBattery.bSResetBattery					:=		prg_ADS.struct_received.bSResetBattery			;
+ prgBattery.lrActualCapacityBattery			:=		prg_ADS.struct_received.lrActualCapacityBattery			;
+ prgBattery.lrMaxCapacityBattery			:=		prg_ADS.struct_received.lrMaxCapacityBattery			;
+ prgBattery.byPrioBattery					:=		prg_ADS.struct_received.byPrioBattery			;
+ prgBattery.bEnableBattery					:=		prg_ADS.struct_received.bEnableBattery			;
+ prgBattery.bResetBattery					:=		prg_ADS.struct_received.bResetBattery			;
+ prgBattery.byBatteryBypassOperation		:=		prg_ADS.struct_received.byBatteryBypassOperation			;]]></ST>
+    </Implementation>
+    <LineIds Name="prgBattery">
+      <LineId Id="6" Count="10" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

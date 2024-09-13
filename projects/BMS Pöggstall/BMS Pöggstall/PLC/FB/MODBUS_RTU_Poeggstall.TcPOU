@@ -1,0 +1,790 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MODBUS_RTU_Poeggstall" Id="{7cb2ffc2-bee8-44b1-9314-199f07292360}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MODBUS_RTU_Poeggstall
+
+VAR_INPUT
+	m_Enable_write							: BOOL;
+	int_H02_Soll_VL_HT_Schloss				: INT;
+	int_H03_Soll_VL_Sek_NT_Schloss 			: INT;
+	int_H05_Soll_VL_HT_Schloss              : INT;
+	int_H06_Soll_VL_Sek_NT_Schloss    		: INT;
+END_VAR
+VAR_OUTPUT
+	int_H02_VL_HT_Schloss					: INT;
+	int_H02_RL_HT_Schloss                   : int;
+	int_H02_Energie_HT_Schloss              : int;
+	int_H02_Volumen_HT_Schloss              : int;
+	int_H02_Leistung_HT_Schloss             : int;
+	int_H03_VL_Primaer_NT_Schloss           : int;
+	int_H03_RL_Primaer_NT_Schloss           : int;
+	int_H03_VL_Sek_NT_Schloss         		: INT;
+	int_H03_RL_Sek_NT_Schloss         		: INT;
+	int_H03_Energie_NT_Schloss              : int;
+	int_H03_Volumen_NT_Schloss              : int;
+	int_H03_Leistung_NT_Schloss             : int;
+	int_H05_VL_HT_Schloss                   : int;
+	int_H05_RL_HT_Schloss                   : int;
+	int_H05_Energie_HT_Schloss              : int;
+	int_H05_Volumen_HT_Schloss              : int;
+	int_H05_Leistung_HT_Schloss             : int;
+	int_H06_VL_Primaer_NT_Schloss           : int;
+	int_H06_RL_Primaer_NT_Schloss           : int;
+	int_H06_VL_Sek_NT_Schloss         : INT;
+	int_H06_RL_Sek_NT_Schloss         : INT;
+	int_H06_Energie_NT_Schloss              : int;
+	int_H06_Volumen_NT_Schloss              : int;
+	int_H06_Leistung_NT_Schloss             : int;
+	int_S00_UG_Schloss_RT_006               : int;
+	int_S00_UG_Schloss_RT_003A_B            : int;
+	int_S01_EG_Schloss_RT_024               : int;
+	int_S01_EG_Schloss_RT_002               : int;
+	int_S01_EG_Schloss_RT_1_003             : int;
+	int_S01_EG_Schloss_RT_2_003             : int;
+	int_S01_EG_Schloss_RT_004               : int;
+	int_S01_EG_Schloss_RT_005               : int;
+	int_S01_EG_Schloss_RT_006               : int;
+	int_S01_EG_Schloss_RT_007               : int;
+	int_S01_EG_Schloss_RT_011               : int;
+	int_S01_EG_Schloss_RT_012               : int;
+	int_S01_EG_Schloss_RT_013               : int;
+	int_S01_EG_Schloss_RT_014               : int;
+	int_S01_EG_Schloss_RT_015               : int;
+	int_S01_EG_Schloss_RT_016               : int;
+	int_S01_EG_Schloss_RT_017               : int;
+	int_S01_EG_Schloss_RT_020_021           : int;
+	int_S01_EG_Schloss_RT_1_025             : int;
+	int_S01_EG_Schloss_RT_2_025             : int;
+	int_S01_EG_Schloss_RT_026_027           : int;
+	int_S01_EG_Schloss_RT_028               : int;
+	int_S01_EG_Schloss_RT_029               : int;
+	int_S01_EG_Schloss_RT_032               : int;
+	int_S01_EG_Schloss_RT_033               : int;
+	int_S01_EG_Schloss_RT_034               : int;
+	int_S01_EG_Schloss_RT_036               : int;
+	int_S01_EG_Schloss_RT_040_              : int;
+	int_S01_EG_Schloss_RT_047               : int;
+	int_S01_EG_Schloss_RT_053               : int;
+	int_H02_Gefaengnisstoeckl_RT_006        : INT;
+	int_S02_OG_Schloss_RT_001               : int;
+	int_S02_OG_Schloss_RT_002               : int;
+	int_S02_OG_Schloss_RT_003               : int;
+	int_S02_OG_Schloss_RT_004               : int;
+	int_S02_OG_Schloss_RT_005               : int;
+	int_S02_OG_Schloss_RT_006               : int;
+	int_S02_OG_Schloss_RT_007_009           : int;
+	int_S02_OG_Schloss_RT_006_2             : INT;
+	int_S02_OG_Schloss_RT_020_026           : int;
+	int_S02_OG_Schloss_RT_027_037           : int;
+	int_S02_OG_Schloss_RT_039_041           : int;
+	int_S02_OG_Schloss_RT_042               : int;
+	int_S02_OG_Schloss_RT_043               : int;
+	int_S02_OG_Schloss_RT_048_051           : int;
+	int_R01_EG_Rondell_RT_007A              : int;
+	int_R01_EG_Rondell_RT_007B              : int;
+	int_R01_EG_Rondell_RT_008               : int;
+	int_R01_EG_Rondell_RT_009_015           : int;
+	int_R01_EG_Rondell_RT_016               : int;
+	int_R01_EG_Rondell_RT_017               : int;
+	int_R01_EG_Rondell_RT_018               : int;
+	int_R01_EG_Rondell_RT_019               : int;
+	int_R02_OG_Rondell_RT_001               : int;
+	int_R02_OG_Rondell_RT_002               : int;
+	int_R02_OG_Rondell_RT_004               : int;
+	int_R02_OG_Rondell_RT_005_007           : int;
+	int_R02_OG_Rondell_RT_008               : int;
+	bool_H02_Status_HK_HT_Schloss			: BOOL;
+	bool_H03_Status_HK_NT_Schloss           : bool;
+	bool_H05_Status_HK_HT_Schloss           : bool;
+	bool_H06_Status_HK_NT_Schloss           : bool;
+	dword_MB_Error		:ARRAY[1..3] OF DWORD;
+END_VAR
+VAR
+//	fbModbusRtuMaster_KL6x22B: ModbusRtuMaster_KL6x22B;
+	fbModbusRtuMaster_KL6x22B: ModbusRtuMasterV2_KL6x22B;
+	fbConfigKL6041 : KL6Configuration;
+	uintPollOrderCount: UINT;
+	mBusy: BOOL;
+	mError: BOOL;
+	mStart: BOOL;
+	udintMemoryDestAddress: POINTER TO BYTE;
+	udintBytesReceived: UDINT;
+	intState: INT:=0;
+	timerT1: TON;
+	timeWaitT1: TIME:=T#500MS;
+	timeWaitT2: TIME:=T#500MS;
+	timeNoRxTimeout:	TIME:=T#2S;
+	timerT2: TON;
+
+	fb_F_TRIG1: F_TRIG;
+	timerTimeout: TON;
+	mError_Rx: BOOL;
+	udintErrorID: MODBUS_ERRORS;
+	byteClientSlaveID: BYTE;
+	uintNoOfWords: UINT;
+	uintStartAddress: UINT;
+	dw_Mask: DWORD;
+	dw_Mask_Not: DWORD;
+	uint_TestPollOrder: UINT;
+	mTestMode: BOOL;
+	mInit_Done: BOOL;
+	
+	structArrayModbusRTU		:ARRAY[1..60] OF ModbusRTURequest;
+	structArrayModbusRTUWrite	:ARRAY[1..60] OF ModbusRTUSend;
+	uintMaxModbusRTUOrders: UINT;
+	uintMaxModbusRTUOrdersWrite: UINT;
+	mExecute: BOOL;
+	int_Handshake: ComHandshake_t:=4;
+	mode: ComSerialLineMode_t:=3;
+	byte_DataBits: BYTE:=8;
+	i	:UINT;		// counter for INIT
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*
+The function block "ModbusRtuMaster_KL6x22B" has 22 bytes where it communicates with the plc
+software. These 22 bytes have to be assigned to the hardware device (for example KL/EL6021) in the
+system manager plus the control and status byte.
+If devices with less then 22 bytes are used, the other function blocks have to be used (for 5 bytes for example).
+*)
+
+(*
+IF fbModbusRtuMaster_KL6x22B.MBmaster.TimeoutTON.Q=TRUE AND mTimeOUT_Qold=FALSE THEN mTimeOUT_Q_Rising; END_IF
+mTimeOUT_Qold:=fbModbusRtuMaster_KL6x22B.MBmaster.TimeoutTON.Q;
+*)
+
+fb_F_TRIG1(CLK:=mBusy);
+
+CASE intState OF
+	
+	0: 	(* reset the start bit *)
+		mStart:=FALSE;
+		IF mInit_Done AND NOT fbConfigKL6041.Busy THEN 
+			intState:=10;
+			mExecute:=FALSE;		
+		ELSE
+			INIT();
+			uintPollOrderCount:=1;
+			mExecute:=TRUE;		// necessary to write the communication parameters to the KL terminal. only necessary once if the terminal is brand new
+		END_IF
+	10:
+
+		
+		(* trouble shooting *)
+		IF mTestMode THEN
+			uintPollOrderCount:=uint_TestPollOrder; 
+		END_IF
+		
+		IF uintPollOrderCount > uintMaxModbusRTUOrders OR uintPollOrderCount<1 THEN
+			uintPollOrderCount:=1;
+		END_IF
+	
+		udintMemoryDestAddress:=ADR(structArrayModbusRTU[uintPollOrderCount].wArrayReceiveBuffer[0]);
+		structArrayModbusRTU[uintPollOrderCount].udintBytesReceived:=0;
+		mStart:=TRUE;
+		timerTimeout.IN:=TRUE;
+		intState:=20;
+	
+	20: (* wait for busy falling or time out *)
+		IF fb_F_TRIG1.Q OR timerTimeout.Q THEN
+	
+			(* check answer time *)
+			structArrayModbusRTU[uintPollOrderCount].timeTimeForRequest:=timerTimeout.ET;
+	
+			(* reset timer *)
+			timerTimeout.IN:=FALSE;
+	
+			(* reset start bit *)
+			mStart:=FALSE;
+	
+			(* save number of bytes received *)
+			structArrayModbusRTU[uintPollOrderCount].udintBytesReceived:=udintBytesReceived;
+			udintBytesReceived:=0;
+	
+			(* Error Detection *)
+			IF timerTimeout.Q THEN
+				mError_Rx:=TRUE;
+				structArrayModbusRTU[uintPollOrderCount].udintErrorID:=9998;
+				structArrayModbusRTU[uintPollOrderCount].strErrorMessage:='Timeout';
+			ELSIF structArrayModbusRTU[uintPollOrderCount].udintBytesReceived=0 AND structArrayModbusRTU[uintPollOrderCount].uintNoOfWords>0 THEN
+				mError_Rx:=TRUE;
+				structArrayModbusRTU[uintPollOrderCount].udintErrorID:=9999;
+				structArrayModbusRTU[uintPollOrderCount].strErrorMessage:='0 bytes received';
+			ELSIF fbModbusRtuMaster_KL6x22B.Error THEN
+				mError_Rx:=TRUE;
+				structArrayModbusRTU[uintPollOrderCount].udintErrorID:=udintErrorID;
+	//			structArrayModbusRTU[uintPollOrderCount].strErrorMessage:=F_ADSERRORTEXT(structArrayModbusRTU[uintPollOrderCount].udintErrorID);
+			ELSE
+				mError_Rx:=FALSE;
+				structArrayModbusRTU[uintPollOrderCount].udintErrorID:=0;
+				structArrayModbusRTU[uintPollOrderCount].strErrorMessage:='';
+			END_IF
+	
+	
+			IF mError_Rx THEN
+				structArrayModbusRTU[uintPollOrderCount].udintCommErrorCounter:=structArrayModbusRTU[uintPollOrderCount].udintCommErrorCounter+1;
+			ELSIF structArrayModbusRTU[uintPollOrderCount].udintBytesReceived>0 THEN 
+				structArrayModbusRTU[uintPollOrderCount].udintCommSuccessCounter:=structArrayModbusRTU[uintPollOrderCount].udintCommSuccessCounter+1;
+				structArrayModbusRTU[uintPollOrderCount].mData_received := TRUE;
+			END_IF
+	
+			structArrayModbusRTU[uintPollOrderCount].timerOKTimer.IN:=NOT mError_Rx;
+			structArrayModbusRTU[uintPollOrderCount].timerErrorTimer.IN:=mError_Rx;
+	
+			dw_Mask:=1;
+			dw_Mask:=SHL(dw_Mask,(structArrayModbusRTU[uintPollOrderCount].intDeviceNumber));
+			dw_Mask_Not:=NOT dw_Mask;
+			
+			IF structArrayModbusRTU[uintPollOrderCount].timerErrorTimer.Q THEN
+				structArrayModbusRTU[uintPollOrderCount].mError:=TRUE;
+				IF structArrayModbusRTU[uintPollOrderCount].intDeviceClass>=1 AND structArrayModbusRTU[uintPollOrderCount].intDeviceClass<=3 THEN
+					dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass]:=dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass] OR dw_Mask;
+				END_IF
+			END_IF
+	
+			IF structArrayModbusRTU[uintPollOrderCount].timerOKTimer.Q THEN
+				structArrayModbusRTU[uintPollOrderCount].mError:=FALSE;
+				IF structArrayModbusRTU[uintPollOrderCount].intDeviceClass>=1 AND structArrayModbusRTU[uintPollOrderCount].intDeviceClass<=3 THEN
+					dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass]:=dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass] AND dw_Mask_Not;
+				END_IF
+			END_IF
+	
+			(* clear buffer *)
+			IF mError_Rx THEN
+				MEMSET(destAddr:=udintMemoryDestAddress,fillByte:=0,130);
+			END_IF
+	
+			(* set next state *)
+			intState:=30;
+		END_IF
+	
+	30:		(* wait *)
+			timerT1(IN:=TRUE);
+			IF timerT1.Q THEN
+				timerT1(IN:=FALSE);
+				structArrayModbusRTU[uintPollOrderCount].mData_received := FALSE;
+				IF uintPollOrderCount >=  uintMaxModbusRTUOrders AND m_Enable_write THEN
+					uintPollOrderCount:=1;
+					intState:=100;
+				ELSE
+					(* set next poll order *)
+					uintPollOrderCount:=uintPollOrderCount+1; (* next slave *)
+					WHILE NOT structArrayModbusRTU[uintPollOrderCount].mRequestActive DO
+						uintPollOrderCount:=uintPollOrderCount+1; (* next slave *)
+					END_WHILE
+					IF uintPollOrderCount > uintMaxModbusRTUOrders OR uintPollOrderCount<1 THEN
+						uintPollOrderCount:=1;
+					END_IF
+					intState:=0; (* back to start *)
+				END_IF
+			END_IF
+
+	100: 		// write data to slave		
+		(* check poll order *)
+		IF uintPollOrderCount > uintMaxModbusRTUOrdersWrite OR uintPollOrderCount<1 THEN
+			uintPollOrderCount:=1;
+		END_IF
+	
+		// write vaules for writing to the correct position
+		structArrayModbusRTUWrite[1].wSendBuffer	:= INT_TO_WORD(int_H02_Soll_VL_HT_Schloss);
+		structArrayModbusRTUWrite[2].wSendBuffer	:= INT_TO_WORD(int_H03_Soll_VL_Sek_NT_Schloss);
+		structArrayModbusRTUWrite[3].wSendBuffer	:= INT_TO_WORD(int_H05_Soll_VL_HT_Schloss);
+		structArrayModbusRTUWrite[4].wSendBuffer	:= INT_TO_WORD(int_H06_Soll_VL_Sek_NT_Schloss);
+			
+		udintMemoryDestAddress:=ADR(structArrayModbusRTUWrite[uintPollOrderCount].wSendBuffer);
+		mStart:=TRUE;
+		timerTimeout.IN:=TRUE;
+		intState:=120;
+	
+	120: (* wait for busy falling or time out *)
+		IF fb_F_TRIG1.Q OR timerTimeout.Q THEN
+	
+			(* check answer time *)
+			structArrayModbusRTUWrite[uintPollOrderCount].timeTimeForRequest:=timerTimeout.ET;
+	
+			(* reset timer *)
+			timerTimeout.IN:=FALSE;
+	
+			(* reset start bit *)
+			mStart:=FALSE;
+	
+
+			(* Error Detection *)
+			IF timerTimeout.Q THEN
+				mError_Rx:=TRUE;
+				structArrayModbusRTUWrite[uintPollOrderCount].udintErrorID:=9998;
+				structArrayModbusRTUWrite[uintPollOrderCount].strErrorMessage:='Timeout';
+			ELSIF fbModbusRtuMaster_KL6x22B.Error THEN
+				mError_Rx:=TRUE;
+				structArrayModbusRTUWrite[uintPollOrderCount].udintErrorID:=udintErrorID;
+	//			structArrayModbusRTU[uintPollOrderCount].strErrorMessage:=F_ADSERRORTEXT(structArrayModbusRTU[uintPollOrderCount].udintErrorID);
+			ELSE
+				mError_Rx:=FALSE;
+				structArrayModbusRTUWrite[uintPollOrderCount].udintErrorID:=0;
+				structArrayModbusRTUWrite[uintPollOrderCount].strErrorMessage:='';
+			END_IF
+	
+	
+			IF mError_Rx THEN
+				structArrayModbusRTUWrite[uintPollOrderCount].udintCommErrorCounter:=structArrayModbusRTUWrite[uintPollOrderCount].udintCommErrorCounter+1;
+			ELSE
+				structArrayModbusRTUWrite[uintPollOrderCount].udintCommSuccessCounter:=structArrayModbusRTU[uintPollOrderCount].udintCommSuccessCounter+1;
+			END_IF
+	
+			structArrayModbusRTUWrite[uintPollOrderCount].timerOKTimer.IN:=NOT mError_Rx;
+			structArrayModbusRTUWrite[uintPollOrderCount].timerErrorTimer.IN:=mError_Rx;
+	
+			
+			IF structArrayModbusRTUWrite[uintPollOrderCount].timerErrorTimer.Q THEN
+				structArrayModbusRTUWrite[uintPollOrderCount].mError:=TRUE;
+				END_IF
+	
+			IF structArrayModbusRTUWrite[uintPollOrderCount].timerOKTimer.Q THEN
+				structArrayModbusRTUWrite[uintPollOrderCount].mError:=FALSE;
+			END_IF
+	
+			(* set next state *)
+			intState:=130;
+		END_IF
+	
+	130:		(* wait *)
+			timerT1(IN:=TRUE);
+			IF timerT1.Q THEN
+				timerT1(IN:=FALSE);
+				
+				IF uintPollOrderCount >=  uintMaxModbusRTUOrdersWrite THEN
+					uintPollOrderCount:=1;
+					intState:=0;
+				ELSE
+					(* set next poll order to write *)
+					uintPollOrderCount:=uintPollOrderCount+1; (* next slave *)
+					WHILE NOT structArrayModbusRTUWrite[uintPollOrderCount].mRequestActive DO
+						uintPollOrderCount:=uintPollOrderCount+1; (* next slave *)
+					END_WHILE
+					IF uintPollOrderCount > uintMaxModbusRTUOrdersWrite OR uintPollOrderCount<1 THEN
+						uintPollOrderCount:=1;
+					END_IF
+					intState:= 100; (* back to start *)
+				END_IF
+			END_IF
+			
+			
+END_CASE
+
+(* Timer calls *)
+structArrayModbusRTU[uintPollOrderCount].timerErrorTimer(PT:=timeNoRxTimeout);
+structArrayModbusRTU[uintPollOrderCount].timerOKTimer(PT:=T#2S);
+timerT1(PT:=timeWaitT1);
+timerT2(PT:=timeWaitT2);
+timerTimeout(PT:=timeNoRxTimeout+timeWaitT1);
+
+
+(* Timers *)
+structArrayModbusRTU[uintPollOrderCount].timerErrorTimer.PT:=T#5S;
+structArrayModbusRTU[uintPollOrderCount].timerOKTimer.PT:=T#5S;
+
+
+fbModbusRtuMaster_KL6x22B.ReadInputRegs(
+// fbModbusRtuMaster_KL6x22B.ReadRegs(
+	UnitID:= structArrayModbusRTU[uintPollOrderCount].byteClientSlaveID, 
+	Quantity:= structArrayModbusRTU[uintPollOrderCount].uintNoOfWords, 
+	MBAddr:= structArrayModbusRTU[uintPollOrderCount].uintStartAddress , 
+	cbLength:= 2*structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	pMemoryAddr:= udintMemoryDestAddress, 
+	AuxQuantity:= , 
+	AuxMBAddr:= , 
+	AuxcbLength:= , 
+	pAuxMemoryAddr:= , 
+	Execute:= mStart, 
+	Timeout:= T#1S, 
+	BUSY=> mBusy, 
+	Error=> mError, 
+	ErrorId=> udintErrorID, 
+	cbRead=> udintBytesReceived);
+fbModbusRtuMaster_KL6x22B.WriteSingleRegister(
+// fbModbusRtuMaster_KL6x22B.ReadRegs(
+	UnitID:= structArrayModbusRTUWrite[uintPollOrderCount].byteClientSlaveID, 
+	Quantity:= 1, 
+	MBAddr:= structArrayModbusRTU[uintPollOrderCount].uintStartAddress , 
+	cbLength:= 2,
+	pMemoryAddr:= udintMemoryDestAddress, 
+	AuxQuantity:= , 
+	AuxMBAddr:= , 
+	AuxcbLength:= , 
+	pAuxMemoryAddr:= , 
+	Execute:= mStart, 
+	Timeout:= T#1S, 
+	BUSY=> mBusy, 
+	Error=> mError, 
+	ErrorId=> udintErrorID, 
+	cbRead=> udintBytesReceived);
+
+	
+(*fbModbusRtuMaster_KL6x22B.ReadRegs(
+	UnitID		:=structArrayModbusRTU[uintPollOrderCount].byteClientSlaveID,
+	Quantity	:=structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	MBAddr		:=structArrayModbusRTU[uintPollOrderCount].uintStartAddress,
+	cbLength	:=2*structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	pMemoryAddr	:=udintMemoryDestAddress,
+	Execute		:=mStart,
+	Timeout		:=t#1s,
+	BUSY		=>mBusy,
+	Error		=>mError,
+	ErrorId		=>udintErrorID,
+	cbRead		=>udintBytesReceived
+);
+*)
+(*
+(*fbModbusRtuMaster_KL6x22B.ReadInputRegs(
+*)
+fbModbusRtuMaster_KL6x22B.ReadInputRegs(
+	UnitID		:=structArrayModbusRTU[uintPollOrderCount].byteClientSlaveID,
+	Quantity	:=structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	MBAddr		:=structArrayModbusRTU[uintPollOrderCount].uintStartAddress,
+	cbLength	:=2*structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	pMemoryAddr	:=udintMemoryDestAddress,
+	Execute		:=mStart,
+	Timeout		:=t#1s,
+	BUSY		=>mBusy,
+	Error		=>mError,
+	ErrorId		=>udintErrorID,
+	cbRead		=>udintBytesReceived
+);
+*)
+// necessary for KL6041 to wirte the com settings
+fbConfigKL6041(
+	Execute 		:= mExecute,
+	Mode 			:= mode,
+	Baudrate 		:= 9600,
+	NoDatabits 		:= byte_DataBits,
+	Parity 			:= 1,		// PARITY_NONE=0, PARITY_EVEN=1, PARITY_ODD=2
+	Stopbits 		:= 1,
+	Handshake  		:= int_Handshake,
+	ContinousMode 	:= FALSE,
+	pComIn 			:= ADR(fbModbusRtuMaster_KL6x22B.InData),
+	pComOut 		:= ADR(fbModbusRtuMaster_KL6x22B.OutData),
+	SizeComIn 		:= SIZEOF(fbModbusRtuMaster_KL6x22B.InData)
+);
+
+
+// copy data when data is vallid
+
+IF structArrayModbusRTU[1].mData_received THEN
+	i:= 1;	
+	int_H02_VL_HT_Schloss				:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i]	);			
+	int_H02_RL_HT_Schloss              	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+1]	);
+    int_H02_Energie_HT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+2]	);
+    int_H02_Volumen_HT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+3]	);
+    int_H02_Leistung_HT_Schloss        	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+4]	);
+    int_H03_VL_Primaer_NT_Schloss      	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+5]	);
+    int_H03_RL_Primaer_NT_Schloss      	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+6]	);
+    int_H03_VL_Sek_NT_Schloss    	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+7]	);
+    int_H03_RL_Sek_NT_Schloss    	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+8]	);
+    int_H03_Energie_NT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+9]	);
+    int_H03_Volumen_NT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+10]);
+    int_H03_Leistung_NT_Schloss        	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+11]);
+    int_H05_VL_HT_Schloss              	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+12]);
+    int_H05_RL_HT_Schloss              	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+13]);
+    int_H05_Energie_HT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+14]);
+    int_H05_Volumen_HT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+15]);
+    int_H05_Leistung_HT_Schloss        	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+16]);
+    int_H06_VL_Primaer_NT_Schloss      	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+17]);
+    int_H06_RL_Primaer_NT_Schloss      	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+18]);
+    int_H06_VL_Sek_NT_Schloss    	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+19]);
+    int_H06_RL_Sek_NT_Schloss    	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+20]);
+    int_H06_Energie_NT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[1].wArrayReceiveBuffer[i+21]);
+END_IF
+
+IF structArrayModbusRTU[2].mData_received THEN
+	i:= 1;		
+	int_H06_Volumen_NT_Schloss         	:= WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i]	);		
+    int_H06_Leistung_NT_Schloss        	:= WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+1]	);
+    int_S00_UG_Schloss_RT_006          	:= WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+2]	);
+    int_S00_UG_Schloss_RT_003A_B       	:= WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+3]	);
+    int_S01_EG_Schloss_RT_024          	:= WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+4]	);
+    int_S01_EG_Schloss_RT_002           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+5]	);
+    int_S01_EG_Schloss_RT_1_003         := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+6]	);
+    int_S01_EG_Schloss_RT_2_003         := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+7]	);
+    int_S01_EG_Schloss_RT_004           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+8]	);
+    int_S01_EG_Schloss_RT_005           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+9]	);
+    int_S01_EG_Schloss_RT_006           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+10]);
+    int_S01_EG_Schloss_RT_007           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+11]);
+    int_S01_EG_Schloss_RT_011           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+12]);
+    int_S01_EG_Schloss_RT_012           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+13]);
+    int_S01_EG_Schloss_RT_013           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+14]);
+    int_S01_EG_Schloss_RT_014           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+15]);
+    int_S01_EG_Schloss_RT_015           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+16]);
+    int_S01_EG_Schloss_RT_016           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+17]);
+    int_S01_EG_Schloss_RT_017           := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+18]);
+    int_S01_EG_Schloss_RT_020_021       := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+19]);
+    int_S01_EG_Schloss_RT_1_025         := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+20]);
+    int_S01_EG_Schloss_RT_2_025         := WORD_TO_INT(structArrayModbusRTU[2].wArrayReceiveBuffer[i+21]);
+END_IF
+
+IF structArrayModbusRTU[3].mData_received THEN
+	i:= 1;		
+    int_S01_EG_Schloss_RT_026_027    	:= WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i]	);	    
+    int_S01_EG_Schloss_RT_028           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+1]	);
+    int_S01_EG_Schloss_RT_029           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+2]	);
+    int_S01_EG_Schloss_RT_032           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+3]	);
+    int_S01_EG_Schloss_RT_033           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+4]	);
+    int_S01_EG_Schloss_RT_034           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+5]	);
+    int_S01_EG_Schloss_RT_036           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+6]	);
+    int_S01_EG_Schloss_RT_040_          := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+7]	);
+    int_S01_EG_Schloss_RT_047           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+8]	);
+    int_S01_EG_Schloss_RT_053           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+9]	);
+    int_H02_Gefaengnisstoeckl_RT_006    := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+10]);
+    int_S02_OG_Schloss_RT_001           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+11]);
+    int_S02_OG_Schloss_RT_002           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+12]);
+    int_S02_OG_Schloss_RT_003           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+13]);
+    int_S02_OG_Schloss_RT_004           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+14]);
+    int_S02_OG_Schloss_RT_005           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+15]);
+    int_S02_OG_Schloss_RT_006           := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+16]);
+    int_S02_OG_Schloss_RT_007_009       := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+17]);
+    int_S02_OG_Schloss_RT_006_2         := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+18]);
+    int_S02_OG_Schloss_RT_020_026       := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+19]);
+    int_S02_OG_Schloss_RT_027_037       := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+20]);
+    int_S02_OG_Schloss_RT_039_041       := WORD_TO_INT(structArrayModbusRTU[3].wArrayReceiveBuffer[i+21]);
+END_IF
+
+IF structArrayModbusRTU[3].mData_received THEN
+	i:= 1;	
+    int_S02_OG_Schloss_RT_042         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i]	);	     
+    int_S02_OG_Schloss_RT_043         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+1]	);    
+    int_S02_OG_Schloss_RT_048_051     	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+2]	);   
+    int_R01_EG_Rondell_RT_007A        	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+3]	);   
+    int_R01_EG_Rondell_RT_007B        	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+4]	);   
+    int_R01_EG_Rondell_RT_008         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+5]	);   
+    int_R01_EG_Rondell_RT_009_015     	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+6]	);   
+    int_R01_EG_Rondell_RT_016         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+7]	);   
+    int_R01_EG_Rondell_RT_017         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+8]	);   
+    int_R01_EG_Rondell_RT_018         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+9]	);   
+    int_R01_EG_Rondell_RT_019         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+10]);   
+    int_R02_OG_Rondell_RT_001         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+11]);   
+    int_R02_OG_Rondell_RT_002         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+12]);   
+    int_R02_OG_Rondell_RT_004         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+13]);   
+    int_R02_OG_Rondell_RT_005_007     	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+14]);   
+    int_R02_OG_Rondell_RT_008         	:= WORD_TO_INT(structArrayModbusRTU[4].wArrayReceiveBuffer[i+15]);   
+    bool_H02_Status_HK_HT_Schloss	  	:= structArrayModbusRTU[4].wArrayReceiveBuffer[i+16].0;   
+    bool_H03_Status_HK_NT_Schloss     	:= structArrayModbusRTU[4].wArrayReceiveBuffer[i+17].0;   
+    bool_H05_Status_HK_HT_Schloss     	:= structArrayModbusRTU[4].wArrayReceiveBuffer[i+18].0;   
+    bool_H06_Status_HK_NT_Schloss     	:= structArrayModbusRTU[4].wArrayReceiveBuffer[i+19].0;   
+END_IF]]></ST>
+    </Implementation>
+    <Action Name="INIT" Id="{c1301098-5879-4197-8e38-6bfd52ef13f2}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+(* Poll 1 Heating circuit 1 *)
+i:= 1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1000;
+structArrayModbusRTU[i].uintNoOfWords:=22;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+i:= i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1022;
+structArrayModbusRTU[i].uintNoOfWords:=22;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+i:= i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1044;
+structArrayModbusRTU[i].uintNoOfWords:=22;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+i:= i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1066;
+structArrayModbusRTU[i].uintNoOfWords:=20;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+uintMaxModbusRTUOrders := i;
+
+
+
+i:= 1;
+structArrayModbusRTUWrite[i].byteClientSlaveID:=1;
+structArrayModbusRTUWrite[i].uintStartAddress:=1000;
+structArrayModbusRTUWrite[i].mRequestActive:=TRUE;
+
+i:= i+1;
+structArrayModbusRTUWrite[i].byteClientSlaveID:=1;
+structArrayModbusRTUWrite[i].uintStartAddress:=1001;
+structArrayModbusRTUWrite[i].mRequestActive:=TRUE;
+
+i:= i+1;
+structArrayModbusRTUWrite[i].byteClientSlaveID:=1;
+structArrayModbusRTUWrite[i].uintStartAddress:=1002;
+structArrayModbusRTUWrite[i].mRequestActive:=TRUE;
+
+i:= i+1;
+structArrayModbusRTUWrite[i].byteClientSlaveID:=1;
+structArrayModbusRTUWrite[i].uintStartAddress:=1003;
+structArrayModbusRTUWrite[i].mRequestActive:=TRUE;
+
+
+uintMaxModbusRTUOrdersWrite := i;
+
+
+
+
+mInit_Done:=TRUE;
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="MODBUS_RTU_Poeggstall">
+      <LineId Id="39" Count="5" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="48" Count="10" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="477" Count="1" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="838" Count="0" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="433" Count="1" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="72" Count="24" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="97" Count="2" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="100" Count="2" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="376" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="121" Count="1" />
+      <LineId Id="124" Count="1" />
+      <LineId Id="973" Count="0" />
+      <LineId Id="127" Count="4" />
+      <LineId Id="389" Count="2" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="132" Count="1" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="396" Count="2" />
+      <LineId Id="138" Count="15" />
+      <LineId Id="704" Count="0" />
+      <LineId Id="707" Count="0" />
+      <LineId Id="850" Count="0" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="846" Count="0" />
+      <LineId Id="840" Count="2" />
+      <LineId Id="708" Count="0" />
+      <LineId Id="847" Count="1" />
+      <LineId Id="843" Count="0" />
+      <LineId Id="849" Count="0" />
+      <LineId Id="709" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="745" Count="3" />
+      <LineId Id="965" Count="1" />
+      <LineId Id="970" Count="2" />
+      <LineId Id="967" Count="0" />
+      <LineId Id="749" Count="1" />
+      <LineId Id="752" Count="14" />
+      <LineId Id="770" Count="5" />
+      <LineId Id="779" Count="0" />
+      <LineId Id="781" Count="18" />
+      <LineId Id="803" Count="2" />
+      <LineId Id="808" Count="0" />
+      <LineId Id="810" Count="2" />
+      <LineId Id="816" Count="0" />
+      <LineId Id="822" Count="5" />
+      <LineId Id="851" Count="17" />
+      <LineId Id="837" Count="0" />
+      <LineId Id="711" Count="1" />
+      <LineId Id="156" Count="7" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="174" Count="3" />
+      <LineId Id="186" Count="2" />
+      <LineId Id="637" Count="14" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="713" Count="4" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="719" Count="9" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="730" Count="0" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="189" Count="3" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="194" Count="6" />
+      <LineId Id="653" Count="0" />
+      <LineId Id="578" Count="14" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="513" Count="11" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="974" Count="1" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="977" Count="0" />
+      <LineId Id="976" Count="0" />
+      <LineId Id="1064" Count="0" />
+      <LineId Id="979" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="981" Count="18" />
+      <LineId Id="1069" Count="1" />
+      <LineId Id="1068" Count="0" />
+      <LineId Id="1066" Count="1" />
+      <LineId Id="1001" Count="20" />
+      <LineId Id="1072" Count="2" />
+      <LineId Id="1071" Count="0" />
+      <LineId Id="1022" Count="21" />
+      <LineId Id="1075" Count="2" />
+      <LineId Id="1044" Count="0" />
+      <LineId Id="1078" Count="0" />
+      <LineId Id="1045" Count="18" />
+      <LineId Id="1079" Count="0" />
+    </LineIds>
+    <LineIds Name="MODBUS_RTU_Poeggstall.INIT">
+      <LineId Id="2" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="50" Count="2" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="60" Count="3" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="64" Count="3" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="74" Count="5" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="85" Count="7" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="93" Count="3" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="69" Count="3" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

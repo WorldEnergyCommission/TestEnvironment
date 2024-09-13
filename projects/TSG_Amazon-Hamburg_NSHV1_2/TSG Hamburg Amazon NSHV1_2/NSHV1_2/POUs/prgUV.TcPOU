@@ -1,0 +1,587 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgUV" Id="{54849f6e-b57c-46bf-9186-df090c664b9a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgUV
+VAR
+	fbUV1_1					: FB_EM_Electric_3P_Ext_Input;
+	fbUV1_2					: FB_EM_Electric_3P_Ext_Input;
+	fbUV2_1					: FB_EM_Electric_3P_Ext_Input;
+	fbUV2_2					: FB_EM_Electric_3P_Ext_Input;
+	fbUV2_3					: FB_EM_Electric_3P_Ext_Input;
+	fbUV2_4					: FB_EM_Electric_3P_Ext_Input;
+	fbUV3_1					: FB_EM_Electric_3P_Ext_Input;
+	fbUV3_2					: FB_EM_Electric_3P_Ext_Input;
+	fbUV3_3					: FB_EM_Electric_3P_Ext_Input;
+	fbUV3_4					: FB_EM_Electric_3P_Ext_Input;
+	timError_UV1_1			: TON;
+	timError_UV1_2			: TON;
+	timError_UV2_1			: TON;
+	timError_UV2_2			: TON;
+	timError_UV2_3			: TON;
+	timError_UV2_4			: TON;
+	timError_UV3_1			: TON;
+	timError_UV3_2			: TON;
+	timError_UV3_3			: TON;
+	timError_UV3_4			: TON;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//UV1.1 for Limit Fuse Line (110kW)
+//Error
+IF prgCS11.byErrorWarningUV1_7 = 2 AND prgCS11.byErrorWarningUV1_8 = 2 THEN
+	timError_UV1_1.IN := TRUE;
+ELSE
+	timError_UV1_1.IN := FALSE;
+END_IF
+	timError_UV1_1(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV1_1.lrPowerTotal := prgCS11.lrPowerUV1_7 + prgCS11.lrPowerUV1_8;
+	fbUV1_1.lrPowerTotal := fbUV1_1.lrPowerTotal * 1000;
+
+fbUV1_1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV1_1.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV1.2 for Limit Fuse Line (80kW)
+//Error
+IF prgCS11.byErrorWarningUV1_9 = 2 AND prgCS11.byErrorWarningUV1_10 = 2 AND prgCS12.byErrorWarningUV1_1 = 2 AND prgCS12.byErrorWarningUV1_2 = 2 AND prgCS12.byErrorWarningUV1_3 = 2 AND prgCS12.byErrorWarningUV1_4 = 2 AND prgCS12.byErrorWarningUV1_5 = 2 AND
+	prgCS12.byErrorWarningUV1_6 = 2 THEN
+		timError_UV1_2.IN := TRUE;
+ELSE
+		timError_UV1_2.IN := FALSE;
+END_IF
+	timError_UV1_2(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV1_2.lrPowerTotal := prgCS11.lrPowerUV1_9 + prgCS11.lrPowerUV1_10 + prgCS12.lrPowerUV1_1 + prgCS12.lrPowerUV1_2 + prgCS12.lrPowerUV1_3 + prgCS12.lrPowerUV1_4 + prgCS12.lrPowerUV1_5 + prgCS12.lrPowerUV1_6;
+	fbUV1_2.lrPowerTotal := fbUV1_2.lrPowerTotal * 1000;
+
+fbUV1_2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV1_2.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV2.1 for Limit Fuse Line (110kW)
+//Error
+IF prgCS6.byErrorWarningUV1_2 = 2 AND prgCS6.byErrorWarningUV1_3 = 2 AND prgCS6.byErrorWarningUV1_4 = 2 AND prgCS6.byErrorWarningUV1_5 = 2 AND prgCS6.byErrorWarningUV1_6 = 2 AND prgCS6.byErrorWarningUV1_7 = 2 AND prgCS6.byErrorWarningUV1_8 = 2 AND
+	prgCS6.byErrorWarningUV1_9 = 2 AND prgCS6.byErrorWarningUV1_10 = 2 AND
+		prgCS7.byErrorWarningUV1_1 = 2 AND prgCS7.byErrorWarningUV1_2 = 2 AND prgCS7.byErrorWarningUV1_3 = 2 AND prgCS7.byErrorWarningUV1_4 = 2 AND prgCS7.byErrorWarningUV1_5 = 2 THEN
+			timError_UV2_1.IN := TRUE;
+ELSE
+			timError_UV2_1.IN := FALSE;
+END_IF
+	timError_UV2_1(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV2_1.lrPowerTotal := prgCS6.lrPowerUV1_2 + prgCS6.lrPowerUV1_3 + prgCS6.lrPowerUV1_4 + prgCS6.lrPowerUV1_5 + prgCS6.lrPowerUV1_6 + prgCS6.lrPowerUV1_7 + prgCS6.lrPowerUV1_8 + prgCS6.lrPowerUV1_9 + prgCS6.lrPowerUV1_10 +
+							prgCS7.lrPowerUV1_1 + prgCS7.lrPowerUV1_2 + prgCS7.lrPowerUV1_3 + prgCS7.lrPowerUV1_4 + prgCS7.lrPowerUV1_5;
+	fbUV2_1.lrPowerTotal := fbUV2_1.lrPowerTotal * 1000;	
+							
+fbUV2_1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV2_1.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV2.2 for Limit Fuse Line (110kW)
+//Error
+IF prgCS7.byErrorWarningUV1_6 = 2 AND prgCS7.byErrorWarningUV1_7 = 2 AND prgCS7.byErrorWarningUV1_8 = 2 AND prgCS7.byErrorWarningUV1_9 = 2 AND prgCS7.byErrorWarningUV1_10 = 2 AND
+	prgCS8.byErrorWarningUV1_1 = 2 AND prgCS8.byErrorWarningUV1_2 = 2 AND prgCS8.byErrorWarningUV1_3 = 2 AND prgCS8.byErrorWarningUV1_4 = 2 AND prgCS8.byErrorWarningUV1_5 = 2 AND prgCS8.byErrorWarningUV1_6 = 2 THEN
+		timError_UV2_2.IN := TRUE;
+ELSE
+		timError_UV2_2.IN := FALSE;
+END_IF
+	timError_UV2_2(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV2_2.lrPowerTotal := prgCS7.lrPowerUV1_6 + prgCS7.lrPowerUV1_7 + prgCS7.lrPowerUV1_8 + prgCS7.lrPowerUV1_9 + prgCS7.lrPowerUV1_10 +
+							prgCS8.lrPowerUV1_1 + prgCS8.lrPowerUV1_2 + prgCS8.lrPowerUV1_3 + prgCS8.lrPowerUV1_4 + prgCS8.lrPowerUV1_5 + prgCS8.lrPowerUV1_6;
+	fbUV2_2.lrPowerTotal := fbUV2_2.lrPowerTotal * 1000;
+							
+fbUV2_2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV2_2.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV2.3 for Limit Fuse Line (110kW)
+//Error
+IF prgCS8.byErrorWarningUV1_8 = 2 AND prgCS9.byErrorWarningUV1_2 = 2 AND prgCS9.byErrorWarningUV1_3 = 2 AND prgCS9.byErrorWarningUV1_6 = 2 AND prgCS9.byErrorWarningUV1_7 = 2 THEN
+	timError_UV2_3.IN := TRUE;
+ELSE
+	timError_UV2_3.IN := FALSE;
+END_IF
+	timError_UV2_3(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV2_3.lrPowerTotal := prgCS8.lrPowerUV1_8 + prgCS9.lrPowerUV1_2 + prgCS9.lrPowerUV1_3 + prgCS9.lrPowerUV1_6 + prgCS9.lrPowerUV1_7;
+	fbUV2_3.lrPowerTotal := fbUV2_3.lrPowerTotal * 1000;
+
+fbUV2_3(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV2_3.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV2.4 for Limit Fuse Line (110kW)
+//Error
+IF prgCS9.byErrorWarningUV1_10 = 2 AND prgCS10.byErrorWarningUV1_1 = 2 AND prgCS10.byErrorWarningUV1_2 = 2 AND prgCS10.byErrorWarningUV1_3 = 2 AND prgCS10.byErrorWarningUV1_4 = 2 AND prgCS10.byErrorWarningUV1_5 = 2 AND prgCS10.byErrorWarningUV1_6 = 2 AND
+	prgCS10.byErrorWarningUV1_7 = 2 THEN
+		timError_UV2_4.IN := TRUE;
+ELSE
+		timError_UV2_4.IN := FALSE;
+END_IF
+	timError_UV2_4(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV2_4.lrPowerTotal := prgCS9.lrPowerUV1_10 + prgCS10.lrPowerUV1_1 + prgCS10.lrPowerUV1_2 + prgCS10.lrPowerUV1_3 + prgCS10.lrPowerUV1_4 + prgCS10.lrPowerUV1_5 + prgCS10.lrPowerUV1_6 + prgCS10.lrPowerUV1_7;
+	fbUV2_4.lrPowerTotal := fbUV2_4.lrPowerTotal * 1000;
+
+fbUV2_4(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV2_4.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV3.1 for Limit Fuse Line (110kW)
+//Error
+IF prgCS1.byErrorWarningUV1_1 = 2 AND prgCS1.byErrorWarningUV1_2 = 2 AND prgCS1.byErrorWarningUV1_3 = 2 AND prgCS1.byErrorWarningUV1_4 = 2 AND prgCS1.byErrorWarningUV1_5 = 2 AND prgCS1.byErrorWarningUV1_6 = 2 AND prgCS1.byErrorWarningUV1_7 = 2 AND
+	prgCS1.byErrorWarningUV1_8 = 2 AND prgCS1.byErrorWarningUV1_9 = 2 AND prgCS1.byErrorWarningUV1_10 = 2 AND
+		prgCS2.byErrorWarningUV1_1 = 2 AND prgCS2.byErrorWarningUV1_2 = 2 AND prgCS2.byErrorWarningUV1_3 = 2 AND prgCS2.byErrorWarningUV1_4 = 2 THEN
+			timError_UV3_1.IN := TRUE;
+ELSE
+			timError_UV3_1.IN := FALSE;
+END_IF
+	timError_UV3_1(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV3_1.lrPowerTotal := prgCS1.lrPowerUV1_1 + prgCS1.lrPowerUV1_2 + prgCS1.lrPowerUV1_3 + prgCS1.lrPowerUV1_4 + prgCS1.lrPowerUV1_5 + prgCS1.lrPowerUV1_6 + prgCS1.lrPowerUV1_7 + prgCS1.lrPowerUV1_8 + prgCS1.lrPowerUV1_9 + prgCS1.lrPowerUV1_10 +
+							prgCS2.lrPowerUV1_1 + prgCS2.lrPowerUV1_2 + prgCS2.lrPowerUV1_3 + prgCS2.lrPowerUV1_4;
+	fbUV3_1.lrPowerTotal := fbUV3_1.lrPowerTotal * 1000;
+							
+fbUV3_1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV3_1.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV3.2 for Limit Fuse Line (80kW)
+//Error
+IF prgCS2.byErrorWarningUV1_5 = 2 AND prgCS2.byErrorWarningUV1_6 = 2 AND prgCS2.byErrorWarningUV1_7 = 2 AND prgCS2.byErrorWarningUV1_8 = 2 AND prgCS2.byErrorWarningUV1_9 = 2 AND prgCS2.byErrorWarningUV1_10 = 2 AND
+	prgCS3.byErrorWarningUV1_1 = 2 AND prgCS3.byErrorWarningUV1_2 = 2 AND prgCS3.byErrorWarningUV1_3 = 2 AND prgCS3.byErrorWarningUV1_4 = 2 AND prgCS3.byErrorWarningUV1_5 = 2 AND prgCS3.byErrorWarningUV1_6 = 2 THEN
+		timError_UV3_2.IN := TRUE;
+ELSE
+		timError_UV3_2.IN := FALSE;
+END_IF
+	timError_UV3_2(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV3_2.lrPowerTotal := prgCS2.lrPowerUV1_5 + prgCS2.lrPowerUV1_6 + prgCS2.lrPowerUV1_7 + prgCS2.lrPowerUV1_8 + prgCS2.lrPowerUV1_9 + prgCS2.lrPowerUV1_10 +
+							prgCS3.lrPowerUV1_1 + prgCS3.lrPowerUV1_2 + prgCS3.lrPowerUV1_3 + prgCS3.lrPowerUV1_4 + prgCS3.lrPowerUV1_5 + prgCS3.lrPowerUV1_6;
+	fbUV3_2.lrPowerTotal := fbUV3_2.lrPowerTotal * 1000;
+							
+fbUV3_2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV3_2.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV3.3 for Limit Fuse Line (110kW)
+//Error
+IF prgCS3.byErrorWarningUV1_7 = 2 AND prgCS3.byErrorWarningUV1_8 = 2 AND prgCS3.byErrorWarningUV1_9 = 2 AND prgCS3.byErrorWarningUV1_10 = 2 AND
+	prgCS4.byErrorWarningUV1_1 = 2 AND prgCS4.byErrorWarningUV1_2 = 2 AND prgCS4.byErrorWarningUV1_3 = 2 AND prgCS4.byErrorWarningUV1_4 = 2 AND prgCS4.byErrorWarningUV1_5 = 2 AND prgCS4.byErrorWarningUV1_6 = 2 AND prgCS4.byErrorWarningUV1_7 = 2 AND
+		prgCS4.byErrorWarningUV1_8 = 2 THEN
+			timError_UV3_3.IN := TRUE;
+ELSE
+			timError_UV3_3.IN := FALSE;
+END_IF
+	timError_UV3_3(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV3_3.lrPowerTotal := prgCS3.lrPowerUV1_7 + prgCS3.lrPowerUV1_8 + prgCS3.lrPowerUV1_9 + prgCS3.lrPowerUV1_10 +
+							prgCS4.lrPowerUV1_1 + prgCS4.lrPowerUV1_2 + prgCS4.lrPowerUV1_3 + prgCS4.lrPowerUV1_4 + prgCS4.lrPowerUV1_5 + prgCS4.lrPowerUV1_6 + prgCS4.lrPowerUV1_7 + prgCS4.lrPowerUV1_8;
+	fbUV3_3.lrPowerTotal := fbUV3_3.lrPowerTotal * 1000;
+							
+fbUV3_3(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV3_3.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+	
+//UV3.4 for Limit Fuse Line (110kW)
+//Error
+IF prgCS4.byErrorWarningUV1_9 = 2 AND prgCS4.byErrorWarningUV1_10 = 2 AND
+	prgCS5.byErrorWarningUV1_1 = 2 AND prgCS5.byErrorWarningUV1_2 = 2 AND prgCS5.byErrorWarningUV1_3 = 2 AND prgCS5.byErrorWarningUV1_4 = 2 AND prgCS5.byErrorWarningUV1_5 = 2 AND prgCS5.byErrorWarningUV1_6 = 2 AND prgCS5.byErrorWarningUV1_7 = 2 AND
+		prgCS5.byErrorWarningUV1_8 = 2 THEN
+			timError_UV3_4.IN := TRUE;
+ELSE
+			timError_UV3_4.IN := FALSE;
+END_IF
+	timError_UV3_4(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Power from CS
+fbUV3_4.lrPowerTotal := prgCS4.lrPowerUV1_9 + prgCS4.lrPowerUV1_10 +
+							prgCS5.lrPowerUV1_1 + prgCS5.lrPowerUV1_2 + prgCS5.lrPowerUV1_3 + prgCS5.lrPowerUV1_4 + prgCS5.lrPowerUV1_5 + prgCS5.lrPowerUV1_6 + prgCS5.lrPowerUV1_7 + prgCS5.lrPowerUV1_8;
+	fbUV3_4.lrPowerTotal := fbUV3_4.lrPowerTotal * 1000;
+							
+fbUV3_4(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= timError_UV3_4.Q, 
+	bWarningExt:= FALSE, 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= 0, 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= 0, 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= 0, 
+	lrVoltageL1N:= 0, 
+	lrVoltageL1L2:= 0, 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= 0, 
+	lrVoltageL2N:= 0, 
+	lrVoltageL2L3:= 0, 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= 0, 
+	lrVoltageL3N:= 0, 
+	lrVoltageL3L1:= 0, 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= 0, 
+	lrReactivePowerTotal:= 0, 
+	lrApparentPowerTotal:= 0, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgUV">
+      <LineId Id="5" Count="0" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="360" Count="3" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="17" Count="29" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="620" Count="1" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="622" Count="6" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="50" Count="1" />
+      <LineId Id="364" Count="27" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="631" Count="2" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="634" Count="6" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="642" Count="0" />
+      <LineId Id="735" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="392" Count="27" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="645" Count="2" />
+      <LineId Id="649" Count="7" />
+      <LineId Id="643" Count="0" />
+      <LineId Id="737" Count="0" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="420" Count="27" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="658" Count="1" />
+      <LineId Id="661" Count="7" />
+      <LineId Id="738" Count="0" />
+      <LineId Id="149" Count="1" />
+      <LineId Id="448" Count="27" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="670" Count="1" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="672" Count="6" />
+      <LineId Id="669" Count="0" />
+      <LineId Id="739" Count="0" />
+      <LineId Id="182" Count="1" />
+      <LineId Id="476" Count="27" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="681" Count="2" />
+      <LineId Id="691" Count="0" />
+      <LineId Id="684" Count="6" />
+      <LineId Id="680" Count="0" />
+      <LineId Id="692" Count="0" />
+      <LineId Id="740" Count="0" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="504" Count="27" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="694" Count="2" />
+      <LineId Id="698" Count="7" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="248" Count="1" />
+      <LineId Id="532" Count="27" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="707" Count="2" />
+      <LineId Id="719" Count="0" />
+      <LineId Id="710" Count="7" />
+      <LineId Id="706" Count="0" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="281" Count="1" />
+      <LineId Id="560" Count="27" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="721" Count="11" />
+      <LineId Id="720" Count="0" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="314" Count="1" />
+      <LineId Id="588" Count="27" />
+      <LineId Id="312" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

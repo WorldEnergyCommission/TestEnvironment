@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="MAIN" Id="{c3d880a7-a386-488f-8782-4173f050ebd2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fbPV : FB_Hoymiles_DTU_ProS_PV_Inverter;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	
+					
+fbPV(
+	bEnable:= , 
+	sIPAdress:= '192.168.1.216', 
+	byUnitID_Inverter:= 101, 
+	DataHoymiles_DTU_Pro_Total=> , 
+	arrDataHoymiles_DTU_Pro=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="56" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="59" Count="7" />
+      <LineId Id="41" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

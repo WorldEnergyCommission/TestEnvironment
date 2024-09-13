@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_XL4XXX_AO" Id="{37881cdd-49f9-4488-a100-3da5d74da516}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_XL4XXX_AO
+VAR_INPUT
+	{attribute 'hide'}
+	rYMinTerminalValue		: REAL;				//Min value from the Terminal for scalling
+	{attribute 'hide'}
+	rXMinInputSignal		: REAL;				//Min value from the new input signal for scalling
+	{attribute 'hide'}
+	rYMaxTerminalValue		: REAL;				//Max value from the Terminal for scalling
+	{attribute 'hide'}
+	rXMaxInputSignal		: REAL;				//Max value from the new input signal for scalling
+	{attribute 'hide'}
+	rSignal					: REAL;				//New Input signal
+END_VAR
+VAR_OUTPUT
+	usiState	AT%I*		: USINT;			//State from the terminal
+END_VAR
+VAR
+	iDataOut	AT%Q*		: INT;				//Raw output value for the terminal
+	{attribute 'hide'}
+	rValue					: REAL;				//Internal value to check
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.06.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to write out a analog signal to a beckhoff analog output terminal and convert before in the right size. 10 to 32767 for example
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+
+rYMinTerminalValue := LIMIT(0,rYMinTerminalValue,32767);
+	rYMaxTerminalValue := LIMIT(0,rYMaxTerminalValue,32767);
+	
+(*----------------------------------------------------------------------Scalling----------------------------------------------------------------------------------------------*)
+
+rValue := F_Scalvalue(x:= rSignal, x1:= rXMinInputSignal, y1:= rYMinTerminalValue, x2:= rXMaxInputSignal, y2:= rYMaxTerminalValue,);
+	rValue := LIMIT(0,rValue,32767);
+		iDataOut := REAL_TO_INT(rValue);	]]></ST>
+    </Implementation>
+    <LineIds Name="FB_XL4XXX_AO">
+      <LineId Id="198" Count="2" />
+      <LineId Id="196" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="204" Count="1" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="206" Count="1" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="213" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgBattery_H2" Id="{a742e2b4-8e0c-4f86-960b-eaa67f503c17}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgBattery_H2
+VAR PERSISTENT
+	bEnableBattery				: BOOL;							//{#lynus.ag#()}
+	byPrioBattery				: BYTE;							//{#lynus.ag#()}
+	lrMaxCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	lrCounterBattProd			: LREAL;						//{#lynus.ag#()}
+	lrCounterBattCons			: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR
+	fbBattery					: FB_Xelectrix_Powerbox;
+	fbBattCounter				: FB_EnergyCounter;
+	bIsEnabledBattery			: BOOL;							//{#lynus.ag#()}
+	bResetBattery				: BOOL;							//{#lynus.ag#()}
+	bSResetBattery				: BOOL;							//{#lynus.ag#()}
+	byErrorWarningBattery		: BYTE;							//{#lynus.ag#()}
+	dwSOCBattery				: DWORD;						//{#lynus.ag#()}
+	rTargetPowerBattery			: REAL;							//{#lynus.ag#()}
+	lrPowerBattery				: LREAL;						//{#lynus.ag#()}
+	lrActualCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	mtest: BOOL;
+	x: REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF mtest THEN
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[1,1].rTargetPowerEMS:=x;
+END_IF
+
+fbBattery(
+	bEnable:= bEnableBattery, 
+	bActivateControl:= TRUE, 
+	byUnitID:= 1, 
+	byPriority:= byPrioBattery, 
+	diNrOfEMS_IN:= prgEMS_H2.fbEMS.diNrOfEMS_OUT, 
+	lrMaxCapacityBattery:= lrMaxCapacityBattery, 
+	sIPAdress:= '10.1.0.110', 						// modify IP Adress
+	bReset:= bResetBattery, 
+	stDataXelectrix=> , 
+	stDataBatt=> , 
+	stDataBattInverter=> , 
+	stDataEMPower_Grid=> , 
+	stDataEMCounter_Grid=> , 
+	diNrOfBatt_OUT=> , 
+	diNrOfBattInverter_OUT=> , 
+	diNrOfEM_OUT_Grid=> , 
+	lrMaxCapacityBattery_OUT=> );
+	
+//Out
+bIsEnabledBattery := fbBattery.stDataBatt.bEnabled;
+	bSResetBattery := fbBattery.stDataBattInverter.bStateReset;
+		dwSOCBattery := fbBattery.stDataBatt.dwSOC;
+			rTargetPowerBattery := fbBattery.stDataBattInverter.rTargetPower;
+				lrPowerBattery := fbBattery.stDataBatt.lrPower;
+					lrActualCapacityBattery := fbBattery.lrMaxCapacityBattery_OUT;	
+						byErrorWarningBattery := fbBattery.stDataBatt.byErrorWarning;
+						
+						
+// EnergyCounter
+fbBattCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerBattery, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbBattCounter.lrTotalCounterEnergy_Production > lrCounterBattProd THEN  	
+	lrCounterBattProd := fbBattCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+IF fbBattCounter.lrTotalCounterEnergy_Consumption > lrCounterBattCons THEN  	
+	lrCounterBattCons := fbBattCounter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgBattery_H2">
+      <LineId Id="268" Count="1" />
+      <LineId Id="266" Count="1" />
+      <LineId Id="200" Count="45" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

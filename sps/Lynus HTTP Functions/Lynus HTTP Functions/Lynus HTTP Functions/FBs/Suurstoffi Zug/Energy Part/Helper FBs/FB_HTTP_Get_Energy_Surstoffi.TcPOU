@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HTTP_Get_Energy_Surstoffi" Id="{a9b9c455-d90c-4102-84c4-08be38db9d17}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HTTP_Get_Energy_Surstoffi
+VAR_INPUT
+	{attribute 'hide'}
+    bSend           	: BOOL;													//Send the Request
+	{attribute 'hide'}
+	tTimeOut			: TIME := T#10S;										//Timer for Timeout
+END_VAR
+VAR_IN_OUT
+	{attribute 'hide'}
+    fbClient          	: FB_IotHttpClient;										//HTTP Client Data
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bValidResult		: BOOL;													//Valid Result received from Server
+	{attribute 'hide'}
+    bBusy             	: BOOL;													//Function is Busy
+	{attribute 'hide'}
+    bError           	: BOOL;													//Error sucess
+	{attribute 'hide'}
+	sContent         	: STRING(7500);											//Received Content
+END_VAR
+VAR
+    fbRequest         	: FB_IotHttpRequest;									//Http Function
+	timTimeout			: TON;													//Timer for Timeout
+	RisingEdge        	: R_TRIG;												//Internal positive edge
+   	bGetContentResult 	: BOOL;													//Get Content Result
+	nState				: UDINT;												//Statemaschine
+  	nReqCount			: UDINT;												//Counter requests
+    nResCount			: UDINT;												//Counter results
+    nValidResCount		: UDINT;												//Counter valid results
+    nErrCount			: UDINT;												//Error Counter
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 18.02.2021
+//Version : 1.0.0.0
+
+//With this Function is possible to send a HTTP Get Request to the System in the Surstoffi Area how save the Modbus Energy Data and the Solar Log Energy Data
+
+//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN nState := 0; bBusy := FALSE; END_IF
+
+RisingEdge(CLK:= bSend);
+
+CASE nState OF
+0:
+    IF RisingEdge.Q THEN
+		bValidResult := FALSE;
+			IF fbRequest.SendRequest(sUri:= '/query?pretty=true&db=suZEV01&q=SELECT%20%22last%22%28%22Leistung%22%29%20FROM%20%22ZevModbus%22%20WHERE%20%22DPkey%22%3D~%2FSU_18bx_U01_TE01_C001_B890%7CSU_18ax_U01_TE01_C001_B890%7CSU_16xx_U01_TE01_C001_B890%7CSU_20xx_U01_TE01_C001_B890%7CSU_22xx_U01_TE01_C001_B890%7CSU_16xx_U01_TE02_PV00_B890%7CSU_18ax_U01_TE01_PV00_B890%7CSU_18bx_U01_TE01_PV00_B890%7CSU_20xx_U01_TE01_PV00_B890%7CSU_22xx_U01_TE01_PV00_B890%2F%20GROUP%20by%20%22DPkey%22',
+									 fbClient:= fbClient, 
+									 eRequestType:= ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+				nState:= 1;
+				nReqCount:= nReqCount+1;
+				bBusy:= TRUE;
+				bError:= FALSE;
+			END_IF
+    END_IF
+1:
+    IF NOT fbRequest.bBusy THEN
+        bError:= TRUE;
+        IF NOT fbRequest.bError THEN
+            bGetContentResult:= fbRequest.GetContent(pContent:= ADR(sContent), 
+                                                     nContentSize:= SIZEOF(sContent), 
+                                                     bSetNullTermination:= TRUE);
+            IF fbRequest.nStatusCode >= 200 AND fbRequest.nStatusCode < 300 THEN
+                	bValidResult := TRUE;
+                    nValidResCount:= nValidResCount+1;
+                    bError:= FALSE;
+               		nResCount:= nResCount+1;
+           END_IF
+        END_IF
+        nState:= 0;
+        bBusy:= FALSE;
+        IF bError THEN
+            nErrCount:= nErrCount+1;
+        END_IF
+    END_IF
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HTTP_Get_Energy_Surstoffi">
+      <LineId Id="119" Count="2" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="159" Count="1" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="43" Count="16" />
+      <LineId Id="63" Count="3" />
+      <LineId Id="68" Count="7" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

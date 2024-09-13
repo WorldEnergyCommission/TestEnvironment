@@ -1,0 +1,327 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_WritePersistentData_CX9020_U900" Id="{2bea3edd-f5c4-4ca4-87b4-7a5e6d6537d5}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_WritePersistentData_CX9020_U900
+VAR_INPUT			
+	eSaveModeData					: eUSVSaveMode;																	//Chosse the Save Mode
+END_VAR
+VAR_OUTPUT
+	bLoadPersistentDataOk			: BOOL;																			//After resart the PLC this Variable show if the load from the Persistent Data is OK
+	bPowerFailDetect				: BOOL;																			//USV has a powerfail detected
+	bError							: BOOL;																			//An Error has sucess
+	bySaveProcess					: BYTE;																			//Save Provess (0-100%)
+	dwStorageLast24h				: DWORD;																		//Show the persistent storage cycles from the last 24 hours
+	udiErrorCode					: UDINT;																		//Error code
+END_VAR
+VAR	
+	fbUSVCX9020						: FB_S_UPS_CX9020_U900;															//Function that communicate with the internal USV on the plc
+	fbWritePersistentData			: FB_WritePersistentData;														//Function that save the persistent data on the card in the plc
+	timSaveData						: TON;																			//Delay when the Data Save on the Card from the PLC
+	timSaveTime						: TON;																			//Time which shortens the pause between saving again when saving often in succession 
+	tim24h							: TON;																			//Timer that reset the Counter from Save 
+	timDissableFunctions			: TON;																			//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL			: TON;																			//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	FPErrorSave						: R_TRIG;																		//Internal positive Edge
+	FPCounterSave					: R_TRIG;																		//Internal positive Edge
+	FPBusy							: R_TRIG;																		//Internal positive Edge
+	FNBusySave						: F_TRIG;																		//Internal negative Edge
+	bNumberOfMasters				: BOOL;																			//True when the Function has received a number
+	bInit							: BOOL;																			//Init variable to wait 1 Cycle in Init Step
+	byCounterSaveCycles				: BYTE;																			//Counter with the Save cycles
+	iStateSave						: INT;																			//State Maschine
+	udiOnlineChangeCounter_CP		: UDINT;																		//Number of online changes to compare it
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 10.02.2021
+//Version : 1.0.0.0
+
+//With this Function is posssible to write persitent Data to the card on the plc.
+//Supported PLC are all CX9020-U900 which have an internal 1 second UPS.
+//The Function work in 3 different Modes.
+//Mode 1 save the Persistent Data in the PLC Code after the 1 Second USV detect a Power Fail.
+//Mode 2 save the Persistent Data in the PLC Code Event-based. This means that when one or more persistent variables in the code change, the data is saved. 
+//The more often values on the PLC change, the less often the data is saved. This is to protect the SD card. (too frequent writing)
+//Mode 3 is a mixture of mode 1 and mode 2 
+
+//--------------------------------------------------------------------------Check number of Masters---------------------------------------------------------------------------
+
+IF NOT bNumberOfMasters THEN
+	Lynus_Standards.GVL_Persistent_Data.byNumberOfMasters := Lynus_Standards.GVL_Persistent_Data.byNumberOfMasters + 1;
+		bNumberOfMasters := TRUE;		 
+END_IF
+	IF udiOnlineChangeCounter_CP <> TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt THEN
+		Lynus_Standards.GVL_Persistent_Data.byNumberOfMasters := 0;
+			bNumberOfMasters := FALSE;	
+				udiOnlineChangeCounter_CP := TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt; 		
+	END_IF 
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backend for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );		
+	
+//--------------------------------------------------------------------------FB USV---------------------------------------------------------------------------
+
+fbUSVCX9020(
+	sNetID:= , 
+	iPLCPort:= , 
+	tTimeout:= , 
+	eUpsMode:= eSUPS_CheckPowerStatus, 
+	ePersistentMode:= , 
+	tRecoverTime:= T#10S, 
+	bPowerFailDetect=> bPowerFailDetect, 
+	eState=> );
+
+//----------------------------------------------------------------------Mode select--------------------------------------------------------------------------
+
+//Write persistent Data
+IF (Lynus_Standards.GVL_Persistent_Data.bSaveData AND iStateSave = 0 AND bInit AND 
+	(eSaveModeData = eUSVSaveMode.eSaveEventBased OR eSaveModeData = eUSVSaveMode.eSaveOnBoth)) THEN 
+		iStateSave := 1; 
+END_IF 
+
+//Save only on Powerfail
+IF eSaveModeData = eUSVSaveMode.eSaveWhenPowerfail THEN iStateSave := 0; END_IF 
+
+//Wait 1 Cycle in Init Step to reset all
+IF iStateSave = 0 THEN bInit := TRUE; END_IF
+
+//Save Progress if event based is active
+bySaveProcess := REAL_TO_BYTE(F_Scalvalue(x:= TIME_TO_REAL(timSaveData.ET), x1:= 0, y1:= 0, x2:= TIME_TO_REAL(timSaveData.PT), y2:= 100));		
+	IF NOT timSaveData.IN THEN bySaveProcess := 100; END_IF
+		
+CASE iStateSave OF
+	
+	0://Init
+		fbWritePersistentData.START := FALSE;
+			timSaveTime.IN := NOT timSaveTime.Q;
+				timSaveData.IN := FALSE;
+
+	1://Start to Save Data Event based
+		timSaveTime.IN := FALSE;
+			timSaveData.IN := TRUE;
+		
+		//Next Step
+		iStateSave := 2;
+
+	2://Wait at Counter to Save Data (Necessary to prevent too many memory accesses on the card) 		
+		IF timSaveData.Q THEN fbWritePersistentData.START := TRUE; timSaveData.IN := FALSE; END_IF		
+
+		//IF saving is Ok, back to Step 0
+		IF FNBusySave.Q AND NOT fbWritePersistentData.ERR THEN 
+			iStateSave := 0; 
+				dwStorageLast24h := dwStorageLast24h + 1;	
+					byCounterSaveCycles := byCounterSaveCycles + 1;
+						Lynus_Standards.GVL_Persistent_Data.bBusy := FALSE;
+							Lynus_Standards.GVL_Persistent_Data.bSaveData := FALSE;
+								bInit := FALSE;
+		END_IF
+		
+		//If Error try it again to Save
+		IF NOT fbWritePersistentData.BUSY AND FPErrorSave.Q THEN iStateSave := 1; byCounterSaveCycles := byCounterSaveCycles + 1; Lynus_Standards.GVL_Persistent_Data.bBusy := FALSE; END_IF
+
+		byCounterSaveCycles := LIMIT(0,byCounterSaveCycles,15);	
+		
+END_CASE
+
+//Timer
+//Calculate the Save Data Time and the Time to reset the counter that calcualte the Save time
+IF byCounterSaveCycles = 0 OR byCounterSaveCycles = 1 THEN timSaveData.PT := T#15S; timSaveTime.PT := T#150S; END_IF
+IF byCounterSaveCycles = 2 THEN timSaveData.PT := T#30S; timSaveTime.PT := T#150S; END_IF
+IF byCounterSaveCycles = 3 THEN timSaveData.PT := T#60S; timSaveTime.PT := T#150S; END_IF
+IF byCounterSaveCycles = 4 THEN timSaveData.PT := T#120S; timSaveTime.PT := T#300S; END_IF
+IF byCounterSaveCycles = 5 THEN timSaveData.PT := T#180S; timSaveTime.PT := T#300S; END_IF
+IF byCounterSaveCycles = 6 THEN timSaveData.PT := T#240S; timSaveTime.PT := T#300S; END_IF
+IF byCounterSaveCycles = 7 THEN timSaveData.PT := T#300S; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 8 THEN timSaveData.PT := T#360S; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 9 THEN timSaveData.PT := T#420S; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 10 THEN timSaveData.PT := T#450S; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 11 THEN timSaveData.PT := T#10M; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 12 THEN timSaveData.PT := T#12.5M; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 13 THEN timSaveData.PT := T#15M; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 14 THEN timSaveData.PT := T#17.5M; timSaveTime.PT := T#600S; END_IF
+IF byCounterSaveCycles = 15 THEN timSaveData.PT := T#20M; timSaveTime.PT := T#600S; END_IF
+
+timSaveData(IN:= , PT:= , Q=> , ET=> );
+	timSaveTime(IN:= , PT:= , Q=> , ET=> );
+
+FPCounterSave(CLK:= timSaveTime.Q, Q=> );	
+	
+IF FPCounterSave.Q AND byCounterSaveCycles >= 1 THEN byCounterSaveCycles := byCounterSaveCycles - 1; END_IF
+	byCounterSaveCycles := LIMIT(0,byCounterSaveCycles,15);			
+
+//Save the Data when a Powerfail is detected
+IF (bPowerFailDetect AND (eSaveModeData = eUSVSaveMode.eSaveWhenPowerfail OR eSaveModeData = eUSVSaveMode.eSaveOnBoth)) THEN 
+	fbWritePersistentData.START := bPowerFailDetect; 
+		bySaveProcess := 100;
+END_IF	
+	
+//--------------------------------------------------------------------------FB Write Persistent Data-----------------------------------------------------------
+
+//Dissable this Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days no connectiopn to the Lynus Service
+IF timDissableFunctions.Q THEN fbWritePersistentData.START := FALSE; END_IF
+	
+fbWritePersistentData(
+	NETID:= , 
+	PORT:= TwinCAT_SystemInfoVarList._AppInfo.AdsPort, 
+	START:= , 
+	TMOUT:= T#5S, 
+	MODE:= SPDM_2PASS, 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> udiErrorCode);
+	
+FPErrorSave(CLK:= fbWritePersistentData.ERR, Q=> );
+	FNBusySave(CLK:= fbWritePersistentData.BUSY, Q=> );
+		FPBusy(CLK:= fbWritePersistentData.BUSY, Q=> );	
+		
+//Write Data in internal array when saving process beginn
+IF FPBusy.Q THEN Lynus_Standards.GVL_Persistent_Data.bBusy := TRUE; END_IF
+		
+//Check, if the Load from Persistent Data is Ok after restart
+bLoadPersistentDataOk := TwinCAT_SystemInfoVarList._AppInfo.BootDataLoaded;
+
+//------------------------------------------------------------------------Global Data------------------------------------------------------------------------------
+
+IF eSaveModeData = eUSVSaveMode.eSaveEventBased OR eSaveModeData = eUSVSaveMode.eSaveOnBoth THEN 
+	Lynus_Standards.GVL_Persistent_Data.bEventBasedActive := TRUE; 
+ELSE 
+	Lynus_Standards.GVL_Persistent_Data.bEventBasedActive := FALSE; 
+		Lynus_Standards.GVL_Persistent_Data.bBusy := FALSE;
+			Lynus_Standards.GVL_Persistent_Data.bSaveData := FALSE;
+				dwStorageLast24h := 0;
+END_IF
+
+//------------------------------------------------------------------------Reset Counter for 24 hours save cycles---------------------------------------------------
+
+tim24h(IN:= (NOT tim24h.Q AND (eSaveModeData = eUSVSaveMode.eSaveEventBased OR eSaveModeData = eUSVSaveMode.eSaveOnBoth)), PT:= T#24H, Q=> , ET=> );
+	IF tim24h.Q THEN dwStorageLast24h := 0; END_IF
+
+//------------------------------------------------------------------------Error Handling---------------------------------------------------------------------------
+
+IF TwinCAT_SystemInfoVarList._AppInfo.OldBootData OR fbWritePersistentData.ERR OR Lynus_Standards.GVL_Persistent_Data.byNumberOfMasters > 1 OR timDissableFunctions.Q THEN bError := TRUE; ELSE bError := FALSE; END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_WritePersistentData_CX9020_U900">
+      <LineId Id="48" Count="2" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="52" Count="4" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="480" Count="9" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="523" Count="1" />
+      <LineId Id="566" Count="4" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="25" Count="8" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="242" Count="1" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="390" Count="1" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="383" Count="1" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="149" Count="1" />
+      <LineId Id="155" Count="1" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="183" Count="11" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="36" Count="7" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="380" Count="1" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="96" Count="1" />
+      <LineId Id="105" Count="1" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="115" Count="2" />
+      <LineId Id="376" Count="1" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="533" Count="1" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

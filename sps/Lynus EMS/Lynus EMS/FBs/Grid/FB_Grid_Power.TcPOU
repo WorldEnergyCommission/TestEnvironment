@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Grid_Power" Id="{98e1b415-13f0-4f0c-a868-5f2575b46551}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Grid_Power
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;													//Enable the Fuctionblock and his logic
+	diNrOfEMS_IN							: DINT;													//Number of EMS on what this Device send Data
+	diNrOfEM_IN_Grid						: DINT;													//Number of the electric meter for incoming power data. (Power Data for this Device)
+	rSizeGridConn							: REAL;													//{#lynus.ag#()} //Max Size of the Grid connection in kW
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataGrid								: ST_GridConnection_Output;								//{#lynus.ag#()} //Output Data from the Grid
+	diNrOfGrid_OUT							: DINT;													//Active Number from the Grid connection for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbGrid									: FB_GridConnection;									//Function block for grid connection
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;									//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	timDissableFunctions					: TON;													//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}	
+	timResetConnectionOnGVL					: TON;													//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD									: ARRAY[1..5] OF FB_PersistentData_Number;				//Function to save persistent data 
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;													//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData							: INT;													//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diCounterForGVL							: DINT;													//Counter to clean old data on GVL
+	{attribute 'hide'}
+	diLPForGVL								: DINT;													//Loop to clean old data on GVL
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	diNrOfEMS_IN_CP							: DINT;													//Number of EMS what control this Device to compare with the original
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 07.06.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to show the power data from a grid connection.
+//The size from the Grid connection is sending to the ems
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+	diNrOfEM_IN_Grid := LIMIT(0,diNrOfEM_IN_Grid,Constants_Energy.diMaxNumberOfElectricMeters);
+
+(*-------------------------------------------------------------Calcualte the number of Grid connection---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfGrids, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfGridConnections, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfGrid_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfGrids := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfGrids := diNrOfGrid_OUT;	
+		iStateGVLData := 1; 
+END_IF	
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------Error----------------------------------------------------------------------------*)
+
+IF timDissableFunctions.Q THEN fbGrid.bWarning := TRUE; fbGrid.iWarningCode := 0; ELSE fbGrid.bWarning := FALSE; END_IF 			
+	IF Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].byErrorWarning = 2 OR Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfGrids > Constants_Energy.diMaxNumberOfGridConnections THEN fbGrid.bError := TRUE; ELSE fbGrid.bError := FALSE; END_IF 
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfGrids > Constants_Energy.diMaxNumberOfGridConnections THEN fbGrid.iErrorCode := 1;
+ELSIF Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].byErrorWarning = 2 THEN fbGrid.iErrorCode := 0;
+END_IF  
+
+(*------------------------------------------------------------------FB Grid----------------------------------------------------------------------------*)
+
+fbGrid(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bWriteWithDelay:= TRUE, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].lrTotalCounterEnergy_Consumption * 1000, 
+	lrTotalCounterEnergy_Production:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].lrTotalCounterEnergy_Production * 1000, 
+	lrCounterEnergyT1_Consumption:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].lrCounterEnergyT1_Consumption * 1000, 
+	lrCounterEnergyT2_Consumption:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].lrCounterEnergyT2_Consumption * 1000, 
+	lrCounterEnergyT1_Production:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].lrCounterEnergyT1_Production * 1000, 
+	lrCounterEnergyT2_Production:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].lrCounterEnergyT2_Production * 1000, 
+	lrPowerGrid:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_Grid].lrPower * 1000, 
+	rSizeGridConn:= rSizeGridConn, 
+	tTimDelayOutput:= T#5S, 
+	stDataGridOut=> , 
+	stDataGridOutDelay=> stDataGrid);
+	
+(*-----------------------------------------------------------Handle data to Global structure for the grid connections-----------------------------------------------------------------*)
+
+//Delte al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN iStateGVLData := 10; END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO 
+			Lynus_Standards.GVL_Energy.stDataGridConnections[diLPForGVL,diCounterForGVL].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataGridConnections[diLPForGVL,diCounterForGVL].byErrorWarning := 0;
+					Lynus_Standards.GVL_Energy.stDataGridConnections[diLPForGVL,diCounterForGVL].lrPower := 0;
+						Lynus_Standards.GVL_Energy.stDataGridConnections[diLPForGVL,diCounterForGVL].lrPowerConsumption := 0;
+							Lynus_Standards.GVL_Energy.stDataGridConnections[diLPForGVL,diCounterForGVL].lrPowerProduction := 0;
+								Lynus_Standards.GVL_Energy.stDataGridConnections[diLPForGVL,diCounterForGVL].rSizeGridConn := 0;
+		END_FOR
+			diCounterForGVL := diCounterForGVL + 1;
+				diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfGridConnections);
+					//Back to the init step
+					IF diCounterForGVL >= Constants_Energy.diMaxNumberOfGridConnections THEN iStateGVLData := 0; END_IF
+
+	10://Clear old Data on GVL 	
+		Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN_CP,diNrOfGrid_OUT].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN_CP,diNrOfGrid_OUT].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN_CP,diNrOfGrid_OUT].lrPower := 0;
+					Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN_CP,diNrOfGrid_OUT].lrPowerConsumption := 0;
+						Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN_CP,diNrOfGrid_OUT].lrPowerProduction := 0;
+							Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN_CP,diNrOfGrid_OUT].rSizeGridConn := 0;
+	
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+			//Back to the init step
+			iStateGVLData := 0;
+
+END_CASE 	 
+
+IF diNrOfGrid_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,diNrOfGrid_OUT].bEnabled := fbGrid.stDataGridOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,diNrOfGrid_OUT].byErrorWarning := fbGrid.stDataGridOut.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,diNrOfGrid_OUT].lrPower := fbGrid.stDataGridOut.lrPower;
+				Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,diNrOfGrid_OUT].lrPowerConsumption := fbGrid.stDataGridOut.lrPowerConsumption;
+					Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,diNrOfGrid_OUT].lrPowerProduction := fbGrid.stDataGridOut.lrPowerProduction;
+						Lynus_Standards.GVL_Energy.stDataGridConnections[diNrOfEMS_IN,diNrOfGrid_OUT].rSizeGridConn := fbGrid.stDataGridOut.rSizeGridConn;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_Grid), bEventBasedActive=> );
+arrPD[4](lrValue:= REAL_TO_LREAL(rSizeGridConn), bEventBasedActive=> );
+arrPD[5](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Grid_Power">
+      <LineId Id="3" Count="137" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

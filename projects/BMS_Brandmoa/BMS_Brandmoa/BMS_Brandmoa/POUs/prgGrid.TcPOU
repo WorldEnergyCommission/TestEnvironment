@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgGrid" Id="{6495b686-2f46-45c1-b8c2-54d95194a867}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR
+	fbKBusState					: FB_K_Bus_State;
+	fbEM1						: FB_EM_Beckhoff_KL3403;
+	lrPowerGrid					: LREAL;							//{#lynus.ag#()}
+	lrPowerGen				: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_1				: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_2				: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_3				: LREAL;							//{#lynus.ag#()}
+	lrCounterGridCon			: LREAL;							//{#lynus.ag#()}
+	lrCounterGridProd			: LREAL;							//{#lynus.ag#()}
+	rSizeGridConn				: REAL;								//{#lynus.ag#()}
+	lr_GridVoltageL1N_V			: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL2N_V			: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL3N_V			: LREAL;							//{#lynus.ag#()}
+	lr_GridCurrentL1_A			: LREAL;							//{#lynus.ag#()}
+	lr_GridCurrentL2_A			: LREAL;							//{#lynus.ag#()}
+	lr_GridCurrentL3_A			: LREAL;							//{#lynus.ag#()}
+	lr_GridFrequency_Hz			: LREAL;							//{#lynus.ag#()}
+
+	lrReactivePowerGrid			: LREAL;							//{#lynus.ag#()}
+	lrApparentPowerGrid			: LREAL;							//{#lynus.ag#()}
+	fbGrid: FB_Grid_Power;
+	
+	mIn_1 AT%I*: BOOL;		// Netz Ein
+	mIn_2 AT%I*: BOOL;		// Gen Ein
+	mIn_3 AT%I*: BOOL;		// Netz Ok U& f
+	mIn_4 AT%I*: BOOL;		// Gen ok U & f
+	mIn_5 AT%I*: BOOL;		// Schütz Speicher out on
+	mIn_6 AT%I*: BOOL;		// Speicher BYP Schütz ein
+	mIn_7 AT%I*: BOOL;		// Spannung speicher out ok
+	mIn_8 AT%I*: BOOL;		// Bypass spannung ok
+	m_OnGen:BOOL;													//{#lynus.ag#()}
+	m_OnGrid:BOOL;													//{#lynus.ag#()}
+	m_GenTemp:BOOL;													//{#lynus.ag#()}
+	int_GenTemp:INT;													//{#lynus.ag#()}
+END_VAR
+
+	
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//The mapping of this function must be linked with the K-Bus State in the E/A Part
+fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+
+//The mapping of this function must be linked with the KL3403 in the E/A Part
+//The measurment is showing the bus bar voltage and the current either from mains or generator 
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,				//Invert power data when transformer are mounted upside down
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 1500, //Transformer ratio on the secondary side 1500/5A CTs mounted
+	uiCurrentTransformerRatioL2:= 1500, 
+	uiCurrentTransformerRatioL3:= 1500, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+IF m_OnGen then
+	lrPowerGen := fbEM1.stDataEMPower.lrPowerTotal;
+	lrPowerGrid := 0;
+ELSE
+	lrPowerGen := 0;
+	lrPowerGrid := fbEM1.stDataEMPower.lrPowerTotal;	
+END_IF
+	
+lrCounterGridCon := fbEM1.stDataEMCounter.lrTotalCounterEnergy_Consumption;	
+lrCounterGridProd := fbEM1.stDataEMCounter.lrTotalCounterEnergy_Production;	
+lrPowerEM1_1 := fbEM1.stDataEMPowerRealTime.lrPowerL1;
+lrPowerEM1_2 := fbEM1.stDataEMPowerRealTime.lrPowerL2;
+lrPowerEM1_3 := fbEM1.stDataEMPowerRealTime.lrPowerL3;
+
+lrReactivePowerGrid:=fbEM1.stDataEMPower.lrReactivePowerTotal;
+lrApparentPowerGrid:=fbEM1.stDataEMPower.lrApparentPowerTotal;
+
+lr_GridVoltageL1N_V:=fbEM1.stDataEMPowerRealTime.lrVoltageL1N;
+lr_GridVoltageL2N_V:=fbEM1.stDataEMPowerRealTime.lrVoltageL2N;
+lr_GridVoltageL3N_V:=fbEM1.stDataEMPowerRealTime.lrVoltageL3N;
+lr_GridCurrentL1_A := fbEM1.stDataEMPowerRealTime.lrCurrentL1;
+lr_GridCurrentL2_A := fbEM1.stDataEMPowerRealTime.lrCurrentL2;
+lr_GridCurrentL3_A := fbEM1.stDataEMPowerRealTime.lrCurrentL3;
+lr_GridFrequency_Hz := fbEM1.stDataEMPowerRealTime.lrFrequency;
+
+fbGrid(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_Grid:= 	fbEM1.diNrOfEM_OUT,			//prgBattery.fbBattery.diNrOfEM_OUT_Grid, 
+	rSizeGridConn:= rSizeGridConn, 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );
+
+// IOs
+m_OnGen := mIn_2;
+m_OnGrid := mIn_1;	]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="3" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="208" Count="1" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="6" Count="17" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="292" Count="1" />
+      <LineId Id="296" Count="1" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="86" Count="2" />
+      <LineId Id="178" Count="3" />
+      <LineId Id="89" Count="5" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="152" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

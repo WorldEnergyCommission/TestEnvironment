@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPersistent" Id="{cf2e0bad-677f-4823-a2bf-489f86d455a8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPersistent
+VAR
+	fbUSV		: FB_WritePersistentData_CX81xx;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbUSV(
+	eSaveModeData:= eUSVSaveMode.eSaveWhenPowerfail, 
+	bLoadPersistentDataOk=> , 
+	bPowerFailDetect=> , 
+	bError=> , 
+	bySaveProcess=> , 
+	dwStorageLast24h=> , 
+	udiErrorCode=> );
+
+prg_SystemTime();]]></ST>
+    </Implementation>
+    <LineIds Name="prgPersistent">
+      <LineId Id="9" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

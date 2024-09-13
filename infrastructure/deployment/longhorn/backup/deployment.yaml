@@ -1,0 +1,55 @@
+apiVersion: longhorn.io/v1beta1
+kind: RecurringJob
+metadata:
+  name: backup
+  namespace: longhorn-system
+spec:
+  cron: "0 0 * * *"
+  task: "backup"
+  groups:
+    - default
+  retain: 8
+  concurrency: 1
+---
+apiVersion: longhorn.io/v1beta1
+kind: Setting
+metadata:
+  name: backup-target
+  namespace: longhorn-system
+value: "S3_BACKUP_TARGET_VALUE"
+---
+apiVersion: longhorn.io/v1beta1
+kind: Setting
+metadata:
+  name: concurrent-automatic-engine-upgrade-per-node-limit
+  namespace: longhorn-system
+value: "1"
+---
+apiVersion: longhorn.io/v1beta1
+kind: Setting
+metadata:
+  name: backup-target-credential-secret
+  namespace: longhorn-system
+value: "backup-secret"
+---
+apiVersion: longhorn.io/v1beta1
+kind: Setting
+metadata:
+  name: storage-over-provisioning-percentage
+  namespace: longhorn-system
+value: "200"
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: fs-trim
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: '0/15 * * * *'
+  groups:
+    - default
+  labels: {}
+  name: fs-trim
+  retain: 0
+  task: filesystem-trim

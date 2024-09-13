@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgEM" Id="{5f366b83-7611-48bb-a9ca-81fe987230b2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbRand			: DRAND;
+	lrRandNum		: LREAL;
+	lrEMConsumption	: LREAL; //{#lynus.ag#()}
+	lrEMCounter		: LREAL; //{#lynus.ag#()}
+	fbTimer1		: TON;
+	bStart1			: BOOL := TRUE;
+	fbTimer2		: TON;
+	bStart2			: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbTimer1(IN := bStart1, PT := T#15M);
+
+IF fbTimer1.Q THEN
+	bStart1 := FALSE;
+	fbRand(Seed := 0);
+	lrEMConsumption := fbRand.Num / 2;
+	lrEMCounter := lrEMCounter + lrEMConsumption;
+	bStart2 := TRUE;
+END_IF
+
+fbTimer2(IN := bStart2, PT := T#15M);
+
+IF fbTimer2.Q THEN
+	bStart2 := FALSE;
+	fbRand(Seed := 0);
+	lrEMConsumption := fbRand.Num;
+	bStart1 := TRUE;
+	lrEMCounter := lrEMCounter + lrEMConsumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="15" Count="17" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

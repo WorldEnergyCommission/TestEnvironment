@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ADS_Read" Id="{70022380-8373-43c1-871a-ae5f6a8fe900}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ADS_Read
+VAR
+	intState: INT;
+	fbADSRDWRT: ADSRDWRT;
+	Timer1: TON;
+END_VAR
+VAR_INPUT
+	udintWriteLength:UDINT;
+	udintReadLength:UDINT;
+	dwSourceAddr:pvoid;
+	dwDestAddr:PVOID;
+	strNetID: STRING;
+	timeReadDelay:TIME;
+END_VAR
+VAR_OUTPUT
+	mADSError: BOOL;
+	strADSErrorText: STRING;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[timeReadDelay := LIMIT(T#100MS,timeReadDelay,T#24H);
+
+CASE intState OF
+	0:	(* start reading *)
+		fbADSRDWRT.WRITELEN:=udintWriteLength;
+		fbADSRDWRT.READLEN:=udintReadLength;
+		fbADSRDWRT.SRCADDR:=dwSourceAddr;
+		fbADSRDWRT.DESTADDR:=dwDestAddr;
+		fbADSRDWRT.WRTRD:=TRUE;
+		intState:=1000;
+	1000: (* wait for reply *)
+		IF NOT fbADSRDWRT.BUSY THEN
+			fbADSRDWRT.WRTRD:=FALSE;
+			IF NOT fbADSRDWRT.ERR THEN
+				strADSErrorText:='no error';
+				mADSError:=FALSE;
+				Timer1.IN:=TRUE;
+				intState:=1100;
+			ELSE
+				strADSErrorText:=F_AdsErrorText(fbADSRDWRT.ERRID);
+				mADSError:=TRUE;
+				Timer1.IN:=TRUE;
+				intState:=1100;
+			END_IF
+		END_IF
+	1100: (* wait to hold state *)
+		fbADSRDWRT.WRTRD:=FALSE;
+		IF Timer1.Q THEN
+			Timer1.IN:=FALSE;
+			intState:=0;
+		END_IF
+		
+END_CASE
+
+Timer1(PT:=timeReadDelay);
+
+
+fbADSRDWRT(
+	NETID:=strNetID,
+	PORT:=851,
+	IDXGRP:=16#F004,
+	IDXOFFS:=0,
+	TMOUT:=t#10s);
+
+
+(*
+VAR_INPUT
+        NETID           : T_AmsNetId;
+        PORT            : T_AmsPort;
+        IDXGRP          : UDINT;
+        IDXOFFS         : UDINT;
+        WRITELEN                : UDINT;
+        READLEN         : UDINT;
+        SRCADDR                 : DWORD;
+        DESTADDR                : DWORD;
+        WRTRD           : BOOL;
+        TMOUT           : TIME;
+END_VAR
+VAR_OUTPUT
+        BUSY            : BOOL;
+        ERR             : BOOL;
+        ERRID           : UDINT;
+END_VAR
+
+*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ADS_Read">
+      <LineId Id="105" Count="1" />
+      <LineId Id="27" Count="14" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="42" Count="8" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="51" Count="3" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="57" Count="29" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

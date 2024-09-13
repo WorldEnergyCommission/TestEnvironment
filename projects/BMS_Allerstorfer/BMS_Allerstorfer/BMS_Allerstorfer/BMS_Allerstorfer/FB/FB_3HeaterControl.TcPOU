@@ -1,0 +1,343 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_3HeaterControl" Id="{e354d3ea-6faf-4aea-9d12-8fcd8611e5de}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_3HeaterControl
+VAR_INPUT
+	m_Enbale					: BOOL;
+	m_Temperature_high			: BOOL;
+	m_Battery_Discharging		: BOOL;
+	real_Temperature			: REAL;
+	real_TemperatureSetPoint	: REAL;
+	real_GridPower				: REAL;
+	real_BatteryPower			: REAL;
+	real_Size_Step1_kW			: REAL;
+	real_Size_Step2_kW			: REAL;
+	real_Size_Step3_kW			: REAL;
+	
+	
+END_VAR
+VAR_OUTPUT
+	m_Step1						: BOOL;
+	m_Step2						: BOOL;
+	m_Step3						: BOOL;
+END_VAR
+VAR
+	fb_HourCounter_Step1		: FB_HourCounter;
+	fb_HourCounter_Step2		: FB_HourCounter;
+	fb_HourCounter_Step3		: FB_HourCounter;
+	r_Trig_allOff				: r_trig;
+	real_Hours_Step1			: REAL;
+	real_Hours_Step2			: REAL;
+	real_Hours_Step3			: REAL;	
+	arr_sint_StartOrder			: ARRAY[1..3] OF SINT;
+	arr_real_LoadSize			: ARRAY[1..3] OF REAL;
+	arr_real_Steps				: ARRAY[1..3] OF REAL;
+	
+	
+	int_state					: INT;
+	ton_OnDelay_Steps			: Ton;
+	time_OnDelay				: TIME:=T#30S;	
+	ton_OffDelay_Steps			: Ton;
+	time_OffDelay				: TIME:=T#30S;	
+	ton_WaitDelay_Steps			: Ton;
+	time_WaitDelay				: TIME:=T#30S;	
+	sint_Steps_On				: SINT;
+	ton_OffDelay2_Steps			: Ton;
+	time_OffDelay2				: TIME:=T#15S;	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+CASE int_state OF
+	0:	// not enabled
+		m_Step1 := FALSE;
+		m_Step2 := FALSE;
+		m_Step3 := FALSE;
+		sint_Steps_On := 0;
+		ton_OnDelay_Steps.IN := FALSE;
+		ton_OffDelay_Steps.IN := FALSE;
+		ton_OffDelay2_Steps.IN := FALSE;
+		ton_WaitDelay_Steps.IN := FALSE;
+		
+		IF 	m_Enbale THEN
+			int_state := 10;
+		END_IF
+	
+	10: // check that mains power gets more negative thenn step power + 20%
+		IF sint_Steps_On <3 THEN 
+			IF real_GridPower + arr_real_LoadSize[sint_Steps_On+1]*1.2 < 0 AND NOT m_Temperature_high AND real_Temperature < (real_TemperatureSetPoint-2) THEN 
+				ton_OnDelay_Steps.IN := TRUE;
+			ELSE
+				ton_OnDelay_Steps.IN := FALSE;
+			END_IF
+		END_IF
+		IF ton_OnDelay_Steps.Q THEN
+			ton_OnDelay_Steps.IN := FALSE;
+			int_state := 11;
+		END_IF
+		IF sint_Steps_On <>0 THEN 
+			IF real_GridPower > 3 OR  real_Temperature > real_TemperatureSetPoint OR (m_Battery_Discharging AND real_BatteryPower > 5) THEN
+ 				ton_OffDelay_Steps.IN := TRUE;
+			ELSE
+				ton_OffDelay_Steps.IN := FALSE;
+			END_IF
+			IF real_GridPower > 10 THEN
+ 				ton_OffDelay2_Steps.IN := TRUE;
+			ELSE
+				ton_OffDelay2_Steps.IN := FALSE;
+			END_IF
+			
+			IF ton_OffDelay_Steps.Q THEN
+				ton_OffDelay_Steps.IN := FALSE;
+				ton_OffDelay2_Steps.IN := FALSE;
+				int_state := 12;
+			END_IF
+			IF m_Temperature_high AND sint_Steps_On <>0 THEN
+				ton_OnDelay_Steps.IN := FALSE;
+ 				ton_OffDelay_Steps.IN := FALSE;
+				ton_OffDelay2_Steps.IN := FALSE;
+				int_state := 15;
+			END_IF
+		END_IF
+		
+		
+	11: // count step one up
+		sint_Steps_On := sint_Steps_On+1;
+		int_state := 20;
+		
+	12:// count step one down
+		sint_Steps_On := sint_Steps_On-1;
+		int_state := 20;
+	
+	15:// Switch off all steps
+		sint_Steps_On := 0;
+		int_state := 20;
+	
+	20: // wait state	
+		ton_WaitDelay_Steps.IN := TRUE;
+		IF ton_WaitDelay_Steps.Q THEN
+			ton_WaitDelay_Steps.IN := FALSE;
+			int_state := 10;
+		END_IF
+END_CASE
+ton_OnDelay_Steps(PT := time_OnDelay);
+ton_OffDelay_Steps(PT := time_OffDelay);
+ton_OffDelay2_Steps(PT := time_OffDelay2);
+ton_WaitDelay_Steps(PT := time_WaitDelay);
+
+// if not enabled, force state to 0
+IF 	NOT m_Enbale THEN
+	int_state := 0;
+END_IF
+
+// switch on steps according to sint_Steps_On
+CASE sint_Steps_On OF
+	0:
+		m_Step1 := FALSE;
+		m_Step2 := FALSE;
+		m_Step3 := FALSE;
+		
+	1:
+		m_Step1 := FALSE;
+		m_Step2 := FALSE;
+		m_Step3 := FALSE;
+		IF arr_sint_StartOrder[1] = 1 THEN 
+ 			m_Step1 := TRUE;
+		ELSIF arr_sint_StartOrder[1] = 2 THEN 
+			m_Step2 := TRUE;
+		ELSIF arr_sint_StartOrder[1] = 3 THEN 
+			m_Step3 := TRUE;
+		END_IF
+	2:
+		m_Step1 := FALSE;
+		m_Step2 := FALSE;
+		m_Step3 := FALSE;
+		IF arr_sint_StartOrder[1] = 1 THEN 
+ 			m_Step1 := TRUE;
+		ELSIF arr_sint_StartOrder[1] = 2 THEN 
+			m_Step2 := TRUE;
+		ELSIF arr_sint_StartOrder[1] = 3 THEN 
+			m_Step3 := TRUE;
+		END_IF
+		IF arr_sint_StartOrder[2] = 1 THEN 
+ 			m_Step1 := TRUE;
+		ELSIF arr_sint_StartOrder[2] = 2 THEN 
+			m_Step2 := TRUE;
+		ELSIF arr_sint_StartOrder[2] = 3 THEN 
+			m_Step3 := TRUE;
+		END_IF
+	3:
+		m_Step1 := TRUE;
+		m_Step2 := TRUE;
+		m_Step3 := TRUE;		
+END_CASE		
+	
+// find out which step has the lowest running hours
+r_Trig_allOff(CLK := NOT m_Step1 AND NOT m_Step2 AND NOT m_Step3);
+
+IF r_Trig_allOff.Q THEN
+	IF real_Hours_Step1 <= real_Hours_Step2 AND real_Hours_Step1<=real_Hours_Step3 THEN
+		arr_sint_StartOrder[1] := 1;
+		IF real_Hours_Step2 <= real_Hours_Step3 THEN
+			arr_sint_StartOrder[2] := 2;
+			arr_sint_StartOrder[3] := 3;
+		ELSE
+			arr_sint_StartOrder[2] := 3;
+			arr_sint_StartOrder[3] := 2;
+		END_IF
+	ELSIF real_Hours_Step2 <= real_Hours_Step1 AND real_Hours_Step2<=real_Hours_Step3 THEN
+		arr_sint_StartOrder[1] := 2;
+		IF real_Hours_Step1 <= real_Hours_Step3 THEN
+			arr_sint_StartOrder[2] := 1;
+			arr_sint_StartOrder[3] := 3;
+		ELSE
+			arr_sint_StartOrder[2] := 3;
+			arr_sint_StartOrder[3] := 1;
+		END_IF
+	ELSIF real_Hours_Step3 <= real_Hours_Step1 AND real_Hours_Step3<=real_Hours_Step2 THEN
+		arr_sint_StartOrder[1] := 3;
+		IF real_Hours_Step1 <= real_Hours_Step2 THEN
+			arr_sint_StartOrder[2] := 1;
+			arr_sint_StartOrder[3] := 2;
+		ELSE
+			arr_sint_StartOrder[2] := 2;
+			arr_sint_StartOrder[3] := 1;
+		END_IF
+	END_IF
+	arr_real_Steps[1]	:= real_Size_Step1_kW;
+	arr_real_Steps[2]	:= real_Size_Step2_kW;
+	arr_real_Steps[3]	:= real_Size_Step3_kW;
+	
+	arr_real_LoadSize[1] :=   arr_real_Steps[arr_sint_StartOrder[1]];
+	arr_real_LoadSize[2] :=   arr_real_Steps[arr_sint_StartOrder[2]];
+	arr_real_LoadSize[3] :=   arr_real_Steps[arr_sint_StartOrder[3]];
+	
+END_IF
+
+
+
+// hour counter for each step
+fb_HourCounter_Step1(	mCounterON:= m_Step1, 
+						realHours=> real_Hours_Step1);
+						
+fb_HourCounter_Step2(	mCounterON:= m_Step2, 
+						realHours=> real_Hours_Step2);
+						
+fb_HourCounter_Step3(	mCounterON:= m_Step3, 
+						realHours=> real_Hours_Step3);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_3HeaterControl">
+      <LineId Id="19" Count="1" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="96" Count="1" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="240" Count="1" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="231" Count="1" />
+      <LineId Id="371" Count="4" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="234" Count="1" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="387" Count="2" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="214" Count="1" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="124" Count="1" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="103" Count="2" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="252" Count="1" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="259" Count="1" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="297" Count="9" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="307" Count="9" />
+      <LineId Id="320" Count="9" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="64" Count="1" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="68" Count="6" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="78" Count="7" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="114" Count="2" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="118" Count="1" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="32" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

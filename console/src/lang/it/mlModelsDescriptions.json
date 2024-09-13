@@ -1,0 +1,1379 @@
+{
+  "HeatingCircuitOptimization": {
+    "title": "Ottimizzazione del circuito di riscaldamento",
+    "name": "Ottimizzazione del circuito di riscaldamento",
+    "overview": "<div> Questo regolatore è progettato per un controllo ottimale della temperatura negli edifici. Ogni 15 minuti il controllore prevede la temperatura ambiente per le prossime sei ore e calcola la ottimale posizione della valvola per ridurre il consumo di energia al minimo, mantenendo un comfort elevato. Il regolatore emette la posizione calcolata della valvola e una previsione per la temperatura ambiente che può essere mappata sul dispositivo di campo. Il controller ha diverse modalità di funzionamento che possono essere impostate. A seconda della modalità impostata, il controller consuma molta meno energia. <div style=\"text-align: center; margin-top: 10px\">Il controller richiede le seguenti variabili: <br>Temperatura di mandata e ritorno del circuito di riscaldamento. <br>Temperatura ambiente <br>Posizione della valvola <br>Temperatura delle stanze attigue <br>Posizione dell'edificio <br>Impostare la temperatura </div> <div style=\"margin-top: 10px\">IMPORTANTE: È importante che il valore attuale della posizione della valvola sul PLC corrisponda anche al valore inviato al regolatore MPC.</div> </div>",
+    "table": [
+      {
+        "name": "Valori attuali nel chart",
+        "description": "Mostra la posizione calcolata della valvola del servizio MPC per questa zona e la temperatura ambiente calcolata del servizio MPC per questa zona per le prossime 6 ore. Con Forcast, i dati richiesti dall'API vengono visualizzati con 6 ore di anticipo. Questi dati possono essere visualizzati allo stesso modo per ogni area. Anche l'energia risparmiata viene aggiornata una volta al giorno.",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Plus (comando Plus)",
+        "description": "Imposta la temperatura target nel servizio MPC 0,5 °C più alta.",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Meno (comando meno)",
+        "description": "Imposta la temperatura target nel servizio MPC 0,5 °C più bassa.",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Campo di uscita 1 (valore effettivo della temperatura nominale)",
+        "description": "Visualizza la temperatura target impostata. Quando si passa dal funzionamento normale al funzionamento a regime ridotto, qui viene visualizzata la rispettiva temperatura nominale.",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Evento di visualizzazione (Riscaldamento attivo)",
+        "description": "Indica quando la valvola è controllata dal servizio MPC peril riscaldamento.",
+        "allowedValues": "251 = Rosso <br>Tutti gli altri valori = nessuna luce."
+      },
+      {
+        "name": "Evento di visualizzazione (MPC attivo)",
+        "description": "Indica se il controllore MPC è pronto a controllare la valvola su plc oppure no.",
+        "allowedValues": "251 = Verde <br>Tutti gli altri valori = nessuna luce."
+      },
+      {
+        "name": "Campo d'ingresso 1 (ora di accensione della fase 1)",
+        "description": "Impostazione del tempo in cui il funzionamento ridotto deve essere attivo. Fuori questa volta la modalità normale è attiva. Ora attiva.",
+        "allowedValues": "0-23"
+      },
+      {
+        "name": "Campo d'ingresso 2 (ora di spegnimento della fase 1)",
+        "description": "Impostazione del tempo in cui il funzionamento ridotto deve essere attivo. Fuori questa volta la modalità normale è attiva. Ora spenta.",
+        "allowedValues": "0-23"
+      },
+      {
+        "name": "Campo d'ingresso 3 (minuti di accensione della fase 1)",
+        "description": "Impostazione del tempo in cui il funzionamento ridotto deve essere attivo. Fuori questa volta la modalità normale è attiva. Minuti attivi.",
+        "allowedValues": "0-59"
+      },
+      {
+        "name": "Campo d'ingresso 4 (minuti di spegnimento della fase 1)",
+        "description": "Impostazione del tempo in cui il funzionamento ridotto deve essere attivo. Fuori questa volta la modalità normale è attiva. Minuti spenti.",
+        "allowedValues": "0-59"
+      },
+      {
+        "name": "Campo d'ingresso 5 (Temperatura funzionamento ridotto)",
+        "description": "Qui si può impostare la temperatura per il funzionamento a regime ridotto.",
+        "allowedValues": "5-30°C"
+      },
+      {
+        "name": "Campo d'ingresso 6 (Temperatura per disattivare servizio)",
+        "description": "Qui potete inserire la temperatura alla quale il regolatore dovrebbe spegnersi.",
+        "allowedValues": "15-20°C"
+      },
+      {
+        "name": "Interruttore 1 (Attivazione funzionamento ridotto, Disattivazione funzionamento ridotto, Stato funzionamento ridotto).",
+        "description": "Questo interruttore può essere usato per attivare o disattivare la modalità di riduzione.",
+        "allowedValues": ""
+      },
+      {
+        "name": "Evento di visualizzazione (Servizio attivo/disattivo)",
+        "description": "Indica se il controller è acceso o spento. Questo può essere il caso, per esempio, se la temperatura esterna è troppo alta. ",
+        "allowedValues": "251 = Verde <br> Tutti gli altri valori = rosso."
+      },
+      {
+        "name": "Selezione della data di inizio per i dati storici",
+        "description": "Una data di inizio può essere selezionata qui, da quando i dati del database possono essere usati retroattivamente per questo controllore per l'apprendimento. Il database può essere usato retroattivamente per questo controllore per l'apprendimento. Questi sono i cosiddetti dati storici. Se non viene specificata alcuna data, il controllore non utilizza alcun dato storico per l'apprendimento. L'apprendimento e fino a quando il controller è pronto per l'uso, richiede più tempo. ",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Temperatura di flusso",
+        "description": "Temperatura di flusso del circuito di riscaldamento dalla stanza da regolare.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Temperatura di ritorno",
+        "description": "Temperatura di ritorno del circuito di riscaldamento dalla stanza da regolare.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Temperatura ambiente",
+        "description": "Temperatura della stanza che deve essere regolata.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Posizione della valvola",
+        "description": "Posizione della valvola dalla stanza da controllare dal PLC al controllore MPC.",
+        "allowedValues": "0-1 o 0-100"
+      },
+      {
+        "name": "Nuova posizione della valvola",
+        "description": "Nuova posizione della valvola calcolata dal controllore MPC da inviare al PLC.",
+        "allowedValues": "0-1 o 0-100"
+      },
+      {
+        "name": "Nuova temperatura ambiente",
+        "description": "Nuova temperatura ambiente calcolata da raggiungere nella prossima ora.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Nuova temperatura di riferimento",
+        "description": "Qui la temperatura di riferimento attuale può essere inviata dal MPC al PLC.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Il servizio MPC genera opzionalmente un heartbeat per monitorare sul PLC se il servizio è attivo o spento. Il valore cambia ogni 60 secondi trà 1 e 0.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Errore/avvertimento",
+        "description": "Stato di errore/avviso dal controllore MPC da inviare al PLC.",
+        "allowedValues": "0= OK <br> 1 = Attenzione <br> 2= Errore"
+      },
+      {
+        "name": "MPC pronto",
+        "description": "Questa variabile indica se il controllore MPC è pronto a controllare la valvola sul PLC o no.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Temperatura ambiente supplementare",
+        "description": "Qui possono essere specificate ulteriori temperature ambiente, ad esempio le temperature ambiente delle stanze vicine alla rispettiva stanza in cui si trova il controllore MPC.",
+        "allowedValues": "Valore di 32 bit"
+      }
+    ]
+  },
+  "PVProductionService": {
+    "title": "Servizio di produzione fotovoltaica",
+    "name": "Servizio di produzione fotovoltaica",
+    "overview": "Questo servizio può essere utilizzato per prevedere quanta potenza fotovoltaica ci si può aspettare nelle prossime 24 ore in base alla potenza fotovoltaica attuale. Il servizio fornisce la potenza in KW per le prossime 24 ore e la somma dell'energia in KWh per le prossime 24 ore.",
+    "table": [
+      {
+        "name": "Selezione della data di inizio per i dati storici",
+        "description": "Una data di inizio può essere selezionata qui, da quando i dati del database possono essere usati retroattivamente per questo controllore per l'apprendimento. Il database può essere usato retroattivamente per questo controllore per l'apprendimento. Questi sono i cosiddetti dati storici. Se non viene specificata alcuna data, il controllore non utilizza alcun dato storico per l'apprendimento. L'apprendimento e fino a quando il controller è pronto per l'uso, richiede più tempo. ",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Valori attuali nel diagramma",
+        "description": "Mostra la previsione della potenza fotovoltaica calcolata e la somma per l'energia fotovoltaica calcolata per le prossime 24 ore. Inoltre, il diagramma mostra l'andamento storico dei valori calcolati, compresa la potenza fotovoltaica attuale.",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Evento di visualizzazione (Servizio pronto)",
+        "description": "Indica se il servizio di produzione Pv è pronto o no.",
+        "allowedValues": "251 = Verde <br> Tutti gli altri valori = Dark"
+      },
+      {
+        "name": "Campo di uscita 1 (potenza effettiva PV)",
+        "description": "Visualizza la potenza attuale del sistema Pv in uscita dal PLC.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Campo di uscita 2 (potenza calcolata 24h)",
+        "description": "Visualizza la potenza calcolata del sistema Pv delle prossime 24 ore che il servizio invia al PLC.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Campo di uscita 3 (energia calcolata 24h)",
+        "description": "Mostra la somma calcolata dell'energia del sistema Pv delle prossime 24 ore che il servizio invia al PLC.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Il Servizio di produzione fotovoltaica genera un heartbeat opzionale per monitorare sul PLC se il servizio è attivo o meno. Il valore cambia tra 0 e 1 ogni 60 secondi.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Errore/avvertimento",
+        "description": "Stato di errore/avviso del Servizio di produzione fotovoltaica da inviare al PLC.",
+        "allowedValues": "0= OK <br> 1 = Attenzione <br> 2= Errore"
+      },
+      {
+        "name": "Servizio pronto",
+        "description": "Questa variabile indica se il servizio di produzione FV è pronto.",
+        "allowedValues": "0-1"
+      }
+    ]
+  },
+  "ConsumptionService": {
+    "title": "Servizio di consumazione",
+    "name": "Servizio di consumazione",
+    "overview": "Questo servizio può essere utilizzato per prevedere quanto consumo ci si può aspettare nelle prossime 24 ore in base alla potenza di consumo attuale. Il servizio fornisce la potenza in KW per le prossime 24 ore e l'energia totale in KWh per le prossime 24 ore.",
+    "table": [
+      {
+        "name": "Valori attuali nel diagramma",
+        "description": "Mostra la previsione del consumo calcolato e la somma per l'energia del consumo per le prossime 24 ore. Inoltre, il diagramma mostra l'andamento storico dei valori calcolati, compreso il consumo attuale.",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "Evento di visualizzazione (Servizio pronto)",
+        "description": "Indica se il servizio di consumazione è pronto o no.",
+        "allowedValues": "251 = Verde <br> Tutti gli altri valori = Dark"
+      },
+      {
+        "name": "Campo di uscita 1 (potenza effettiva consumazione)",
+        "description": "Visualizza la potenza attuale di consumazione in uscita dal PLC.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Campo di uscita 2 (potenza calcolata 24h)",
+        "description": "Visualizza la potenza calcolata della consumazione delle prossime 24 ore che il servizio invia al PLC.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Campo di uscita 3 (energia calcolata 24h)",
+        "description": "Mostra la somma calcolata dell'energia della consumazione delle prossime 24 ore che il servizio invia al PLC.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Il Servizio di consumazione genera un heartbeat opzionale per monitorare sul PLC se il servizio è attivo o meno. Il valore cambia tra 0 e 1 ogni 60 secondi. ",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Errore/avvertimento",
+        "description": "Stato di errore/avviso del Servizio di consumazione da inviare al PLC.",
+        "allowedValues": "0= OK <br> 1 = Attenzione <br> 2= Errore"
+      },
+      {
+        "name": "Servizio pronto",
+        "description": "Questa variabile indica se il servizio di consumazione è pronto.",
+        "allowedValues": "0-1"
+      }
+    ]
+  },
+  "EMS": {
+    "title": "Ottimizzazione dell'energia",
+    "name": "Ottimizzazione dell'energia",
+    "overview": "Con questo logaritmo, è possibile tramite l'intelligenza artificiale e i dati meteorologici utilizzare e distribuire l'energia generata nell'edificio nel modo più ottimale possibile. I produttori con connessione alla rete possono essere aggiunti individualmente. I consumatori abituali come le pompe di calore, le stazioni eletrice di ricarica e le batterie possono anche essere creati individualmente. I dati vengono poi elaborati nel backend e inoltrati al controller per l'esecuzione. Diverse impostazioni possono poi essere fatte sui dispositivi durante il funzionamento. Inoltre, il servizio offre la possibilità di visualizzare la produzione e il consumo per le prossime 24 ore. Questi dati sono anche memorizzati storicamente in parallelo e sono quindi disponibili anche in seguito.",
+    "table": [
+      {
+        "name": "Heartbeat",
+        "description": "L'ottimizzazione energetica genera un heartbeat opzionale per monitorare sul PLC se il servizio è attivo o non attivo. Il valore cambia tra 0 e 1 ogni 60 secondi.",
+        "allowedValues": "Valore di 32 bit"
+      },
+      {
+        "name": "Evento di visualizzazione (errore/avviso)\n",
+        "description": "Errore/avviso Lo stato dell'ottimizzazione dell'energia viene inviato al PLC.\n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Evento di visualizzazione (ottimizzazione dell'energia pronta)\n",
+        "description": "Questa variabile indica se l'ottimizzazione dell'energia è pronta o no.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Nuova potenza della batteria\n",
+        "description": "Questa variabile indica la nuova potenza della batteria dal backend al PLC. Ogni 15 minuti.\n",
+        "allowedValues": "Valore di 32 bit\n"
+      },
+      {
+        "name": "Attivare le pompe di calore\n",
+        "description": "Questa variabile mostra quando sul PLC le pompe di calore possono essere accese se non abbiamo eccedenze nelle prossime 24 ore. Così la pompa di calore può essere accesa quando siamo nella tariffa bassa dell'elettricità, per esempio.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Controllo del Servizio\n",
+        "description": "La modalità di controllo del servizio è collegata qui.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Campo d'ingresso 1 (dimensione della stazione di carica del fusibile principale)\n",
+        "description": "Indica la dimensione del fusibile principale delle stazioni di ricarica in kW.\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Dropdown (modalità di funzionamento EMS)\n",
+        "description": "Modalità di funzionamento EMS\n",
+        "allowedValues": "0 = Tutto spento; 1 = Consumo proprio; 2 = Limitazione del carico; 3 = Gestione del carico; 4 = Autoconsumo adattivo; \n"
+      },
+      {
+        "name": "Campo d'ingresso 2 (Profondità massima di scarica nel funzionamento in emergenza)\n",
+        "description": "Se la modalità di funzionamento in isola è attiva, la profondità massima di scarica delle batterie fino allo spegnimento dell'inverter può essere impostata qui.\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Campo d'ingresso 3 (SOC della batteria di riserva per il funzionamento in emergenza)",
+        "description": "Riserva di SOC nella batteria per il funzionamento di emergenza\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Campo d'ingresso 4 (SOC minimo per l'ottimizzazione dell'autoconsumo adattivo)",
+        "description": "SOC minimo per l'ottimizzazione dell'autoconsumo adattivo\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Campo d'ingresso 5 (priorità minimo SOC della batteria in funzionamento di emergenza)\n",
+        "description": "Quando il funzionamento dell'energia di emergenza è attivo, prima si carica la combinazione batteria/inverter fino a questo valore, che costruisce la rete autonoma. Solo allora il surplus di potenza viene distribuito secondo le priorità.\n",
+        "allowedValues": "25-75\n"
+      },
+      {
+        "name": "Campo d'ingresso 6 (Carica di riserva dalla rete)\n",
+        "description": "Riserva nella batteria, che viene caricata dalla rete se la rete misurata è < il massimo della rete (attiva solo in modalità Limitazione del carico di picco e Gestione del carico).\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Campo d'ingresso 7 (Tempo di aggiornamento EMS)\n",
+        "description": "Tempo di aggiornamento quando l'EMS calcola il nuovo surplus di energia o il consumo di energia e poi controlla i carichi. L'unità è secondi.\n",
+        "allowedValues": "1-600\n"
+      },
+      {
+        "name": "DropDown (messaggio EMS)\n",
+        "description": "Messaggi dalla funzione EMS\n",
+        "allowedValues": "0 = Disabilitato; 1 = Abilitato; 2 = Tutte le priorità al minimo; 3 = Tutte le priorità al massimo; 4 = Valori di potenza mancanti all'impostazione del dispositivo; 5 = Troppi dispositivit\n"
+      },
+      {
+        "name": "Interruttore_V2 (Abilita EMS)\n",
+        "description": "Abilitare o disabilitare la funzione EMS\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (rilascio di stato EMS)\n",
+        "description": "Una variabile può essere collegata qui per fornire lo stato del Interruttore_V2 di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Pulsante per consentire la ricarica dalla rete)\n",
+        "description": "Con questo pulsante è possibile consentire la ricarica della batteria dalla rete. Questo è attivo solo nella modalità di gestione del carico e nella modalità di limitazione dei picchi.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato Consentire la ricarica dalla rete)\n",
+        "description": "Qui si può collegare una variabile che restituisce lo stato della carica consentita della batteria dalla rete.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Data di inizio per i dati storici\n",
+        "description": "Una data di inizio può essere selezionata qui, da cui i dati del database possono essere usati retroattivamente per questo il servizio può essere usato per l'apprendimento. Questi sono i cosiddetti dati storici. Se non viene specificata alcuna data, il servizio non utilizza i dati storici per l'apprendimento. L'apprendimento e fino a quando il servizio non sarà pronto per l'uso richiederà più tempo.\n",
+        "allowedValues": "Usato per la comunicazione interna\n"
+      },
+      {
+        "name": "Valori attuali nel diagramma",
+        "description": "Mostra la previsione per la potenza e la somma dell'energia per i vari e aggiunto carichi e generatori per le prossime 24 ore. Inoltre, il diagramma mostra l'andamento storico dei valori calcolati, compresi i valori di potenza attuali.",
+        "allowedValues": "Usato per la comunicazione interna"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza PV) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e indica la potenza PV attuale. L'unità è il kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Visualizza l'evento (errore/avviso del sistema FV) (1-10)\n",
+        "description": "Qui si può collegare la variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore.  \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza del generatore di corrente) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e indica la potenza attuale del generatore. L'unità è il kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato di reset del eneratore) (1-10)\n",
+        "description": "Qui può essere mappata la variabile che restituisce lo stato del processo di reset.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Pulsante di reset del generatore) (1-10)\n",
+        "description": "Con questa variabile il comando di reset può essere inviato al PLC.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Evento di visualizzazione (errore/aviso generatore) (1-10)\n",
+        "description": "Qui può essere mappata la variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore. \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Evento di visualizzazione (stato del generatore) (1-10)\n",
+        "description": "Qui si può collegare lo stato del generatore, se è acceso o spento. \n",
+        "allowedValues": "1 = Luce verde. Tutti gli altri valori senza luce\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per attivare il generatore) (1-10)\n",
+        "description": "Se il SOC della batteria scende sotto questo valore, il generatore si accende.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per disattivare il generatore) (1-10)\n",
+        "description": "Se il SOC della batteria supera questo valore, il generatore sarà spento.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Interruttore_V2 (abilitazione del generatore) (1-10)\n",
+        "description": "Abilitare o disabilitare il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato di abilitazione del generatore) (1-10)\n",
+        "description": "Una variabile può essere collegata qui per fornire lo stato del Interruttore_V2 di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza di rete effettiva) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e indica la potenza di rete attuale. L'unità è il kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Evento di visualizzazione (errore/aviso griglia) (1-10)\n",
+        "description": "Qui si può collegare la variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore. \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Campo di input (Dimensione della griglia) (1-10)\n",
+        "description": "Dimensione massima della connessione alla rete. L'unità è il kW\n",
+        "allowedValues": "0.1-1000 KW\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza effettiva della batteria) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e indica la potenza attuale della batteria. L'unità è il kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Evento di visualizzazione (errore/aviso batteria) (1-10)\n",
+        "description": "Qui si può collegare la variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore. \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Campo di uscita (SOC corrente della batteria) (1-10)\n",
+        "description": "Qui può essere mappata la variabile che contiene l'attuale SOC della batteria.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (Capacità effettiva della batteria) (1-10)\n",
+        "description": "Qui può essere mappata la variabile che contiene la capacità attuale della batteria in kWh.\n",
+        "allowedValues": "Valore di 32 bit\n"
+      },
+      {
+        "name": "Campo di ingresso (Intervallo dello stato di carica: max) (1-10)\n",
+        "description": "La portata massima per lo stato di carica.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di ingresso (Intervallo dello stato di carica: min ) (1-10)\n",
+        "description": "L'intervallo minimo per lo stato di carica.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (Stato della gamma di carica: max) (1-10)\n",
+        "description": "Lo stato della portata massima per lo stato di carica.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (Stato della gamma di carica: min) (1-10)\n",
+        "description": "Lo stato della gamma minima per lo stato di carica.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (potenza obietivo batteria) (1-10)\n",
+        "description": "Qui può essere mappata la variabile che contiene la potenza attuale della batteria da -100% (in carica) a +100% (in scarica). \n",
+        "allowedValues": "-100 +100\n"
+      },
+      {
+        "name": "Campo d'ingresso (Capacità della batteria) (1-10)\n",
+        "description": "Qui si può collegare una variabile che indica la dimensione massima della batteria in kWh.\n",
+        "allowedValues": "0-1000 kWh\n"
+      },
+      {
+        "name": "Campo di input (priorità della batteria) (1-10)\n",
+        "description": "Priorità del dispositivo con cui è controllato nell'EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Interruttore_V2 (batteria di abilitazione) (1-10)\n",
+        "description": "Attivazione o disattivazione del dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato Abilitazione Batteria) (1-10)\n",
+        "description": "Qui si può mappare una variabile che indica lo stato del Interruttore_V2 di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato del Interruttore_V2 di reset) (1-10)\n",
+        "description": "La variabile che fornisce lo stato dell'operazione di reset può essere mappata qui.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Interruttore_V2 di reset della batteria) (1-10)\n",
+        "description": "Con questa variabile il comando di reset può essere inviato al PLC\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo d'uscita (potenza corrente della casa) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e indica la potenza attuale del consumo della casa. L'unità è il kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Evento di visualizzazione (errore/aviso della corrente casa) (1-10)\n",
+        "description": "Qui si può collegare la variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore. \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Interruttore_V2 (abilitazione della corrente di casa) (1-10)\n",
+        "description": "Abilitare o disabilitare il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato di abilitazione dell' corrente di casa) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del Interruttore_V2 di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza attuale della stazione di ricarica) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e fornisce la potenza attuale della stazione di ricarica. L'unità è il kW\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Mostra evento (errore/aviso della stazione die carica) (1-10)\n",
+        "description": "Qui la variabile può essere collegata, che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore.  \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Evento del display (stazione di ricarica collegata sulla machina) (1-10)\n",
+        "description": "Qui si può collegare una variabile che indica se la stazione di ricarica è collegata a un veicolo.\n",
+        "allowedValues": "1 = Luce verde. Tutti gli altri valori senza luce\n"
+      },
+      {
+        "name": "Campo di uscita (durata della ricarica della stazione di ricarica) (1-10)n",
+        "description": "Qui si può collegare una variabile che mostra quanto tempo è passato dall'inizio del processo di carica.\n",
+        "allowedValues": "Valore di 32 bit\n"
+      },
+      {
+        "name": "Evento di visualizzazione (stato della stazione di ricarica) (1-10)\n",
+        "description": "Qui si può collegare una variabile che indica se la stazione di ricarica è accesa o no.\n",
+        "allowedValues": "1 = Luce verde. Tutti gli altri valori senza luce\n"
+      },
+      {
+        "name": "Interruttore (stazione di ricarica spenta in funzionamento di emergenza) (1-10)\n",
+        "description": "Questa variabile può essere utilizzata per disattivare il carico in modalità di alimentazione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore (Stato della stazione di ricarica per Funzionamento spento in funzinamento di emergenza) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del Interruttore_V2 di accensione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore (Stazione di ricarica accendere Manuale) (1-10)\n",
+        "description": "Accendere manualmente il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore (stato di accendere manuale la stazione di ricarica) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di accensione manuale.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Cursore (Stazione di ricaraivca potenza manuale) (1-10)\n",
+        "description": "% della potenza massima in kW quando l'unità è accesa manualmente\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (stato attuale della potenza manuale) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce il valore attuale del cursore per la potenza manuale.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Cursore (potenza minimo della statzione di carica) (1-10)\n",
+        "description": "Potenza minima in % della potenza massima in kW. La stazione di ricarica funziona con questa potenza, anche se non c'è un'eccedenza. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'uscita (Stato della potenza minima della stazione di carica) (1-10)\n",
+        "description": "Si può mappare qui una variabile che restituisce il valore corrente del cursore per la potenza minima.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (potenza obietivo della stazione di carica) (1-10)\n",
+        "description": "Qui si può mappare una variabile che contiene la potenza attuale della stazione di ricarica da 0% a 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (prioritaria della statzione di carica) (1-10)\n",
+        "description": "Priorità del dispositivo con cui è controllato nell'EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per attivare la stazione di ricarica) (1-10)\n",
+        "description": "Questa variabile è usata per impostare da quale SOC della batteria il carico può essere acceso.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per disattivare la stazione di ricarica) (1-10)\n",
+        "description": "Questa variabile è usata per impostare a partire da quale SOC della batteria il consumatore deve essere spento.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (massima potenza della stazione di carica) (1-10)\n",
+        "description": "Max. Potenza della stazione di ricarica con unità kW.\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Interruttore_V2 (Abilita la stazione di ricarica) (1-10)\n",
+        "description": "Abilitare o disabilitare il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato di abilitazione della stazione di ricarica) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza elettrica corrente del riscaldatore) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e indica la potenza attuale della resistenza elettrica. L'unità è il kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Evento di visualizzazione (guasto/avvertimento del riscaldatore elettrico) (1-10)\n",
+        "description": "Qui si può collegare la variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore. \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Campo di uscita (temperatura della caldaia del riscaldatore elettrico) (1-10)\n",
+        "description": "Temperatura nella caldaia che viene riscaldata dall'elemento riscaldante.\n",
+        "allowedValues": "-30 +120 \n"
+      },
+      {
+        "name": "Evento di visualizzazione (stato del riscaldatore elettrico) (1-10)\n",
+        "description": "Qui si può collegare una variabile che indica se la resistenza elettrica è accesa o no.\n",
+        "allowedValues": "1 = Luce verde. Tutti gli altri valori senza luce\n"
+      },
+      {
+        "name": "Interruttore_V2 (Riscaldatore elettrico spento in funzione d'emergenza) (1-10)\n",
+        "description": "Questa variabile può essere utilizzata per disattivare il carico in modalità di alimentazione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato dell riscaldamento eletrico per Funzionamento spento in funzinamento di emergenza) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di accensione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Riscaldatore elettrico accendere manuale) (1-10)\n",
+        "description": "Accendere manualmente l'unità\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato di accendere manuale del riscaldatore elettrico) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di accensione manuale.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Cursore (potenza manuale del riscaldatore elettrico) (1-10)\n",
+        "description": "% della potenza massima in kW quando il dispositivo è acceso manualmente\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (stato della potenza manuale del riscaldamento eletrico) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce il valore attuale del cursore della potenza manuale.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Interruttore_V2 (Attiva il funzionamento del tempo per il riscaldatore elettrico) (1-10)\n",
+        "description": "L'elemento riscaldante viene attivato solo tra il tempo specificato se la temperatura scende al di sotto della temperatura di accensione. \n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato dell funzionamento del tempo per il riscaldamento eletrico) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di rilascio del tempo.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Disattivare la protezione antilegionella dell'elemento riscaldante elettrico) (1-10)\n",
+        "description": "Questa variabile può essere utilizzata per disattivare la protezione dalla legionella.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato per la dissativazione della protezione legionella al riscaldante elettrico) (1-10)\n",
+        "description": "Si può mappare qui una variabile che fornisce lo stato del pulsante Disattiva protezione dalla legionella.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Campo di uscita (potenza obietivo dell riscaldamento elettrico) (1-10)\n",
+        "description": "Qui si può mappare una variabile che contiene la potenza attuale del riscaldatore da 0% a 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di ingresso (Priorità elemento riscaldante elettrico) (1-10)\n",
+        "description": "Priorità del dispositivo con cui è controllato nell'EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per attivare il riscaldatore elettrico) (1-10)\n",
+        "description": "Questa variabile è usata per impostare da quale SOC della batteria il carico può essere acceso.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per disattivare il riscaldatore elettrico) (1-10)\n",
+        "description": "Questa variabile è usata per impostare a partire da quale SOC della batteria il consumatore deve essere spento.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (ora per attivazione il funzionamento di tempo per il riscaldatore eletrico) (1-10)\n",
+        "description": "Ora a partire dalla quale l'elemento riscaldante può accendersi.\n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Campo di entrata (minuti per attivazione il funzionamento di tempo per il riscaldatore eletrico) (1-10)\n",
+        "description": "Minuti a partire dai quali l'elemento riscaldante può accendersi \n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Campo di ingresso (ora per disattivare il funzionamento di tempo per il riscaldatore eletrico) (1-10)\n",
+        "description": "Ora a partire dalla quale l'elemento riscaldante può spegnersi\n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Campo di ingresso (minuti per disattivare il funzionamento di tempo per il riscaldatore eletrico) (1-10)\n",
+        "description": "Minuti a partire dai quali l'elemento riscaldante può spegnersi\n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Campo d'ingresso (temperatura per accendere l' elemento di riscaldamento elettrico) (1-10)\n",
+        "description": "Al di sotto di questo valore di temperatura, l'elemento riscaldante si accende nel funzionamento normale.\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Campo d'ingresso (temperatura per spegnere l'elemento di riscaldamento elettrico) (1-10)\n",
+        "description": "Quando la temperatura nel funzionamento normale raggiunge questo valore, l'elemento riscaldante si spegne.\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Campo d'ingresso (temperatura nominale max. elemento riscaldante elettrico) (1-10)\n",
+        "description": "Setpoint di temperatura che sarà avvicinato in caso di una condizione di sovraccarico. (surriscaldamento)\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Campo di ingresso (potenza massima elemento riscaldante elettrico 1-10) (1-10)\n",
+        "description": "Max. Potenza dell'elemento riscaldante elettrico con l'unità kW. L'elemento riscaldante elettrico può avere al massimo 10 diverse potenze massime. (Fase commutata)\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Interruttore_V2 (Abilitazione elemento riscaldante elettrico) (1-10)\n",
+        "description": "Abilitare o disabilitare il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato di abilitazione dell'elemento di riscaldamento elettrico) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza attuale della pompa di calore) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e indica la potenza attuale della pompa di calore. L'unità è il kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Evento di visualizzazione (errore/aviso della pompa di calore) (1-10)\n",
+        "description": "Qui si può collegare la variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore.  \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Interruttore_V2 (pulsante di ripristino dello stato della pompa di calore) (1-10)\n",
+        "description": "La variabile che restituisce lo stato del processo di reset può essere mappata qui.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (pulsante di reset della pompa di calore) (1-10)\n",
+        "description": "Con questa variabile il comando di reset può essere inviato al PLC.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Evento di visualizzazione (stato della pompa di calore) (1-10)\n",
+        "description": "Qui si può mappare una variabile che indica se la pompa di calore è accesa o meno.\n",
+        "allowedValues": "1 = Luce verde. Tutti gli altri valori senza luce\n"
+      },
+      {
+        "name": "Interruttore_V2 (Pompa di calore spento in funzionamento d' emergenza) (1-10)\n",
+        "description": "Questa variabile può essere usata per spegnere il consumatore in modalità di alimentazione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato della pompa di calore per Funzionamento spento in funzinamento di emergenza) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di accensione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (pompa di calore accendere manuale) (1-10)\n",
+        "description": "Accendere manualmente l'unità\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato accendere manuale la pompa di calore) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di accensione manuale.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Cursore (potenza manuale della pompa di calore) (1-10)\n",
+        "description": "% della potenza massima in kW quando il dispositivo è acceso manualmente\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (stato della potenza manuale della pompa di calore) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce il valore attuale del cursore della potenza manuale.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Interruttore_V2 (Attiva il funzionamento del tempo per la pompa di calore) (1-10)\n",
+        "description": "Se True, la pompa di calore passa alla modalità aumentata tra il tempo specificato.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato del funzionamento di tempo per la pompa di calore) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di rilascio del tempo.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Cursore (impostazione della potenza quando il funzionamneto del tempo è attico sulla pompa di calore) (1-10)\n",
+        "description": "Impostazione della potenza in % entro il tempo di abilitazione, se la pompa di calore non viene commutata in modalità a gradini.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (Stato dell'ingresso di potenza quando la regolazione a tempo della pompa di calore è attivata) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce il valore attuale del cursore di potenza quando la pompa di calore è attiva in modalità tempo.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (valore reale della temperatura di mandata della pompa di calore) (1-10)\n",
+        "description": "Qui la variabile può essere mappata per indicare quale temperatura di mandata è presente alla pompa di calore sul PLC\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Campo di uscita (valore reale della temperatura di ritorno della pompa di calore) (1-10)\n",
+        "description": "Qui la variabile può essere mappata per indicare quale temperatura di ritorno è presente alla pompa di calore sul PLC.\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Campo di uscita (Temperatura di mandata della sorgente pompa di calore) (1-10)\n",
+        "description": "Qui la variabile può essere mappata per indicare quale temperatura di mandata della sorgente è presente alla pompa di calore sul PLC. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Campo di uscita (pompa di calore con temperatura di ritorno della sorgente) (1-10)\n",
+        "description": "Qui la variabile può essere mappata per indicare quale temperatura di uscita della sorgente è presente alla pompa di calore sul PLC.\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Campo di uscita (temperature del sistema di riscaldamento) (1-10)\n",
+        "description": "Qui la variabile può essere mappata per indicare quale sistema di riscaldamento a temperatura della caldaia è presente alla pompa di calore sul PLC. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Campo di uscita (temperatua del acqua calda sanitaria) (1-10)\n",
+        "description": "Qui la variabile può essere mappata per indicare quale temperatura della caldaia è presente alla pompa di calore sul PLC. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Campo di uscita (potenza objetiva della pompa di calore) (1-10)\n",
+        "description": "Qui si può mappare la variabile che contiene la potenza attuale della pompa di calore da 0% a 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di ingresso (prioritaria della pompa di calore) (1-10)\n",
+        "description": "Priorità del dispositivo con cui è controllato nell'EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per attivare la pompa di calore) (1-10)\n",
+        "description": "Questa variabile è usata per impostare da quale SOC della batteria il carico può essere acceso.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per disattivare la pompa di calore) (1-10)\n",
+        "description": "Questa variabile è usata per impostare a partire da quale SOC della batteria il consumatore deve essere spento.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di entrata (ora per attiviare il funzionamento di tempo sulla pompa di calore) (1-10)\n",
+        "description": "Ora a partire dalla quale la pompa di calore può funzionare in modalità aumentata \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Campo di ingresso (minuti per attiviare il funzionamento di tempo sulla pompa di calore) (1-10)\n",
+        "description": "Minuti a partire dai quali la pompa di calore può funzionare in modalità aumentata \n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Campo di ingresso (ora per disattivare il funzionamento di tempo sulla pompa di calore) (1-10)\n",
+        "description": "Ora a partire dalla quale la pompa di calore non può più funzionare in modalità aumentata \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Campo di ingresso (minuti per disattivare il funzionamento di tempo sulla pompa di calore) (1-10)\n",
+        "description": "Minuti a partire dai quali la pompa di calore non può più funzionare in modalità aumentata\n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Campo d'ingresso (potenza massima della pompa di calore 1-2) (1-10)\n",
+        "description": "Max. Potenza della pompa di calore con l'unità kW. La pompa di calore può avere al massimo 2 diverse potenze massime. (fase commutata)\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Interruttore_V2 (Abilita la pompa di calore) (1-10)\n",
+        "description": "Abilitare o disabilitare il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato di abilitazione della pompa di calore) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Campo di uscita (potenza attuale di altri grandi consumatori) (1-10)\n",
+        "description": "Qui la variabile può essere collegata e fornisce la potenza attuale di un altro grande consumatore. L'unità è il kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Evento di visualizzazione (errore/avviso di altri grandi consumatori) (1-10)\n",
+        "description": "Qui la variabile può essere collegata a una variabile che invia un errore o un avvertimento dal PLC al backend. 1 = avvertimento, 2 = errore. \n",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Evento di visualizzazione (stato di altri grandi consumatori) (1-10)\n",
+        "description": "Qui si può collegare una variabile che indica se il grande consumatore è acceso o no.\n",
+        "allowedValues": "1 =  Luce verde. Tutti gli altri valori senza luce\n"
+      },
+      {
+        "name": "Interruttore_V2 (Grande consumatore spento in funzionamento di emergenza) (1-10)\n",
+        "description": "Questa variabile può essere usata per disabilitare il consumatore in modalità di alimentazione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (Stato dell grande consumatore per Funzionamento spento in funzinamento di emergenza)) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di accensione di emergenza.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (grande consumatore accendere manuale) (1-10)\n",
+        "description": "Accendere manualmente il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato accendere manuale grande consumatore) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato di accensione manuale del pulsante.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Cursore (potenza manuale dell grande consumatore) (1-10)\n",
+        "description": "% della potenza massima in kW quando il dispositivo è acceso manualmente\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (stato della potenza manuale dell grande consumatore) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce il valore attuale del cursore della potenza manuale.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d' ingresso (priorità del grande consumatore) (1-10)\n",
+        "description": "Priorità del dispositivo con cui è controllato nell'EMS.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per attivare il grande consumatore) (1-10)\n",
+        "description": "Questa variabile è usata per impostare da quale SOC della batteria l'utenza può essere accesa.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo d'ingresso (SOC per disattivare il grande consumatore) (1-10)\n",
+        "description": "Questa variabile è usata per impostare a partire da quale SOC della batteria il consumatore deve essere spento.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Campo di uscita (potenza nominale del grande consumatore) (1-10)\n",
+        "description": "Qui può essere mappata la variabile che contiene la potenza attuale del setpoint da 0% a 100%. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Interruttore_V2 (Abilitazione del grande consumatore) (1-10)\n",
+        "description": "Abilitare o disabilitare il dispositivo\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Interruttore_V2 (stato abilitazione grande consumatore) (1-10)\n",
+        "description": "Qui si può collegare una variabile che fornisce lo stato del pulsante di abilitazione.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Campo d' ingresso (potenza massima dei grandi consumatori) (1-10)\n",
+        "description": "Max. Potenza dei grandi consumatori con unità kW.\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Status Batterie-Standby-Optimierung",
+        "description": "Questa variabile indica quale modalità di ottimizzazione dello standby della batteria è attualmente attiva",
+        "allowedValues": "0, 1, 2"
+      },
+      {
+        "name": "Modalità di ottimizzazione dello standby della batteria",
+        "description": "Modalità di ottimizzazione dello standby della batteria",
+        "allowedValues": "0 = disattivato, 2 = dipendente dal carico"
+      },
+      {
+        "name": "Soglia di tempo attiva (minuti)",
+        "description": "Definisce il valore di soglia temporale dopo il quale il BSO deve essere attivato se viene raggiunto il valore di soglia della potenza",
+        "allowedValues": "Qualsiasi valore in byte"
+      },
+      {
+        "name": "Soglia temporale disattivata (Minuti)",
+        "description": "Definisce il valore di soglia temporale dopo il quale il BSO deve essere spento se viene raggiunto il valore di soglia della potenza",
+        "allowedValues": "Qualsiasi valore in byte"
+      },
+      {
+        "name": "Potenza soglia In (kW)",
+        "description": "Definisce il valore di soglia della potenza al di sopra del quale il BSO deve essere attivato.",
+        "allowedValues": "Qualsiasi valore intero"
+      },
+      {
+        "name": "Soglia di spegnimento (kW)",
+        "description": "Definisce la soglia di potenza al di sopra della quale il BSO deve essere disattivato.",
+        "allowedValues": "Qualsiasi valore intero"
+      }
+    ]
+  },
+  "PVMonitoringService": {
+    "title": "Monitoraggio PV",
+    "name": "Monitoraggio PV",
+    "overview": "Questo algoritmo prende i valori di potenza PV di un sito durante un certo periodo di tempo. Poi confronta il flusso di dati dal vivo del sito con i dati di riferimento su base giornaliera. In questo modo, si possono determinare le cadute di potenza dell'impianto fotovoltaico. Questo può essere dovuto alla sporcizia dei moduli PV o all'invecchiamento dell'impianto PV, per esempio.",
+    "table": [
+      {
+        "name": "Campo d'ingresso PV-Power",
+        "description": " Poi confronta il flusso di dati dal vivo del sito con i dati di riferimento su base giornaliera. In questo modo, si possono determinare le cadute di potenza dell'impianto fotovoltaico. Questo può essere dovuto alla sporcizia dei moduli PV o all'invecchiamento dell'impianto PV, per esempio.",
+        "allowedValues": "Solo valori numerici"
+      },
+      {
+        "name": "Campo d'ingresso Data d'inizio",
+        "description": "Questo campo di ingresso prende il giorno di inizio del periodo di riferimento ",
+        "allowedValues": "Datetime in secondi"
+      },
+      {
+        "name": "Campo d'ingresso Data di fine",
+        "description": "Questo campo di ingresso prende il giorno di fine dell'intervallo di tempo di riferimento",
+        "allowedValues": "Datetime in secondi"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Il Servizio di consumazione genera un heartbeat opzionale per monitorare sul PLC se il servizio è attivo o meno. Il valore cambia tra 0 e 1 ogni 60 secondi. ",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Errore/avvertimento",
+        "description": "Stato di errore/avviso del Servizio di consumazione da inviare al PLC.",
+        "allowedValues": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      {
+        "name": "Servizio pronto",
+        "description": "Questa variabile indica se il servizio di consumazione è pronto.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Campo di uscita opzionale PV-Efficiency",
+        "description": "Questo campo di uscita mappa l'efficienza calcolata dell'impianto fotovoltaico in una variabile del PLC",
+        "allowedValues": "0-100%"
+      }
+    ]
+  },
+  "SetpointOptimizer": {
+    "title": "Ottimizzatore di setpoint",
+    "name": "Ottimizzatore di setpoint",
+    "overview": "Questo algoritmo può ottimizzare un sistema di riscaldamento o raffreddamento esistente sulla base di un nuovo setpoint. Questo può essere, per esempio, una temperatura di alimentazione ottimizzata o una temperatura dell'aria di alimentazione ottimizzata. Questa unità può essere utilizzata per circuiti di riscaldamento o di raffreddamento con mezzo liquido o anche per circuiti con mezzo aria. È anche possibile mescolare riscaldamento e raffreddamento in un circuito.",
+    "table": [
+      {
+        "name": "Heartbeat",
+        "description": "L'ottimizzatore di setpoint genera un heartbeat opzionale per monitorare sul PLC se il servizio è attivo o meno. Il valore si alterna tra 0 e 1 ogni 60 secondi.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Errore/avvertimento",
+        "description": "Errore/avviso Stato dell'ottimizzatore di setpoint inviato al PLC.",
+        "allowedValues": "0-2 0 = OK, 1=Attenzione, 2=Errore"
+      },
+      {
+        "name": "Servizio pronto",
+        "description": "Questa variabile mostra se l'ottimizzatore di setpoint è pronto o no.",
+        "allowedValues": "0=Non pronto, 1=Pronto, quando 0 luce verde altrimenti grigio"
+      },
+      {
+        "name": "Campo di inserimento della data di inizio",
+        "description": "Questo campo di input prende il giorno di inizio dell'arco temporale di riferimento ",
+        "allowedValues": "Data in secondi"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Temperatura del campo d'ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di mandata del circuito dell'acqua all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Temperatura di ritorno del campo in ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di ritorno del circuito dell'acqua all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Stato del campo d'ingresso on/off",
+        "description": "Questa mappatura di ingresso mappa lo stato attuale del circuito dell'acqua di riscaldamento. 0 significa che il circuito di riscaldamento è spento, 1 significa che il circuito di riscaldamento è acceso.",
+        "allowedValues": "0-1, 0=off, 1=on e luce rosso"
+      },
+      {
+        "name": "Campo d'ingresso Temperatura ambiente",
+        "description": "Questa mappatura degli ingressi mappa la temperatura ambiente delle stanze collegate al circuito dell'acqua, può essere aggiunta dinamicamente fino a un massimo di 10 temperature ambiente, 1 è obbligatoria, il resto è opzionale.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di uscita Temperatura di mandata ottimizzata",
+        "description": "Questa mappatura dell'uscita trasmette la temperatura di mandata ottimizzata dell'ottimizzatore di setpoint al PLC.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di input Titolo",
+        "description": "Questo input prende il nome del circuito dell'acqua per visualizzarlo nell'interfaccia utente",
+        "allowedValues": "Testo"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Temperatura del flusso d'aria del campo d'ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di mandata del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Temperatura di ritorno dell'aria di campo in ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di ritorno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo d'ingresso Stato On/Off",
+        "description": "Questa mappatura di ingresso mappa lo stato attuale del circuito dell'aria di riscaldamento. 0 significa che il circuito di riscaldamento è spento, 1 significa che il circuito di riscaldamento è acceso.",
+        "allowedValues": "0-1, 0=off, 1=on e luce rosso"
+      },
+      {
+        "name": "Campo d'ingresso Temperatura ambiente",
+        "description": "Questa mappatura d'ingresso mappa la temperatura ambiente delle stanze collegate al circuito dell'aria, può essere aggiunta dinamicamente fino a un massimo di 10 temperature ambiente, 1 è obbligatoria, il resto è opzionale.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di uscita Temperatura del flusso d'aria ottimizzata",
+        "description": "Questa mappatura di uscita mappa la temperatura del flusso d'aria ottimizzata dell'ottimizzatore di setpoint al PLC.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di input Titolo",
+        "description": "Questo input prende il nome del circuito dell'aria per visualizzarlo sull'interfaccia utente",
+        "allowedValues": "Testo"
+      },
+      {
+        "name": "Temperatura del flusso d'aria dall'interno all'esterno",
+        "description": "Questa mappatura degli ingressi mappa la temperatura del flusso d'aria dall'interno all'esterno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Temperatura del flusso d'aria dall'esterno all'interno",
+        "description": "Questa mappatura degli ingressi mappa la temperatura del flusso d'aria dall'esterno all'interno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Temperatura del campo d'ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di mandata del circuito dell'acqua all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Temperatura di ritorno del campo in ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di ritorno del circuito dell'acqua all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Stato del campo d'ingresso on/off",
+        "description": "Questa mappatura di ingresso mappa lo stato attuale del circuito dell'acqua di raffreddamento. 0 significa che il circuito di raffreddamento è spento, 1 significa che il circuito di raffreddamento è acceso.",
+        "allowedValues": "0-1, 0=off, 1=on e luce blu"
+      },
+      {
+        "name": "Campo d'ingresso Temperatura ambiente",
+        "description": "Questa mappatura degli ingressi mappa la temperatura ambiente delle stanze che sono collegate al circuito dell'acqua, può essere aggiunta dinamicamente fino a un massimo di 10 temperature ambiente, 1 è obbligatoria il resto è opzionale.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di uscita Temperatura di mandata ottimizzata",
+        "description": "Questa mappatura dell'uscita trasmette la temperatura di mandata ottimizzata dell'ottimizzatore di setpoint al PLC.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di input Titolo",
+        "description": "Questo input prende il nome del circuito dell'acqua per visualizzarlo nell'interfaccia utente",
+        "allowedValues": "Testo"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Temperatura del flusso d'aria del campo d'ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di mandata del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Temperatura di ritorno dell'aria di campo in ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura dell'aria di ritorno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo d'ingresso Stato On/Off",
+        "description": "Questa mappatura di ingresso mappa lo stato attuale del circuito dell'aria di raffreddamento. 0 significa che il circuito di raffreddamento è spento, 1 significa che il circuito di raffreddamento è acceso.",
+        "allowedValues": "0-1, 0=off, 1=on e luce blu"
+      },
+      {
+        "name": "Campo d'ingresso Temperatura ambiente",
+        "description": "Questa mappatura d'ingresso mappa la temperatura ambiente delle stanze collegate al circuito d'aria, può essere aggiunta dinamicamente a max. 10 temperature ambiente, 1 è obbligatoria il resto è opzionale.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di uscita Temperatura del flusso d'aria ottimizzata",
+        "description": "Questa mappatura di uscita mappa la temperatura del flusso d'aria ottimizzata dell'ottimizzatore di setpoint al PLC.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di input Titolo",
+        "description": "Questo input prende il nome del circuito dell'aria per visualizzarlo sull'interfaccia utente",
+        "allowedValues": "Testo"
+      },
+      {
+        "name": "Temperatura del flusso d'aria dall'interno all'esterno",
+        "description": "Questa mappatura degli ingressi mappa la temperatura del flusso d'aria dall'interno all'esterno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Temperatura del flusso d'aria dall'esterno all'interno",
+        "description": "Questa mappatura degli ingressi mappa la temperatura del flusso d'aria dall'esterno all'interno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Temperatura del campo d'ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di mandata del circuito dell'acqua all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Temperatura di ritorno del campo in ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di ritorno del circuito dell'acqua all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo d'ingresso stato ibrido",
+        "description": "Questa mappatura di ingresso mappa lo stato attuale del circuito idrico ibrido. 0 significa che il circuito ibrido è spento, 1 significa che il riscaldamento è acceso, 2 significa che il raffreddamento è acceso.",
+        "allowedValues": "0-2, 0=Off, 1=Cool e luce blu, 2=Heat e luce rosso"
+      },
+      {
+        "name": "Campo d'ingresso Temperatura ambiente",
+        "description": "Questa mappatura degli ingressi mappa la temperatura ambiente delle stanze collegate al circuito dell'acqua, può essere estesa dinamicamente fino a un massimo di 10 temperature ambiente, 1 è obbligatoria, il resto è opzionale.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di uscita Temperatura di mandata ottimizzata",
+        "description": "Questa mappatura dell'uscita trasmette la temperatura di mandata ottimizzata dell'ottimizzatore di setpoint al PLC.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di input Titolo",
+        "description": "Questo input prende il nome del circuito dell'acqua per visualizzarlo nell'interfaccia utente",
+        "allowedValues": "Testo"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Temperatura del flusso d'aria del campo d'ingresso",
+        "description": "Questa mappatura degli ingressi mappa la temperatura di mandata del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo d'ingresso Temperatura di ritorno dell'aria",
+        "description": "Questa mappatura degli ingressi mappa la temperatura dell'aria di ritorno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo d'ingresso Stato ibrido",
+        "description": "Questa mappatura di ingresso mappa lo stato attuale del circuito d'aria ibrido. 0 significa che il circuito ibrido è spento, 1 significa che il riscaldamento è acceso, 2 significa che il raffreddamento è acceso.",
+        "allowedValues": "0-2, 0=Off, 1=Cool e luce blu, 2=Heat e luce rosso"
+      },
+      {
+        "name": "Campo d'ingresso Temperatura ambiente",
+        "description": "Questa mappatura di ingresso mappa la temperatura ambiente delle stanze collegate al circuito dell'aria, può essere estesa dinamicamente fino a max. 10 temperature ambiente, 1 è obbligatoria, il resto è opzionale.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "OCampo di uscita Temperatura del flusso d'aria ottimizzata",
+        "description": "Questa mappatura di uscita mappa la temperatura del flusso d'aria ottimizzata dell'ottimizzatore di setpoint al PLC.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Campo di input Titolo",
+        "description": "Questo input prende il nome del circuito dell'aria per visualizzarlo sull'interfaccia utente",
+        "allowedValues": "Testo"
+      },
+      {
+        "name": "Temperatura del flusso d'aria dall'interno all'esterno",
+        "description": "Questa mappatura degli ingressi mappa la temperatura del flusso d'aria dall'interno all'esterno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      },
+      {
+        "name": "Dall'esterno all'interno Temperatura del flusso d'aria",
+        "description": "Questa mappatura degli ingressi mappa la temperatura del flusso d'aria dall'esterno all'interno del circuito dell'aria all'ottimizzatore di setpoint.",
+        "allowedValues": "Solo valori numerici (max 2 cifre decimali)"
+      }
+    ]
+  }
+}

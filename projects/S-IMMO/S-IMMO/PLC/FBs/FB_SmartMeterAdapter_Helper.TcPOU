@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_SmartMeterAdapter_Helper" Id="{4603ed50-a0df-42b2-92c4-e5d4364093fe}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SmartMeterAdapter_Helper
+VAR_INPUT
+	bSend				: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient			: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy				: BOOL;
+	bError				: BOOL;
+	
+	lrenergy_consumption: LREAL;
+	lrenergy_production: LREAL;
+	lrreactive_energy_consumption: LREAL;
+	lrreactive_energy_production: LREAL;
+	lrpower_consumption: LREAL;
+	lrpower_production: LREAL;
+	lrreactive_power_consumption: LREAL;
+	lrreactive_power_production: LREAL;
+	lrpower_total		: LREAL;
+
+END_VAR
+
+VAR
+	fbRequestSMA		: FB_IotHttpRequest;
+	fbJson				: FB_JsonDomParser;
+	nState				: UDINT;
+	RisingEdge			: R_TRIG;
+	timTimeout			: TON;
+	tTimeOut			: TIME := T#50S;
+	bGetContentResult	: BOOL;
+	sContent			: STRING(2048);
+	sContent2			: STRING(2048);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonDocRaw			: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN 
+		nState := 0;
+		bBusy := FALSE;
+	END_IF
+
+RisingEdge(CLK:= bSend );
+CASE nState OF
+0:	
+	IF RisingEdge.Q THEN 
+		IF 
+			fbRequestSMA.SendRequest(sUri:='/getLastData?user=FCF5C49B1AFB&password=10164987', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			nState:= 1;
+			nReqCount:= nReqCount+1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+1:
+	IF NOT fbRequestSMA.bBusy THEN
+		bError:= TRUE;
+		IF NOT fbRequestSMA.bError THEN				 
+			bGetContentResult:= fbRequestSMA.GetContent(pContent:= ADR(sContent), nContentSize:= SIZEOF(sContent), bSetNullTermination:= TRUE);
+			IF fbRequestSMA.nStatusCode >= 200 AND fbRequestSMA.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				FindAndReplaceChar(pSrcString:=ADR(sContent), sDeleteChar:='$N', sInsertChar:='' ,pDstString:=ADR(sContent2), nDstSize:=SIZEOF(sContent2));
+				jsonDoc := fbJson.ParseDocument(sContent2);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'timestamp')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, '1.8.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrenergy_consumption := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, '2.8.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrenergy_production := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, '3.8.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrreactive_energy_consumption := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, '4.8.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrreactive_energy_production := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, '1.7.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrpower_consumption := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF	
+						jsonVal:= fbJson.FindMember(jsonDoc, '2.7.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrpower_production := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, '3.7.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrreactive_power_consumption := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF	
+						jsonVal:= fbJson.FindMember(jsonDoc, '4.7.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrreactive_power_production := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, '16.7.0');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsString(jsonVal) THEN
+							lrpower_total := STRING_TO_LREAL(fbJson.GetString(jsonVal)) / 1000;
+						END_IF	
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+		END_IF
+				
+		nState:= 0;
+		bBusy:= FALSE;
+		IF bError THEN
+			nErrCount:= nErrCount+1;
+		END_IF
+	END_IF  	
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SmartMeterAdapter_Helper">
+      <LineId Id="421" Count="12" />
+      <LineId Id="437" Count="12" />
+      <LineId Id="753" Count="0" />
+      <LineId Id="757" Count="0" />
+      <LineId Id="451" Count="5" />
+      <LineId Id="759" Count="0" />
+      <LineId Id="458" Count="15" />
+      <LineId Id="684" Count="3" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="689" Count="3" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="694" Count="8" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="704" Count="3" />
+      <LineId Id="703" Count="0" />
+      <LineId Id="474" Count="5" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="571" Count="6" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

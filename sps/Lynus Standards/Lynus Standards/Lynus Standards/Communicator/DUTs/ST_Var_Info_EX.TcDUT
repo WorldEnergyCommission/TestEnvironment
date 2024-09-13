@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Var_Info_EX" Id="{1ea81fb0-7768-478d-83b6-c70afed63992}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_Var_Info_EX :
+STRUCT
+	{attribute 'hide'}
+	bNoStandardDatatypeDetected	: BOOL;																					//If its true the Symbol is not a standart Data Type			
+	{attribute 'hide'}
+	sFullSymbolName				: STRING(48);																			//Full Symbol name of plc variable 
+	{attribute 'hide'}
+	sSymbolName					: STRING(255);																			//Symbol name of plc variable 
+	{attribute 'hide'}
+	uiSizeArray					: UINT;																					//Array size if symbol type is a array
+	{attribute 'hide'}
+	udiGroup					: UDINT;																				//Group number
+	{attribute 'hide'}
+	udiOffset					: UDINT;																				//Offset of group number
+	{attribute 'hide'}
+	udiSize						: UDINT;																				//Size of variable in Byte	
+	{attribute 'hide'}
+	uiTypeLength				: UINT;																					//Lenght of the type in Byte it is bigdata ads type
+	{attribute 'hide'}
+	udiFlags					: UDINT;																				//Flags
+	{attribute 'hide'}
+	sAdsDataType				: STRING(12);																			//ADS data type	
+	{attribute 'hide'}
+	sSymbolType					: STRING(255);																			//Symbol type of plc variable	
+	{attribute 'hide'}
+	sSymbolUnit					: STRING(255);																			//Symbol Unit
+	{attribute 'hide'}
+	sProjectName				: STRING(63);																			//Projekt Name			
+	{attribute 'hide'}
+	arrInfoSubItems				: ARRAY[1..Constants_Communicator.uiArraySizeOfMarkedSubItems] OF ST_Infos_SubItem; 	//All important infos from the SubItems it is not a standart Data Type
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

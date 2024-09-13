@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_Pixii_BatteryState" Id="{ca9f8c40-2fe1-419c-8f10-fe9648152bb2}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE E_Pixii_BatteryState :
+(
+	eNoDataReceived := 0,
+	eDisconnected := 1,
+	eInitializing  := 2,
+	eConnected := 4,
+	eStandby := 8,
+	eSoCProtection 	 := 16,
+	eSuspending := 32,
+	eFault	 := 64
+);
+END_TYPE
+(*
+Name 			Bit no 		Description Action/Comment
+Disconnected 	1 			Battery bank is disconnected. All contactors are open.
+Initializing 	2 			Battery bank is initializing but not ready for operating. String balancing may occur.
+Connected 		3 			Battery bank is ready for operation. All enabled contactors are closed.
+Standby 		4 			Battery bank is connected and in standby/power saving mode.
+SoC Protection 	5 			Battery bank is connected but SoC is too low. Battery should be considered "offline".
+Suspending 		6 			Battery bank is suspending operation and will disconnect.
+Fault 			99 			The battery has experienced a critical failure and may not be operated.
+*)]]></Declaration>
+  </DUT>
+</TcPlcObject>

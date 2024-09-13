@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM" Id="{8aa78912-b3f7-4463-bcf8-7120557bfc3a}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	lr_RealPower_Grid	: LREAL;						//{#lynus.ag#()}
+	lr_ApparentPower_Grid: LREAL;						//{#lynus.ag#()}
+	lr_ReactivePower_Grid: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_Grid	: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1L2		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2L3		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3L1		: LREAL;						//{#lynus.ag#()}
+ 	lr_Current_L1		: LREAL;						//{#lynus.ag#()}
+	lr_Current_L2		: LREAL;						//{#lynus.ag#()}
+	lr_Current_L3		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM1		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM2		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM3		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM4		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM5		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM6		: LREAL;						//{#lynus.ag#()}
+	lrPower_House	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_Grid	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_EM1	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_EM2	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_EM3	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_EM4	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_EM5	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_EM6	: LREAL;						//{#lynus.ag#()}
+	lr_EnergyCounter_House	: LREAL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[lr_RealPower_Grid		:=		prg_ADS.struct_received.lr_RealPower_Grid	;
+lr_ApparentPower_Grid		:=		prg_ADS.struct_received.lr_ApparentPower_Grid	;
+lr_ReactivePower_Grid		:=		prg_ADS.struct_received.lr_ReactivePower_Grid	;
+lr_Frequency_Grid		:=		prg_ADS.struct_received.lr_Frequency_Grid	;
+lr_Voltage_L1N		:=		prg_ADS.struct_received.lr_Voltage_L1N	;
+lr_Voltage_L2N		:=		prg_ADS.struct_received.lr_Voltage_L2N	;
+lr_Voltage_L3N		:=		prg_ADS.struct_received.lr_Voltage_L3N	;
+lr_Voltage_L1L2		:=		prg_ADS.struct_received.lr_Voltage_L1L2	;
+lr_Voltage_L2L3		:=		prg_ADS.struct_received.lr_Voltage_L2L3	;
+lr_Voltage_L3L1		:=		prg_ADS.struct_received.lr_Voltage_L3L1	;
+lr_Current_L1		:=		prg_ADS.struct_received.lr_Current_L1	;
+lr_Current_L2		:=		prg_ADS.struct_received.lr_Current_L2	;
+lr_Current_L3		:=		prg_ADS.struct_received.lr_Current_L3	;
+lrPower_EM1		:=		prg_ADS.struct_received.lrPower_EM1	;
+lrPower_EM2		:=		prg_ADS.struct_received.lrPower_EM2	;
+lrPower_EM3		:=		prg_ADS.struct_received.lrPower_EM3	;
+lrPower_EM4		:=		prg_ADS.struct_received.lrPower_EM4	;
+lrPower_EM5		:=		prg_ADS.struct_received.lrPower_EM5	;
+lrPower_EM6		:=		prg_ADS.struct_received.lrPower_EM6	;
+lrPower_House		:=		prg_ADS.struct_received.lrPower_House	;
+lr_EnergyCounter_Grid		:=		prg_ADS.struct_received.lr_EnergyCounter_Grid	;
+lr_EnergyCounter_EM1		:=		prg_ADS.struct_received.lr_EnergyCounter_EM1	;
+lr_EnergyCounter_EM2		:=		prg_ADS.struct_received.lr_EnergyCounter_EM2	;
+lr_EnergyCounter_EM3		:=		prg_ADS.struct_received.lr_EnergyCounter_EM3	;
+lr_EnergyCounter_EM4		:=		prg_ADS.struct_received.lr_EnergyCounter_EM4	;
+lr_EnergyCounter_EM5		:=		prg_ADS.struct_received.lr_EnergyCounter_EM5	;
+lr_EnergyCounter_EM6		:=		prg_ADS.struct_received.lr_EnergyCounter_EM6	;
+lr_EnergyCounter_House		:=		prg_ADS.struct_received.lr_EnergyCounter_House	;]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="39" Count="26" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

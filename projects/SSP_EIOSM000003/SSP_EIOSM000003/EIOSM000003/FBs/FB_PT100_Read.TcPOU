@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_PT100_Read" Id="{76199814-44c1-4b51-a0b0-d65cd6386ac8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PT100_Read
+VAR_INPUT
+    bScale : BOOL := TRUE;
+    EL3202_Channel_1: INT;  
+    EL3202_Channel_2: INT;  
+END_VAR
+VAR_OUTPUT
+    temperature1 : REAL;   // Berechnete Temperatur
+    temperature2 : REAL;   
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bScale THEN
+	temperature1 := TO_REAL(EL3202_Channel_1) / 10;
+	temperature2 := TO_REAL(EL3202_Channel_2) / 10;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PT100_Read">
+      <LineId Id="18" Count="2" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

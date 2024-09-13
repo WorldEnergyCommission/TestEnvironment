@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Message_Out" Id="{ca7744e2-5efe-4eee-a756-d517590391e0}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_Message_Out :
+STRUCT
+	{attribute 'hide'}
+	sFullSymbolName				: STRING(48);																			//Symbol name of plc variable uncoded
+	{attribute 'hide'}
+	sSymbolType					: STRING(255);																			//Symbol type of plc variable uncoded
+	{attribute 'hide'}
+	uiSizeArray					: UINT;																					//Size of actuall Array
+	{attribute 'hide'}
+	byReadWriteArrayNumber		: BYTE;																					//Number of the array for which the command is intended
+	{attribute 'hide'}
+	arrValue					: ARRAY[0..Constants_Communicator.bySizeOfReceivedValueArrayInJson] OF STRING(30);		//Value from the Variable	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

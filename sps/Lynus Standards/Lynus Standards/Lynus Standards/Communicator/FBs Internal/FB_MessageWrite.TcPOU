@@ -1,0 +1,259 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_MessageWrite" Id="{051dbcb6-ce94-4c01-b2eb-d375d9cdb14a}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_MessageWrite
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable							: BOOL;																			//Enable this function														
+	{attribute 'hide'}
+	stInfoToConvertInMessage		: ARRAY[1..10] OF ST_Message_In;												//Received raw structer to convert in message file	
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	sMessageDocToWrite  	 		: STRING(7000);																	//Message file from raw input structer
+	{attribute 'hide'}
+	bError							: BOOL;																			//Error Message write
+	{attribute 'hide'}
+	bDone							: BOOL;
+	eErrorMessage_Out				: eErrorMessage;																//Error Message
+END_VAR
+VAR
+	fbJsonWrite     				: FB_JsonSaxWriter;																//FB Sax Writer
+	arrFind							: ARRAY[1..2] OF INT;															//Help variable for string functions
+	byLPPrepearJson					: BYTE;																			//Loop to prepear the json with input settings
+	iStatePrepearJson				: INT;																			//State Maschine
+	uiSizeArray						: UINT;																			//Array Size
+	uiValueLower					: UINT;																			//Lower value from array size
+	uiValueHigher					: UINT;																			//Higher value from array size
+	uiLPWriteValueArrayIN			: UINT;																			//Loop to write array value		
+	sJsonDocToWriteInt   			: STRING(255);																	//Json file from raw input structer	
+	sAddKeyValue					: STRING(2);																	//Key for the Value in the string	
+	rNumer							: REAL;																			//Real number to check for valid value
+	lrNumer							: LREAL;																		//LReal number to check for valid value
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 01.04.2020
+//Version : 1.0.0.0
+
+//With this function its possible to create a json file in SenML Format
+//Create json files with every standart data type with single symbols and 1 dimension arrays.
+
+CASE iStatePrepearJson OF
+
+	0://Start if somthing is inside the Array
+	bDone := FALSE;
+	
+	IF GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND GVL_Communicator.byNumberOfReadWriteFunction <= 10 AND bEnable THEN
+		FOR byLPPrepearJson := 1 TO GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO
+			IF FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'BOOL') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'BYTE') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'WORD') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DWORD') = 1 OR
+				FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'SINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'USINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'INT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'UINT') = 1 OR
+					FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'UDINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'LINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'ULINT') = 1 OR 
+						FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'REAL') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'LREAL') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'STRING(30)') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'TIME') = 1 OR
+							FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'TIME_OF_DAY') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DATE') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DATE_AND_TIME') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'LWORD') = 1 OR 
+								FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'ARRAY') = 1 THEN
+				bError := FALSE;
+				eErrorMessage_Out := eErrorMessage.eNoError;
+				fbJsonWrite.StartArray();	
+				iStatePrepearJson := 1;	
+				EXIT;	
+			END_IF
+		END_FOR
+	END_IF
+		
+	1://Prepear Json
+		IF GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN
+			FOR byLPPrepearJson := 1 TO GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO
+				//Change key for the value
+				IF FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'STRING(30)') <> 0 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'OF STRING(30)') <> 0 THEN
+					sAddKeyValue := 'vs';
+				ELSE
+					sAddKeyValue := 'v';
+				END_IF
+				
+				//Check it is a single standard variable
+				IF FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'BOOL') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'BYTE') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'WORD') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DWORD') = 1 OR
+					FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'SINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'USINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'INT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'UINT') = 1 OR
+						FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'UDINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'LINT') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'ULINT') = 1 OR 
+							FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'REAL') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'LREAL') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'STRING(30)') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'TIME') = 1 OR
+								FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'TIME_OF_DAY') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DATE') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'DATE_AND_TIME') = 1 OR FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'LWORD') = 1 THEN
+					fbJsonWrite.StartObject();
+					fbJsonWrite.AddKey('n');
+					fbJsonWrite.AddString(stInfoToConvertInMessage[byLPPrepearJson].sFullSymbolName);
+					fbJsonWrite.AddKey(sAddKeyValue);
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'BOOL' THEN fbJsonWrite.AddUdint(STRING_TO_BYTE(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF 
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'BYTE' THEN fbJsonWrite.AddUdint(STRING_TO_BYTE(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF 
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'WORD' THEN fbJsonWrite.AddUdint(STRING_TO_WORD(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF 
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'DWORD' THEN fbJsonWrite.AddUdint(STRING_TO_DWORD(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF 
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'SINT' THEN fbJsonWrite.AddDint(STRING_TO_SINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF 
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'USINT' THEN fbJsonWrite.AddUdint(STRING_TO_USINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF 
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'INT' THEN fbJsonWrite.AddDint(STRING_TO_INT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'UINT' THEN fbJsonWrite.AddUdint(STRING_TO_UINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'DINT' THEN fbJsonWrite.AddDint(STRING_TO_DINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'UDINT' THEN fbJsonWrite.AddUdint(STRING_TO_UDINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'LINT' THEN fbJsonWrite.AddLint(STRING_TO_LINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'ULINT' THEN fbJsonWrite.AddUlint(STRING_TO_ULINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'REAL' THEN
+						rNumer := STRING_TO_REAL(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1]); 
+							IF IsFinite(F_REAL(rNumer)) THEN
+								fbJsonWrite.AddReal(rNumer); 
+							ELSE
+								bError := TRUE;
+									eErrorMessage_Out := eErrorMessage.eCreatedMessageWithError;	
+							END_IF
+					END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'LREAL' THEN 
+						lrNumer := STRING_TO_LREAL(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1]);
+							IF IsFinite(F_LREAL(lrNumer)) THEN	
+								fbJsonWrite.AddLreal(lrNumer); 
+							ELSE
+								bError := TRUE;
+									eErrorMessage_Out := eErrorMessage.eCreatedMessageWithError;
+							END_IF
+					END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'STRING(30)' THEN fbJsonWrite.AddString(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1]); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'TIME' THEN fbJsonWrite.AddUdint(STRING_TO_UDINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'TIME_OF_DAY' THEN fbJsonWrite.AddUdint(STRING_TO_UDINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'DATE' THEN fbJsonWrite.AddUdint(STRING_TO_UDINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'DATE_AND_TIME' THEN fbJsonWrite.AddUdint(STRING_TO_UDINT(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					IF stInfoToConvertInMessage[byLPPrepearJson].sSymbolType = 'LWORD' THEN fbJsonWrite.AddUlint(STRING_TO_LWORD(stInfoToConvertInMessage[byLPPrepearJson].arrValue[1])); END_IF
+					fbJsonWrite.AddKey('u');
+					fbJsonWrite.AddString(stInfoToConvertInMessage[byLPPrepearJson].sSymbolUnit);
+					fbJsonWrite.EndObject();
+						rNumer := 0;
+						lrNumer := 0;
+				END_IF
+					IF FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'ARRAY') = 1 THEN
+						//Prepear json for array with standard variable	
+						//detect array size
+						arrFind[1] := FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'[');
+						uiValueLower := STRING_TO_UINT(MID(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,1,arrFind[1] + 1));
+						arrFind[2] := FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,']');
+							IF arrFind[1] = 7 AND arrFind[2] = 12 THEN
+								uiValueHigher := STRING_TO_UINT(MID(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,1,arrFind[2] - 1));
+							ELSIF arrFind[1] = 7 AND arrFind[2] = 13 THEN
+								uiValueHigher := STRING_TO_UINT(MID(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,2,arrFind[2] - 2));
+							ELSIF arrFind[1] = 7 AND arrFind[2] = 14 THEN
+								uiValueHigher := STRING_TO_UINT(MID(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,3,arrFind[2] - 3));
+							END_IF	
+								uiSizeArray := (uiValueHigher - uiValueLower) + 1;
+						
+						fbJsonWrite.StartObject();
+						fbJsonWrite.AddKey('n');
+						fbJsonWrite.AddString(stInfoToConvertInMessage[byLPPrepearJson].sFullSymbolName);
+						fbJsonWrite.AddKey(sAddKeyValue);
+						fbJsonWrite.StartArray();
+						IF uiSizeArray <= Constants_Communicator.bySizeOfValueArray THEN
+							FOR uiLPWriteValueArrayIN := 1 TO uiSizeArray BY 1 DO
+								IF FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'OF STRING(30)') <> 0 THEN 
+									fbJsonWrite.AddString(stInfoToConvertInMessage[byLPPrepearJson].arrValue[uiLPWriteValueArrayIN]);
+								ELSIF FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'OF REAL') <> 0 THEN
+									rNumer := STRING_TO_REAL(stInfoToConvertInMessage[byLPPrepearJson].arrValue[uiLPWriteValueArrayIN]); 
+										IF IsFinite(F_REAL(rNumer)) THEN  
+											fbJsonWrite.AddReal(rNumer);
+										ELSE
+											bError := TRUE;
+												eErrorMessage_Out := eErrorMessage.eCreatedMessageWithError;
+										END_IF
+								ELSIF FIND(stInfoToConvertInMessage[byLPPrepearJson].sSymbolType,'OF LREAL') <> 0 THEN
+									lrNumer := STRING_TO_LREAL(stInfoToConvertInMessage[byLPPrepearJson].arrValue[uiLPWriteValueArrayIN]); 
+										IF IsFinite(F_LREAL(lrNumer)) THEN  
+											fbJsonWrite.AddLreal(lrNumer);
+										ELSE
+											bError := TRUE;
+												eErrorMessage_Out := eErrorMessage.eCreatedMessageWithError;
+										END_IF
+								ELSE
+										fbJsonWrite.AddRawArray(stInfoToConvertInMessage[byLPPrepearJson].arrValue[uiLPWriteValueArrayIN]);
+								END_IF
+							END_FOR
+						ELSE
+							bError := TRUE;
+						END_IF
+						fbJsonWrite.EndArray();
+						fbJsonWrite.AddKey('u');
+						fbJsonWrite.AddString(stInfoToConvertInMessage[byLPPrepearJson].sSymbolUnit);
+						fbJsonWrite.EndObject();
+							rNumer := 0;
+							lrNumer := 0;
+					END_IF
+			END_FOR	
+		END_IF
+			//Json is ready		
+			fbJsonWrite.EndArray();
+			sJsonDocToWriteInt := fbJsonWrite.GetDocument();
+			fbJsonWrite.CopyDocument(sMessageDocToWrite, SIZEOF(sMessageDocToWrite));
+			fbJsonWrite.ResetDocument();
+				bDone := TRUE;
+				//Error when in 1 step the old messege is included befor the new one is ready
+				IF LEN2(ADR(sMessageDocToWrite)) <= 2 THEN bError := TRUE; END_IF 
+					iStatePrepearJson := 0;			
+END_CASE
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MessageWrite">
+      <LineId Id="1056" Count="2" />
+      <LineId Id="1054" Count="1" />
+      <LineId Id="1052" Count="0" />
+      <LineId Id="1287" Count="0" />
+      <LineId Id="1542" Count="0" />
+      <LineId Id="1405" Count="0" />
+      <LineId Id="1387" Count="1" />
+      <LineId Id="1605" Count="1" />
+      <LineId Id="1599" Count="0" />
+      <LineId Id="1398" Count="0" />
+      <LineId Id="1390" Count="3" />
+      <LineId Id="1389" Count="0" />
+      <LineId Id="1394" Count="1" />
+      <LineId Id="1400" Count="1" />
+      <LineId Id="1410" Count="0" />
+      <LineId Id="1539" Count="0" />
+      <LineId Id="1396" Count="0" />
+      <LineId Id="1399" Count="0" />
+      <LineId Id="1406" Count="0" />
+      <LineId Id="1600" Count="0" />
+      <LineId Id="1413" Count="0" />
+      <LineId Id="1601" Count="0" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="1417" Count="12" />
+      <LineId Id="1521" Count="0" />
+      <LineId Id="1434" Count="41" />
+      <LineId Id="1534" Count="1" />
+      <LineId Id="1480" Count="2" />
+      <LineId Id="1485" Count="13" />
+      <LineId Id="1500" Count="7" />
+      <LineId Id="1550" Count="0" />
+      <LineId Id="1555" Count="1" />
+      <LineId Id="1552" Count="0" />
+      <LineId Id="1557" Count="1" />
+      <LineId Id="1560" Count="0" />
+      <LineId Id="1559" Count="0" />
+      <LineId Id="1562" Count="6" />
+      <LineId Id="1561" Count="0" />
+      <LineId Id="1508" Count="3" />
+      <LineId Id="1548" Count="1" />
+      <LineId Id="1512" Count="3" />
+      <LineId Id="1522" Count="0" />
+      <LineId Id="1553" Count="1" />
+      <LineId Id="1526" Count="0" />
+      <LineId Id="1517" Count="0" />
+      <LineId Id="1602" Count="0" />
+      <LineId Id="1527" Count="0" />
+      <LineId Id="1523" Count="0" />
+      <LineId Id="1518" Count="2" />
+      <LineId Id="1538" Count="0" />
+      <LineId Id="1604" Count="0" />
+      <LineId Id="1603" Count="0" />
+      <LineId Id="1528" Count="0" />
+      <LineId Id="1415" Count="0" />
+      <LineId Id="1608" Count="1" />
+      <LineId Id="1607" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

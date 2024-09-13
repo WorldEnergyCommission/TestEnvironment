@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgTmp" Id="{8f49ce61-2342-477f-aa28-8b3a3cac7544}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgTmp
+VAR
+	fbPT100Reader : FB_PT100_Read;
+    pt100_Channel1 : REAL;           								// Variablen für den PT100-Wert
+    pt100_Channel2 : REAL;           
+    temperature1 : REAL;            								//{#lynus.ag#()}
+    temperature2 : REAL;        									//{#lynus.ag#()}
+	{attribute 'TcLinkTo' := 'TIID^Device 2 (EtherCAT)^Term 1 (EK1200)^Term 7 (EL3202)^RTD Inputs Channel 1^Value'}
+	EL3202_Channel_1 AT%I*: INT;
+	{attribute 'TcLinkTo' := 'TIID^Device 2 (EtherCAT)^Term 1 (EK1200)^Term 7 (EL3202)^RTD Inputs Channel 2^Value'}
+	EL3202_Channel_2 AT%I*: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbPT100Reader(
+				EL3202_Channel_1 := EL3202_Channel_1, 
+				EL3202_Channel_2 := EL3202_Channel_2, 
+				bScale := TRUE);
+				
+temperature1 := fbPT100Reader.temperature1;
+temperature2 := fbPT100Reader.temperature2;]]></ST>
+    </Implementation>
+    <LineIds Name="prgTmp">
+      <LineId Id="13" Count="0" />
+      <LineId Id="17" Count="3" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

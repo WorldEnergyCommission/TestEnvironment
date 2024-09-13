@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgMain" Id="{09755b01-d80b-414a-9783-185acd4cb0f4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMain
+VAR
+	ADS_1: FB_ADS_Read;
+	str_ADS_real_AverageRoomTemp: STRING(40);
+	real_AverageRoomTemp	: REAL;											//{#lynus.ag#()}
+	ton_Read_Delay: Ton;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// ADS Read out every minute
+ton_Read_Delay( In:=TRUE AND NOT ton_Read_Delay.Q, 
+				PT:=T#1M);
+		
+	
+// start ADS read out of PLC Object ZVG
+IF ton_Read_Delay.Q THEN
+	str_ADS_real_AverageRoomTemp:='prgMain.real_AverageRoomTemp';
+	ADS_1(	udintWriteLength:=SIZEOF(str_ADS_real_AverageRoomTemp),
+			udintReadLength:=SIZEOF(real_AverageRoomTemp),
+			dwSourceAddr:=ADR(str_ADS_real_AverageRoomTemp),
+			dwDestAddr:=ADR(real_AverageRoomTemp),
+			strNETid:='5.109.229.195.1.1');		// AMS NetID Object ZVG
+END_IF
+
+real_AverageRoomTemp := INT_TO_REAL(REAL_TO_INT(real_AverageRoomTemp*1000))/1000;]]></ST>
+    </Implementation>
+    <LineIds Name="prgMain">
+      <LineId Id="12" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

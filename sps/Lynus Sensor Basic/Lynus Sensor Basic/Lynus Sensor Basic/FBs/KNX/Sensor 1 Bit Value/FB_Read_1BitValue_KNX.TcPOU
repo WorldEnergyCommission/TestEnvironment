@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Read_1BitValue_KNX" Id="{16afeae6-9ddc-4e6c-810a-27e66461eb6c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Read_1BitValue_KNX
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;												//Enable the Fuctionblock and his logic
+	diNrOfKNXMasterLine_IN					: DINT;												//Number of the KNX Master Function on what this function can receive or write data
+	strGroupAddr							: EIB_GROUP_ADDR;									//KNX group address which should be controlled with this function
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	bData									: BOOL;												//Values from the Group Adress
+	byErrorWarning							: BYTE;												//Error and Warning from this Function (1= Warning, 2 = Error)
+	diNrOfKNX_S_OUT							: DINT;												//Active Number from the KNX Sensor for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbKNXRead								: EIB_BIT_REC;										//KNX Read Function
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;								//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	timDissableFunctions					: TON;												//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;												//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	timDelay								: TON;												//Timer for Delay to send the change of the output Value
+	{attribute 'hide'}
+	FPEnable								: R_TRIG;											//Internal positive Edge
+	{attribute 'hide'}
+	FNEnable								: F_TRIG;											//Internal negative Edge
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 06.01.2022
+//Version : 1.0.0.0
+
+//With this Function its possible to receive a 1 Bit Value over the KNX Group Adress
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfKNXMasterLine_IN := LIMIT(0,diNrOfKNXMasterLine_IN,Constants_Bussystems.diMaxNumberOfKNXMasterKL6301);	
+
+strGroupAddr.MAIN := LIMIT(0,strGroupAddr.MAIN,31);
+	strGroupAddr.SUB_MAIN := LIMIT(0,strGroupAddr.SUB_MAIN,7);
+
+(*-------------------------------------------------------------Calcualte the number of Temperature---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Sensors.diNumberOfKNXSensors, 
+	diMaxNumberOfDevices:= Constants_Sensors.diMaxNumberOfKNXSensors, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfKNX_S_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Sensors.diNumberOfKNXSensors := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Sensors.diNumberOfKNXSensors := diNrOfKNX_S_OUT;	
+END_IF
+	
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+			
+(*------------------------------------------------------------Error and Warning----------------------------------------------------------------------------------*)
+
+IF timDissableFunctions.Q THEN byErrorWarning := 1;
+ELSIF Lynus_Standards.GVL_Sensors.diNumberOfKNXSensors > Constants_Sensors.diMaxNumberOfKNXSensors THEN byErrorWarning := 2;
+ELSE
+	byErrorWarning := 0;
+END_IF
+
+(*------------------------------------------------------------Logic----------------------------------------------------------------------------------*)
+
+FNEnable(CLK:= bEnable, Q=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		timDelay(IN:= NOT timDelay.Q AND bEnable, PT:= T#5S, Q=> , ET=> );
+	
+fbKNXRead(Group_Address:= strGroupAddr, strData_Rec:= Lynus_Standards.GVL_Bussystems.stDataOfKNXMasterKL6301[diNrOfKNXMasterLine_IN], bDataReceive=> , bData=> );
+
+IF bEnable AND NOT timDissableFunctions.Q AND byErrorWarning <> 2 THEN
+	IF FNEnable.Q OR FPEnable.Q OR timDelay.Q THEN
+		bData := fbKNXRead.bData;
+	END_IF
+ELSE
+	bData := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Read_1BitValue_KNX">
+      <LineId Id="20" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="26" Count="2" />
+      <LineId Id="31" Count="2" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="126" Count="19" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="36" Count="6" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="90" Count="3" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="64" Count="1" />
+      <LineId Id="63" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

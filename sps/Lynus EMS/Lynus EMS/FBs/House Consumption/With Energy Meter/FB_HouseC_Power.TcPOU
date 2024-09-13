@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HouseC_Power" Id="{2542c4e8-331f-4fd1-8be1-4ec0234c622b}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_HouseC_Power
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;													//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bPowerDataInvers						: BOOL;													//With True its possible to invert all received power data from the electric meter
+	diNrOfEM_IN_HouseC						: DINT;													//Number of the electric meter for incoming power data. (Power Data for this Device)
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataHouseC							: ST_HouseConsumption_Output;							//{#lynus.ag#()} //House consumption output data
+	diNrOfHouseC_OUT						: DINT;													//Active Number from the House connection for using on other functions
+END_VAR
+VAR
+	fbHouseC								: FB_HouseConsumption;									//Function for House consumption
+	fbNumberDevice							: FB_NumberOfDevice;									//Function block to calcualte the number of the Device
+	timDissableFunctions					: TON;													//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL					: TON;													//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	arrPD									: ARRAY[1..3] OF FB_PersistentData_Number;				//Function to save persistent data 
+	byWaitInStep							: BYTE;													//Wait in Step before start to clean data on PLC
+	iStateGVLData							: INT;													//State machine to handle the data on the GVL
+	diCounterForGVL							: DINT;													//Counter to clean old data on GVL
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 07.06.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to show the power data from a house.
+
+//NOTE for diNr.....Designation => 
+//_ID = Only Incoming Data to this function
+//_OD = Only Outcomming Data from this function
+//_IDOD = Incoming Data to this function and outcoming data from this function
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfEM_IN_HouseC := LIMIT(0,diNrOfEM_IN_HouseC,Constants_Energy.diMaxNumberOfElectricMeters);	
+
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+IF NOT bPowerDataInvers THEN
+	fbHouseC.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT1_Production * 1000;
+	fbHouseC.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT2_Production * 1000;
+	fbHouseC.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT1_Consumption * 1000;
+	fbHouseC.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT1_Consumption * 1000;
+	fbHouseC.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrTotalCounterEnergy_Production * 1000;
+	fbHouseC.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrTotalCounterEnergy_Consumption * 1000;
+		fbHouseC.lrPowerHouseConsumption := (Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrPower * 1000) * - 1;
+ELSE
+	fbHouseC.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT1_Consumption * 1000;
+	fbHouseC.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT2_Consumption * 1000;
+	fbHouseC.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT1_Production * 1000;
+	fbHouseC.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrCounterEnergyT2_Production * 1000;
+	fbHouseC.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrTotalCounterEnergy_Consumption * 1000;
+	fbHouseC.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrTotalCounterEnergy_Production * 1000;
+		fbHouseC.lrPowerHouseConsumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_HouseC].lrPower * 1000;
+END_IF
+
+(*-------------------------------------------------------------Calcualte the number of House Consumption---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHouseConsumption, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfHouseConsumptions, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfHouseC_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHouseConsumption := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHouseConsumption := diNrOfHouseC_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*-----------------------------------------------------------------------------Error ----------------------------------------------------------------------------*)
+
+IF timDissableFunctions.Q THEN fbHouseC.bWarning := TRUE; fbHouseC.iWarningCode := 0; ELSE fbHouseC.bWarning := FALSE; END_IF 	
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfHouseConsumption > Constants_Energy.diMaxNumberOfHouseConsumptions THEN 
+		fbHouseC.bError := TRUE; 
+			fbHouseC.iErrorCode := 1;
+	ELSE 
+		fbHouseC.bError := FALSE; 
+			fbHouseC.iErrorCode := 0;
+	END_IF  
+	
+(*------------------------------------------------------------------FB House----------------------------------------------------------------------------*)
+
+fbHouseC(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q,
+	bError:= , 
+	bWriteWithDelay:= TRUE, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrPowerHouseConsumption:= , 
+	tTimDelayOutput:= T#5S, 
+	stDataHouseCOut=> , 
+	stDataHouseCOutDelay=> stDataHouseC);		
+	
+(*-----------------------------------------------------------Handle data to Global structure for the House consumption-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diCounterForGVL].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diCounterForGVL].lrPowerConsumption := 0;
+					Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diCounterForGVL].lrPower := 0;
+						Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diCounterForGVL].lrPowerProduction := 0;
+		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfHouseConsumptions);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Energy.diMaxNumberOfHouseConsumptions THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfHouseC_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diNrOfHouseC_OUT].bEnabled := fbHouseC.stDataHouseCOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diNrOfHouseC_OUT].byErrorWarning := fbHouseC.stDataHouseCOut.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diNrOfHouseC_OUT].lrPowerConsumption := fbHouseC.stDataHouseCOut.lrPowerConsumption;
+				Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diNrOfHouseC_OUT].lrPower := fbHouseC.stDataHouseCOut.lrPower;
+					Lynus_Standards.GVL_Energy.stDataHouseConsumptions[diNrOfHouseC_OUT].lrPowerProduction := fbHouseC.stDataHouseCOut.lrPowerProduction;
+END_IF 	
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_HouseC), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HouseC_Power">
+      <LineId Id="3" Count="137" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

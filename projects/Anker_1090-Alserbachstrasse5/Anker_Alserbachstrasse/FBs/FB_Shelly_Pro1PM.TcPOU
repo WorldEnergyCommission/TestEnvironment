@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Shelly_Pro1PM" Id="{409f724c-0d46-4ce0-9383-f989e51615a7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_Pro1PM
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME;				//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+	bOnP1				: BOOL;
+	bOffP1				: BOOL;
+	bEnableControl		: BOOL;
+END_VAR
+
+VAR_OUTPUT
+	bValidResult				: BOOL;															//Valid Result received from Server
+    bBusy						: BOOL;															//Function is Busy
+    bError						: BOOL;															//Error sucess
+	bDone						: BOOL;															//True after the decoding from the received Json File
+	bConnected					: BOOL;															//Connection to the Server
+	hrErrorCode       			: HRESULT;														//Error Result from Http Client
+	lrpowerP1					: LREAL;														//Received Value
+	lrvoltageP1					: LREAL;														//Received Value
+	lrenergyP1					: LREAL;														//Received Value
+	lrTemperatureP1				: LREAL;														//Received Value
+	bStateP1					: BOOL;
+END_VAR
+
+VAR
+	fbClient					: FB_IotHttpClient;
+	fbHttpGet					: FB_Shelly_Pro1PM_Helper;
+	timStartRequest				: TON;															//Timer to Start the Request
+	FPStartRequest				: R_TRIG;														//Internal positive Edge
+	FPDone						: R_TRIG;														//Internal positive Edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+	SwitchOnP1					: R_TRIG;
+	SwitchOffP1					: R_TRIG;
+	rs_Switch_ON: Rs;
+	rs_Switch_OFF: RS;
+	x: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[bError := FALSE;
+(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := T#25S;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := TRUE;
+	fbClient.tConnectionTimeout := T#25S;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+timStartRequest(	IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, 
+					PT:= tDelayRequest, 
+					Q=> , 
+					ET=> );
+IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured)) THEN 
+	fbHttpGet.bSend := TRUE; 
+	x:=x+1;
+END_IF
+
+				
+//Http Get Function
+fbHttpGet(
+	lrapowerP1 => lrpowerP1, 
+	lrvoltageP1 => lrvoltageP1, 
+	lraenergyP1 => lrenergyP1,
+	lrTemperatureP1 => lrTemperatureP1,
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> ,
+	sContentS0=> ,
+	bStateP1=>bStateP1 );
+
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+// zum testen ob dadurch die verbindung aufrechtbleibt nach dem schalten 
+// --> error geht nicht mehr low!
+// IF NOT bError  THEN
+	fbClient.Execute();
+// ELSE
+//	fbClient.Disconnect();
+// END_IF
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbClient.hrErrorCode;
+	
+
+// Relay Control, Switch P1
+SwitchOnP1(CLK:=bOnP1);
+rs_Switch_ON(	Set:= SwitchOnP1.Q AND bEnableControl,
+				Reset1 := bStateP1);	// OR fbHttpGet.timTimeoutSwitch.Q);
+				
+IF rs_Switch_ON.Q1 AND bEnableControl THEN
+	fbHttpGet.bSetOnP1 := TRUE;
+ELSE
+	fbHttpGet.bSetOnP1 := FALSE;
+END_IF
+
+SwitchOffP1(CLK:=bOffP1);
+rs_Switch_OFF(	Set:= SwitchOffP1.Q AND bEnableControl,
+				Reset1 := NOT bStateP1);	// OR fbHttpGet.timTimeoutSwitch.Q);
+				
+IF rs_Switch_OFF.Q1 AND bEnableControl THEN
+	fbHttpGet.bSetOffP1 := TRUE;
+ELSE
+	fbHttpGet.bSetOffP1 := FALSE;
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_Pro1PM">
+      <LineId Id="283" Count="0" />
+      <LineId Id="67" Count="14" />
+      <LineId Id="183" Count="2" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="83" Count="6" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="99" Count="3" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="110" Count="5" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="361" Count="5" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="124" Count="5" />
+      <LineId Id="265" Count="6" />
+      <LineId Id="320" Count="1" />
+      <LineId Id="272" Count="7" />
+      <LineId Id="323" Count="1" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Shelly_PlugS_Helper" Id="{f57550ae-ad68-4365-a693-7a6ebfb6551b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_PlugS_Helper
+VAR_INPUT
+	bSend			: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient		: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy			: BOOL;
+	bError			: BOOL;
+	lrpower			: LREAL;
+	lrenergy		: LREAL;
+END_VAR
+
+VAR
+	
+	fbRequestMeter		: FB_IotHttpRequest;
+	fbJson				: FB_JsonDomParser;
+	nState				: UDINT;
+	RisingEdge			: R_TRIG;
+	
+	bGetContentResult	: BOOL;
+	sContent			: STRING(511);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[RisingEdge(CLK:= bSend );
+CASE nState OF
+0:	
+	IF RisingEdge.Q THEN 
+		IF
+			fbRequestMeter.SendRequest(sUri:='/meter/0', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			nState:= 1;
+			nReqCount:= nReqCount+1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+1:
+	IF NOT fbRequestMeter.bBusy THEN
+		bError:= TRUE;
+		
+		IF NOT fbRequestMeter.bError THEN				 
+			bGetContentResult:= fbRequestMeter.GetContent(pContent:= ADR(sContent), nContentSize:= SIZEOF(sContent), bSetNullTermination:= TRUE);
+			IF fbRequestMeter.nStatusCode >= 200 AND fbRequestMeter.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequestMeter.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, 'power')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, 'power');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrpower:= fbJson.GetDouble(jsonVal);									
+						END_IF
+						jsonVal:= fbJson.FindMember(jsonDoc, 'total');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsNumber(jsonVal) THEN							
+							lrenergy:= fbJson.GetDouble(jsonVal) / 60;									
+						END_IF
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+			END_IF
+
+		
+	nState:= 0;
+	bBusy:= FALSE;
+		IF bError THEN
+			nErrCount:= nErrCount+1;
+		END_IF
+	END_IF  	
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_PlugS_Helper">
+      <LineId Id="58" Count="4" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="22" />
+      <LineId Id="223" Count="3" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="5" />
+      <LineId Id="208" Count="7" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_EL3443_DPM_VariantTotal" Id="{88f01543-d280-49af-8107-0978ddf08db5}">
+    <Declaration><![CDATA[TYPE ST_EL3443_DPM_VariantTotal :
+STRUCT
+    fIn_RMS : REAL; 			// [A]  (Real Selector: 1032 (= 1024 + 8))  Calculated RMS value of the neutral current
+    fPower_Factor : REAL; 		// [-]  (Real Selector: 1047 (= 1024 + 23))  Total power factor over all phases
+    fPtot : REAL; 				// [W]  (Real Selector: 1050 (= 1024 + 26))  Total active power
+    fPtotavg : REAL; 			// [W]  (Real Selector: 1051 (= 1024 + 27))  Average total active power during the last interval
+    fPtotmin : REAL; 			// [W]  (Real Selector: 1052 (= 1024 + 28))  Minimum total active power in the last interval
+    fPtotmax : REAL; 			// [W]  (Real Selector: 1053 (= 1024 + 29))  Maximum total active power in the last interval
+    fStot : REAL; 				// [VA]  (Real Selector: 1056 (= 1024 + 32))  Total apparent power
+    fStotavg : REAL; 			// [VA]  (Real Selector: 1057 (= 1024 + 33))  Average total apparent power during the last interval
+    fStotmin : REAL; 			// [VA]  (Real Selector: 1058 (= 1024 + 34))  Minimum total apparent power in the last interval
+    fStotmax : REAL; 			// [VA]  (Real Selector: 1059 (= 1024 + 35))  Maximum total apparent power in the last interval
+    fQtot : REAL; 				// [Var]  (Real Selector: 1062 (= 1024 + 38))  Total reactive power
+    fQtotavg : REAL; 			// [Var]  (Real Selector: 1063 (= 1024 + 39))  Average total reactive power during the last interval
+    fQtotmin : REAL; 			// [Var]  (Real Selector: 1064 (= 1024 + 40))  Minimum total reactive power in the last interval
+    fQtotmax : REAL; 			// [Var]  (Real Selector: 1065 (= 1024 + 41))  Maximum total reactive power in the last interval
+    nEptot : LINT; 				// [mWh]  (LINT Selector: 1069 (= 1024 + 45))  Balanced total active energy
+    nEPtot_pos : ULINT; 		// [mWh]  (ULINT Selector: 1070 (= 1024 + 46))  Related total active energy
+    nEPtot_neg : ULINT; 		// [mWh]  (ULINT Selector: 1071 (= 1024 + 47))  Input total active energy
+    nEptot_interval : LINT; 	// [mWh]  (LINT Selector: 1072 (= 1024 + 48))  Balanced total active energy in last interval
+    nEPtot_pos_interval : ULINT;// [mWh]  (ULINT Selector: 1073 (= 1024 + 49))  Total active energy related in the last interval
+    nEPtot_neg_interval : ULINT;// [mWh]  (ULINT Selector: 1074 (= 1024 + 50))  Input total active energy the last interval
+    nEStot : LINT; 				// [mWh]  (LINT Selector: 1075 (= 1024 + 51))  Total apparent energy
+    nEStot_pos : ULINT; 		// [mWh]  (ULINT Selector: 1076 (= 1024 + 52))  Total apparent energy
+    nEStot_neg : ULINT; 		// [mWh]  (ULINT Selector: 1077 (= 1024 + 53))  Total apparent energy
+    nEStot_interval : LINT; 	// [mWh]  (LINT Selector: 1078 (= 1024 + 54))  Total apparent energy in the last interval
+    nEStot_pos_interval : ULINT;// [mWh]  (ULINT Selector: 1079 (= 1024 + 55))  Total apparent energy in the last interval
+    nEStot_neg_interval : ULINT;// [mWh]  (ULINT Selector: 1080 (= 1024 + 56))  Total apparent energy in the last interval
+    nEQtot : LINT; 				// [mWh]  (LINT Selector: 1081 (= 1024 + 57))  Total reactive energy
+    nEQtot_pos : ULINT; 		// [mWh]  (ULINT Selector: 1082 (= 1024 + 58))  Total reactive energy
+    nEQtot_neg : ULINT; 		// [mWh]  (ULINT Selector: 1083 (= 1024 + 59))  Total reactive energy
+    nEQtot_interval : LINT; 	// [mWh]  (LINT Selector: 1084 (= 1024 + 60))  Total reactive energy in the last interval
+    nEQtot_pos_interval : ULINT;// [mWh]  (ULINT Selector: 1085 (= 1024 + 61))  Total reactive energy in the last interval
+    nEQtot_neg_interval : ULINT;// [mWh]  (ULINT Selector: 1086 (= 1024 + 62))  Total reactive energy in the last interval
+    fPhiL1L2 : REAL; 			// [°]  (Real Selector: 1094 (= 1024 + 70))  Phase shift angle between phase L1 and L2
+    fPhiL1L3 : REAL; 			// [°]  (Real Selector: 1095 (= 1024 + 71))  Phase shift angle between phase L1 and L3
+    fUnbalance : REAL; 			// [-]  (Real Selector: 1096 (= 1024 + 72))  Ratio between negative and positive voltage system
+    fPQF : REAL; 				// [-]  (Real Selector: 1104 (= 1024 + 80))  Power quality factor
+    fPQF_Avg : REAL; 			// [-]  (Real Selector: 1105 (= 1024 + 81))  Average value of the power quality factor during the last interval
+    fPQF_Min : REAL; 			// [-]  (Real Selector: 1106 (= 1024 + 82))  Minimum power quality factor in the last interval
+    fPQF_Max : REAL; 			// [-]  (Real Selector: 1107 (= 1024 + 83))  Maximum power quality factor in the last interval
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

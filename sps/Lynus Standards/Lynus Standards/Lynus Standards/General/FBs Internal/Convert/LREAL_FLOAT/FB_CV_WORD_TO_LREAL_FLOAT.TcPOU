@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_LREAL_FLOAT" Id="{4cf9d147-3913-44c3-919a-965f59294bd2}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_CV_WORD_TO_LREAL_FLOAT
+VAR_INPUT
+	{attribute 'hide'}
+	wInputValue_1				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	wInputValue_2				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	wInputValue_3				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	wInputValue_4				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	eByteOrderForConvert		: eByteOrder;						//Byte Format
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	lrOutputValue				: LREAL;							//Converted output value							
+END_VAR
+VAR
+	unConvertLRealToULINT		: ST_UN_FLOAT_CONVERT_ULINT_LREAL;	//Union to convert the value
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//The byte order can be selected between BigEndian and LittleEndian
+//WORD TO LREAL
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+IF eByteOrderForConvert = eByteOrder.eBigEndian THEN
+	unConvertLRealToULINT.uliRawValue := SHL(WORD_TO_ULINT(wInputValue_1),48) + SHL(WORD_TO_ULINT(wInputValue_2),32) + SHL(WORD_TO_ULINT(wInputValue_3),16) + WORD_TO_DWORD(wInputValue_4);
+ELSE
+	unConvertLRealToULINT.uliRawValue := SHL(WORD_TO_ULINT(wInputValue_4),48) + SHL(WORD_TO_ULINT(wInputValue_3),32) + SHL(WORD_TO_ULINT(wInputValue_2),16) + WORD_TO_DWORD(wInputValue_1);
+END_IF
+
+IF IsFinite(F_LREAL(unConvertLRealToULINT.lrValueFloat)) THEN
+	lrOutputValue := unConvertLRealToULINT.lrValueFloat;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_LREAL_FLOAT">
+      <LineId Id="124" Count="2" />
+      <LineId Id="17" Count="5" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="102" Count="3" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="108" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

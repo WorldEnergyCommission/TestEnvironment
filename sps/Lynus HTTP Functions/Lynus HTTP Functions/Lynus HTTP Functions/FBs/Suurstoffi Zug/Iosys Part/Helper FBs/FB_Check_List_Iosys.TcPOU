@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Check_List_Iosys" Id="{de137e1c-f6f6-478b-85a0-32e0ad2797ce}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Check_List_Iosys
+VAR_INPUT
+	{attribute 'hide'}
+	bStart						: BOOL;															//Start the Function. False = The Data in the output Array is deleted 
+	{attribute 'hide'}
+	bValidResult				: BOOL;															//Valid Result received from Server
+	{attribute 'hide'}
+	bDone						: BOOL;															//Data in Input Array is complete
+	{attribute 'hide'}
+	arrValuesIosys				: ARRAY[0..249] OF ST_Values_Iosys;								//Datapoints with Value in a array
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	arrCheckedValues			: ARRAY[0..249] OF ST_Values_Checked_Iosys;						//All Datapoints what are receved from the Server	
+END_VAR
+VAR
+	FPDone						: R_TRIG;														//Internal positive edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+	bExist						: BOOL;															//Show that the Value just exist in the output Array
+	byLPArray					: BYTE;															//Variable for Loop
+	byLPArrayIntern				: BYTE;															//Variable for Loop
+	byPlaceInArrayInUse			: BYTE;															//Show how much places in the output array are just in use
+	byCounterLoop				: BYTE;															//Counter Variable for Loop
+	iStateCheckValue			: INT;															//Variable for Statemaschine
+	sValue						: STRING(30);													//Value as Strin after preparetion
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 17.02.2021
+//Version : 1.0.0.0
+
+//Since only the values that have changed are delivered when querying the data points via the token, 
+//the values that have not changed but have already occurred must be saved. So that they are not overwritten with 0.
+
+//---------------------------------------------------------------------------Start and Stop the function--------------------------------------------------------------
+
+FNStart(CLK:= bStart, Q=> );
+	FPDone(CLK:= bDone, Q=> );
+
+//Start new Session	
+IF FPDone.Q AND bValidResult AND bStart AND iStateCheckValue = 0 THEN iStateCheckValue := 1; END_IF
+	//Stop
+	IF FNStart.Q THEN 
+		iStateCheckValue := 0; byPlaceInArrayInUse := 0; sValue := ''; byCounterLoop := 0;	
+			//Clear the Output Array
+			FOR byLPArray := 0 TO 249 BY 1 DO
+				arrCheckedValues[byLPArray].lrValue := 0;
+					arrCheckedValues[byLPArray].sId := '';
+						arrCheckedValues[byLPArray].sTimestamp := '';	
+			END_FOR	
+	END_IF
+	
+//---------------------------------------------------------------------------State Maschine--------------------------------------------------------------
+
+CASE iStateCheckValue OF
+	
+	1://Write all Variabes to Output
+		FOR byLPArray := 0 TO 249 BY 1 DO
+			IF arrValuesIosys[byLPArray].sId <> '' AND NOT arrValuesIosys[byLPArray].bNoValue THEN
+				arrCheckedValues[byPlaceInArrayInUse].sTimestamp := arrValuesIosys[byLPArray].sTimestamp;
+					arrCheckedValues[byPlaceInArrayInUse].sId := arrValuesIosys[byLPArray].sId;
+						//Prepear the String Value
+						IF FIND(arrValuesIosys[byLPArray].sValue,'.') <> 0 THEN
+							sValue := MID(arrValuesIosys[byLPArray].sValue,FIND(arrValuesIosys[byLPArray].sValue,'.') + 2,1);
+								arrCheckedValues[byPlaceInArrayInUse].lrValue := STRING_TO_LREAL(sValue);
+									//Limit to 2 commas
+									arrCheckedValues[byPlaceInArrayInUse].lrValue := LINT_TO_LREAL(LREAL_TO_LINT(arrCheckedValues[byPlaceInArrayInUse].lrValue * 100)) / 100;	
+						ELSE
+							sValue := MID(arrValuesIosys[byLPArray].sValue,30,1);
+								arrCheckedValues[byPlaceInArrayInUse].lrValue := STRING_TO_LREAL(sValue);
+						END_IF	
+							byPlaceInArrayInUse := byPlaceInArrayInUse + 1;	
+								byPlaceInArrayInUse := LIMIT(0,byPlaceInArrayInUse,250);	 
+			END_IF
+				//All vaiables insert and go to next step
+				IF LEN(arrValuesIosys[byLPArray].sId) = 0 OR byPlaceInArrayInUse >= 250 THEN iStateCheckValue := 2; EXIT; END_IF 	
+		END_FOR		
+ 
+	2://Wait for new Values
+		IF byPlaceInArrayInUse > 249 THEN byPlaceInArrayInUse := 249; END_IF 
+			IF FPDone.Q AND bValidResult AND bStart THEN iStateCheckValue := 3; byCounterLoop := 0; END_IF
+		
+	3://Check the changes
+		FOR byLPArray := 0 TO byPlaceInArrayInUse BY 1 DO
+			FOR byLPArrayIntern := 0 TO byPlaceInArrayInUse BY 1 DO
+				IF arrValuesIosys[byLPArray].sId = arrCheckedValues[byLPArrayIntern].sId THEN
+					arrCheckedValues[byLPArrayIntern].sTimestamp := arrValuesIosys[byLPArray].sTimestamp;
+						//Prepear the String Value
+						IF FIND(arrValuesIosys[byLPArray].sValue,'.') <> 0 THEN
+							sValue := MID(arrValuesIosys[byLPArray].sValue,FIND(arrValuesIosys[byLPArray].sValue,'.') + 2,1);
+								arrCheckedValues[byLPArrayIntern].lrValue := STRING_TO_LREAL(sValue);
+									//Limit to 2 commas
+									arrCheckedValues[byLPArrayIntern].lrValue := LINT_TO_LREAL(LREAL_TO_LINT(arrCheckedValues[byLPArrayIntern].lrValue * 100)) / 100;	
+						ELSE
+							sValue := MID(arrValuesIosys[byLPArray].sValue,30,1);
+								arrCheckedValues[byLPArrayIntern].lrValue := STRING_TO_LREAL(sValue);
+						END_IF			
+				END_IF 
+			END_FOR
+				byCounterLoop := byCounterLoop + 1;
+					byCounterLoop := LIMIT(0,byCounterLoop,250);
+						//Back to Step Nr 2
+						IF byCounterLoop > byPlaceInArrayInUse THEN iStateCheckValue := 2; EXIT; END_IF 
+		END_FOR
+		
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Check_List_Iosys">
+      <LineId Id="14" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="66" Count="1" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="77" Count="3" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="161" Count="5" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="167" Count="2" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="172" Count="1" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="174" Count="1" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="207" Count="3" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="211" Count="2" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="224" Count="2" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="53" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

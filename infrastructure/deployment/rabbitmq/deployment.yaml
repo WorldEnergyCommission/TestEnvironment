@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbit-mq-config
+  namespace: lynus
+data:
+  enabled_plugins: |
+    [rabbitmq_management,rabbitmq_prometheus].
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbit-mq
+  namespace: lynus
+spec:
+  selector:
+    matchLabels:
+      app: rabbit-mq
+  template:
+    metadata:
+      labels:
+        app: rabbit-mq
+    spec:
+      containers:
+        - name: rabbit-mq
+          image: library/rabbitmq:3.13.0
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 15672
+              name: webconsole
+            - containerPort: 15692
+              name: metrics
+            - containerPort: 5672
+              name: listener
+          volumeMounts:
+            - mountPath: /etc/rabbitmq/enabled_plugins
+              name: config
+              subPath: enabled_plugins
+      volumes:
+        - name: config
+          configMap:
+            name: rabbit-mq-config
+      nodeSelector:
+        nodetype: large
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbit-mq
+  namespace: lynus
+spec:
+  selector:
+    app: rabbit-mq
+  ports:
+    - port: 15672
+      targetPort: 15672
+      name: webconsole
+    - port: 15692
+      targetPort: 15692
+      name: metrics
+    - port: 5672
+      targetPort: 5672
+      name: listener
+  type: ClusterIP

@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV_separate" Id="{3940a3f5-dd31-4276-b197-0a9b05eb909c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV_separate
+VAR
+	fbPVCounter_1			: FB_EnergyCounter;
+	fbPVCounter_2			: FB_EnergyCounter;
+	lrPowerPV				: LREAL;				
+		// extend or reduce amount of PV Inverters
+	lrPowerPV_1				: LREAL;				
+	lrPowerPV_2				: LREAL;				
+
+	str_IP: STRING(15) := '172.16.127.240';
+	FB_PV_1:FB_TCPModbusRequest_PV_Huawei_inclWrite_oneTurn;	
+
+	fb_Meter_1		: FB_EM_Electric_3P_Ext_Input;
+	fbPVInt_1		: FB_PV_Power;
+	fb_Meter_2		: FB_EM_Electric_3P_Ext_Input;
+	fbPVInt_2		: FB_PV_Power;
+	
+
+	FB_PID_Inverter :FB_PID;
+
+	uint_setPoint_onetenth: UINT;					
+
+	rPValue: REAL := 0.05;
+	udint_IValue: UDINT:=250;
+	udint_DValue: UDINT:=30;
+
+	unit_Temp: UINT;
+	real_max: REAL:=1000;
+	real_min: REAL:=10;
+
+	int_state: INT;
+	ton_State_Timeout: TON;
+	mtest: BOOL:=TRUE;
+END_VAR
+VAR PERSISTENT
+	lrCounterPV_1				: LREAL;			
+	lrCounterPV_2				: LREAL;				
+	m_Direction: BOOL:= TRUE;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// state maschine for talking to each PV inverter by the time
+
+CASE int_state OF
+	0: // wait state
+		int_state := 10;
+		FB_PV_1.b_Enable := FALSE;
+		
+	10: //talk to first PV
+		IF FB_PV_1.i_State = 0 THEN
+			int_state := int_state+1;
+		END_IF
+	
+	11: // start first poll
+		FB_PV_1.b_Enable := TRUE;
+		FB_PV_1.by_slave_ID:= 1;
+		ton_State_Timeout.IN := TRUE;
+		IF FB_PV_1.i_State <> 0 THEN
+			int_state := int_state+1;
+		END_IF
+ 
+		
+	12: // wait for data received
+		FB_PV_1.b_Enable := FALSE;
+		IF FB_PV_1.i_State = 0 AND NOT FB_PV_1.FB_SocketReceive.bError THEN
+ 			lrPowerPV_1 := FB_PV_1.lreal_RealPower_kW;
+			ton_State_Timeout.IN := FALSE;
+			int_state := int_state+1;
+		ELSIF ton_State_Timeout.Q THEN
+			ton_State_Timeout.IN := FALSE;
+			int_state := int_state+1;
+		END_IF
+		
+	13: // go to next poll
+		int_state := 20;
+		
+	20: //talk to second PV
+		IF FB_PV_1.i_State = 0 THEN
+			int_state := int_state+1;
+		END_IF
+	
+	21: // start first poll
+		FB_PV_1.b_Enable := TRUE;
+		FB_PV_1.by_slave_ID:= 2;
+		ton_State_Timeout.IN := TRUE;
+		IF FB_PV_1.i_State <> 0 THEN
+			int_state := int_state+1;
+		END_IF
+ 
+		
+	22: // wait for data received
+		FB_PV_1.b_Enable := FALSE;
+		IF FB_PV_1.i_State = 0 AND NOT FB_PV_1.FB_SocketReceive.bError THEN
+ 			lrPowerPV_2 := FB_PV_1.lreal_RealPower_kW;
+			ton_State_Timeout.IN := FALSE;
+			int_state := int_state+1;
+		ELSIF ton_State_Timeout.Q THEN
+			ton_State_Timeout.IN := FALSE;
+			int_state := int_state+1;
+		END_IF		
+	23: // go to next poll
+		int_state := 0;		
+		
+END_CASE
+ton_State_Timeout(pt:= T#1M);
+
+
+
+		
+FB_PV_1(
+	b_Enable:= , 
+	by_slave_ID:= , 
+	str_IPAdress:= str_ip, 
+	uint_SetPoint_onetenth:= uint_setPoint_onetenth, 
+	lreal_RealPower_kW=> ,  );
+
+
+	
+
+fbPVCounter_1(	byActiveTariff := 1,	
+				lrPowerInput := 0-lrPowerPV_1,
+				lrTotalCounterEnergy_Production => lrCounterPV_1);
+
+fbPVCounter_2(	byActiveTariff := 1,	
+				lrPowerInput := 0-lrPowerPV_2,
+				lrTotalCounterEnergy_Production => lrCounterPV_2);
+
+lrPowerPV := lrPowerPV_1 + lrPowerPV_2;
+
+fbPVInt_1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fb_Meter_1.diNrOfEM_OUT, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+	
+fb_Meter_1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= , 
+	bWarningExt:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrCurrentL1:= , 
+	lrVoltageL1N:= , 
+	lrVoltageL1L2:= , 
+	lrPowerL1:= , 
+	lrCurrentL2:= , 
+	lrVoltageL2N:= , 
+	lrVoltageL2L3:= , 
+	lrPowerL2:= , 
+	lrCurrentL3:= , 
+	lrVoltageL3N:= , 
+	lrVoltageL3L1:= , 
+	lrPowerL3:= , 
+	lrPowerTotal:= lrPowerPV_1,
+	lrFrequency:= , 
+	lrReactivePowerTotal:= , 
+	lrApparentPowerTotal:= , 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+
+	
+
+fbPVInt_2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fb_Meter_2.diNrOfEM_OUT, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+	
+fb_Meter_2(	
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	bErrorExt:= , 
+	bWarningExt:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrCurrentL1:= , 
+	lrVoltageL1N:= , 
+	lrVoltageL1L2:= , 
+	lrPowerL1:= , 
+	lrCurrentL2:= , 
+	lrVoltageL2N:= , 
+	lrVoltageL2L3:= , 
+	lrPowerL2:= , 
+	lrCurrentL3:= , 
+	lrVoltageL3N:= , 
+	lrVoltageL3L1:= , 
+	lrPowerL3:= , 
+	lrPowerTotal:= lrPowerPV_2,
+	lrFrequency:= , 
+	lrReactivePowerTotal:= , 
+	lrApparentPowerTotal:= , 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	diNrOfEM_OUT=> );
+
+	
+FB_PID_Inverter(
+		bEnable:= TRUE, 
+		rSetpoint:= -LIMIT(0,prgGrid.rSizeGridDelivery,30), 
+		udiIValue:= udint_IValue, 
+		udiDValue:= udint_DValue, 
+		udiDamping:= 0, 
+		rPValue:= rPValue, 
+		rMaxValue:= real_max, 
+		rMinValue:= real_min, 
+		rNeutralZone:= 1, 
+		bDirection:= m_Direction, 
+		rActualValue:=  LREAL_TO_REAL(prgGrid.fbEM1.stDataEMPowerRealTime.lrPowerTotal),
+		rQController=> );
+IF mtest THEN
+	uint_setPoint_onetenth := REAL_TO_UINT(FB_PID_Inverter.rQController);
+END_IF
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV_separate">
+      <LineId Id="511" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="522" Count="1" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="524" Count="3" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="528" Count="1" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="537" Count="2" />
+      <LineId Id="543" Count="1" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="545" Count="0" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="579" Count="0" />
+      <LineId Id="577" Count="1" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="549" Count="8" />
+      <LineId Id="585" Count="0" />
+      <LineId Id="558" Count="7" />
+      <LineId Id="580" Count="4" />
+      <LineId Id="568" Count="1" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="518" Count="0" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="513" Count="1" />
+      <LineId Id="415" Count="5" />
+      <LineId Id="508" Count="2" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="221" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="229" Count="5" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="238" Count="29" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="273" Count="7" />
+      <LineId Id="283" Count="29" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="452" Count="10" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="591" Count="1" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="467" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

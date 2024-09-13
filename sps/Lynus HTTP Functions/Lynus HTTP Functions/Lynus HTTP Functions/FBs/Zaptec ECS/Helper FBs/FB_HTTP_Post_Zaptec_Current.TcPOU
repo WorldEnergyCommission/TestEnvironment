@@ -1,0 +1,211 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HTTP_Post_Zaptec_Current" Id="{2f5e456a-2192-4ae1-9122-4179a19397f5}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HTTP_Post_Zaptec_Current
+VAR_INPUT
+	{attribute 'hide'}
+	bSend              					: BOOL;													//Send the Request to the Service
+	{attribute 'hide'}
+	byMode								: BYTE;													//Work mode : 0 = Send to Charger; 1 = Send to Installation
+	{attribute 'hide'}
+	rMaxCurrentCharger					: REAL;													//Max Current for Charging Station 
+	{attribute 'hide'}
+	rMinCurrentCharger					: REAL;													//Min Current for Charging Station
+	{attribute 'hide'}
+	rAvailableCurrentInstallation		: REAL;													//Available Current for Installation
+	{attribute 'hide'}
+	sToken								: STRING(1500);											//Bearer Token
+	{attribute 'hide'}
+	sTokenType							: STRING(50);											//Token Type
+	{attribute 'hide'}
+	sID									: STRING(50);											//Charger ID or Installation ID		
+	{attribute 'hide'}
+	tTimeOut							: TIME := T#10S;										//Timer for Timeout
+END_VAR
+VAR_IN_OUT
+	{attribute 'hide'}
+    fbClient            				: FB_IotHttpClient;										//FB Http Client
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bValidResult						: BOOL;													//Valid Result received from Server
+	{attribute 'hide'}
+	bBusy             					: BOOL;													//Busy Flag
+	{attribute 'hide'}
+    bError              				: BOOL;													//Error Flag
+END_VAR
+VAR
+	fbJsonWrite     					: FB_JsonSaxWriter;	
+    fbRequest           				: FB_IotHttpRequest;									//HTTP Request
+	fbHeader            				: FB_IotHttpHeaderFieldMap;								//Header Function
+	timTimeout							: TON;													//Timer for Timeout
+    RisingEdge          				: R_TRIG;												//Internal Risig Edge
+    bOnce               				: BOOL:= TRUE;											//Add the addidional Header Part
+    bGetContentResult   				: BOOL;													//Content Received
+ 	nState              				: UDINT;												//State
+	nReqCount           				: UDINT;												//Request Counter
+    nResCount           				: UDINT;												//Receive Conter
+    nValidResCount      				: UDINT;												//Valid receive Counter
+    nErrCount           				: UDINT;												//Error Counter
+	sBearerToken						: STRING(1600);											//Bearer Token
+	sBearerToken_CP						: STRING(1600);											//Bearer Token
+   	sContent            				: STRING(500);											//Content to send with the psot request
+	sReceiveContent						: STRING(1000);											//Received Content
+	sUri								: STRING;												//URL for the Request
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 03.11.2021
+//Version : 1.0.0.0
+
+//With this Function is possible to make a POST Request to a Zaptec Account to set the max current on each Charging station or the complete Charge current for a installation
+//With the Input byMode its possible to switch between the 2 modes
+//When we send the current to a installation, then the Zaptec charging station logic distributes this electricity to the charging stations in the installation.
+//In a Installation can be more then 1 Charging stations
+//When we use byMode = 0 then at the sID we need the Chargig station ID
+//When we use byMode = 1 then at the sID we need the Installation ID
+
+//Limits
+byMode := LIMIT(0,byMode,1);
+	rMaxCurrentCharger := LIMIT(0,rMaxCurrentCharger,32);
+		rMinCurrentCharger := LIMIT(6,rMinCurrentCharger,10);
+			rAvailableCurrentInstallation := LIMIT(0,rAvailableCurrentInstallation,1000);	
+
+RisingEdge(CLK:= bSend);
+
+//Prepear Bearer Token
+sTokenType := CONCAT(sTokenType,' ');
+	CONCAT2(ADR(sTokenType),ADR(sToken),ADR(sBearerToken),SIZEOF(sBearerToken));
+
+//Add the Bearer Token to the Header
+IF sBearerToken <> sBearerToken_CP AND nState = 0 THEN bOnce := TRUE; sBearerToken_CP := sBearerToken; END_IF  
+
+IF bOnce THEN
+    fbHeader.AddField('Authorization',sBearerToken, FALSE);
+	fbHeader.AddField('Content-type','application/json-patch+json', FALSE);
+    bOnce:= FALSE;
+END_IF
+
+//Prepear URI
+IF byMode = 0 THEN 
+	sUri := CONCAT(CONCAT('/api/chargers/',sID),'/update');
+ELSIF byMode = 1 THEN
+	sUri := CONCAT(CONCAT('/api/installation/',sID),'/update');	
+END_IF
+
+//Prepear Content
+IF byMode = 0 THEN 
+	fbJsonWrite.StartObject();
+	fbJsonWrite.AddKey('maxChargeCurrent');
+	fbJsonWrite.AddReal(rMaxCurrentCharger);
+	fbJsonWrite.AddKey('minChargeCurrent');
+	fbJsonWrite.AddReal(rMinCurrentCharger);
+	fbJsonWrite.EndObject();
+	sContent := fbJsonWrite.GetDocument();
+	fbJsonWrite.ResetDocument();
+ELSIF byMode = 1 THEN
+	fbJsonWrite.StartObject();
+	fbJsonWrite.AddKey('availableCurrent');
+	fbJsonWrite.AddReal(rAvailableCurrentInstallation);
+	fbJsonWrite.EndObject();
+	sContent := fbJsonWrite.GetDocument();
+	fbJsonWrite.ResetDocument();
+END_IF
+
+//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN nState := 0; bBusy := FALSE; END_IF
+
+CASE nState OF
+	
+	0://Request
+		IF RisingEdge.Q THEN
+			IF fbRequest.SendRequest(sUri:= sUri, fbClient:= fbClient, 
+									 eRequestType:= ETcIotHttpRequestType.HTTP_POST, 
+									 pContent:= ADR(sContent), 
+									 nContentSize:= LEN2(ADR(sContent)), fbHeader) THEN
+				nState:= 1;
+				nReqCount:= nReqCount+1;
+				bBusy:= TRUE;
+				bError:= FALSE;
+				bValidResult := FALSE;
+			END_IF
+		END_IF
+		
+	1://Wait for the Response
+		IF NOT fbRequest.bBusy THEN
+			bError:= TRUE;
+			IF NOT fbRequest.bError THEN
+				bGetContentResult:= fbRequest.GetContent(pContent:= ADR(sReceiveContent),
+														 nContentSize:= SIZEOF(sReceiveContent), 
+														 bSetNullTermination:= TRUE);
+				IF fbRequest.nStatusCode >= 200 AND fbRequest.nStatusCode < 300 THEN
+					bValidResult := TRUE;
+					bError:= FALSE;   
+					nResCount:= nResCount+1;
+				END_IF
+			END_IF
+				nState:= 0;
+				bBusy:= FALSE;
+					IF bError THEN
+						nErrCount:= nErrCount+1;
+					END_IF
+		END_IF
+		
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HTTP_Post_Zaptec_Current">
+      <LineId Id="339" Count="2" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="342" Count="1" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="445" Count="0" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="446" Count="1" />
+      <LineId Id="442" Count="2" />
+      <LineId Id="466" Count="2" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="427" Count="8" />
+      <LineId Id="487" Count="0" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="437" Count="1" />
+      <LineId Id="448" Count="4" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="472" Count="6" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="480" Count="2" />
+      <LineId Id="485" Count="1" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="544" Count="1" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="43" Count="7" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="53" Count="7" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="7" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

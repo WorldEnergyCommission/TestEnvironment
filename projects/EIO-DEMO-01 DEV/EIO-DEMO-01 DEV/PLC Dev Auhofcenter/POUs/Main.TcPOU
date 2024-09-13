@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Main" Id="{1eca2f5e-04c6-4d11-a2d3-44bbeada3f29}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Main
+VAR
+	rHeartbeat						: REAL;			//{#lynus.ag#()}
+	rErrorWarning					: REAL;			//{#lynus.ag#()}
+	rSPOptReady						: REAL;			//{#lynus.ag#()}
+	rNewTargetValue					: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	bPumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rAussentemperatur				: REAL;			//{#lynus.ag#()} //Aussentemperatur 
+	rUmfVorlaufPri					: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur primär
+	rUmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rUmfVorlaufSek					: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rUmfRuecklaufSek				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur sekundär
+	rRTMall_EG_Billa				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, vor Billa
+	rRTMall_EG_RichutngBT2			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Richtung Bauteil 2
+	rRTMall_EG_VorPost				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, vor Post
+	rRTMall_OG_VorTKMaxx			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 1. OG, vor TKMaxx
+	rRTMall_OG_VorStrasslSchaider	: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 1. OG, vor Strassl-Schaider
+	rRTMall_OG_Nordseitig			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 2. OG, Nordseitig
+	rRTMall_OG_Suedseitig			: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall 2. OG, Südseitig
+	bBT2PumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rBT2NewTargetValue				: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	rBT2UmfVorlaufSek				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rBT2UmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rBT2RTMall_EG_Nord				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Nord
+	rBT2RTMall_OG_Nord				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, Nord
+	rBT2RTMall_EG_Sued				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Sued
+	rBT2RTMall_OG_Sued				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, Sued
+	bBT3PumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rBT3NewTargetValue				: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	rBT3UmfVorlaufPri				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur primär
+	rBT3UmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rBT3UmfVorlaufSek				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rBT3UmfRuecklaufSek				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur sekundär
+	rBT3RTMall_EG_West				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, West
+	rBT3RTMall_OG_West				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, West
+	rBT3RTMall_EG_HK31				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, HK3.1
+	rBT3RTMall_EG_HK32				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, HK3.2
+	rBT3RTMall_OG_K33				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, K3.3
+	rBT3RTMall_OG_K34				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, K3.4
+	rBT3RTMall_OG_Ost				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, Ost
+	rBT3RTMall_EG_Ost				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, Ost
+	rBT3RTMall_EG_HK35				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG, HK3.5
+	rBT3RTMall_OG_HK37				: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG, HK3.7
+	bBT4PumpenState					: BOOL;			//{#lynus.ag#()} //Heizung Aus/Ein (Hauptschalter)
+	rBT4NewTargetValue				: REAL;			//{#lynus.ag#()} //Optimierter Sollwert Vorlauftemperatur
+	rBT4UmfVorlaufPri				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur primär
+	rBT4UmfRuecklaufPri				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur primär
+	rBT4UmfVorlaufSek				: REAL;			//{#lynus.ag#()} //Umformer Vorlauftemperatur sekundär
+	rBT4UmfRuecklaufSek				: REAL;			//{#lynus.ag#()} //Umformer Rücklauftemperatur sekundär
+	rBT4RTMall_EG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG
+	rBT5RTMall_OG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG (BT5)
+	rBT6RTMall_OG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall OG (BT6)
+	rBT6RTMall_EG					: REAL;			//{#lynus.ag#()} //Raumtemperatur Mall EG (BT6)
+	lrBT1EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT1 Zaehlerstand	
+	rBT1EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT1 Momentanleistung
+	lrBT2EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT2 Zaehlerstand
+	rBT2EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT2 Momentanleistung
+	lrBT3EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT3 Zaehlerstand
+	rBT3EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT3 Momentanleistung
+	lrBT4EM_Counter_kWh				: LREAL;		//{#lynus.ag#()} //BT4 Zaehlerstand
+	rBT4EM_Power_kW					: REAL;			//{#lynus.ag#()} //BT4 Momentanleistung
+	bEnableOp						: BOOL;			//{#lynus.ag#()}
+	bEnableOpBT2					: BOOL;			//{#lynus.ag#()}
+	bEnableOpBT3					: BOOL;			//{#lynus.ag#()}
+	bEnableOpBT4					: BOOL;			//{#lynus.ag#()}
+	bSEnableOp						: BOOL;			//{#lynus.ag#()}
+	bSEnableOpBT2					: BOOL;			//{#lynus.ag#()}
+	bSEnableOpBT3					: BOOL;			//{#lynus.ag#()}
+	bSEnableOpBT4					: BOOL;			//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MAIN.rHeartbeat  					:= 			prg_ADS.struct_received.rHeartbeat	;
+MAIN.rErrorWarning  				:= 			prg_ADS.struct_received.rErrorWarning	;
+MAIN.rSPOptReady  					:= 			prg_ADS.struct_received.rSPOptReady	;
+MAIN.rUmfVorlaufSek  				:= 			prg_ADS.struct_received.rUmfVorlaufSek	;
+MAIN.rUmfRuecklaufSek 				:= 			prg_ADS.struct_received.rUmfRuecklaufSek	;
+MAIN.bPumpenState  					:= 			prg_ADS.struct_received.bPumpenState	;
+MAIN.rRTMall_EG_Billa  				:= 			prg_ADS.struct_received.rRTMall_EG_Billa	;
+MAIN.rRTMall_EG_RichutngBT2  		:= 			prg_ADS.struct_received.rRTMall_EG_RichutngBT2	;
+MAIN.rRTMall_EG_VorPost 			:= 			prg_ADS.struct_received.rRTMall_EG_VorPost	;
+MAIN.rRTMall_OG_Nordseitig 			:= 			prg_ADS.struct_received.rRTMall_OG_Nordseitig 	;
+MAIN.rRTMall_OG_Suedseitig  		:= 			prg_ADS.struct_received.rRTMall_OG_Suedseitig	;
+MAIN.rRTMall_OG_VorTKMaxx  			:= 			prg_ADS.struct_received.rRTMall_OG_VorTKMaxx 	;
+MAIN.rRTMall_OG_VorStrasslSchaider 	:= 			prg_ADS.struct_received.rRTMall_OG_VorStrasslSchaider 	;
+MAIN.rNewTargetValue  				:= 			prg_ADS.struct_received.rNewTargetValue	;
+MAIN.rBT2UmfVorlaufSek  			:= 			prg_ADS.struct_received.rBT2UmfVorlaufSek	;
+MAIN.rBT2UmfRuecklaufPri  			:= 			prg_ADS.struct_received.rBT2UmfRuecklaufPri	;
+MAIN.bBT2PumpenState 				:= 			prg_ADS.struct_received.bBT2PumpenState	;
+MAIN.rBT2RTMall_EG_Nord  			:= 			prg_ADS.struct_received.rBT2RTMall_EG_Nord	;
+MAIN.rBT2RTMall_OG_Nord 			:= 			prg_ADS.struct_received.rBT2RTMall_OG_Nord	;
+MAIN.rBT2RTMall_EG_Sued  			:= 			prg_ADS.struct_received.rBT2RTMall_EG_Sued	;
+MAIN.rBT2RTMall_OG_Sued  			:= 			prg_ADS.struct_received.rBT2RTMall_OG_Sued	;
+MAIN.rBT2NewTargetValue  			:= 			prg_ADS.struct_received.rBT2NewTargetValue	;
+MAIN.rBT3UmfVorlaufSek  			:= 			prg_ADS.struct_received.rBT3UmfVorlaufSek	;
+MAIN.rBT3UmfRuecklaufSek  			:= 			prg_ADS.struct_received.rBT3UmfRuecklaufSek	;
+MAIN.bBT3PumpenState  				:= 			prg_ADS.struct_received.bBT3PumpenState	;
+MAIN.rBT3RTMall_EG_West  			:= 			prg_ADS.struct_received.rBT3RTMall_EG_West	;
+MAIN.rBT3RTMall_OG_West  			:= 			prg_ADS.struct_received.rBT3RTMall_OG_West	;
+MAIN.rBT3RTMall_EG_HK31  			:= 			prg_ADS.struct_received.rBT3RTMall_EG_HK31	;
+MAIN.rBT3RTMall_EG_HK32  			:= 			prg_ADS.struct_received.rBT3RTMall_EG_HK32	;
+MAIN.rBT3RTMall_OG_K33  			:= 			prg_ADS.struct_received.rBT3RTMall_OG_K33	;
+MAIN.rBT3RTMall_OG_K34  			:= 			prg_ADS.struct_received.rBT3RTMall_OG_K34	;
+MAIN.rBT3RTMall_OG_Ost  			:= 			prg_ADS.struct_received.rBT3RTMall_OG_Ost	;
+MAIN.rBT3RTMall_EG_Ost 				:= 			prg_ADS.struct_received.rBT3RTMall_EG_Ost	;
+MAIN.rBT3RTMall_EG_HK35  			:= 			prg_ADS.struct_received.rBT3RTMall_EG_HK35	;
+MAIN.rBT3RTMall_OG_HK37  			:= 			prg_ADS.struct_received.rBT3RTMall_OG_HK37	;
+MAIN.rBT3NewTargetValue  			:= 			prg_ADS.struct_received.rBT3NewTargetValue	;
+MAIN.rBT4UmfVorlaufSek  			:= 			prg_ADS.struct_received.rBT4UmfVorlaufSek	;
+MAIN.rBT4UmfRuecklaufSek  			:= 			prg_ADS.struct_received.rBT4UmfRuecklaufSek	;
+MAIN.bBT4PumpenState  				:= 			prg_ADS.struct_received.bBT4PumpenState	;
+MAIN.rBT4RTMall_EG  				:= 			prg_ADS.struct_received.rBT4RTMall_EG	;
+MAIN.rBT5RTMall_OG  				:= 			prg_ADS.struct_received.rBT5RTMall_OG	;
+MAIN.rBT6RTMall_OG 					:= 			prg_ADS.struct_received.rBT6RTMall_OG	;
+MAIN.rBT6RTMall_EG  				:= 			prg_ADS.struct_received.rBT6RTMall_EG	;
+MAIN.rBT4NewTargetValue  			:= 			prg_ADS.struct_received.rBT4NewTargetValue	;
+MAIN.rAussentemperatur  			:= 			prg_ADS.struct_received.rAussentemperatur	;
+MAIN.bEnableOp  					:= 			prg_ADS.struct_received.bEnableOp	;
+MAIN.bSEnableOp  					:= 			prg_ADS.struct_received.bSEnableOp	;
+MAIN.bEnableOpBT2  					:= 			prg_ADS.struct_received.bEnableOpBT2	;
+MAIN.bSEnableOpBT2  				:= 			prg_ADS.struct_received.bSEnableOpBT2	;
+MAIN.bEnableOpBT3  					:= 			prg_ADS.struct_received.bEnableOpBT3	;
+MAIN.bSEnableOpBT3  				:= 			prg_ADS.struct_received.bSEnableOpBT3	;
+MAIN.bEnableOpBT4  					:= 			prg_ADS.struct_received.bEnableOpBT4	;
+MAIN.bSEnableOpBT4  				:= 			prg_ADS.struct_received.bSEnableOpBT4	;
+MAIN.rBT1EM_Power_kW  				:= 			prg_ADS.struct_received.rBT1EM_Power_kW	;
+MAIN.lrBT1EM_Counter_kWh  			:= 			prg_ADS.struct_received.lrBT1EM_Counter_kWh	;
+MAIN.rBT2EM_Power_kW  				:= 			prg_ADS.struct_received.rBT2EM_Power_kW	;
+MAIN.lrBT2EM_Counter_kWh  			:= 			prg_ADS.struct_received.lrBT2EM_Counter_kWh	;
+MAIN.rBT3EM_Power_kW  				:= 			prg_ADS.struct_received.rBT3EM_Power_kW	;
+MAIN.lrBT3EM_Counter_kWh  			:= 			prg_ADS.struct_received.lrBT3EM_Counter_kWh	;
+MAIN.rBT4EM_Power_kW  				:= 			prg_ADS.struct_received.rBT4EM_Power_kW	;
+MAIN.lrBT4EM_Counter_kWh  			:= 			prg_ADS.struct_received.lrBT4EM_Counter_kWh	;
+MAIN.rUmfVorlaufPri  				:= 			prg_ADS.struct_received.rUmfVorlaufPri	;
+MAIN.rUmfRuecklaufPri  				:= 			prg_ADS.struct_received.rUmfRuecklaufPri	;
+MAIN.rBT3UmfRuecklaufPri			:= 			prg_ADS.struct_received.rBT3UmfRuecklaufPri	;
+MAIN.rBT3UmfVorlaufPri				:= 			prg_ADS.struct_received.rBT3UmfVorlaufPri	;
+MAIN.rBT4UmfRuecklaufPri			:= 			prg_ADS.struct_received.rBT4UmfRuecklaufPri	;
+MAIN.rBT4UmfVorlaufPri				:= 			prg_ADS.struct_received.rBT4UmfVorlaufPri	;]]></ST>
+    </Implementation>
+    <LineIds Name="Main">
+      <LineId Id="6" Count="60" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="143" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

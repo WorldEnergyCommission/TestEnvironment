@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-ssl-proxy-conf
+  namespace: lynus
+data:
+  nginx.conf: |
+    worker_processes auto;
+    pid /run/nginx.pid;
+
+    events {
+         worker_connections 768;
+         # multi_accept on;
+     }
+     
+    stream {
+      server {
+          listen 8883 ssl;
+
+          ssl_certificate /etc/nginx/ssl/tls.crt;
+          ssl_certificate_key /etc/nginx/ssl/tls.key;
+          ssl_ciphers ALL;
+
+          proxy_pass proxy:1883;
+      }
+
+      server {
+          listen 1883;
+
+          proxy_pass proxy:1883;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-ssl-proxy
+  namespace: lynus
+  labels:
+    app: mqtt-ssl-proxy
+spec:
+  selector:
+    matchLabels:
+      app: mqtt-ssl-proxy
+  template:
+    metadata:
+      labels:
+        app: mqtt-ssl-proxy
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25.2-alpine
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          env:
+            - name: DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: DOMAIN
+                  name: lynus-credentials
+            - name: NGINX_ENVSUBST_OUTPUT_DIR
+              value: /etc/nginx
+          ports:
+            - containerPort: 1883
+              name: mqtt
+            - containerPort: 8883
+              name: mqtts
+          volumeMounts:
+            - mountPath: /etc/nginx/templates/nginx.conf.template
+              readOnly: true
+              name: config
+              subPath: nginx.conf
+            - mountPath: /etc/nginx/ssl/
+              readOnly: true
+              name: certs
+      nodeSelector:
+        nodetype: large
+      volumes:
+        - name: config
+          configMap:
+            name: mqtt-ssl-proxy-conf
+        - name: certs
+          secret:
+            secretName: mqtt-certificates
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt-ssl-proxy
+  namespace: lynus
+spec:
+  selector:
+    app: mqtt-ssl-proxy
+  ports:
+    - name: mqtts
+      port: 8883
+    - name: mqtt
+      port: 1883
+  type: ClusterIP

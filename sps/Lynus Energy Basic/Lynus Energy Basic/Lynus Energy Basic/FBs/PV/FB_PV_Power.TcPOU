@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_PV_Power" Id="{4965e835-105b-40f5-b6ea-9aa25383702e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PV_Power
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;													//Enable the Fuctionblock and his logic
+	bPowerDataInvers						: BOOL;													//With True its possible to invert all received power data from the electric meter
+	diNrOfEM_IN_PV							: DINT;													//Number of the electric meter for incoming power data. (Power Data for this Device)
+END_VAR
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	stDataPv								: ST_PV_Output;											//{#lynus.ag#()} //Output Data Pv System
+	diNrOfPv_OUT							: DINT;													//Active Number from the Pv system for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbPv									: FB_PV_Production;										//Function block for Pv system
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;									//Function block to calcualte the number of the Device
+	fbDIErrorPv								: FB_XL1XXX_DI;											//Digital Input Error Pv System
+	{attribute 'hide'}
+	timDissableFunctions					: TON;													//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;													//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD									: ARRAY[1..3] OF FB_PersistentData_Number;				//Function to save persistent data 
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;													//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData							: INT;													//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diCounterForGVL							: DINT;													//Counter to clean old data on GVL
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 08.06.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to show the power data from a pv system.
+//This function block has no active communication to a pv system. Visualize only the received power data
+//This function has a DI Signal for a external Error from the Pv system
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Limits----------------------------------------------------------------------------------*)
+
+diNrOfEM_IN_PV := LIMIT(0,diNrOfEM_IN_PV,Constants_Energy.diMaxNumberOfElectricMeters);	
+
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+IF NOT bPowerDataInvers THEN
+	fbPv.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT1_Production * 1000;
+	fbPv.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT2_Production * 1000;
+	fbPv.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT1_Consumption * 1000;
+	fbPv.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT1_Consumption * 1000;
+	fbPv.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrTotalCounterEnergy_Production * 1000;
+	fbPv.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrTotalCounterEnergy_Consumption * 1000;
+ELSE
+	fbPv.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT1_Consumption * 1000;
+	fbPv.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT2_Consumption * 1000;
+	fbPv.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT1_Production * 1000;
+	fbPv.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrCounterEnergyT2_Production * 1000;
+	fbPv.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrTotalCounterEnergy_Consumption * 1000;
+	fbPv.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrTotalCounterEnergy_Production * 1000;
+		
+END_IF	
+
+(*-------------------------------------------------------------Calcualte the number of Pv System---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfPvSystems, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfPvSystems, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfPv_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfPvSystems := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfPvSystems := diNrOfPv_OUT;	
+		iStateGVLData := 1; 
+END_IF	
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*-----------------------------------------------------------------------------Error ----------------------------------------------------------------------------*)
+
+fbDIErrorPv(bInvers:= FALSE, bSignal=> );	
+
+IF timDissableFunctions.Q THEN fbPv.bWarning := TRUE; fbPv.iWarningCode := 0; ELSE fbPv.bWarning := FALSE; END_IF 	
+	IF fbDIErrorPv.bSignal OR Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfPvSystems > Constants_Energy.diMaxNumberOfPvSystems THEN fbPv.bError := TRUE; ELSE fbPv.bError := FALSE; END_IF 
+		//Error Code
+		IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfPvSystems > Constants_Energy.diMaxNumberOfPvSystems THEN fbPv.iErrorCode := 1; END_IF  
+		IF fbDIErrorPv.bSignal THEN fbPv.iErrorCode := 0; END_IF 
+
+fbPv(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bWriteWithDelay:= TRUE, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrPvPower:= Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_PV].lrPower * 1000, 
+	tTimDelayOutput:= T#5S, 
+	stDataPvOut=> , 
+	stDataPvOutDelay=> stDataPv);	
+		
+(*-----------------------------------------------------------Handle data to Global structure for the Pv system-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataOfPvSystems[diCounterForGVL].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataOfPvSystems[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataOfPvSystems[diCounterForGVL].lrPowerConsumption := 0;
+					Lynus_Standards.GVL_Energy.stDataOfPvSystems[diCounterForGVL].lrPower := 0;
+						Lynus_Standards.GVL_Energy.stDataOfPvSystems[diCounterForGVL].lrPowerProduction := 0;	
+		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfPvSystems);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Energy.diMaxNumberOfPvSystems THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfPv_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataOfPvSystems[diNrOfPv_OUT].bEnabled := fbPv.stDataPvOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataOfPvSystems[diNrOfPv_OUT].byErrorWarning := fbPv.stDataPvOut.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataOfPvSystems[diNrOfPv_OUT].lrPowerConsumption := fbPv.stDataPvOut.lrPowerConsumption;
+				Lynus_Standards.GVL_Energy.stDataOfPvSystems[diNrOfPv_OUT].lrPower := fbPv.stDataPvOut.lrPower;
+					Lynus_Standards.GVL_Energy.stDataOfPvSystems[diNrOfPv_OUT].lrPowerProduction := fbPv.stDataPvOut.lrPowerProduction;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_PV), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PV_Power">
+      <LineId Id="424" Count="2" />
+      <LineId Id="422" Count="1" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="694" Count="1" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="448" Count="1" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="451" Count="7" />
+      <LineId Id="460" Count="7" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="661" Count="0" />
+      <LineId Id="663" Count="7" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="655" Count="0" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="656" Count="3" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="729" Count="1" />
+      <LineId Id="768" Count="4" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="736" Count="0" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="642" Count="0" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="624" Count="14" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="470" Count="0" />
+      <LineId Id="515" Count="28" />
+      <LineId Id="552" Count="4" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="591" Count="3" />
+      <LineId Id="589" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

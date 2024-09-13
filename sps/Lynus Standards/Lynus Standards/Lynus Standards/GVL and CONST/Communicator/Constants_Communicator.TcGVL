@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <GVL Name="Constants_Communicator" Id="{4125c15a-234f-4a6c-b87c-58218d27259c}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'conditionalshow'}
+VAR_GLOBAL CONSTANT
+	{attribute 'hide'}
+	bySizeOfValueArray						: BYTE := 1;						//Size of the Array with the Values (Max 50)
+	{attribute 'hide'}
+	bySizeOfReceivedValueArrayInJson		: BYTE := 0;						//Size of the received Value Array from external in the json (Max 49) => bySizeOfReceivedValueArrayInJson = bySizeOfValueArray - 1 
+	{attribute 'hide'}
+	udiArraySizeSymbols						: UDINT := 1000;					//Size of the array from complete data of each one symbol in plc (Max 1000)
+	{attribute 'hide'}
+	udiArraySizeMarkedSymobls				: UDINT := 1500;					//Size of the array for all marked symbols incl. all Subitems (Max 2000) !!Change this for max variables!!
+	{attribute 'hide'}
+	uiArraySizeOfMarkedSubItems				: UINT := 100;						//Size of the array for marked Symbols in Subitems (Max 32768)
+	{attribute 'hide'}
+	uiArraySizeOfSubItems					: UINT := 200;						//Size of the array for all founded subitems after the Parse function(Max 1000)
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

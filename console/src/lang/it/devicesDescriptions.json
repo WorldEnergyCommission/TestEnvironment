@@ -1,0 +1,2215 @@
+{
+  "LightSwitch": {
+    "title": "Descrizione del dispositivo",
+    "name": "Interruttore della luce",
+    "overview": "Questo dispositivo può essere usato per accendere e spegnere una semplice luce. L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Accendere (interruttore)",
+        "description": "Accendere = Con accendere, il comando per accendere la luce può essere inviato.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegnere (interruttore)",
+        "description": "Spegnere = Il comando spegnere può essere usato per spegnere la luce.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato (interruttore)",
+        "description": "Stato = Lo stato della luce serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "TimeSwitch": {
+    "title": "Descrizione del dispositivo",
+    "name": "Interruttore orario",
+    "overview": "Un dispositivo di commutazione che configura la programmazione, utilizzata poi dal worker di backend per inviare impulsi alle variabili correlate. Il segnale di impulso viene inviato come valore 1 e passa al valore 0 dopo 1 secondo.",
+    "table": [
+      {
+        "name": "Accendere (interruttore)",
+        "description": "Variabile che riceve il segnale di impulso Accendere.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegnere (interruttore)",
+        "description": "Variabile che riceve il segnale di impulso Spegnere",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato (interruttore)",
+        "description": "Variabile visualizzata dall'indicatore del dispositivo. Questa variabile non viene aggiornata automaticamente dal backend.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "GeneralSwitchV2": {
+    "title": "Descrizione del dispositivo",
+    "name": "Interruttore generale V2",
+    "overview": "Con questo dispositivo si può realizzare un interruttore generale. L'interruttore invia sempre il contrario del il valore che lo stato ha attualmente. Non appena lo stato cambia il valore, cambia anche il comando di invio dall'interruttore.",
+    "table": [
+      {
+        "name": "Interruttore_V2 (On, Off, Stato)",
+        "description": "On/Off = Se la variabile di stato ha il valore 0, viene sempre inviato un 1 quando l'interruttore viene attivato da un clic. Finché il valore della variabile di stato ha il valore 1, viene inviato uno 0 quando l'interruttore viene attivato da un clic. Stato = Lo stato serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "On/Off = 0-1 \nStato = 0-1"
+      },
+      {
+        "name": "Mostra l'evento (Mostra evento)",
+        "description": "On/Off = Se la variabile di stato ha il valore 0, viene sempre inviato un 1 quando l'interruttore viene attivato da un clic. Finché il valore della variabile di stato ha il valore 1, viene inviato uno 0 quando l'interruttore viene attivato da un clic. Stato = Lo stato serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ImpulseButton": {
+    "title": "Descrizione del dispositivo",
+    "name": "Interruttore a impulsi",
+    "overview": "Dispositivo che invia un segnale con valore 1 e torna al valore 0 dopo un secondo.",
+    "table": [
+      {
+        "name": "ImpulseButton (On)",
+        "description": "On = Variabile per il segnale a impulsi.",
+        "allowedValues": "On = 0-1"
+      },
+      {
+        "name": "Mostra l'evento (Mostra evento)",
+        "description": "On/Off = Se la variabile di stato ha il valore 0, viene sempre inviato un 1 quando l'interruttore viene attivato da un clic. Finché il valore della variabile di stato ha il valore 1, viene inviato uno 0 quando l'interruttore viene attivato da un clic. Stato = Lo stato serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "Indicator": {
+    "title": "Descrizione del dispositivo",
+    "name": "@:basicControls.Indicator",
+    "overview": "Dispositivo con icona configurabile che visualizza lo stato booleano del sensore.",
+    "table": [
+      {
+        "name": "Accendere/Spegnere",
+        "description": "Indicatore di stato variabile",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Mostra l'evento (Mostra evento)",
+        "description": "On/Off = Se la variabile di stato ha il valore 0, viene sempre inviato un 1 quando l'interruttore viene attivato da un clic. Finché il valore della variabile di stato ha il valore 1, viene inviato uno 0 quando l'interruttore viene attivato da un clic. Stato = Lo stato serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "LightDimmer": {
+    "title": "Descrizione del dispositivo",
+    "name": "Luce dimmerabile",
+    "overview": "Con questo dispositivo si può realizzare un dimmer. Tramite l'interruttore offre la possibilità di accendere e spegnere la luce. La luminosità può essere regolata tramite il cursore. Il campo di uscita visualizza il valore attuale del dimmer. L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Accendere (interruttore)",
+        "description": "Accendere = Con accendere, il comando per accendere la luce può essere inviato.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegnere (interruttore)",
+        "description": "Spegnere = Il comando spegnere può essere usato per spegnere la luce.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato (interruttore)",
+        "description": "Stato = Lo stato della luce serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Setpoint di luminosità (cursore)",
+        "description": "Il cursore invia il setpoint corrente per la luminosità al regolatore.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Campo di uscita (valore reale luminosità)",
+        "description": "Il campo di uscita fornisce il valore di luminosità corrente dal dimmer sul controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "Temperature": {
+    "title": "Descrizione del dispositivo",
+    "name": "Sensore di temperatura",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare un sensore che misura la temperatura. Il valore da -100 - 1500 °C viene visualizzato nel campo di uscita. L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Temperatura attuale (campo di uscita)",
+        "description": "Il campo di uscita restituisce la temperatura attuale dal sensore sul controller.",
+        "allowedValues": "da -100 a 1500 °C"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "VariableOutputField": {
+    "title": "Descrizione del dispositivo",
+    "name": "Campo di uscita variabile",
+    "overview": "Con questa unità è possibile visualizzare qualsiasi valore numerico. È possibile aggiungere qualsiasi icona al dispositivo e assegnargli l'unità appropriata.",
+    "table": [
+      {
+        "name": "Campo di uscita",
+        "description": "Il campo di uscita visualizza un valore variabile inviato dal controller.",
+        "allowedValues": "Min/Max delle variabili a 64 bit"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "TimeDerivative": {
+    "title": "Descrizione del dispositivo",
+    "name": "Derivata temporale",
+    "overview": "Il dispositivo utilizza la variabile di origine come consumo cumulativo totale e calcola la derivata temporale per l'intervallo specificato.",
+    "table": [
+      {
+        "name": "Variabile sorgente",
+        "description": "Variabile con consumo cumulativo totale.",
+        "allowedValues": "galleggiante"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "VariableInputField": {
+    "title": "Descrizione del dispositivo",
+    "name": "Campo di uscita variabile",
+    "overview": "Con questa unità è possibile inserire qualsiasi valore numerico e inviarlo al controller. Il simbolo e l'unità possono essere assegnati e selezionati liberamente.",
+    "table": [
+      {
+        "name": "Campo d'ingresso",
+        "description": "Questo campo di input può essere utilizzato per inviare un valore variabile al controller.",
+        "allowedValues": "Min/Max delle variabili a 64 bit"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "VariableTextOutputField": {
+    "title": "Descrizione del dispositivo",
+    "name": "Campo di uscita con lettere",
+    "overview": "Con questo dispositivo è possibile visualizzare qualsiasi lettere variabili. L'icona del dispositivo può essere assegnata liberamente. Sono supportati i formati Ascii e UTF-8. Attenzione, le lettere non vengono memorizzato storicamente, viene visualizzato solo il valore attuale, direttamente ricevuto.",
+    "table": [
+      {
+        "name": "Campo di uscita per lettere",
+        "description": "Il campo di uscita visualizza le lettere di una variabile inviata dal controller.",
+        "allowedValues": "ASCII e UTF-8 (massimo 30 caratteri)"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "VariableTextInputField": {
+    "title": "Descrizione del dispositivo",
+    "name": "Campo di ingresso per lettere variabile",
+    "overview": "Con questo dispositivo è possibile inserire lettere e inviarlo al controller. L'icona del dispositivo può essere assegnata liberamente.  Il formato Ascii e UTF-8 è supportato qui. Attenzione, le lettere non vengono memorizzato storicamente, viene visualizzato solo il valore attuale, che è stato inviato direttamente.",
+    "table": [
+      {
+        "name": "Campo di inserimento dei lettere",
+        "description": "Questo campo di input per lettere può essere utilizzato per inviare lettere variabile al controller.",
+        "allowedValues": "ASCII e UTF-8 (massimo 30 caratteri)"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "LightRGB": {
+    "title": "Descrizione del dispositivo",
+    "name": "Luce RGB",
+    "overview": "Questo dispositivo può essere usato per controllare un'illuminazione RGB. Può essere acceso e spento con l'interruttore.È possibile regolare il colore della lampada con il cursore RGB.La luminosità può essere regolata con il cursore. Il campo di uscita mostra il valore attuale del dimmer. I 3 campi di uscita sopra il cursore del colore mostrano il valore corrente dei colori.L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Accendere (interruttore)",
+        "description": "Accendere = Con accendere, il comando per accendere la luce può essere inviato.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegnere (interruttore)",
+        "description": "Spegnere = Il comando spegnere può essere usato per spegnere la luce.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato (interruttore)",
+        "description": "Stato = Lo stato della luce serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Setpoint di luminosità (cursore)",
+        "description": "Il cursore invia il setpoint corrente per la luminosità al regolatore.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Setpoint dei colori rosso, verde e blu (cursore RGB)",
+        "description": "Rosso = Qui il valore del colore per il rosso può essere inviato al controller. <br> Verde = Qui il valore del colore per il verde può essere inviato al controller. <br> Blu = Qui il valore del colore per il blu può essere inviato al controller.",
+        "allowedValues": "0-255 <br> 0-255 <br> 0-255"
+      },
+      {
+        "name": "Valore reale luminosità (campo di uscita 1)",
+        "description": "Il campo di uscita fornisce il valore di luminosità corrente sul regolatore.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Valore reale colore rosso (campo di uscita 2)",
+        "description": "Il campo di uscita fornisce il valore corrente del colore rosso sul controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Valore reale colore verde (campo di uscita 3)",
+        "description": "Il campo di uscita fornisce il valore corrente del colore verde sul controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Valore reale colore blu (campo di uscita 4)",
+        "description": "Il campo di uscita restituisce il valore corrente del colore blu sul controller.",
+        "allowedValues": "0-255"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "LightPushButton": {
+    "title": "Descrizione del dispositivo",
+    "name": "Pulsante",
+    "overview": "Questo dispositivo può essere usato per accendere e spegnere una luce. La luce rimane accesa quando si preme il pulsante la prima volta. Se si preme il pulsante una seconda volta, la luce si spegne. L'indicatore di evento può essere usato per indicare un errore del dispositivo",
+    "table": [
+      {
+        "name": "Toggle accendere-spegnere (pulsante)",
+        "description": "Accendere-spegnere = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. In questo modo, la luce può essere accesa e spenta alternativamente tramite 1 segnale.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Toggle accendere-spegnere (stato)",
+        "description": "Stato = Lo stato della luce serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "SocketSwitch": {
+    "title": "Descrizione del dispositivo",
+    "name": "Interruttore della presa",
+    "overview": "Questo dispositivo può essere usato per accendere e spegnere una presa. L'indicatore di evento può essere usato per indicare un errore del dispositivo <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Accendere (interruttore)",
+        "description": "Accendere = Con accendere il comando per accendere la presa può essere inviato.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegnere (interruttore)",
+        "description": "Spegnere = Con spegnere si può inviare il comando per spegnere la presa.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato (interruttore)",
+        "description": "Stato = Lo stato della presa serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ControlBlinds": {
+    "title": "Descrizione del dispositivo",
+    "name": "Tende",
+    "overview": "Con questo dispositivo è possibile controllare una tenda. Con i tasti freccia la tenda può essere spostata per aprire o chiudere con tutta la velocità.  Il valore attuale del cursore mostra la posizione attuale della tenda. Spostando il cursore, potete cambiare la posizione di destinazione desiderata e spostare la tenda lì secondo la posizione del cursore. Utilizzando il menu a tendina, sarebbe possibile impostare una posizione desiderata delle lamelle della tenda. La posizione attuale viene visualizzata nel campo di uscita. L'indicatore di evento può essere usato per indicare un errore del dispositivo. Inoltre, il tempo di movimento può essere impostato separatamente in secondi. È anche possibile controllare il movimento della posizione di partenza. Il tempo di movimento delle lamelle da completamente aperte a completamente chiuse può essere specificato separatamente.",
+    "table": [
+      {
+        "name": "Aprire (Freccia su)",
+        "description": "Aprire = Il comando aprire può essere usato per inviare il comando aprire per le tende. ",
+        "allowedValues": "Aprire = 0-1"
+      },
+      {
+        "name": "Stato (su)",
+        "description": "Stato = Lo stato aprire serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Chiudere (freccia giù)",
+        "description": "Chiudere = Il comando chiudere può essere usato per inviare il comando chiudere per le tende. ",
+        "allowedValues": "Chiudere = 0-1"
+      },
+      {
+        "name": "Stato (giù)",
+        "description": "Status = Lo stato chiudere serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Setpoint posizione (cursore)",
+        "description": "Il cursore invia all'apparecchio il valore nominale attuale della posizione della tenda.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Setpoint delle lamelle (dropdown)",
+        "description": "Con la selezione nel menu a tendina, si possono selezionare diverse posizioni delle lamelle della tenda.",
+        "allowedValues": "0 = Completamente aperto <br> 1 = Tre quarti aperto <br> 2 = Metta aperto <br> 3 = Quarto aperto <br> 4 = Chiuso"
+      },
+      {
+        "name": "Posizione del valore reale (campo di uscita)",
+        "description": "Il campo di uscita fornisce la posizione attuale della tenda sul controller.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Spostamento in posizione di partenza (pulsante)",
+        "description": "Accendere-spegnere = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Lo 0 viene inviato solo quando il pulsante viene rilasciato. Inviando il segnale, la posizione di partenza della tenda può essere avvicinata.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato di posizione iniziale (pulsante)",
+        "description": "Stato = Lo stato della posizione di partenza viene utilizzato come feedback dal terminale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Tempo per aprire (campo d'ingresso 1)",
+        "description": "Campo di input per il tempo di aprire",
+        "allowedValues": "0-600 sec"
+      },
+      {
+        "name": "Tempo per chiudere (campo d'ingresso 2)",
+        "description": "Campo di input per il tempo di chiudere",
+        "allowedValues": "0-600 sec"
+      },
+      {
+        "name": "Tempo viaggio delle lamelle (campo d'ingresso 3)",
+        "description": "Campo di input per il tempo di viaggio delle lamelle",
+        "allowedValues": "0-10 sec"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ControlAwning": {
+    "title": "Descrizione del dispositivo",
+    "name": "Tenda da sole",
+    "overview": "Questo dispositivo può essere usato per controllare una tenda da sole. Usa i tasti freccia per spostare la tenda verso l'esterno o verso l'interno a tutta velocità. Il valore attuale del cursore mostra la posizione attuale della tenda da sole. Azionando il cursore, la posizione di destinazione desiderata può essere cambiata e la tenda da sole può essere spostata in base alla posizione del cursore. La posizione attuale viene visualizzata nel campo di uscita. L'indicatore di evento può essere usato per indicare un errore del dispositivo. Inoltre, il tempo di movimento può essere impostato separatamente in secondi. È anche possibile controllare il movimento della posizione di partenza.",
+    "table": [
+      {
+        "name": "Uscire (freccia di uscire)",
+        "description": "Uscire = Il comando uscire può essere inviato sul controller.",
+        "allowedValues": "Uscire = 0-1"
+      },
+      {
+        "name": "Stato (freccia di uscire)",
+        "description": "Stato = Lo stato per uscire serve come feedback dall'apparecchio terminale e fornisce lo stato attuale",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Ritirare (freccia di ritirare)",
+        "description": "Ritirare = Il comando ritirare può essere inviato sul controller. ",
+        "allowedValues": "Ritirare = 0-1"
+      },
+      {
+        "name": "Stato (freccia di ritirare)",
+        "description": "Stato = Lo stato di ritirare serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Setpoint posizione (cursore)",
+        "description": "The slider sends the current target value for the awning position to the device.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Posizione del valore reale (campo di uscita)",
+        "description": "Il campo di uscita fornisce la posizione attuale della tenda da sole sul controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Spostamento in posizione di partenza (pulsante)",
+        "description": "Accendere-spegnere = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Lo 0 viene inviato solo quando il pulsante viene rilasciato. Inviando il segnale, la posizione di base della tenda da sole può essere avvicinata.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato di posizione iniziale (pulsante)",
+        "description": "Stato = Lo stato della posizione di partenza serve come feedback dall'apparecchio terminale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Tempo per uscire (campo d'ingresso 1)",
+        "description": "Campo di input per il tempo di uscire",
+        "allowedValues": "0-600 sec"
+      },
+      {
+        "name": "Tempo per ritirare (campo d'ingresso 2)",
+        "description": "Campo di input per il tempo di ritirare",
+        "allowedValues": "0-600 sec"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ControlShutter": {
+    "title": "Descrizione del dispositivo",
+    "name": "Tapparella",
+    "overview": "Questo dispositivo può essere utilizzato per controllare una tapparella.  Con i tasti freccia la tapparella può essere spostata per aprire o chiudere con tutta la velocità. Il valore attuale del cursore mostra la posizione attuale della tapparella. Azionando il cursore, la posizione desiderata dell'obiettivo può essere cambiata e la tapparella vi si sposta secondo la posizione del cursore. La posizione attuale viene visualizzata nel campo di uscita. L'indicatore di evento può essere usato per indicare un errore del dispositivo. Inoltre, il tempo di movimento può essere impostato separatamente in secondi. È anche possibile controllare il movimento della posizione di partenza. ",
+    "table": [
+      {
+        "name": "Aprire (Freccia su)",
+        "description": "Aprire = Il comando aprire può essere usato per inviare il comando aprire per la tapparella",
+        "allowedValues": "Aprire = 0-1"
+      },
+      {
+        "name": "Stato (su)",
+        "description": "Stato = Lo stato aprire serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Chiudere (freccia giù)",
+        "description": "Chiudere = Il comando chiudere può essere usato per inviare il comando chiudere per la tapparella.",
+        "allowedValues": "Chiudere = 0-1"
+      },
+      {
+        "name": "Stato (giù)",
+        "description": "Stato = Lo stato chiudere serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Setpoint posizione (cursore)",
+        "description": "Il cursore invia all'apparecchio il valore nominale attuale della posizione della tapparella.",
+        "allowedValues": "0-100 %"
+      },
+      {
+        "name": "Posizione del valore reale (campo di uscita)",
+        "description": "Il campo di uscita restituisce la posizione attuale della tapparella al controllore.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Spostamento in posizione di partenza (pulsante)",
+        "description": "Accendere-spegnere = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Lo 0 viene inviato solo quando il pulsante viene rilasciato. Inviando il segnale, la posizione di base della tapparella può essere avvicinata.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato di posizione iniziale (pulsante)",
+        "description": "Stato = Lo stato della posizione di partenza viene utilizzato come feedback dal terminale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Tempo per aprire (campo d'ingresso 1)",
+        "description": "Campo di input per il tempo di aprire",
+        "allowedValues": "0-600 sec"
+      },
+      {
+        "name": "Tempo per chiudere (campo d'ingresso 2)",
+        "description": "Campo di input per il tempo di chiudere",
+        "allowedValues": "0-600 sec"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ThermostatDigital": {
+    "title": "Descrizione del dispositivo",
+    "name": "Termostato digitale",
+    "overview": "Con questo dispositivo si può realizzare un termostato digitale. La temperatura nominale può essere regolata tramite i pulsanti più e meno. Tramite il campo di uscita, il setpoint attualmente desiderato e regolato può essere visualizzato sul regolatore. Tramite i 2 interruttori è possibile attivare una modalità di riduzione e passare dal riscaldamento al raffreddamento. Tramite i 4 campi di inserimento dei tempi, si può specificare 1 tempo di riscaldamento o di raffreddamento separato a partire dal quale il termostato deve essere attivo. Questa funzione deve essere attivata tramite l'interruttore nr. 2.   L'indicatore di evento può essere usato per indicare un errore del dispositivo. Il cerchio rosso indica se il riscaldamento è in corso. Il cerchio blu indica se il raffreddamento è in corso. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Comando Più (Più)",
+        "description": "Il pulsante più può essere usato per inviare un segnale al regolatore per aumentare la temperatura di riferimento.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Comando meno (Meno)",
+        "description": "Il pulsante menu può essere usato per inviare un segnale al controllo per diminuire la temperatura di riferimento.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Valore reale della temperatura nominale (campo di uscita 1)",
+        "description": "Il campo di uscita restituisce la temperatura di setpoint corrente dal termostato sul controllo.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Ora di accensione (campo d'ingresso 1)",
+        "description": "Campo di ingresso per l'ora di accensione della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Ora spenta (campo d'ingresso 2)",
+        "description": "Campo di ingresso per l'ora di spegnimento della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Minuti die accensione(campo d'ingresso 3)",
+        "description": "Campo di ingresso per il minuto di accensione della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Minuti di spenta (campo d'ingresso 4)",
+        "description": "Campo di ingresso per il minuto di spegnimento della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Accendi modalità di riduzione (interruttore 1)",
+        "description": "Accendere = Con accendere può essere inviato il comando accendere per la modalità di riduzione",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni modalità di riduzione (interruttore 1)",
+        "description": "Spegnere = Con spegnere può essere inviato il comando spegnere per la modalità di riduzione",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato del modo di riduzione(interruttore 1)",
+        "description": "Stato = Lo stato di modalità riduzione serve come feedback dall'apparecchio finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Accendi cambia riscaldamento-raffreddamento (interruttore 2)",
+        "description": "Accendere = Accendere può essere usato per inviare il comando accendere per la modalità riscaldamento o raffreddamento.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni cambiare riscaldamento-raffreddamento (interruttore 2)",
+        "description": "Spegnere = Spegnere è usato per inviare il comando spegnere per la modalità di riscaldamento o raffreddamento.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato cambiamento di riscaldamento-raffreddamento (interruttore 2)",
+        "description": "Status = Lo stato per riscaldamento o raffreddamento è usato come feedback dal dispositivo finale e fornisce lo stato corrente.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Accendi controllo del tempo (interruttore 3)",
+        "description": "Accendere = Accendere può essere usato per inviare il comando accendere per la modalità temporizzata. ",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni controllo del tempo (interruttore 3)",
+        "description": "Spegnere = Spegnere è usato per inviare il comando spegnere per la modalità temporizzato.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato controllo del tempo (interruttore 3)",
+        "description": "Stato = Lo stato della modalità temporizzato serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Riscaldamento attivo (Mostra evento)",
+        "description": "Questo comando indica se il termostato è attualmente in modalità riscaldamento.",
+        "allowedValues": "251 = Rosso <br>Tutti gli altri valori = nessuna luce"
+      },
+      {
+        "name": "Raffreddamento attivo (Mostra evento)",
+        "description": "Questo controllo indica se il termostato è attualmente in modalità di raffreddamento.",
+        "allowedValues": "251 = Blu <br>Tutti gli altri valori = nessuna luce."
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ThermostatAnalog": {
+    "title": "Descrizione del dispositivo",
+    "name": "Termostato analogico",
+    "overview": "Con questo dispositivo si può realizzare un termostato analogico. Il valore nominale per la \"temperatura normale\" e per la \"temperatura ridotta\" può essere immesso tramite i 2 campi di ingresso.  Tramite i 2 interruttori è possibile attivare una modalità di riduzione e passare dal riscaldamento al raffreddamento. Utilizzando i 4 campi di inserimento degli orari, è possibile specificare 1 orario separato di riscaldamento o di raffreddamento a partire dal quale il termostato deve essere attivo. Questa funzione deve essere attivata con l'interruttore nr. 2.  L'indicatore di evento può essere usato per indicare un errore del dispositivo.. Il cerchio rosso indica se il riscaldamento è in corso. Il cerchio blu indica se il raffreddamento è in corso. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Setpoint temperatura di riferimento (campo d'ingresso 1)",
+        "description": "Campo di ingresso per la temperatura di riferimento.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Setpoint temperatura in modo di riduzione nominale (campo d'ingresso 1)",
+        "description": "Campo di ingresso per la temperatura ridotta quando la modalità di riduzione è attiva.",
+        "allowedValues": "0-50 °C"
+      },
+      {
+        "name": "Ora di accensione (campo d'ingresso 1)",
+        "description": "Campo di ingresso per l'ora di accensione della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Ora spenta (campo d'ingresso 2)",
+        "description": "Campo di ingresso per l'ora di spegnimento della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Minuti die accensione(campo d'ingresso 3)",
+        "description": "Campo di ingresso per il minuto di accensione della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Minuti di spenta (campo d'ingresso 4)",
+        "description": "Campo di ingresso per il minuto di spegnimento della 1 fase di riscaldamento o raffreddamento.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Accendi modalità di riduzione (interruttore 1)",
+        "description": "Accendere = Con accendere può essere inviato il comando accendere per la modalità di riduzione",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni modalità di riduzione (interruttore 1)",
+        "description": "Spegnere = Con spegnere può essere inviato il comando spegnere per la modalità di riduzione",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato del modo di riduzione(interruttore 1)",
+        "description": "Stato = Lo stato di modalità riduzione serve come feedback dall'apparecchio finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Accendi cambia riscaldamento-raffreddamento (interruttore 2)",
+        "description": "Accendere = Accendere può essere usato per inviare il comando accendere per la modalità riscaldamento o raffreddamento.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni cambiare riscaldamento-raffreddamento (interruttore 2)",
+        "description": "Spegnere = Spegnere è usato per inviare il comando spegnere per la modalità di riscaldamento o raffreddamento.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato cambiamento di riscaldamento-raffreddamento (interruttore 2)",
+        "description": "Status = Lo stato per riscaldamento o raffreddamento è usato come feedback dal dispositivo finale e fornisce lo stato corrente.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Accendi controllo del tempo (interruttore 3)",
+        "description": "Accendere = Accendere può essere usato per inviare il comando accendere per la modalità temporizzata. ",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni controllo del tempo (interruttore 3)",
+        "description": "Spegnere = Spegnere è usato per inviare il comando spegnere per la modalità temporizzato.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato controllo del tempo (interruttore 3)",
+        "description": "Stato = Lo stato della modalità temporizzato serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Riscaldamento attivo (Mostra evento)",
+        "description": "Questo comando indica se il termostato è attualmente in modalità riscaldamento.",
+        "allowedValues": "251 = Rosso <br>Tutti gli altri valori = nessuna luce."
+      },
+      {
+        "name": "Raffreddamento attivo (Mostra evento)",
+        "description": "Questo controllo indica se il termostato è attualmente in modalità di raffreddamento.",
+        "allowedValues": "251 = Blu <br>Tutti gli altri valori = nessuna luce."
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "AirHumiditySensor": {
+    "title": "Descrizione del dispositivo",
+    "name": "Sensore di umidità dell'aria",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare un sensore che misura l'umidità dell'aria. Il valore da 0-100% viene visualizzato nel campo di uscita.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Valore reale umidità (campo di uscita)",
+        "description": "Il campo di uscita restituisce l'umidità corrente dal sensore sul controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "BrightnessSensor": {
+    "title": "Descrizione del dispositivo",
+    "name": "Sensore di luminosità",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare un sensore che misura la luminosità. Il campo di uscita visualizza il valore da 0-100 kLux.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Valore reale luminosità (campo di uscita)",
+        "description": "Il campo di uscita restituisce la luminosità attuale dal sensore sul controller.",
+        "allowedValues": "0-100 kLux"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "SensorCO2": {
+    "title": "Descrizione del dispositivo",
+    "name": "Sensore CO2",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare un sensore che misura il contenuto di CO2 nell'aria. Il valore da 0-5000 ppm viene visualizzato nel campo di uscita.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Valore reale CO2 (campo di uscita)",
+        "description": "Il campo di uscita restituisce l'attuale CO2 dal sensore sul controller.",
+        "allowedValues": "0-5000 ppm"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "SensorLevel": {
+    "title": "Descrizione del dispositivo",
+    "name": "Sensore di livello",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare un sensore che misura il livello per esempio in un contenitore. Il display del livello mostra il valore da 0-100 %.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Livello effettivo (visualizzazione del livello)",
+        "description": "Il display mostra il livello attuale dal sensore sul controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "WeatherStation": {
+    "title": "Descrizione del dispositivo",
+    "name": "Stazione meteorologica",
+    "overview": "Con questo dispositivo è possibile visualizzare una stazione meteorologica con i suoi punti di misurazione più comuni. Il valore di luminosità delle direzioni del cielo est, sud e ovest può essere misurato. Il valore del crepuscolo può anche essere visualizzato. Inoltre, l'umidità e la velocità del vento possono essere registrate. Inoltre, viene visualizzato se piove o no.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Valore reale luminosità est (campo di uscita 1)",
+        "description": "Il campo di uscita restituisce l'attuale valore di luminosità Est dalla stazione meteorologica sul controller.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Valore reale luminosità sud (campo di uscita 2)",
+        "description": "Il campo di uscita restituisce l'attuale valore di luminosità Sud dalla stazione meteorologica sul controller.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Valore reale luminosità ovest (campo di uscita 3)",
+        "description": "Il campo di uscita restituisce l'attuale valore di luminosità West dalla stazione meteorologica sul controller.",
+        "allowedValues": "0-200 kLux"
+      },
+      {
+        "name": "Valore reale crepuscolo (campo di uscita 4)",
+        "description": "Il campo di uscita restituisce il valore attuale del crepuscolo dalla stazione meteorologica sul controller.",
+        "allowedValues": "0-1000 Lux"
+      },
+      {
+        "name": "Valore effettivo dell'umidità esterna (campo di uscita 5)",
+        "description": "Il campo di uscita restituisce l'umidità esterna corrente dalla stazione meteorologica sul controller.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Valore reale della velocità del vento (campo di uscita 6)",
+        "description": "Il campo di uscita restituisce la velocità attuale del vento dalla stazione meteorologica sul controller.",
+        "allowedValues": "0-50 m/s"
+      },
+      {
+        "name": "Valore reale delle precipitazioni (campo di uscita 7)",
+        "description": "Il campo di uscita restituisce se la stazione meteorologica del controllore ha rilevato o meno delle precipitazioni.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "HotWaterMeter": {
+    "title": "Descrizione del dispositivo",
+    "name": "Contatore di acqua calda",
+    "overview": "Con questo dispositivo si può realizzare un contatore di acqua calda. Questo fornisce i 2 valori più comuni, la lettura del contatore in m³ e la portata effettiva in m³/h.  L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Contatore del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita restituisce la lettura corrente del contatore dell'acqua calda.",
+        "allowedValues": "0-Max della variabile 64Bit in m³"
+      },
+      {
+        "name": "Flusso del valore reale (campo di uscita 2)",
+        "description": "Il campo di uscita restituisce la portata attuale del contatore dell'acqua calda.",
+        "allowedValues": "0-Max di 64Bit variabile in m³/h"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ColdWaterMeter": {
+    "title": "Descrizione del dispositivo",
+    "name": "Contatore di acqua fredda",
+    "overview": "Con questo dispositivo è possibile visualizzare un contatore di acqua fredda. Questo fornisce i 2 valori più comuni, la lettura del contatore in m³ e la portata effettiva in m³/h.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Contatore del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita restituisce il conteggio attuale del contatore di acqua fredda.",
+        "allowedValues": "0-Max della variabile 64Bit in m³"
+      },
+      {
+        "name": "Flusso del valore reale (campo di uscita 2)",
+        "description": "Il campo di uscita restituisce la portata attuale del contatore di acqua fredda.",
+        "allowedValues": "0-Max di 64Bit variabile in m³/h"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "HeatingMeter": {
+    "title": "Descrizione del dispositivo",
+    "name": "Contatore di riscaldamento",
+    "overview": "Con questo dispositivo è possibile visualizzare un misuratore di calore. Vengono visualizzati i 9 valori più comuni. La potenza di riscaldamento attuale in kW e le 3 letture del contatore in kW/h. Queste sono le letture dei contatori T1 e T2 del riscaldamento e la risultante lettura totale del contatore del riscaldamento. Inoltre, viene visualizzata la lettura del contatore in m³ del consumo d'acqua e la portata attuale in m³/h. Inoltre, vengono visualizzate la temperatura di mandata e di ritorno in °C e la loro differenza in K.  L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Potenza del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita restituisce la potenza attuale del contatore di calore.",
+        "allowedValues": "0-Max della variabile 32Bit in KW"
+      },
+      {
+        "name": "Contatore del valore reale (campo di uscita 2)",
+        "description": "Il campo di uscita restituisce l'attuale lettura totale del contatore del riscaldamento.",
+        "allowedValues": "0-Max di 64Bit variabile in KW/h"
+      },
+      {
+        "name": "Contatore del valore tariffa 1 (campo di uscita 3)",
+        "description": "Il campo di uscita restituisce la lettura attuale della tariffa 1 dal contatore del riscaldamento.",
+        "allowedValues": "0-Max di 64Bit variabile in KW/h"
+      },
+      {
+        "name": "Contatore del valore tariffa 2 (campo di uscita 4)",
+        "description": "Il campo di uscita restituisce la lettura attuale della tariffa 2 dal contatore del riscaldamento.",
+        "allowedValues": "0-Max. di 64Bit variabile in KW/h"
+      },
+      {
+        "name": "Contatore d'acqua con valore reale (campo di uscita 5)",
+        "description": "Il campo di uscita restituisce la lettura attuale del contatore dell'acqua dal contatore del riscaldamento.",
+        "allowedValues": "0-Max. di 32Bit variabile in m³"
+      },
+      {
+        "name": "Valore reale della portata (campo di uscita 6)",
+        "description": "Il campo di uscita restituisce la portata effettiva del contatore di calore.",
+        "allowedValues": "0-Max. di 32Bit variabile in m³/h"
+      },
+      {
+        "name": "Valore reale della temperatura di mandata (campo di uscita 7)",
+        "description": "Il campo di uscita restituisce la temperatura di mandata effettiva del contatore di calore.",
+        "allowedValues": "0-Max. di 32Bit variabile in °C"
+      },
+      {
+        "name": "Valore reale della temperatura di ritorno (campo di uscita 8)",
+        "description": "Il campo di uscita restituisce la temperatura di ritorno effettiva del contatore di riscaldamento.",
+        "allowedValues": "0-Max. di 32Bit variabile in °C"
+      },
+      {
+        "name": "Differenza di temperatura del valore reale (campo di uscita 9)",
+        "description": "Il campo di uscita restituisce la temperatura differenziale effettiva del contatore di riscaldamento.",
+        "allowedValues": "0-Max. di 32Bit-Variabile in k"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ElectricityMeter": {
+    "title": "Descrizione del dispositivo",
+    "name": "Contatore di elettricità",
+    "overview": "Con questo dispositivo è possibile visualizzare un contatore elettrico. Le 7 valori più comuni possono essere visualizzati con esso. Per la lettura del contatore T1 e T2 ciascuno in kW/h e la risultante lettura totale del contatore. Lo stesso vale per il consumo del contatore. Viene anche visualizzata la potenza attiva corrente in kW.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Potenza del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita restituisce la potenza attuale del contatore elettrico.",
+        "allowedValues": "0-Max della variabile 32Bit in KW"
+      },
+      {
+        "name": "Contatore del valore tariffa 1 (campo di uscita 2)",
+        "description": "Il campo di uscita restituisce l'attuale lettura totale della tariffa 1 del contatore di elettricità.",
+        "allowedValues": "0-Max di 64Bit variabile in KW/h"
+      },
+      {
+        "name": "Contatore del valore tariffa 2(campo di uscita 3)",
+        "description": "Il campo di uscita restituisce la lettura attuale della tariffa 2 dal contatore di elettricità.",
+        "allowedValues": "0-Max di 64Bit variabile in KW/h"
+      },
+      {
+        "name": "Consumo effettivo della tariffa 1 (campo di uscita 4)",
+        "description": "Il campo di uscita restituisce la lettura attuale del consumo della tariffa 1 del contatore di elettricità.",
+        "allowedValues": "0-Max of 64Bit Variable in KW/h"
+      },
+      {
+        "name": "Produzione effettivo della tariffa 1  (campo di uscita 5)",
+        "description": "Il campo di uscita restituisce la lettura attuale della tariffa di produzione 1 del contatore di elettricità.",
+        "allowedValues": "0-Max di 64Bit Variable in KW/h"
+      },
+      {
+        "name": "Consumo effettivo della tariffa 2 (campo di uscita 6)",
+        "description": "Il campo di uscita restituisce la lettura attuale della tariffa di consumo 2 del contatore di elettricità.",
+        "allowedValues": "0-Max di 64Bit Variable in KW/h"
+      },
+      {
+        "name": "Produzione effettivo della tariffa 2 (campo di uscita 7)",
+        "description": "Il campo di uscita restituisce la lettura attuale della tariffa di produzione 2 dal contatore dell'elettricità.",
+        "allowedValues": "0-Max di 64Bit Variable in KW/h"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "MotionSensor": {
+    "title": "Descrizione del dispositivo",
+    "name": "Sensore di movimento",
+    "overview": "Un rilevatore di movimento può essere implementato con questo dispositivo. Il campo di ingresso può essere utilizzato per impostare il periodo di tempo per il quale il rilevatore di movimento deve rimanere acceso dopo aver rilevato una persona. Il rilevatore di movimento può essere impostato manualmente su uno stato permanente tramite l'interruttore. Questo può essere permanentemente spento o permanentemente acceso. Il pulsante può essere utilizzato per inviare un impulso al rilevatore di movimento per accenderlo per il tempo impostato.   L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Tempo di accensione del valore nominale (1 campo d'ingresso)",
+        "description": "Campo di immissione per la durata del tempo di accensione.",
+        "allowedValues": "0-1200 sec"
+      },
+      {
+        "name": "Accendi sempre acceso (interruttore 1)",
+        "description": "Accendere = Con accendere, il comando per accendere l'accensione continua può essere inviato.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni sempre acceso (interruttore 1)",
+        "description": "Spegnere = Con spegnere, il comando per spegnere l'accensione continua può essere inviato.",
+        "allowedValues": "Spegnere = 0-1 "
+      },
+      {
+        "name": "Stato sempre acceso (interruttore 1)",
+        "description": "Stato = Il stato per sempre acceso serve come feedback dal dispositivo terminale e fornisce lo stato corrente.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Impulso per accendere (pulsante 1)",
+        "description": "Accendere-Spegnere = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso accendere-spegnere per l'accensione della luce può essere inviato al controllo.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato per Impulso accendere (pulsante 1)",
+        "description": "Stato = Lo stato per l'impulso per accendere serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "Battery": {
+    "title": "Descrizione del dispositivo",
+    "name": "Batteria",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare una batteria con i suoi dati di prestazione più importanti. Il simbolo della batteria visualizza attivamente il SoC da 0-100 %. Attraverso i 4 campi di uscita vengono visualizzati la tensione della batteria, la temperatura della batteria, la potenza della batteria e il SoH della batteria.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Stato di carica SOC (batteria 1)",
+        "description": "La batteria visualizza l'attuale valore SOC della batteria.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Tensione del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita restituisce la tensione effettiva della batteria.",
+        "allowedValues": "0-1000 V"
+      },
+      {
+        "name": "Temperatura del valore reale (campo di uscita 2)",
+        "description": "Il campo di uscita restituisce la temperatura attuale della batteria.",
+        "allowedValues": "-30 to 120 °C"
+      },
+      {
+        "name": "Potenza del valore reale (campo di uscita 3)",
+        "description": "Il campo di uscita restituisce la potenza effettiva della batteria.",
+        "allowedValues": "-1000 to 1000 kW"
+      },
+      {
+        "name": "Valore reale SOH (campo di uscita 4)",
+        "description": "Il campo di uscita restituisce l'effettivo SOH della batteria.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "PVSystem": {
+    "title": "Descrizione del dispositivo",
+    "name": "Impianto fotovoltaico",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare i dati di un impianto fotovoltaico. La potenza attiva dell'impianto fotovoltaico attivo viene visualizzata nel campo potenza.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Potenza del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita mostra la potenza attuale dell'impianto fotovoltaico.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "HouseConsumption": {
+    "title": "Descrizione del dispositivo",
+    "name": "Casa di consumo",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare il consumo di una casa. La potenza attiva viene visualizzata nel campo uscita.   L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Potenza del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita mostra la potenza effettiva del consumo della casa al controllore.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "Generator": {
+    "title": "Descrizione del dispositivo",
+    "name": "Generatore",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare la potenza di un generatore. La potenza attiva viene visualizzata attraverso il campo di uscita. Il generatore può essere avviato manualmente tramite l'interruttore, se è necessario. Lo stato dell'interruttore indica quindi se è acceso o spento. Se necessario, il generatore può essere resettato tramite il pulsante in caso di guasto.  L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Valore di potenza effettiva (campo di uscita 1)",
+        "description": "Il campo di uscita mostra la potenza attuale del generatore.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Accendere acceso manuale (interruttore 1)",
+        "description": "Accendere = Usate accendere per inviare il comando accendere per l'accensione manuale. ",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni acceso manuale (interruttore 1)",
+        "description": "Spegnere = Spegnere è usato per inviare il comando spegnere per l' accensione manuale.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato acceso manuale (interruttore 1)",
+        "description": "Stato = Lo stato per accensione manuale serve come feedback dal dispositivo terminale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Accendi-spegni Reset (pulsante 1)",
+        "description": "Accendere-Spegnere = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso accendere-spegnere può essere inviato al controller per cancellare il guasto sul generatore.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato del reset (pulsante 1)",
+        "description": "Stato = Lo stato per il reset serve come feedback dal dispositivo terminale e fornisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "MainsConnection": {
+    "title": "Descrizione del dispositivo",
+    "name": "Collegamento alla rete",
+    "overview": "Questo dispositivo può essere utilizzato per visualizzare la potenza di una connessione di rete. La potenza attiva viene visualizzata in kW nel campo di uscita. L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Potenza del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita mostra la potenza attuale della connessione di rete.",
+        "allowedValues": "-5000 to 5000 kW"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "ElectricChargingStation": {
+    "title": "Descrizione del dispositivo",
+    "name": "Stazione di ricarica elettrica",
+    "overview": "Con questo dispositivo si può realizzare una stazione di ricarica. Nel campo di uscita la potenza attiva della stazione di ricarica e il tempo di ricarica trascorso possono essere visualizzati. La potenza minima in kW che dovrebbe essere sempre disponibile nella stazione di ricarica può essere inserita nel campo di ingresso. Questo può essere utile, per esempio, se la stazione di ricarica è gestita tramite un EMS al controller. Un interruttore può essere utilizzato per impostare la stazione di ricarica in modalità manuale e il cursore può essere utilizzato per selezionare quale potenza deve essere disponibile. Il secondo interruttore può essere usato per attivare la modalità di potenza minima. Il piccolo cerchio verde indica se il veicolo è stato collegato con successo alla stazione di ricarica.  L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Campo di uscita 1 (Potenza del valore reale)",
+        "description": "Il campo di uscita mostra la potenza effettiva della stazione di ricarica.",
+        "allowedValues": "0- 1000 kW"
+      },
+      {
+        "name": "Campo di uscita 2 (Tempo di carica del valore reale)",
+        "description": "Il campo di uscita mostra il tempo di ricarica effettivo dalla stazione di ricarica.",
+        "allowedValues": "0-2000 min"
+      },
+      {
+        "name": "Campo d'ingresso 1 (Setpoint della potenza di carica minima)",
+        "description": "Campo di immissione per il valore nominale della potenza di carica minima della stazione di carica.",
+        "allowedValues": "0-1000KW"
+      },
+      {
+        "name": "Interruttore 1 (Accendi modalità di potenza di carica minima, Spegni potenza di carica minima, Stato potenza di carica minima)",
+        "description": "Accendere = Con accendere, può essere inviato il comando accendere per la modalità di potenza di carica minima. <br> Spegnere = Con spegnere può essere inviato il comando spegnere per il modo di potenza di carica minima. <br> Stato = Lo stato per la modalità di potenza di carica minima serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "Accendere = 0-1 <br> Spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Interruttore 2 (Accendi acceso manuale, Spegni acceso manuale, Stato acceso manuale)",
+        "description": "Accendere = Con accendere, il comando accendere per l'accensione manuale può essere inviato. <br> Spegnere = Con spegnere, il comando spegnere per l'accensione manuale può essere inviato. <br> Stato = Lo stato accensione manuale serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "On = 0-1 <br> Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "Setpoint di potenza manuale (cursore 1)",
+        "description": "Il cursore invia il setpoint potenza manuale alla stazione di ricarica.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      },
+      {
+        "name": "Veicolo collegato (mostra evento)",
+        "description": "Questo controllo indica se la stazione di ricarica è collegata al veicolo.",
+        "allowedValues": "251 = Verde <br> Tutti gli altri valori = nessuna luce."
+      },
+      {
+        "name": "Valore reale di potenza manuale (campo di uscita 3)",
+        "description": "Il campo di uscita mostra la potenza manuale effettiva della stazione di ricarica.",
+        "allowedValues": "0-100%"
+      }
+    ]
+  },
+  "ElectronicBoiler": {
+    "title": "Descrizione del dispositivo",
+    "name": "Inserto per caldaia elettrica",
+    "overview": "Con questo dispositivo è possibile implementare un inserto elettrico in una caldaia. La potenza attiva dell'inserto viene visualizzata tramite uno dei campi di uscita. Tramite i 4 campi di input per il tempo si ha la possibilità di eseguire determinati programmi al controllo. L'inserto può essere acceso manualmente tramite l'interruttore e la potenza può essere impostata tramite il cursore.  L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Campo di uscita 1 (Potenza del valore reale)",
+        "description": "Il campo di uscita mostra l'uscita di corrente del boiler elettrico.",
+        "allowedValues": "0-1000 kW"
+      },
+      {
+        "name": "Campo d'ingresso 1 (Ora di accensione riscaldamento)",
+        "description": "Campo di ingresso per l'ora di accensione della fase di riscaldamento.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Campo d'ingresso 2 (Ora spenta riscaldamento)",
+        "description": "Campo di ingresso per l'ora di spegnimento della fase di riscaldamento.",
+        "allowedValues": "0-23 h"
+      },
+      {
+        "name": "Campo d'ingresso 3 (Minuti die accensione riscaldamento)",
+        "description": "Campo di ingresso per il minuto di accensione della fase di riscaldamento.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Campo d'ingresso 4 (Minuti di spenta riscaldamento)",
+        "description": "Campo di ingresso per il minuto di spegnimento della fase di riscaldamento.",
+        "allowedValues": "0-59 min"
+      },
+      {
+        "name": "Interruttore 1 (Accendi acceso manuale, Spegni acceso manuale, Stato Manuale On)",
+        "description": "Accendere = Con accendere, il comando per accendere l'accensione manuale può essere inviato. <br> Spegnere = Con spegnere, il comando per spegnere l'accensione manuale può essere inviato. <br> Stato = Lo stato per accensione manuale serve come feedback dal dispositivo finale e fornisce lo stato attuale.",
+        "allowedValues": "On = 0-1 <br> Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "Cursore 1 (Setpoint Potenza manuale)",
+        "description": "Il cursore invia il setpoint della potenza manuale alla caldaia elettrica.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Campo di uscita 2 (Actual Value Manual Power)",
+        "description": "L'attuale uscita manuale del boiler elettrico viene visualizzata nel campo di uscita.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Interruttore 2 (Accendi controllo del tempo, Spegni controllo del tempo, Stato controllo del tempo)",
+        "description": "Accendere = Accendere può essere usato per inviare il comando accendere per la modalità temporizzata. <br> Spegnere = Spegnere è usato per inviare il comando spegnere per la modalità temporizzato. <br> Stato = Lo stato della modalità temporizzato serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "On = 0-1 <br> Off = 0-1 <br> State = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "VentilatorSwitch": {
+    "title": "Descrizione del dispositivo",
+    "name": "Controllo del ventilatore",
+    "overview": "Questo dispositivo può essere usato per accendere e spegnere un ventilatore, ad esempio un ventilatore da bagno. L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Accendi (interruttore 1)",
+        "description": "Accendere = Con accendere, il comando per accendere il ventilatore può essere inviato. ",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni (interruttore 1)",
+        "description": "Spegnere = Con spegnere, il comando per spegnere il ventilatore può essere inviato.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato (interruttore 1)",
+        "description": "Status = Lo stato del ventilatore serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Status = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "MusicSystem": {
+    "title": "Descrizione del dispositivo",
+    "name": "Sistema musicale",
+    "overview": "Con questo dispositivo si possono realizzare i segnali più comuni per il controllo di un sistema musicale. Il livello del volume può essere regolato con il più e il meno. Con play, stop e pausa la musica può essere controllata di conseguenza. La selezione dei titoli può essere regolata in avanti e indietro. Con l'interruttore il sistema musicale può essere acceso o spento. L'indicatore di evento può essere usato per indicare un errore del dispositivo. NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Più volume (Plus 1)",
+        "description": "Il pulsante più può essere usato per inviare un segnale al controller per aumentare il volume.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Meno volume (meno 1)",
+        "description": "Il pulsante meno può essere usato per inviare un segnale al controller per diminuire il volume.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Play (Play 1)",
+        "description": "Il pulsante play può essere usato per inviare un segnale al controller per riprodurre la musica.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Fermata (fermata 1)",
+        "description": "Il pulsante di fermata può essere utilizzato per inviare un segnale al controller per fermare la musica.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Pausa (Pausa 1)",
+        "description": "Il pulsante pause può essere usato per inviare un segnale al controller per mettere in pausa la musica.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Avanti (Avanti 1)",
+        "description": "Il pulsante avanti può essere usato per inviare un segnale al controller per aumentare un titolo.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Indietro (indietro 1)",
+        "description": "Con il pulsante indietro si può inviare un segnale al controller per far tornare indietro una traccia.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Sistema musicale acceso (interruttore 1)",
+        "description": "Accendere = Con accendere può essere inviato il comando per accendere il sistema musicale.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Sistema musicale spento (interruttore 1)",
+        "description": "Spegnere = Con spegnere può essere inviato il comando per spegnere il sistema musicale.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato del sistema musicale (interruttore 1)",
+        "description": "Stato = Lo stato del sistema musicale serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "TV": {
+    "title": "Descrizione del dispositivo",
+    "name": "TV",
+    "overview": "Con questo dispositivo si possono realizzare i segnali più comuni per controllare una TV. Tramite il più e il meno il livello del volume può essere regolato. Via avanti e indietro la selezione del canale può essere impostata. Con l'interruttore il televisore può essere acceso o spento.  L'indicatore di evento può essere usato per indicare un errore del dispositivo. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Più volume(Plus 1)",
+        "description": "Il pulsante più invia un segnale al controller per aumentare il volume.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Meno volume (meno 1)",
+        "description": "Il pulsante meno può essere usato per inviare un segnale al controller per diminuire il volume.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Avanti (Avanti 1)",
+        "description": "Con il pulsante avanti, un segnale può essere inviato al controller per cambiare un canale TV in alto.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Indietro (indietro 1)",
+        "description": "Il pulsante indietro può essere usato per inviare un segnale al controller per far tornare indietro un canale TV.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Tv acceso (interruttore 1)",
+        "description": "Accendere = Con accendere, il comando per accender il sistema TV può essere inviato. ",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Tv spento (interruttore 1)",
+        "description": "Spegnere = Con spegnere, il comando per spegnere il sistema TV può essere inviato.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato del Tv (interruttore 1)",
+        "description": "Stato = Lo stato per la TV serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "MotorWithoutVFD": {
+    "title": "Descrizione del dispositivo",
+    "name": "Motore senza controllo della velocità",
+    "overview": "Questo dispositivo può essere utilizzato per controllare un motore che non è controllata alla velocità. I 3 pulsanti superiori possono essere utilizzati per passare tra le modalità automatiche, manuale e inattivo. Con il pulsante nr. 4 il motore può essere resettato in caso di guasto. Il campo di uscita può essere utilizzato per visualizzare il consumo di corrente del motore Le frecce possono essere utilizzate per selezionare il senso di rotazione in modalità manuale. Viene anche visualizzato il senso di rotazione attuale. L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Pulsante 1 (Abilita la modalità automatica, Stato Modalità automatica)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità automatiche viene inviato al controllo. Stato = Lo stato per la modalità automatiche serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 2 (Attivare la modalità manuale, State Manual Mode active)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità manuale viene inviato alla centralina. Stato = Lo stato per la modalità manuale serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "On-Off = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 3 (Attivare il modo inattivo, Stato Modo inattivo)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per attivare la modalità inattiva viene inviato all'unità di controllo. Stato = Lo stato per la modalità inattiva serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 4 (Pulsante Reset, Stato di reset)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale si invia l'impulso on-off al controller per resettare il motore. Stato = Lo stato per il reset serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "1 freccia a sinistra (Sinistra, Stato)",
+        "description": "Sinistra = Con sinistra si può inviare il comando di sinistra per il motore. Stato = Lo stato per sinistra serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Sinistra = 0-1 State = 0-1"
+      },
+      {
+        "name": "1 freccia a destra (Destra, Stato)",
+        "description": "Stato = Lo stato per sinistra serve come feedback dal dispositivo finale e restituisce lo stato attuale. Destra = Con destra si può inviare il comando di destra per il motore.",
+        "allowedValues": "Destra = 0-1 State = 0-1"
+      },
+      {
+        "name": "1 campo di uscita (Corrente effettiva)",
+        "description": "Il campo di uscita mostra il consumo di corrente del motore.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "PumpWithoutVFD": {
+    "title": "Descrizione del dispositivo",
+    "name": "Pompa senza controllo di velocità",
+    "overview": "Questo dispositivo può essere utilizzato per controllare una pompa che non è controllata alla velocità. I 3 pulsanti superiori possono essere utilizzati per passare tra le modalità automatiche, manuale e inattivo. Con il pulsante nr. 4 la pompa può essere resettato in caso di guasto. Il campo di uscita può essere utilizzato per visualizzare il consumo di corrente della pompa. Le frecce possono essere utilizzate per selezionare il senso di rotazione in modalità manuale. Viene anche visualizzato il senso di rotazione attuale. L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Pulsante 1 (Abilita la modalità automatica, Stato Modalità automatica)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità automatiche viene inviato al controllo. Stato = Lo stato per la modalità automatiche serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 2 (Attivare la modalità manuale, Stato del modo manuale)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità manuale viene inviato alla centralina. Stato = Lo stato per la modalità manuale serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 3 (Attivare il modo inattivo, Stato Modo inattivo)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per attivare la modalità inattiva viene inviato all'unità di controllo. Stato = Lo stato per la modalità inattiva serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 4 (Pulsante Reset, Stato di reset)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale si invia l'impulso on-off al controller per resettare la pompa.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "1 freccia a sinistra (Sinistra, Stato)",
+        "description": "Sinistra = Con sinistra si può inviare il comando di sinistra alla pompa. Stato = Lo stato per sinistra serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Sinistra = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "1 freccia a destra (Destra, Stato)",
+        "description": "Destra = Con destra si può inviare il comando di destra alla pompa. Stato = Lo stato per destra serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Destra = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "1 campo di uscita (Corrente effettiva)",
+        "description": "Il campo di uscita mostra il consumo di corrente della pompa.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "MotorWithVFD": {
+    "title": "Descrizione del dispositivo",
+    "name": "Motore con controllo della velocità",
+    "overview": "Con questo dispositivo si può realizzare il controllo di un motore, che è controllata alla velocità. I 3 pulsanti superiori possono essere utilizzati per passare tra le modalità automatica, manuale e inattivo. Il pulsante nr. 4 posso essere utilizzato per resettare il motore in caso di guasto. Il consumo di corrente del motore può essere visualizzato attraverso il campo di uscita. Il senso di rotazione può essere selezionato in modalità manuale usando le frecce. Viene anche visualizzato il senso di rotazione attuale. Inoltre, la velocità può essere impostata in modalità manuale utilizzando il cursore. Il campo di uscita aggiuntivo mostra poi la velocità attuale in %. Anche la velocità attuale viene visualizzata e regolata nel cursore. L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Pulsante 1 (Abilita la modalità automatica, Stato Modalità automatica)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità automatiche viene inviato al controllo. Stato = Lo stato per la modalità automatiche serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 2 (Attivare la modalità manuale, Stato del modo manuale)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità manuale viene inviato alla centralina. Stato = Lo stato per la modalità manuale serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 3 (Attivare il modo inattivo, Stato Modo inattivo)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per attivare la modalità inattiva viene inviato all'unità di controllo. Stato = Lo stato per la modalità inattiva serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 4 (Pulsante Reset, Stato di reset)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale si invia l'impulso on-off al controller per resettare il motore. Stato = Lo stato per il reset serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 Stato = 0-1"
+      },
+      {
+        "name": "1 freccia a sinistra (Sinistra, Stato)",
+        "description": "Sinistra = Con sinistra si può inviare il comando di sinistra per il motore. Stato = Lo stato per sinistra serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Sinistra = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "1 freccia a destra (Destra, Stato)",
+        "description": "Destra = Con destra si può inviare il comando di destra per il motore. Stato = Lo stato per destra serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Destra = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "1 campo di uscita (Corrente effettiva)",
+        "description": "Il campo di uscita mostra il consumo di corrente del motore.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Cursore 1 (Setpoint Velocità manuale)",
+        "description": "Il cursore invia il setpoint della velocità al motore.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Campo uscita 2 (Velocità del valore reale)",
+        "description": "Il campo di uscita mostra la velocità attuale del motore.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "PumpWithVFD": {
+    "title": "Descrizione del dispositivo",
+    "name": "Pompa con controllo della velocità",
+    "overview": "Con questo dispositivo si può realizzare il controllo di una pompa, che è controllata alla velocità. I 3 pulsanti superiori possono essere utilizzati per passare tra le modalità automatiche, manuale e Inattivo. Il pulsante nr. 4 posso essere utilizzato per resettare la pompa in caso di guasto. Il consumo attuale della pompa può essere visualizzato attraverso il campo di uscita. Il senso di rotazione può essere selezionato in modalità manuale usando le frecce. Viene anche visualizzato il senso di rotazione attuale. Inoltre, la velocità può essere impostata in modalità manuale utilizzando il cursore. Il campo di uscita aggiuntivo mostra poi la velocità attuale in %. Anche la velocità attuale viene visualizzata e regolata nel cursore. L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Pulsante 1 (Abilita la modalità automatica, Stato Modalità automatica)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità automatiche viene inviato al controllo. Stato = Lo stato per la modalità automatiche serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 2 (Attivare la modalità manuale, Stato del modo manuale)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità manuale viene inviato alla centralina. Stato = Lo stato per la modalità manuale serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 3 (Attivare il modo inattivo, Stato Modo inattivo)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per attivare la modalità inattiva viene inviato all'unità di controllo. Stato = Lo stato per la modalità inattiva serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Pulsante 4 (Pulsante Reset, Stato di reset)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale si invia l'impulso on-off al controller per resettare la pompa. Stato = Lo stato per il reset serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "Accendere-spegnere = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "1 freccia a sinistra (Sinistra, Stato)",
+        "description": "Stato = Lo stato per il reset serve come feedback dall'apparecchio terminale e restituisce lo stato attuale. Sinistra = Con sinistra si può inviare il comando di sinistra alla pompa.",
+        "allowedValues": "Sinistra = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "1 freccia a destra (Destra, Stato)",
+        "description": "Destra = Con destra si può inviare il comando di destra alla pompa. Stato = Lo stato per destra serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Destra = 0-1 <br> Stato = 0-1"
+      },
+      {
+        "name": "Campo di uscita 1 (Corrente effettiva)",
+        "description": "Il campo di usicta mostra il consumo di corrente della pompa.",
+        "allowedValues": "0-1000 A"
+      },
+      {
+        "name": "Cursore 1 (Regolazione manuale della velocità)",
+        "description": "Il cursore invia il setpoint di velocità alla pompa.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Campo di uscita 2 (Velocità del valore reale)",
+        "description": "Il campo di uscita mostra la velocità attuale della pompa.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Warning, <br>2 = Error"
+      }
+    ]
+  },
+  "MixingValve": {
+    "title": "Descrizione del dispositivo",
+    "name": "Valvola miscelatrice analogica",
+    "overview": "Con questo dispositivo si può realizzare il controllo di una valvola miscelatrice. Con i 3 pulsanti superiori è possibile passare tra le modalità automatiche, manuale e inattiva. Con i 4 pulsanti la valvola miscelatrice può essere resettata in caso di errore. Il cursore può essere utilizzato per selezionare la posizione della valvola miscelatrice in modalità manuale. Il cursore si adatta alla posizione corrente della valvola. Il campo di uscita mostra la posizione attuale della valvola. L'indicatore di evento può essere usato per indicare un errore del dispositivo.",
+    "table": [
+      {
+        "name": "Abilita la modalità automatica (pulsante 1)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità automatiche viene inviato al controllo.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato Modalità automatica (pulsante 1)",
+        "description": "Stato = Lo stato per la modalità automatiche serve come feedback dal dispositivo finale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Attivare la modalità manuale (pulsante 2)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per l'attivazione della modalità manuale viene inviato al controllo.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato del modo manuale (pulsante 2)",
+        "description": "Stato = Lo stato per la modalità manuale serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Attivare il modo inattivo (pulsante 3)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale, l'impulso on-off per attivare la modalità inattiva viene inviato all'unità di controllo.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato Modo inattivo (pulsante 3)",
+        "description": "Stato = Lo stato per la modalità inattiva serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Pulsante Reset (pulsante 4)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato viene inviato lo 0. Inviando il segnale si invia l'impulso on-off al controller per resettare la valvola.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Stato di reset (pulsante 4)",
+        "description": "Stato = Lo stato per il reset serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Setpoint Posizione manuale (cursore 1)",
+        "description": "Il cursore invia la nuova posizione della valvola.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Posizione del valore reale (campo di uscita 1)",
+        "description": "Il campo di uscita mostra la posizione attuale della valvola miscelatrice.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "Ventilation": {
+    "title": "Descrizione del dispositivo",
+    "name": "Ventilazione",
+    "overview": "Questo dispositivo può essere usato per controllare un sistema di ventilazione. L'interruttore può essere usato per cambiare se la ventilazione deve funzionare in modalità automatica o manuale. In modalità manuale, il campo di ingresso può essere utilizzato per impostare la potenza a cui la ventilazione deve funzionare. I 2 campi di uscita mostrano le velocità dei ventilatori dell'aria di alimentazione e dell'aria di scarico. I 2 punti verdi indicano la sostituzione del filtro dell'aria di alimentazione o di estrazione.  L'indicatore di evento può essere usato per indicare un errore del dispositivo. Il pulsante di reset può essere usato per resettare l'errore. <br> NOTA SULL'INTERRUTTORE : Se entro 5 secondi lo stato corrispondente non ritorna al comando inviato, l'interruttore invierà automaticamente il comando \"accendere\" una volta e poi il comando \"spegnere\".",
+    "table": [
+      {
+        "name": "Accendi acceso manuale (interruttore 1)",
+        "description": "Accendere = Con accendere, il comando per accendere l'accensione manuale può essere inviato.",
+        "allowedValues": "Accendere = 0-1"
+      },
+      {
+        "name": "Spegni acceso manuale (interruttore 1)",
+        "description": "Spegnere = Con spegnere, il comando per spegnere l'accensione manuale può essere inviato.",
+        "allowedValues": "Spegnere = 0-1"
+      },
+      {
+        "name": "Stato acceso manuale (interruttore 1)",
+        "description": "Stato = Lo stato accensione manuale serve come feedback dal dispositivo terminale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Velocità di riferimento (campo d'ingresso 1)",
+        "description": "Campo di ingresso del riferimento di velocità",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Valore reale della velocità dell'aria di alimentazione (campo di uscita 1)",
+        "description": "Il campo di uscita mostra la velocità effettiva dell'aria di alimentazione dalla ventilazione.",
+        "allowedValues": "0-3000 rpm"
+      },
+      {
+        "name": "Valore reale della velocità dell'aria di scarico (campo di uscita 2)",
+        "description": "Il campo di uscita mostra la velocità effettiva dell'aria di scarico dalla ventilazione.",
+        "allowedValues": "0-3000 rpm"
+      },
+      {
+        "name": "Cambiare il filtro dell'aria di alimentazione (visualizzare evento nr 1)",
+        "description": "Indica se il filtro dell'aria di alimentazione deve essere cambiato.",
+        "allowedValues": "251 = Verde <br> Tutti gli altri valori = Nessuna luce."
+      },
+      {
+        "name": "Cambiare il filtro dell'aria di scarico (visualizzare evento nr 2)",
+        "description": "Indica se il filtro dell'aria di scarico deve essere cambiato.",
+        "allowedValues": "251 = Verde <br> Al altri valori = nessuna luce"
+      },
+      {
+        "name": "Pulsante di reset (pulsante)",
+        "description": "\"Accendere-spegnere\" = Il pulsante genera il seguente segnale. Quando viene premuto, viene inviato un segnale 1. Solo quando viene rilasciato, lo 0 viene inviato. Inviando il segnale si invia l'impulso accendere-spegnere al controllore per resettare la ventilazione.",
+        "allowedValues": "Accendere-spegnere = 0-1"
+      },
+      {
+        "name": "Reset di stato (pulsante)",
+        "description": "Stato = Lo stato per il reset serve come feedback dall'apparecchio terminale e restituisce lo stato attuale.",
+        "allowedValues": "Stato = 0-1"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, <br>2 = Errore"
+      }
+    ]
+  },
+  "Gauge": {
+    "title": "Descrizione del dispositivo",
+    "name": "Display grafico",
+    "overview": "Con questo display grafico è possibile visualizzare direttamente i dati. C'è di nuovo la possibilità di impostare la scala manualmente. Anche l'unità può essere assegnata di nuovo manualmente. Questa visualizzazione grafica utilizza solo i dati live direttamente via Mqtt.",
+    "table": [
+      {
+        "name": "Valore reale 1",
+        "description": "Qui si può mappare 1 variabile che deve poi essere visualizzata.",
+        "allowedValues": "Min e Max della variabile a 64 bit"
+      },
+      {
+        "name": "Scalare",
+        "description": "Si può usare il ridimensionamento automatico o inserire manualmente un valore minimo e massimo.",
+        "allowedValues": "Automatico e manuale"
+      },
+      {
+        "name": "Valore min-max (visibile solo se la scalatura per questa variabile è manuale)",
+        "description": "Valore minimo e massimo per la scalatura quando la scalatura è selezionata in modalità manuale.",
+        "allowedValues": "Min e Max della variabile a 64 bit"
+      }
+    ]
+  },
+  "DropDownOutputFieldWithVariable": {
+    "title": "Descrizione del dispositivo",
+    "name": "Campo di uscita Dropdown",
+    "overview": "Questo campo di uscita a discesa può essere usato per emettere testi insieme a un numero. Quando si crea il dispositivo, si possono aggiungere i numeri e assegnare i testi corrispondenti. Quando il dispositivo riceve il rispettivo numero dal controller, viene emesso il testo corrispondente. Questo dispositivo è particolarmente adatto al tipo di dati ENUM sul lato del controllore. Con il campo a discesa, questo dispositivo può solo ricevere e visualizzare, niente può essere inviato. Un'icona può essere assegnata liberamente al dispositivo quando viene creato.",
+    "table": [
+      {
+        "name": "Valore effettivo (drop down)",
+        "description": "Questo campo di uscita a discesa può visualizzare un testo variabile che si riferisce a un numero sullo sfondo.",
+        "allowedValues": "Min -32768 , Max 32767"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, 2 = Errore"
+      }
+    ]
+  },
+  "DropDownInputFieldWithVariable": {
+    "title": "Descrizione del dispositivo",
+    "name": "Campo di ingresso Dropdown",
+    "overview": "Questo campo di ingresso a discesa può essere usato per inserire testi insieme a un numero. Quando si crea il dispositivo, si possono aggiungere i numeri e assegnare i testi corrispondenti. Se ora selezioni un testo nel dispositivo, il numero corrispondente viene inviato al controllo. Questo dispositivo è particolarmente adatto al tipo di dati ENUM sul lato controllo.  Un simbolo può essere assegnato liberamente al dispositivo quando viene creato.",
+    "table": [
+      {
+        "name": "Setpoint (drop down)",
+        "description": "Questo campo di input a discesa può essere utilizzato per selezionare vari testi che inviano un numero al controller in background.",
+        "allowedValues": "Min -32768 , Max 32767"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, 2 = Errore"
+      }
+    ]
+  },
+  "TSGFrischwasser": {
+    "title": "Descrizione del dispositivo",
+    "name": "TSG Acqua fresca",
+    "overview": "Questo dispositivo può essere utilizzato per controllare e visualizzare un sistema di acqua fresca da TSG.",
+    "table": [
+      {
+        "name": "Offset Redox",
+        "description": "Questo valore può essere usato per specificare l'offset della sonda ORP per correggere il valore di uscita.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Min Value Redox",
+        "description": "Questo valore può essere usato per specificare l'offset della sonda ORP per correggere il valore di uscita.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Max Value Redox",
+        "description": "Questo valore può essere usato per specificare il valore massimo della sonda redox al quale viene generato e regolato un allarme se non arrivano impulsi dal contatore d'acqua per un certo tempo ma il valore massimo non è ancora stato raggiunto.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Allways On",
+        "description": "Con questo valore, la pompa può essere commutata in modalità continua. Questo significa che se il valore Max non è ancora stato raggiunto o il contatore dell'acqua emette degli impulsi, la pompa emette un segnale continuo invece di impulsi, cioè è accesa finché arrivano degli impulsi dal contatore dell'acqua o il valore Max non è ancora stato raggiunto.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Pulse Duration",
+        "description": "Questo valore può essere usato per specificare la lunghezza dell'impulso della pompa.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Break Time",
+        "description": "Con questo valore, il tempo di pausa tra gli impulsi della pompa può essere impostato.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Allways On Time",
+        "description": "Questo valore può essere usato per specificare il tempo di accensione continua, quando la pompa funziona in modalità di accensione continua. La pompa continua a funzionare per il tempo successivo alla ricezione dell'ultimo impulso.",
+        "allowedValues": "0 – 25000 in ms"
+      },
+      {
+        "name": "Hour On",
+        "description": "Questo valore può essere usato per specificare le ore da quando il sistema di lavaggio è in modalità di accensione.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute On",
+        "description": "Questo valore può essere usato per specificare il minuto a partire dal quale il sistema di lavaggio è in modalità di accensione.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Hour Off",
+        "description": "Questo valore può essere usato per specificare le ore da quando il sistema di lavaggio è in modalità di spegnimento.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute Off",
+        "description": "Questo valore può essere usato per specificare il minuto a partire dal quale il sistema di lavaggio è in modalità di spegnimento.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Time to go Max Value",
+        "description": "Con questo valore è possibile impostare quando la pompa deve regolare al valore massimo della sonda dopo l'ultimo impulso del contatore d'acqua se questo non è stato raggiunto. In secondi",
+        "allowedValues": "0 - 60"
+      },
+      {
+        "name": "Max Water Flow",
+        "description": "Questo valore può essere usato per impostare la quantità massima di acqua dolce che può fluire quando il sistema di lavaggio è in modalità di spegnimento.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Max Chemistry Flow",
+        "description": "Questo valore può essere usato per impostare la quantità massima di prodotto chimico che può fluire quando il sistema di lavaggio è in modalità di spegnimento.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Min Chemistry Flow",
+        "description": "Questo valore può essere usato per impostare quanto prodotto chimico minimo deve fluire in 24 ore.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Reset",
+        "description": "Con questo valore, alcuni allarmi della funzione possono essere resettati. Non tutti gli allarmi possono essere resettati manualmente",
+        "allowedValues": "0 – 1"
+      },
+      {
+        "name": "Reset State",
+        "description": "Questo valore restituisce lo stato di reset corrente.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Error Warning State",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sull'unità. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Warning 2 = Error"
+      },
+      {
+        "name": "State Float Switch",
+        "description": "Questo valore può essere usato per visualizzare lo stato dell'interruttore a galleggiante.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Reed Contact",
+        "description": "Questo valore può essere usato per visualizzare lo stato del contatto reed nel contenitore chimico.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Allways On",
+        "description": "Questo valore fornisce la congestione attuale della modalità di accensione continua della pompa.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Value Redox",
+        "description": "Questo valore fornisce il valore corrente della sonda redox.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Actual Flow Water",
+        "description": "Questo valore fornisce la portata attuale del contatore d'acqua.",
+        "allowedValues": "0 – Max of 64 Bit Variable in l/min"
+      },
+      {
+        "name": "Actual Flow Chemistry",
+        "description": "Questo valore fornisce la portata attuale del misuratore di prodotti chimici.",
+        "allowedValues": "0 – Max of 64Bit Variable in l/min"
+      },
+      {
+        "name": "Counter Water",
+        "description": "Questo valore fornisce la lettura attuale del contatore dell'acqua.",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Counter Chemistry",
+        "description": "Questo valore fornisce la lettura corrente del contatore chimico",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Alarm Message",
+        "description": "Questo valore mostra il messaggio di allarme corrente.",
+        "allowedValues": "0 = Nessun allarme <br> 1 = Troppo consumo di acqua dolce <br> 2 = Troppo consumo di prodotti chimici <br> 3 = Consumo eccessivo di prodotti chimici e di acqua dolce <br> 4 = Consumo di prodotti chimici troppo basso <br> 5 = Valore minimo della sonda redox raggiunto <br> 6 = Max value of the redox probe reached <br> 7 = L'interruttore a galleggiante è scattato <br> 8 = Reed Contatto contenitore chimico ha innescato"
+      },
+      {
+        "name": "Error Message",
+        "description": "Questo valore mostra il messaggio di errore corrente.",
+        "allowedValues": "0 = Nessun errore <br> 1 = KL1512 Errore di configurazione <br> 2 = Errore AI del sensore Redox <br> 3 = Errore di tempo del sistema <br> 4 = Tempo di commutazione on-off dell'errore"
+      }
+    ]
+  },
+  "TSGBrauchwasser": {
+    "title": "Device description",
+    "name": "TSG acqua usata",
+    "overview": "Questo dispositivo può essere utilizzato per controllare e visualizzare un sistema di acqua usata da TSG.",
+    "table": [
+      {
+        "name": "Offset Redox",
+        "description": "Questo valore può essere usato per specificare l'offset della sonda ORP per correggere il valore di uscita.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Min Value Redox",
+        "description": "Questo valore può essere usato per specificare il valore minimo della sonda ORP al quale viene generato un allarme.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Max Value Redox",
+        "description": "Questo valore può essere usato per specificare il valore massimo della sonda redox al quale viene generato e regolato un allarme se non arrivano impulsi dal contatore d'acqua per un certo tempo ma il valore massimo non è ancora stato raggiunto.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Allways On",
+        "description": "Con questo valore, la pompa può essere commutata in modalità continua. Questo significa che se il valore Max non è ancora stato raggiunto o il contatore dell'acqua emette degli impulsi, la pompa emette un segnale continuo invece di impulsi, cioè è accesa finché arrivano degli impulsi dal contatore dell'acqua o il valore Max non è ancora stato raggiunto.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Pulse Duration",
+        "description": "Questo valore può essere usato per specificare la lunghezza dell'impulso della pompa.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Break Time",
+        "description": "Con questo valore si può impostare il tempo di pausa tra gli impulsi della pompa.",
+        "allowedValues": "0 – 10000 in ms"
+      },
+      {
+        "name": "Allways On Time",
+        "description": "Questo valore può essere usato per specificare il tempo di funzionamento quando la pompa funziona in modalità di accensione continua. La pompa continua a funzionare per il tempo successivo alla ricezione dell'ultimo impulso.",
+        "allowedValues": "0 – 25000 in ms"
+      },
+      {
+        "name": "Hour On",
+        "description": "Questo valore può essere usato per specificare le ore da quando il sistema di lavaggio è in modalità di accensione.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute On",
+        "description": "Questo valore può essere usato per specificare il minuto a partire dal quale il sistema di lavaggio è in modalità di accensione.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Hour Off",
+        "description": "Questo valore può essere usato per specificare le ore da quando il sistema di lavaggio è in modalità di spegnimento.",
+        "allowedValues": "0 - 23"
+      },
+      {
+        "name": "Minute Off",
+        "description": "Questo valore può essere usato per specificare il minuto a partire dal quale il sistema di lavaggio è in modalità di spegnimento.",
+        "allowedValues": "0 - 59"
+      },
+      {
+        "name": "Max Chemistry Flow",
+        "description": "Questo valore può essere usato per impostare la quantità massima di prodotto chimico che può fluire quando il sistema di lavaggio è in modalità di spegnimento.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Min Chemistry Flow",
+        "description": "Questo valore può essere usato per impostare quanto prodotto chimico minimo deve fluire in 24 ore.",
+        "allowedValues": "0 – 10000 in l"
+      },
+      {
+        "name": "Reset",
+        "description": "Con questo valore, alcuni allarmi della funzione possono essere resettati. Non tutti gli allarmi possono essere resettati manualmente",
+        "allowedValues": "0 – 1"
+      },
+      {
+        "name": "Reset State",
+        "description": "Questo valore restituisce lo stato di reset corrente.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Error Warning State",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sull'unità. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Warnung 2 = Error"
+      },
+      {
+        "name": "State Float Switch",
+        "description": "Questo valore può essere usato per visualizzare lo stato dell'interruttore a galleggiante.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Reed Contact",
+        "description": "Questo valore può essere usato per visualizzare lo stato del contatto reed nel contenitore chimico.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "State Allways On",
+        "description": "Questo valore fornisce la congestione attuale della modalità di accensione continua della pompa.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Value Redox",
+        "description": "Questo valore fornisce il valore corrente della sonda redox.",
+        "allowedValues": "-999 - +999 in mV"
+      },
+      {
+        "name": "Actual Flow Water",
+        "description": "Questo valore fornisce la portata attuale del contatore d'acqua.",
+        "allowedValues": "0 – Max of 64 Bit Variable in l/min"
+      },
+      {
+        "name": "Actual Flow Chmistry",
+        "description": "Questo valore fornisce la portata attuale del misuratore di prodotti chimici.",
+        "allowedValues": "0 – Max of 64Bit Variable in l/min"
+      },
+      {
+        "name": "Counter Chemistry",
+        "description": "Questo valore fornisce la lettura corrente del contatore chimico",
+        "allowedValues": "0 – Max of 64Bit Variable in l"
+      },
+      {
+        "name": "Alarm Message",
+        "description": "Questo valore mostra il messaggio di allarme corrente.",
+        "allowedValues": "0 = Nessun allarme <br> 1 = Troppo consumo di acqua dolce <br> 2 = Troppo consumo di prodotti chimici <br> 3 = Troppo consumo di prodotti chimici e di acqua dolce <br> 4 = Consumo di prodotti chimici troppo basso <br> 5 = Valore minimo della sonda redox raggiunto <br> 6 = Valore massimo della sonda redox raggiunto <br> 7 = L'interruttore a galleggiante è scattato <br> 8 = Reed Contatto contenitore chimico ha innescato"
+      },
+      {
+        "name": "Error Message",
+        "description": "Questo valore mostra il messaggio di errore corrente.",
+        "allowedValues": "0 = Nessun errore <br> 1 = KL1512 Errore di configurazione <br> 2 = Errore AI del sensore Redox <br> 3 = Errore di tempo del sistema <br> 4 = Tempo di commutazione on-off dell'errore"
+      }
+    ]
+  },
+  "EnergyView": {
+    "title": "Descrizione del dispositivo",
+    "name": "Vista energia",
+    "overview": "Questo dispositivo visualizza una panoramica energetica di tutti i grandi produtori comuni e consumatori in un edificio. Nella vista principale, ogni dispositivo appare al massimo 1 volta. Se ci sono diversi dispositivi dello stesso tipo, questo viene visualizzato nella vista principale. Il valore di potenza è quindi la somma di tutti i valori di potenza dei singoli dispositivi. Per il SOC della batteria, viene visualizzata la media se ci sono più sistemi di batterie. Per vedere ogni dispositivo individualmente, potete cliccare sul symbolo del dispositivo nella vista principale. Questo aprirà una finestra con tutti i dispositivi di quel tipo. Le linee di flusso nel grafico sono animate per mostrare la direzione in cui le energie stanno fluendo. A seconda della selezione e del numero di dispositivi, la visualizzazione della vista energetica viene compilata in modo diverso.",
+    "table": [
+      {
+        "name": "Campo di uscita 0 - 10 (produzione FV)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza PV di ogni singolo Impianto fotovoltaico. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (generatore)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza del generatore di ogni singolo gruppo elettrogeno.  È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (rete)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza di rete di ogni singolo sistema di rete. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-5000KW +5000KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (potenza della batteria)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza della batteria di ogni singolo sistema di batterie. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (SOC della batteria)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare il SOC della batteria di ogni sistema di batterie.È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "0-100%"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (consumo domestico)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare il consumo domestico del singolo Sistemi della casa. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (stazione di ricarica elettrica)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza di carica di ogni stazione di ricarica. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (boiler elettrico)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza di ogni singolo boiler elettrico. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (pompa di calore)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza elettrica di ogni singola pompa di calore. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Campo di uscita 0 - 10 (Altri grandi consumatori)",
+        "description": "Questi campi di uscita possono essere utilizzati per visualizzare la potenza di qualsiasi altro grande consumatore. È possibile aggiungere da 0 a 10 campi.",
+        "allowedValues": "-1000 +1000 KW"
+      },
+      {
+        "name": "Stato di errore e attenzione (Mostra evento)",
+        "description": "Qui potete specificare una variabile che indica un avvertimento o un errore direttamente sul dispositivo. L'avvertimento è indicato dal lampeggiamento arancione, un errore dal lampeggiamento rosso.",
+        "allowedValues": "0 = OK, 1 = Attenzione, 2 = Errore"
+      }
+    ]
+  },
+  "TSGLadestationNotAus": {
+    "title": "Descrizione del dispositivo",
+    "name": "TSGLadestationNotAusPreview",
+    "overview": "Questo dispositivo può essere utilizzato per implementare il monitoraggio dell'arresto di emergenza per le stazioni di ricarica TSG.",
+    "table": [
+      {
+        "name": "Emergency Off State",
+        "description": "Questo valore mostra lo stato corrente del circuito di arresto di emergenza.",
+        "allowedValues": "0 = NotAus Kreis ist aktiv; 1 = NotAus Kreis hat ausgelöst"
+      },
+      {
+        "name": "Reset Button",
+        "description": "Il circuito di arresto di emergenza può essere ripristinato con questo valore.",
+        "allowedValues": "0 - 1"
+      },
+      {
+        "name": "Reset Button State",
+        "description": "Questo valore restituisce lo stato di ripristino corrente.",
+        "allowedValues": "0 - 1"
+      }
+    ]
+  },
+  "TSGModulLadestation": {
+    "title": "Descrizione del dispositivo",
+    "name": "TSGModulLadestation",
+    "overview": "",
+    "table": [
+      {
+        "name": "State Charging Station",
+        "description": "Stato di funzionamento del caricabatterie. Verde = Disponibile; Arancione = Auto collegata; Blu = In carica",
+        "allowedValues": "1 = Libero, 2 = Auto collegato, 3 = Ricarica auto"
+      },
+      {
+        "name": "Actual Power",
+        "description": "Potenza di carica attuale in kW",
+        "allowedValues": "valori numerici"
+      },
+      {
+        "name": "Charged Energy of the Session",
+        "description": "Energia caricata nella sessione corrente",
+        "allowedValues": "valori numerici"
+      },
+      {
+        "name": "Loading Time of the Session",
+        "description": "Tempo dall'inizio della carica",
+        "allowedValues": "valori numerici"
+      },
+      {
+        "name": "State of Charge",
+        "description": "Stato di carica in percentuale",
+        "allowedValues": "valori numerici"
+      },
+      {
+        "name": "Total Energy",
+        "description": "Energia totale erogata di tutte le sessioni di ricarica",
+        "allowedValues": "valori numerici"
+      }
+    ]
+  }
+}

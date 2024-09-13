@@ -1,0 +1,441 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgMain" Id="{ef0c52e7-0fcd-48cf-97e0-52c4cc12a2d4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMain
+VAR
+	// Jacuzzi, Shelly Pro4PM
+	fbJacuzzi					: FB_Shelly_Pro4PM;
+	lrPowershelly4P0			: LREAL;	//{#lynus.ag#()}
+	lrVoltageShelly4P0			: LREAL;	//{#lynus.ag#()}
+	lrEnergyShelly4P0			: LREAL;	//{#lynus.ag#()}
+	
+	// Klima, Shelly Pro4PM
+	fbKlima						: FB_Shelly_Pro4PM;
+	lrPowerKlima				: LREAL;	//{#lynus.ag#()}
+	lrVoltageKlima				: LREAL;	//{#lynus.ag#()}
+	lrEnergyKlima				: LREAL;	//{#lynus.ag#()}
+	
+	// Wohnung Gesamt, Shelly 3EM
+	fbFlatTotal					: FB_Shelly_3EM;
+	lrPowerFlatTotal			: LREAL;	//{#lynus.ag#()}
+	lrEnergyFlatTotal			: LREAL;	//{#lynus.ag#()}
+	lrPowerFlatL1				: LREAL;	//{#lynus.ag#()}
+	lrPowerFlatL2				: LREAL;	//{#lynus.ag#()}
+	lrPowerFlatL3				: LREAL;	//{#lynus.ag#()}
+	lrCurrentFlatL1				: LREAL;	//{#lynus.ag#()}
+	lrCurrentFlatL2				: LREAL;	//{#lynus.ag#()}
+	lrCurrentFlatL3				: LREAL;	//{#lynus.ag#()}
+	lrVoltageFlatL1				: LREAL;	//{#lynus.ag#()}
+	lrVoltageFlatL2				: LREAL;	//{#lynus.ag#()}
+	lrVoltageFlatL3				: LREAL;	//{#lynus.ag#()}
+	lrEnergyFlatL1				: LREAL;	//{#lynus.ag#()}
+	lrEnergyFlatL2				: LREAL;	//{#lynus.ag#()}
+	lrEnergyFlatL3				: LREAL;	//{#lynus.ag#()}
+	
+	// Buero Bianca, Shelly PlugS
+	fbOfficeBianca				: FB_Shelly_PlugS;
+	lrPowerOfficeBianca			: LREAL;	//{#lynus.ag#()}
+	lrEnergyOfficeBianca		: LREAL;	//{#lynus.ag#()}
+	
+	// Gefrierschrank, Shelly Plug
+	fbFreezer					: FB_Shelly_PlugS;
+	lrPowerFreezer				: LREAL;	//{#lynus.ag#()}
+	lrEnergyFreezer				: LREAL;	//{#lynus.ag#()}
+	
+	// Buero Matthias, Shelly PlugS
+	fbOfficeMatthias			: FB_Shelly_PlugS;
+	lrPowerOfficeMatthias		: LREAL;	//{#lynus.ag#()}
+	lrEnergyOfficeMatthias		: LREAL;	//{#lynus.ag#()}
+	
+	// TV Schlafzimmer, Shelly PlugS
+	fbTVSleeping				: FB_Shelly_PlugS;
+	lrPowerTVSleeping			: LREAL;	//{#lynus.ag#()}
+	lrEnergyTVSleeping			: LREAL;	//{#lynus.ag#()}
+	
+	// TV Wohnzimmer, Shelly PlugS
+	fbTVLiving					: FB_Shelly_PlugS;
+	lrPowerTVLiving				: LREAL;	//{#lynus.ag#()}
+	lrEnergyTVLiving			: LREAL;	//{#lynus.ag#()}
+	
+	// TV Gaestezimmer, Shelly PlugS
+	fbTVGuest					: FB_Shelly_PlugS;
+	lrPowerTVGuest				: LREAL;	//{#lynus.ag#()}
+	lrEnergyTVGuest				: LREAL;	//{#lynus.ag#()}
+	
+	// Kaffeemaschine, Shelly PlugS
+	fbCoffeemachine				: FB_Shelly_PlugS;
+	lrPowerCoffeemachine		: LREAL;	//{#lynus.ag#()}
+	lrEnergyCoffeemachine		: LREAL;	//{#lynus.ag#()}
+	
+	// Waeschetrockner, Shelly Plug
+	fbDryer						: FB_Shelly_PlugS;
+	lrPowerDryer				: LREAL;	//{#lynus.ag#()}
+	lrEnergyDryer				: LREAL;	//{#lynus.ag#()}
+	
+	// Waschmaschine, Shelly Plug
+	fbWasher					: FB_Shelly_PlugS;
+	lrPowerWasher				: LREAL;	//{#lynus.ag#()}
+	lrEnergyWasher				: LREAL;	//{#lynus.ag#()}
+	
+	// Freezer Kitchen, Shelly PlugS
+	fbFreezerKitchen			: FB_Shelly_PlugS;
+	lrPowerFreezerKitchen		: LREAL;	//{#lynus.ag#()}
+	lrEnergyFreezerKitchen		: LREAL;	//{#lynus.ag#()}
+	
+	// Dishwasher, Shelly PlugS
+	fbDishwasher				: FB_Shelly_PlugS;
+	lrPowerDishwasher			: LREAL;	//{#lynus.ag#()}
+	lrEnergyDishwasher			: LREAL;	//{#lynus.ag#()}
+	
+	// Luftreiniger, Shelly PlugS
+	fbAirCleaner				: FB_Shelly_PlugS;
+	lrPowerAirCleaner			: LREAL;	//{#lynus.ag#()}
+	lrEnergyAirCleaner			: LREAL;	//{#lynus.ag#()}
+	
+	// Internet, Shelly PlugS
+	fbInternet					: FB_Shelly_PlugS;
+	lrPowerInternet				: LREAL;	//{#lynus.ag#()}
+	lrEnergyInternet			: LREAL;	//{#lynus.ag#()}
+	
+	// Ladegeraete, Shelly PlugS
+	fbCharger					: FB_Shelly_PlugS;
+	lrPowerCharger				: LREAL;	//{#lynus.ag#()}
+	lrEnergyCharger				: LREAL;	//{#lynus.ag#()}
+	
+	// Bad Obergeschoss, Shelly Plug
+	fbUpperBath					: FB_Shelly_PlugS;
+	lrPowerUpperBath			: LREAL;	//{#lynus.ag#()}
+	lrEnergyUpperBath			: LREAL;	//{#lynus.ag#()}
+END_VAR
+
+VAR PERSISTENT
+	// trigger command execution
+	bEnableJacuzzi 			: BOOL;		//{#lynus.ag#()}
+	bEnableKlima 			: BOOL;		//{#lynus.ag#()}
+	bEnableFlatTotal 		: BOOL;		//{#lynus.ag#()}
+	bEnableOfficeBianca		: BOOL;		//{#lynus.ag#()}
+	bEnableFreezer			: BOOL;		//{#lynus.ag#()}
+	bEnableOfficeMatthias	: BOOL;		//{#lynus.ag#()}
+	bEnableTVSleeping		: BOOL;		//{#lynus.ag#()}
+	bEnableTVLiving			: BOOL;		//{#lynus.ag#()}
+	bEnableTVGuest			: BOOL;		//{#lynus.ag#()}
+	bEnableCoffeemachine	: BOOL;		//{#lynus.ag#()}
+	bEnableDryer			: BOOL;		//{#lynus.ag#()}
+	bEnableWasher			: BOOL;		//{#lynus.ag#()}
+	bEnableFreezerKitchen	: BOOL;		//{#lynus.ag#()}
+	bEnableDishwasher		: BOOL;		//{#lynus.ag#()}
+	bEnableAirCleaner		: BOOL;		//{#lynus.ag#()}
+	bEnableInternet			: BOOL;		//{#lynus.ag#()}
+	bEnableCharger			: BOOL;		//{#lynus.ag#()}
+	bEnableUpperBath		: BOOL;		//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbJacuzzi(
+	bStart:= bEnableJacuzzi, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.103', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpowerP1=> lrPowershelly4P0, 
+	lrvoltageP1=> lrVoltageShelly4P0, 
+	lrenergyP1=> lrEnergyShelly4P0 );
+
+fbKlima(
+	bStart:= bEnableKlima, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.131', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpowerP1=> lrPowerKlima, 
+	lrvoltageP1=> lrVoltageKlima, 
+	lrenergyP1=> lrEnergyKlima );
+
+fbFlatTotal(
+	bStart:= bEnableFlatTotal, 
+	tDelayRequest:= T#5S, 
+	sHostname:= '192.168.68.110', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrtotalpower=> lrPowerFlatTotal,
+	lrpowerL1=> lrPowerFlatL1,
+	lrpowerL2=> lrPowerFlatL2,
+	lrpowerL3=> lrPowerFlatL3,
+	lrcurrentL1=> lrCurrentFlatL1,
+	lrcurrentL2=> lrCurrentFlatL2,
+	lrcurrentL3=> lrCurrentFlatL3,
+	lrvoltageL1=> lrVoltageFlatL1,
+	lrvoltageL2=> lrVoltageFlatL2,
+	lrvoltageL3=> lrVoltageFlatL3,
+	lrenergyL1=> lrEnergyFlatL1,
+	lrenergyL2=> lrEnergyFlatL2,
+	lrenergyL3=> lrEnergyFlatL3 );
+
+lrEnergyFlatTotal :=  lrEnergyFlatL1 + lrEnergyFlatL2 + lrEnergyFlatL3;
+
+	
+fbOfficeBianca(
+	bStart:= bEnableOfficeBianca, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.148', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerOfficeBianca,  
+	lrenergy=> lrEnergyOfficeBianca );
+	
+	
+fbFreezer(
+	bStart:= bEnableFreezer, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.147', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerFreezer,  
+	lrenergy=> lrEnergyFreezer );
+	
+	
+fbOfficeMatthias(
+	bStart:= bEnableOfficeMatthias, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.114', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerOfficeMatthias,  
+	lrenergy=> lrEnergyOfficeMatthias );
+	
+	
+fbTVSleeping(
+	bStart:= bEnableTVSleeping, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.121', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerTVSleeping,  
+	lrenergy=> lrEnergyTVSleeping );
+	
+	
+fbTVLiving(
+	bStart:= bEnableTVLiving, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.152', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerTVLiving,  
+	lrenergy=> lrEnergyTVLiving );
+
+	
+fbTVGuest(
+	bStart:= bEnableTVGuest, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.132', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerTVGuest,  
+	lrenergy=> lrEnergyTVGuest );
+	
+	
+fbCoffeemachine(
+	bStart:= bEnableCoffeemachine, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.154', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerCoffeemachine,  
+	lrenergy=> lrEnergyCoffeemachine );
+	
+
+fbDryer(
+	bStart:= bEnableDryer, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.155', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerDryer,  
+	lrenergy=> lrEnergyDryer );
+	
+	
+fbWasher(
+	bStart:= bEnableWasher, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.156', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerWasher,  
+	lrenergy=> lrEnergyWasher );
+	
+
+fbFreezerKitchen(
+	bStart:= bEnableFreezerKitchen, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.123', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerFreezerKitchen,  
+	lrenergy=> lrEnergyFreezerKitchen );
+	
+	
+fbDishwasher(
+	bStart:= bEnableDishwasher, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.150', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerDishwasher,  
+	lrenergy=> lrEnergyDishwasher );
+	
+	
+fbAirCleaner(
+	bStart:= bEnableAirCleaner, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.128', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerAirCleaner,  
+	lrenergy=> lrEnergyAirCleaner );
+	
+	
+fbInternet(
+	bStart:= bEnableInternet, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.101', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerInternet,  
+	lrenergy=> lrEnergyInternet );
+	
+	
+fbCharger(
+	bStart:= bEnableCharger, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.149', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerCharger,  
+	lrenergy=> lrEnergyCharger );
+	
+	
+fbUpperBath(
+	bStart:= bEnableUpperBath, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.68.151', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpower=> lrPowerUpperBath,  
+	lrenergy=> lrEnergyUpperBath );]]></ST>
+    </Implementation>
+    <LineIds Name="prgMain">
+      <LineId Id="114" Count="8" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="123" Count="1" />
+      <LineId Id="142" Count="11" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="159" Count="10" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="204" Count="7" />
+      <LineId Id="224" Count="2" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="566" Count="0" />
+      <LineId Id="544" Count="9" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="567" Count="0" />
+      <LineId Id="556" Count="9" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="568" Count="1" />
+      <LineId Id="571" Count="9" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="581" Count="1" />
+      <LineId Id="584" Count="9" />
+      <LineId Id="583" Count="0" />
+      <LineId Id="594" Count="1" />
+      <LineId Id="597" Count="9" />
+      <LineId Id="596" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="690" Count="10" />
+      <LineId Id="689" Count="0" />
+      <LineId Id="797" Count="0" />
+      <LineId Id="812" Count="0" />
+      <LineId Id="799" Count="9" />
+      <LineId Id="798" Count="0" />
+      <LineId Id="813" Count="0" />
+      <LineId Id="815" Count="10" />
+      <LineId Id="814" Count="0" />
+      <LineId Id="826" Count="1" />
+      <LineId Id="829" Count="9" />
+      <LineId Id="828" Count="0" />
+      <LineId Id="955" Count="0" />
+      <LineId Id="957" Count="10" />
+      <LineId Id="956" Count="0" />
+      <LineId Id="968" Count="1" />
+      <LineId Id="971" Count="9" />
+      <LineId Id="970" Count="0" />
+      <LineId Id="981" Count="1" />
+      <LineId Id="984" Count="9" />
+      <LineId Id="983" Count="0" />
+      <LineId Id="994" Count="1" />
+      <LineId Id="997" Count="9" />
+      <LineId Id="996" Count="0" />
+      <LineId Id="1134" Count="1" />
+      <LineId Id="1137" Count="9" />
+      <LineId Id="1136" Count="0" />
+      <LineId Id="1147" Count="1" />
+      <LineId Id="1150" Count="9" />
+      <LineId Id="1149" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

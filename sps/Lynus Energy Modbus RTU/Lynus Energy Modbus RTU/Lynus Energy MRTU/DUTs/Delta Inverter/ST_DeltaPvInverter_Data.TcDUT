@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="ST_DeltaPvInverter_Data" Id="{27294b77-5f16-4e7d-a3df-baa6c08f58e4}">
+    <Declaration><![CDATA[TYPE ST_DeltaPvInverter_Data :
+STRUCT
+	eOperatingState			: eDeltaOperatingState;		//Operating State
+	eEvent1					: eDeltaEvent;				//Eventfield
+	rTotalMPPTPower			: REAL;						//Total DC Power in kW from the MPPT
+	rCabinetTemp			: REAL;						//Cabinet Temperature
+	rHeatSinkTemp			: REAL;						//Heat Sink Temperature
+	arrCurrentFault			: ARRAY[1..8] OF WORD;		//Bit map for the current event of fault on inverter
+	arrCurrentError			: ARRAY[1..5] OF WORD;		//Bit map for the current event of error on inverter
+	arrCurrentWarning		: ARRAY[1..3] OF WORD;		//Bit map for the current event of warning on inverter
+	arrMPPTPower			: ARRAY[1..6] OF REAL;		//Each MPPT DC Power in kW (Max 6 MPPT)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

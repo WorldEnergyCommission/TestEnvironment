@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgMBUS" Id="{ded5ce68-461c-45f1-8c38-3e3dd0144038}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMBUS
+VAR
+	fbMBusKL6781 : FB_MBUSKL6781;
+	stComIn    AT %I*	:	ST_KL6781inData22B;
+	stComOut   AT %Q*	:	ST_KL6781outData22B;
+	stCom				:	ST_MBUS_Communication;
+	fb_Mbus_11				: 	FB_MBUS_General_Water;
+	fbmbusScan	: FB_MBUS_Scan;
+	m_StartScan: BOOL;
+	FB_ChangeAdress : FB_MBUS_ChangeAdr;
+	m_Start 			: BOOL;
+	usi_Old 			: USINT;
+	usi_New	 			: USINT;
+	m_Start_Change		: BOOL;
+	m_Disable_Change 	: BOOL;
+
+
+	
+END_VAR
+VAR PERSISTENT
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbMBusKL6781(
+	usiRetries:= , 
+	bStart:= , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	stComIn:= stComIn, 
+	stComOut:= stComOut, 
+	stCom:= stCom);
+
+fb_Mbus_11(
+	usiAddress:=  , 
+	stSecAdr:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bStart:= m_Start, 
+	bSND_NKE:= , 
+	bReadInit:= , 
+	tMinSendTime:= T#10S , 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	dwIdNumber=> , 
+	byStatus=> , 
+	byGEN=> , 
+	byCounter=> , 
+	usiRecivedAdr=> , 
+	eMedium=> , 
+	sMan=> , 
+	stVolume=> , 
+	stFlow=> , 
+	stCom:= stCom);
+
+	
+// only required for commissioning the water meters	
+fbMBusScan(		bStart:= m_StartScan, 
+				bStop:= NOT m_StartScan, 
+				eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+				bDisabled:= , 
+				bBusy=> , 
+				bReady=> , 
+				bError=> , 
+				eError=> , 
+				usiAddress=> , 
+				usiCount=> , 
+				arrDevice=> , 
+				stCom:= stCom);
+
+FB_ChangeAdress(	usiAdrOld:= usi_Old, 
+					usiAdrNew:= usi_New, 
+					eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+					bStart:= m_Start_Change, 
+					bDisabled:= m_Disable_Change, 
+					bBusy=> , 
+					bReady=> , 
+					bError=> , 
+					eError=> , 
+					stCom:= stCom);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMBUS">
+      <LineId Id="14" Count="9" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="487" Count="21" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="27" Count="9" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="410" Count="1" />
+      <LineId Id="413" Count="7" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="675" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

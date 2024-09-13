@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgGrid" Id="{34200d71-fb30-4541-aed0-759ca7d5cb5d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR
+	fbGrid					: FB_Grid_Power;
+	fbCounter				: FB_EnergyCounter;
+	lrGridPower				: LREAL;	//{#lynus.ag#()}
+	byErrorWarningGrid		: BYTE;		//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	rSizeGrid				: REAL;		//{#lynus.ag#()}
+	lrCounterGridCons		: LREAL;	//{#lynus.ag#()}
+	lrCounterGridProd		: LREAL;	//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbGrid(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_Grid:= prgXelect.fbBatt.diNrOfEM_OUT_Grid, 
+	rSizeGridConn:= rSizeGrid, 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );
+	
+lrGridPower := fbGrid.stDataGrid.lrPower;
+byErrorWarningGrid := fbGrid.stDataGrid.byErrorWarning;
+
+fbCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrGridPower, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+
+IF fbCounter.lrTotalCounterEnergy_Consumption > lrCounterGridCons THEN
+	lrCounterGridCons := fbCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+	IF fbCounter.lrTotalCounterEnergy_Production > lrCounterGridProd THEN
+		lrCounterGridProd := fbCounter.lrTotalCounterEnergy_Production;
+	END_IF 
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="8" Count="5" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="69" Count="7" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="51" Count="3" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,48 @@
+name: realm_ci_cd
+
+on:
+  workflow_dispatch:
+    inputs:
+      cluster:
+        description: "kubernetes cluster to deploy to"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - all
+          - efficientio
+          - tsg
+          - dev
+          - peneder
+          - be
+          - bms
+          - effectas
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - id: string
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ github.event.inputs.cluster }}
+      - uses: efficientIO/keepass-to-environment@v1.2
+        with:
+          keepass-file-path: "keepass/secrets.kdbx"
+          keepass-master-password: ${{ secrets.KEEPASS_MASTER_PASSWORD }}
+          keepass-group-filter: "cloud"
+      - name: Update the keycloak realms according to the configs in keepass
+        run: |
+          python3 scripts/configure_keycloak_realm.py --cluster "${{ steps.string.outputs.lowercase }}" --no-add_host_to_keystore
+      - name: Success notification
+        uses: ./.github/actions/teams_notification_success
+        if: success()
+        with:
+          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
+      - name: Failure notification
+        uses: ./.github/actions/teams_notification_failure
+        if: failure()
+        with:
+          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}

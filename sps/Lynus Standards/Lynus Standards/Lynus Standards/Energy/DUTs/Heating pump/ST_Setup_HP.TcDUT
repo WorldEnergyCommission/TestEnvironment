@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Setup_HP" Id="{a327179b-e631-46f9-8e93-abd57f2e3b94}">
+    <Declaration><![CDATA[TYPE ST_Setup_HP :
+STRUCT
+	bOnEmergPowerOff				: BOOL;								//When emergency power is active then user can choose if the device is on or switch automatic off
+	bTimeEnabled					: BOOL;								//{#lynus.ag#()} //If True, the heat pump will be switched to the elevated mode between the specified time
+	bReset							: BOOL;								//{#lynus.ag#()} //Resets the error or the warning of the heat pump internally in the FB and if necessary externally if present.
+	bManualyOn						: BOOL;								//Switch the device manualy on
+	byManualyTargetPower			: BYTE;								//% of the max Power in kW when the Device is manually on
+	byPriority						: BYTE; 							//{#lynus.ag#()} //Priority of the device if controlled via the EMS block = 1 2 3 (If 0 then this device does not exist for the EMS block)
+	byEnableSOC						: BYTE; 							//{#lynus.ag#()} //Enable the device when the battery SOC is greater than equal this value
+	byDisableSOC					: BYTE; 							//{#lynus.ag#()} //Disable the device when the battery SOC is smaler than equal this value 
+	byTimeEnabledTargetPower		: BYTE;								//{#lynus.ag#()} //% power to the output within release time, if the heat pump is not step switched
+	byHourOn						: BYTE;								//{#lynus.ag#()} //Hour from which the heating pump can work in increased operation 
+	byMinutesOn						: BYTE;								//{#lynus.ag#()} //Minutes from which the heating pump can work in increased operation
+	byHourOff						: BYTE;								//{#lynus.ag#()} //Hour from which the heating pump can't work in increased operation 
+	byMinutesOff					: BYTE;								//{#lynus.ag#()} //Minutes from which the heating pump can't work in increased operation
+	rMaxPower1						: REAL;								//{#lynus.ag#()} //Maximum power of the load in kW (1 Step) 1 = Increased operation 
+	rMaxPower2						: REAL;								//{#lynus.ag#()} //Maximum power of the load in kW (2 Step) 2 = Maximum operation
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

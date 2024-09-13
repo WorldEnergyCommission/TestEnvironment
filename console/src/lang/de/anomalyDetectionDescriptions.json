@@ -1,0 +1,126 @@
+{
+  "HistoryAnomalyDetection": {
+    "title": "Historische Anomalie Erkennung",
+    "name": "Historische Anomalie Erkennung",
+    "overview": "Dieser Algorithmus trainiert mit historischen Sensordaten, Nach dem Training werden die neuen Proben mit den Trainingsdaten und dann mit einem Anomalie-Score zwischen 0-100 klassifiziert. Ein Anomaliewert von 0 bedeutet, dass sich die Daten normal verhalten. Ein Wert von 100 weist auf ein stark abnormales Verhalten der beobachteten beobachtete Daten. Normalerweise bedeutet eine Punktzahl von mehr als 15, dass eine Anomalie beobachtet wurde, aber auch dies hängt stark von den Sensordaten ab. hängt stark von den Sensordaten ab.",
+    "table": [
+      {
+        "name": "Variable hinzufügen",
+        "description": "Fügt eine Variable hinzu, die von der Datenbank überwacht wird. durch den Anomaliedetektor überwacht Detektor, max. 10 Variablen",
+        "allowedValues": ""
+      },
+      {
+        "name": "Einheiten",
+        "description": "Einheit der Variablen, die in der Grafik angezeigt werden [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "var",
+        "description": "Variablenname [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "agg",
+        "description": "Art der Aggregation der Variable Variable Aggregationsart",
+        "allowedValues": ""
+      },
+      {
+        "name": "tipo",
+        "description": "Typ der Diagrammskala",
+        "allowedValues": "Manuell oder automatisch"
+      },
+      {
+        "name": "heartbeat",
+        "description": "Der Anomaliedetektor erzeugt einen Herzschlag. Der Wertändert sich alle 60 Sekunden zwischen 0 und 1 liegt, bedeutet dies dass der Dienst noch aktiv ist.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "FehlerWarnung",
+        "description": "Fehler-/Warnungsstatus von Störungsmelder",
+        "allowedValues": "0 = OK\n1 = Warnung\n2 = Fehler"
+      },
+      {
+        "name": "mpcReady",
+        "description": "Diese Variable zeigt an, ob der Anomaliedetektor ist bereit oder nicht.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Störung Score",
+        "description": "Output-Mapping des Detektor-Anomalie-Score, wird jede jede Minute geschrieben",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Schwellenwert",
+        "description": "Der Schwellenwert, bei dem Datenpunkte Punkte werden als Anomalien gekennzeichnet,Standard gut = 15",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Datum des Beginns",
+        "description": "Startdatum der historischen Daten",
+        "allowedValues": ""
+      },
+      {
+        "name": "Datum des Endes ",
+        "description": "Enddatum der historischen Daten",
+        "allowedValues": ""
+      }
+    ]
+  },
+  "StreamAnomalyDetection": {
+    "title": "Echtzeit Anomalie Erkennung",
+    "name": "Echtzeit Anomalie Erkennung",
+    "overview": "Dieser Algorithmus trainiert mittels historischen Sensordaten, nach dem Training werden neue Datenpunkte mit den Trainingsdaten verglichen und dann mit einem Anomalie-Score zwischen 0-100 bewertet. Ein Anomalie-Score von 0 bedeutet, dass sich die Daten normal verhalten. Ein Wert von 100 bedeutet ein stark abnormales Verhalten der beobachteten Daten. Normalerweise bedeutet ein Wert über 15, dass eine Anomalie beobachtet wurde, dies hängt stark von den Sensordaten ab.",
+    "table": [
+      {
+        "name": "Variable hinzufügen",
+        "description": "Fügt eine Variable hinzu, die vom Algorithmus überwacht werden soll, maximal 10 Variablen",
+        "allowedValues": ""
+      },
+      {
+        "name": "Einheiten",
+        "description": "Einheit der Variablen welche im Chart angezeigt werden [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "var",
+        "description": "Variablenname welcher im Chart angezeigt wird [OPTIONAL]",
+        "allowedValues": ""
+      },
+      {
+        "name": "agg",
+        "description": "Anzeigetyp der Variablen im Chart",
+        "allowedValues": ""
+      },
+      {
+        "name": "Typ",
+        "description": "Typ der Diagrammskala",
+        "allowedValues": "Manuell oder automatisch"
+      },
+      {
+        "name": "Herzschlag",
+        "description": "Der Anomalie-Detektor erzeugt einen Heartbeat. Der Wert wechselt alle 60 Sekunden zwischen 0 und 1, dies zeigt an, dass der Dienst noch aktiv ist.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "FehlerWarnung",
+        "description": "Fehler-/Warnungsstatus des Anomalie-Detektors",
+        "allowedValues": "0 = OK\n1 = Warnung\n2 = Fehler"
+      },
+      {
+        "name": "mpcReady",
+        "description": "Diese Variable zeigt an ob der Anomalie-Detektor aktiv ist.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Störung Score",
+        "description": "Output-Mapping des Detektor-Anomalie-Score, das Modell schreibt jede Minute einen Wert auf die angegebene Variable",
+        "allowedValues": "0-100"
+      },
+      {
+        "name": "Schwellenwert",
+        "description": "Der Grenzwert, bei dem Datenpunkte als Anomalien gekennzeichnet werden Guter Standard-Wert = 15",
+        "allowedValues": "0-100"
+      }
+    ]
+  }
+}

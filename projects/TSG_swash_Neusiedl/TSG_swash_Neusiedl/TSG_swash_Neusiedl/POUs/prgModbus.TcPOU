@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgModbus" Id="{d470fde0-d977-42fa-82a2-a16c050e6aa4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgModbus
+VAR
+	FB_Modbus: FB_ModBus_100Registers_FC4;
+	FB_Modbus1: FB_ModBus_100Registers_FC3;
+	m_Enable: BOOL:=TRUE;
+	m_Enable1: BOOL:=TRUE;
+	fbConvertWordToDword		: FB_CV_WORD_TO_DWORD;			//Convert Word to Dword
+	usintSign					: USINT;						// converstion dword to real	
+	intExponent					: INT;							// converstion dword to real
+	realMantisse				: REAL;							// converstion dword to real
+	x: INT;
+	r_HP_OutsideTemp	: REAL;									//{#lynus.ag#()}
+	r_HP_SupplyTemp		: REAL;									//{#lynus.ag#()}
+	r_HP_ReturnTemp		: REAL;									//{#lynus.ag#()}
+	r_HP_SupplyTemp_A	: REAL;									//{#lynus.ag#()}
+	r_HP_SupplyTemp_B	: REAL;									//{#lynus.ag#()}
+	r_HP_SupplyTemp_C	: REAL;									//{#lynus.ag#()}
+	r_HP_Heissgastemperatur: REAL;								//{#lynus.ag#()}
+	r_HP_AirSupplyTemp: REAL;									//{#lynus.ag#()}
+	r_HP_AirHeatExchangerTemp: REAL;							//{#lynus.ag#()}
+	r_HP_AverageOutsideTemp: REAL;								//{#lynus.ag#()}
+	r_HP_HeatQuantitySupply: REAL;								//{#lynus.ag#()}
+	m_HP_SystemMode_Off: BOOL;									//{#lynus.ag#()}
+	m_HP_SystemMode_Auto: BOOL;									//{#lynus.ag#()}
+	m_HP_SystemMode_OnlyWater: BOOL;							//{#lynus.ag#()}
+	m_HP_SystemMode_OnceCharging: BOOL;							//{#lynus.ag#()}
+	m_HP_HeatingMode_Off: BOOL;									//{#lynus.ag#()}
+	m_HP_HeatingMode_Time: BOOL;								//{#lynus.ag#()}
+	m_HP_HeatingMode_Normal: BOOL;								//{#lynus.ag#()}
+	m_HP_HeatingMode_ECO: BOOL;									//{#lynus.ag#()}
+	m_HP_HeatingMode_Manual: BOOL;								//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FB_Modbus(
+	m_Enable:=m_Enable , 
+	str_IPAdress:='192.168.71.71' , 
+	w_Adress:= 1000, 
+	usint_Quantity:= 70, 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+	
+FB_Modbus1(
+	m_Enable:=m_Enable1 , 
+	str_IPAdress:='192.168.71.71' , 
+	w_Adress:= 2000, 
+	usint_Quantity:= 4, 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+
+x:=1; 	//1000	Außentemperatur
+r_HP_OutsideTemp  			:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=3;	//1002	Wärmepumpen Vorlauftemperatur
+r_HP_SupplyTemp  			:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=9;	//1008	Wärmepumpen Rücklauftemperatur / Wärmespeichertemperatur
+r_HP_ReturnTemp  			:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=17;	//1016	Heizkreis A Vorlauftemperatur
+r_HP_SupplyTemp_A  			:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=19;	//1018	Heizkreis B Vorlauftemperatur
+r_HP_SupplyTemp_B  			:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=21;	//1020	Heizkreis C Vorlauftemperatur
+r_HP_SupplyTemp_C  			:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=45;	//1044	Heissgastemperatur
+r_HP_Heissgastemperatur  	:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=49;	//1044	Heissgastemperatur
+r_HP_AirSupplyTemp 			:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=51;	//1050	Luftwärmetauschertemperatur
+r_HP_AirHeatExchangerTemp 	:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1])); 
+x:=61;	//1060	Gemittelte Aussentemperatur
+r_HP_AverageOutsideTemp 	:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+x:=69;	//1068	Wärmemenge Wärmepumpenvorlauf
+r_HP_HeatQuantitySupply		:= F_DWORD_TO_FLOAT32(dwInput := WORD_TO_DWORD(FB_Modbus.w_Array_Received[x]) + 16#10000 * WORD_TO_DWORD(FB_Modbus.w_Array_Received[x+1]));
+
+
+//2000	Betriebsart System
+CASE FB_Modbus1.w_Array_Received[1] OF
+	0:
+	m_HP_SystemMode_Off				:= TRUE;
+	m_HP_SystemMode_Auto			:= FALSE;
+	m_HP_SystemMode_OnlyWater		:= FALSE;
+	m_HP_SystemMode_OnceCharging	:= FALSE;
+	1:
+	m_HP_SystemMode_Off				:= FALSE;
+	m_HP_SystemMode_Auto			:= TRUE;
+	m_HP_SystemMode_OnlyWater		:= FALSE;
+	m_HP_SystemMode_OnceCharging	:= FALSE;
+	2:
+	m_HP_SystemMode_Off				:= FALSE;
+	m_HP_SystemMode_Auto			:= FALSE;
+	m_HP_SystemMode_OnlyWater		:= TRUE;
+	m_HP_SystemMode_OnceCharging	:= FALSE;
+	3:
+	m_HP_SystemMode_Off				:= FALSE;
+	m_HP_SystemMode_Auto			:= FALSE;
+	m_HP_SystemMode_OnlyWater		:= FALSE;
+	m_HP_SystemMode_OnceCharging	:= TRUE;
+END_CASE
+
+
+//2002	Betriebsart Heizkreis
+CASE FB_Modbus1.w_Array_Received[1] OF
+	0:
+	m_HP_HeatingMode_Off			:= TRUE;
+	m_HP_HeatingMode_Time			:= FALSE;
+	m_HP_HeatingMode_Normal			:= FALSE;
+	m_HP_HeatingMode_ECO			:= FALSE;
+	m_HP_HeatingMode_Manual			:= FALSE;
+	1:
+	m_HP_HeatingMode_Off			:= FALSE;
+	m_HP_HeatingMode_Time			:= TRUE;
+	m_HP_HeatingMode_Normal			:= FALSE;
+	m_HP_HeatingMode_ECO			:= FALSE;
+	m_HP_HeatingMode_Manual			:= FALSE;
+	2:
+	m_HP_HeatingMode_Off			:= FALSE;
+	m_HP_HeatingMode_Time			:= FALSE;
+	m_HP_HeatingMode_Normal			:= TRUE;
+	m_HP_HeatingMode_ECO			:= FALSE;
+	m_HP_HeatingMode_Manual			:= FALSE;
+	3:
+	m_HP_HeatingMode_Off			:= FALSE;
+	m_HP_HeatingMode_Time			:= FALSE;
+	m_HP_HeatingMode_Normal			:= FALSE;
+	m_HP_HeatingMode_ECO			:= TRUE;
+	m_HP_HeatingMode_Manual			:= FALSE;
+	4:
+	m_HP_HeatingMode_Off			:= FALSE;
+	m_HP_HeatingMode_Time			:= FALSE;
+	m_HP_HeatingMode_Normal			:= FALSE;
+	m_HP_HeatingMode_ECO			:= FALSE;
+	m_HP_HeatingMode_Manual			:= TRUE;
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="prgModbus">
+      <LineId Id="8" Count="6" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="48" Count="6" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="233" Count="2" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="258" Count="3" />
+      <LineId Id="263" Count="3" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="268" Count="3" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="273" Count="3" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="244" Count="1" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="283" Count="4" />
+      <LineId Id="289" Count="4" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="295" Count="4" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="301" Count="4" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="307" Count="4" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="312" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

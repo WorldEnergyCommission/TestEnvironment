@@ -1,0 +1,333 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Decode_Json_Energy" Id="{d1ebdf77-bb8c-4e8d-a7b7-318e81b84017}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Decode_Json_Energy
+VAR_INPUT
+	{attribute 'hide'}
+	bStart							: BOOL;													//Function is running
+	{attribute 'hide'}
+	bExecute						: BOOL;													//Start the decoding
+	{attribute 'hide'}
+	sContent						: STRING(7500);											//Received Content
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bDone							: BOOL;													//Function Done
+	{attribute 'hide'}
+	bError							: BOOL;													//Error Flag
+	{attribute 'hide'}
+	arrValuesEnergy					: ARRAY[0..9] OF ST_Values_Energy_Surstoffi;			//Datapoints with Value in a array
+END_VAR
+VAR
+	fbJson            				: FB_JsonDomParser;										//Function Json Parser
+	FPExecute						: R_TRIG;												//Internal positive edge
+	jsonDoc           				: SJsonValue;											//Initila Json Value
+	//First Member
+	jsonIteratorStartMember1		: SJsonIterator;										//Json Start with 1 Member
+	jsonValMember1					: SJsonValue;											//Json Vale from 1 Member
+	//First Array
+	jsonIteratorStartArray1			: SJsonIterator;										//Json Start with 1 Array
+	jsonIteratorEndArray1			: SJsonIterator;										//Json Start with 1 Array	
+	jsonValueArray1					: SJsonValue;											//Json Value 1 Array
+	jsonValMemberArray1				: SJsonValue;											//Json Value from the last member in 1 Array	
+	//Second Array
+	jsonIteratorStartArray2			: SJsonIterator;										//Json Start with 2 Array
+	jsonIteratorEndArray2			: SJsonIterator;										//Json Start with 2 Array	
+	jsonValueArray2					: SJsonValue;											//Json Value 2 Array
+	//Member "tags"
+	jsonContMemberTags				: SJsonValue;											//Json Value Tags
+	jsonValMemberTags				: SJsonValue;											//Json Value Tags
+	//Member "columns"
+	jsonIteratorStartArrayColumns	: SJsonIterator;										//Json Start with Array columns
+	jsonIteratorEndArrayColumns		: SJsonIterator;										//Json Start with Array columns
+	jsonContMemberColumns			: SJsonValue;											//Json Value Columns
+	jsonValArrayColumns				: SJsonValue;											//Json Value for Array
+	//Member "values"
+	jsonIteratorStartArrayValues1	: SJsonIterator;										//Json Start with Array 1 Values
+	jsonIteratorEndArrayValues1		: SJsonIterator;										//Json Start with Array 1 Values
+	jsonIteratorStartArrayValues2	: SJsonIterator;										//Json Start with Array 2 Values
+	jsonIteratorEndArrayValues2		: SJsonIterator;										//Json Start with Array 2 Values
+	jsonContMemberValues			: SJsonValue;											//Json Value Columns
+	jsonValArray1					: SJsonValue;											//Json Value Array 1
+	jsonValArray2					: SJsonValue;											//Json Value Array 2
+	//Other Variables
+	byLoop							: BYTE;													//Loop to clear the Output Array befor insert the new Data
+	byCounterColumns1				: BYTE;													//Counter to check on what possiton is the value last or time in the member colums
+	byCounterColumns2				: BYTE;													//Counter to fill the Position Values Array that we know on what position we found the time in the next member values
+	byCounterColumns3				: BYTE;													//Counter to fill the Position Values Array that we know on what position we found the value in the next member values
+	arrCounter						: ARRAY[1..3] OF BYTE;									//Array with counter status to fill the content in the Output array	
+	arrPositionTime					: ARRAY[0..9] OF BYTE;									//Save the Position who the Time is saved in the values member array	
+	arrPositionValue				: ARRAY[0..9] OF BYTE;									//Save the Position who the value is saved in the values member array									
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 18.02.2021
+//Version : 1.0.0.0
+
+//With this Fuction is possible to decode the Json String that we received from the Interface from PV soll and the Modbus Counters in the area Surstoffi
+//The Message has more Arrays and members included
+
+FPExecute(CLK:= bExecute, Q=> );
+	jsonDoc:= fbJson.ParseDocument(sContent);
+
+bDone := FALSE;
+
+IF NOT bStart THEN 
+	FOR byLoop := 0 TO 9 BY 1 DO
+		arrValuesEnergy[byLoop].sId := '';
+			arrValuesEnergy[byLoop].sTimestamp := '';
+				arrValuesEnergy[byLoop].lrValue := 0;
+	END_FOR
+END_IF
+	
+IF jsonDoc <> 0 AND FPExecute.Q AND bStart THEN
+
+	//Clear Counter
+	arrCounter[1] := 0; arrCounter[2] := 0; arrCounter[3] := 0; byCounterColumns1 := 0; byCounterColumns2 := 0; byCounterColumns3 := 0; bError := FALSE;
+		//Clear Internal array
+		FOR byLoop := 0 TO 9 BY 1 DO
+			arrPositionTime[byLoop] := 0;
+				arrPositionValue[byLoop] := 0;	
+		END_FOR
+			//Clear Output Array
+			FOR byLoop := 0 TO 9 BY 1 DO
+				arrValuesEnergy[byLoop].sId := '';
+					arrValuesEnergy[byLoop].sTimestamp := '';
+						arrValuesEnergy[byLoop].lrValue := 0;
+			END_FOR
+	
+//Start with the first Member and get this value
+jsonIteratorStartMember1 := fbJson.MemberBegin(jsonDoc);
+	jsonValMember1 := fbJson.GetMemberValue(jsonIteratorStartMember1);	
+
+	
+//Start to decode 1 Array content with the member "series"	
+jsonIteratorStartArray1 := fbJson.ArrayBegin(jsonValMember1);
+jsonIteratorEndArray1 := fbJson.ArrayEnd(jsonValMember1);
+	WHILE jsonIteratorStartArray1 <> jsonIteratorEndArray1 DO
+		jsonValueArray1 := fbJson.GetArrayValue(jsonIteratorStartArray1);
+			jsonValMemberArray1 := fbJson.FindMember(jsonValueArray1,'series');	
+				jsonIteratorStartArray1 := fbJson.NextArray(jsonIteratorStartArray1);
+	END_WHILE
+
+	//Start to decode 2 Array content
+	IF jsonValMemberArray1 <> 0 THEN
+		jsonIteratorStartArray2 := fbJson.ArrayBegin(jsonValMemberArray1);
+		jsonIteratorEndArray2 := fbJson.ArrayEnd(jsonValMemberArray1);
+			WHILE jsonIteratorStartArray2 <> jsonIteratorEndArray2 DO
+				jsonValueArray2 := fbJson.GetArrayValue(jsonIteratorStartArray2);
+					//Member "Tags"
+					jsonContMemberTags := fbJson.FindMember(jsonValueArray2,'tags');
+						IF jsonContMemberTags <> 0 THEN
+							//Find the member "DPkey"
+							jsonValMemberTags := fbJson.FindMember(jsonContMemberTags,'DPkey');
+								IF jsonValMemberTags <> 0 AND fbJson.IsString(jsonValMemberTags) THEN
+									IF arrCounter[1] > 9 THEN bError := TRUE; END_IF
+										arrCounter[1] := LIMIT(0,arrCounter[1],9);
+											arrValuesEnergy[arrCounter[1]].sID := fbJson.GetString(jsonValMemberTags);
+												arrCounter[1] := arrCounter[1] + 1;	
+								END_IF 
+						END_IF 
+					//Member "columns"
+					jsonContMemberColumns := fbJson.FindMember(jsonValueArray2,'columns');
+						IF jsonContMemberColumns <> 0 THEN
+							jsonIteratorStartArrayColumns := fbJson.ArrayBegin(jsonContMemberColumns);
+							jsonIteratorEndArrayColumns := fbJson.ArrayEnd(jsonContMemberColumns);	
+								WHILE jsonIteratorStartArrayColumns <> jsonIteratorEndArrayColumns DO
+									jsonValArrayColumns := fbJson.GetArrayValue(jsonIteratorStartArrayColumns);
+										IF jsonValArrayColumns <> 0 AND fbJson.IsString(jsonValArrayColumns) THEN  
+											//Find the time text in the json string
+											IF fbJson.GetString(jsonValArrayColumns) = 'time' THEN
+												IF byCounterColumns2 > 9 THEN bError := TRUE; EXIT; END_IF
+													byCounterColumns2 := LIMIT(0,byCounterColumns2,9);	
+														arrPositionTime[byCounterColumns2] := byCounterColumns1;
+															byCounterColumns2 := byCounterColumns2 + 1;
+											END_IF 
+												//Find the last text in the json string
+												IF fbJson.GetString(jsonValArrayColumns) = 'last' THEN
+													IF byCounterColumns3 > 9 THEN bError := TRUE; EXIT; END_IF
+														byCounterColumns3 := LIMIT(0,byCounterColumns3,9);
+															arrPositionValue[byCounterColumns3] := byCounterColumns1;
+																byCounterColumns3 := byCounterColumns3 + 1;
+													END_IF
+										END_IF
+											byCounterColumns1 := byCounterColumns1 + 1;
+												IF byCounterColumns1 > 250 THEN bError := TRUE; EXIT; END_IF
+													jsonIteratorStartArrayColumns := fbJson.NextArray(jsonIteratorStartArrayColumns);
+								END_WHILE   
+									byCounterColumns1 := 0;
+						END_IF 
+					//Member "values"
+					jsonContMemberValues := fbJson.FindMember(jsonValueArray2,'values');
+						IF jsonContMemberValues <> 0 THEN
+							//Decode first Array
+						 	jsonIteratorStartArrayValues1 := fbJson.ArrayBegin(jsonContMemberValues);
+							jsonIteratorEndArrayValues1 := fbJson.ArrayEnd(jsonContMemberValues);
+								WHILE jsonIteratorStartArrayValues1 <> jsonIteratorEndArrayValues1 DO
+									jsonValArray1 :=  fbJson.GetArrayValue(jsonIteratorStartArrayValues1);
+										//Decode second Array
+										IF jsonValArray1 <> 0 THEN 
+											jsonIteratorStartArrayValues2 := fbJson.ArrayBegin(jsonValArray1);
+											jsonIteratorEndArrayValues2 := fbJson.ArrayEnd(jsonValArray1);	
+												WHILE jsonIteratorStartArrayValues2 <> jsonIteratorEndArrayValues2 DO
+													jsonValArray2 := fbJson.GetArrayValue(jsonIteratorStartArrayValues2);
+														//Find the Timestamp
+														IF jsonValArray2 <> 0 AND fbJson.IsString(jsonValArray2) THEN
+															IF arrCounter[2] > 9 THEN bError := TRUE; END_IF
+																arrCounter[2] := LIMIT(0,arrCounter[2],9);
+																	arrValuesEnergy[arrCounter[2]].sTimestamp := fbJson.GetString(jsonValArray2);
+																		arrCounter[2] := arrCounter[2] + 1;	
+														END_IF  
+														//Find the Value
+														IF jsonValArray2 <> 0 AND fbJson.IsNumber(jsonValArray2) THEN
+															IF arrCounter[3] > 9 THEN bError := TRUE; END_IF
+																arrCounter[3] := LIMIT(0,arrCounter[3],9);
+																	IF fbJson.IsDouble(jsonValArray2) THEN arrValuesEnergy[arrCounter[3]].lrValue := fbJson.GetDouble(jsonValArray2); END_IF
+																	IF fbJson.IsInt64(jsonValArray2) THEN arrValuesEnergy[arrCounter[3]].lrValue := LINT_TO_LREAL(fbJson.GetInt64(jsonValArray2)); END_IF
+																	IF fbJson.IsUint64(jsonValArray2) THEN arrValuesEnergy[arrCounter[3]].lrValue := ULINT_TO_LREAL(fbJson.GetUint64(jsonValArray2)); END_IF 	
+																		arrCounter[3] := arrCounter[3] + 1;
+														END_IF 
+													jsonIteratorStartArrayValues2 := fbJson.NextArray(jsonIteratorStartArrayValues2);	
+												END_WHILE
+										END_IF
+									jsonIteratorStartArrayValues1 := fbJson.NextArray(jsonIteratorStartArrayValues1);
+								END_WHILE	
+						END_IF		
+				jsonIteratorStartArray2 := fbJson.NextArray(jsonIteratorStartArray2);
+			END_WHILE
+	END_IF
+	
+	//Limit for 2 Commas and convert to KW
+	FOR byLoop := 0 TO 9 BY 1 DO
+		arrValuesEnergy[byLoop].lrValue := arrValuesEnergy[byLoop].lrValue / 1000;
+			arrValuesEnergy[byLoop].lrValue := LINT_TO_LREAL(LREAL_TO_LINT(arrValuesEnergy[byLoop].lrValue * 100)) / 100;
+	END_FOR
+	
+	//Done
+	IF NOT bError THEN bDone := TRUE; END_IF
+	
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Decode_Json_Energy">
+      <LineId Id="157" Count="2" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="172" Count="1" />
+      <LineId Id="580" Count="1" />
+      <LineId Id="584" Count="3" />
+      <LineId Id="582" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="394" Count="1" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="425" Count="1" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="146" Count="1" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="257" Count="1" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="301" Count="1" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="289" Count="1" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="397" Count="2" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="409" Count="1" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="434" Count="1" />
+      <LineId Id="433" Count="0" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="534" Count="1" />
+      <LineId Id="518" Count="2" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="448" Count="1" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="522" Count="1" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="555" Count="1" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="549" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="566" Count="2" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="563" Count="1" />
+      <LineId Id="569" Count="1" />
+      <LineId Id="575" Count="2" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="545" Count="1" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="588" Count="0" />
+      <LineId Id="592" Count="0" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="591" Count="0" />
+      <LineId Id="444" Count="0" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="74" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

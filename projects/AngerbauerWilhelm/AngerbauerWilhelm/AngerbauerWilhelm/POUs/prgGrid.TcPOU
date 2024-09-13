@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgGrid" Id="{9da87431-0904-45b1-a35c-2d3365b9066c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR
+	FB_PV1:FB_TCPModbusRequest_Grid;
+	FB_PV2:FB_TCPModbusRequest_Grid;
+
+	lreal_GridVoltage_L1L2_V_PV1		: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L2L3_V_PV1		: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L3L1_V_PV1		: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L1_V_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L2_V_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L3_V_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridCurrent_L1_A_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridCurrent_L2_A_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridCurrent_L3_A_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridPower_kW_PV1				: LREAL;				//{#lynus.ag#()}
+	lreal_GridPower_kW_PV1_2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridReactivePower_kVAr_PV1	: LREAL;				//{#lynus.ag#()}
+	lreal_GridPowerFactor_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridFrequency_Hz_PV1			: LREAL;				//{#lynus.ag#()}
+	lreal_GridEnergyDelivered_kWh_PV1	: LREAL;				//{#lynus.ag#()}
+	lreal_GridEnergySupllied_kWh_PV1	: LREAL;				//{#lynus.ag#()}
+	
+	lreal_GridVoltage_L1L2_V_PV2		: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L2L3_V_PV2		: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L3L1_V_PV2		: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L1_V_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L2_V_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridVoltage_L3_V_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridCurrent_L1_A_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridCurrent_L2_A_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridCurrent_L3_A_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridPower_kW_PV2				: LREAL;				//{#lynus.ag#()}
+	lreal_GridPower_kW_PV2_2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridReactivePower_kVAr_PV2	: LREAL;				//{#lynus.ag#()}
+	lreal_GridPowerFactor_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridFrequency_Hz_PV2			: LREAL;				//{#lynus.ag#()}
+	lreal_GridEnergyDelivered_kWh_PV2	: LREAL;				//{#lynus.ag#()}
+	lreal_GridEnergySupllied_kWh_PV2	: LREAL;				//{#lynus.ag#()}
+
+	lreal_HousePower_kW_PV1				: LREAL;				//{#lynus.ag#()}
+	lreal_HousePower_kW_PV2				: LREAL;				//{#lynus.ag#()}
+	lreal_HousePower_kW_PV1_2			: LREAL;				//{#lynus.ag#()}
+	lreal_HousePower_kW_PV2_2			: LREAL;				//{#lynus.ag#()}
+	
+	lreal_GridPower_kW_Total			: LREAL;				//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+FB_PV1	(	b_Enable:= TRUE, 
+			str_IPAdress:= prgPv.FB_PV1.str_IPAdress);
+
+
+FB_PV2	(	b_Enable:= TRUE, 
+			str_IPAdress:= prgPv.FB_PV2.str_IPAdress);
+
+
+
+lreal_GridVoltage_L1L2_V_PV1 	:= FB_PV1.lreal_GridVoltage_L1L2_V;
+lreal_GridVoltage_L2L3_V_PV1 	:= FB_PV1.lreal_GridVoltage_L2L3_V;
+lreal_GridVoltage_L3L1_V_PV1 	:= FB_PV1.lreal_GridVoltage_L3L1_V;
+lreal_GridVoltage_L1_V_PV1		:= FB_PV1.lreal_GridVoltage_L1_V;
+lreal_GridVoltage_L2_V_PV1		:= FB_PV1.lreal_GridVoltage_L2_V;
+lreal_GridVoltage_L3_V_PV1		:= FB_PV1.lreal_GridVoltage_L3_V;
+lreal_GridCurrent_L1_A_PV1		:= FB_PV1.lreal_GridCurrent_L1_A;
+lreal_GridCurrent_L2_A_PV1		:= FB_PV1.lreal_GridCurrent_L2_A;
+lreal_GridCurrent_L3_A_PV1		:= FB_PV1.lreal_GridCurrent_L3_A;
+lreal_GridPower_kW_PV1			:= FB_PV1.lreal_GridPower_kW;
+lreal_GridPower_kW_PV1_2		:= FB_PV1.lreal_GridPower_kW * (-1);
+lreal_GridReactivePower_kVAr_PV1:= FB_PV1.lreal_GridReactivePower_kVAr;
+lreal_GridPowerFactor_PV1		:= FB_PV1.lreal_GridPowerFactor;
+lreal_GridFrequency_Hz_PV1		:= FB_PV1.lreal_GridFrequency_Hz;
+lreal_GridEnergyDelivered_kWh_PV1:= FB_PV1.lreal_GridEnergyDelivered_kWh;
+lreal_GridEnergySupllied_kWh_PV1 := FB_PV1.lreal_GridEnergySupllied_kWh;
+
+lreal_HousePower_kW_PV1 := lreal_GridPower_kW_PV1 + prgPV.lrPowerPV1;
+lreal_HousePower_kW_PV1_2 := lreal_GridPower_kW_PV1_2 + prgPV.lrPowerPV1;
+
+lreal_GridVoltage_L1L2_V_PV2 	:= FB_PV2.lreal_GridVoltage_L1L2_V;
+lreal_GridVoltage_L2L3_V_PV2 	:= FB_PV2.lreal_GridVoltage_L2L3_V;
+lreal_GridVoltage_L3L1_V_PV2 	:= FB_PV2.lreal_GridVoltage_L3L1_V;
+lreal_GridVoltage_L1_V_PV2		:= FB_PV2.lreal_GridVoltage_L1_V;
+lreal_GridVoltage_L2_V_PV2		:= FB_PV2.lreal_GridVoltage_L2_V;
+lreal_GridVoltage_L3_V_PV2		:= FB_PV2.lreal_GridVoltage_L3_V;
+lreal_GridCurrent_L1_A_PV2		:= FB_PV2.lreal_GridCurrent_L1_A;
+lreal_GridCurrent_L2_A_PV2		:= FB_PV2.lreal_GridCurrent_L2_A;
+lreal_GridCurrent_L3_A_PV2		:= FB_PV2.lreal_GridCurrent_L3_A;
+lreal_GridPower_kW_PV2			:= FB_PV2.lreal_GridPower_kW;
+lreal_GridPower_kW_PV2_2		:= FB_PV2.lreal_GridPower_kW * (-1);
+lreal_GridReactivePower_kVAr_PV2:= FB_PV2.lreal_GridReactivePower_kVAr;
+lreal_GridPowerFactor_PV2		:= FB_PV2.lreal_GridPowerFactor;
+lreal_GridFrequency_Hz_PV2		:= FB_PV2.lreal_GridFrequency_Hz;
+lreal_GridEnergyDelivered_kWh_PV2:= FB_PV2.lreal_GridEnergyDelivered_kWh;
+lreal_GridEnergySupllied_kWh_PV2 := FB_PV2.lreal_GridEnergySupllied_kWh;
+
+
+lreal_HousePower_kW_PV2 := lreal_GridPower_kW_PV2 + prgPV.lrPowerPV2;
+lreal_HousePower_kW_PV2_2 := lreal_GridPower_kW_PV2_2 + prgPV.lrPowerPV2;
+
+lreal_GridPower_kW_Total := lreal_GridPower_kW_PV1_2 + lreal_GridPower_kW_PV2_2;]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="78" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="89" Count="2" />
+      <LineId Id="80" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="26" Count="1" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="30" Count="1" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="36" Count="4" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="61" Count="9" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="71" Count="3" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="194" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

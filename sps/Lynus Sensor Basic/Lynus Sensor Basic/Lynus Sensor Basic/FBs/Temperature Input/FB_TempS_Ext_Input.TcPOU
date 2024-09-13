@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_TempS_Ext_Input" Id="{c52005d1-dbbe-41e8-a3c1-538fb1bf5929}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TempS_Ext_Input
+VAR_INPUT PERSISTENT
+	bEnable							: BOOL;											//Enable or dissable the function
+	rTemperatureOffset				: REAL;											//Temperatur Offset (-10 to +10)
+END_VAR
+VAR_INPUT
+	bExtErrorTemp					: BOOL;											//External Error from the Function what read out the Temperature value
+	rExtTempValue					: REAL;											//Temperature value from the external function
+END_VAR
+VAR_OUTPUT
+	stDataTempS						: ST_Temperature_Output;						//{#lynus.ag#()} //Temperature output data
+	diNrOfTempS_OUT					: DINT;											//Active Number from the Temperature Sensor for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbTempS							: FB_TempSensor_M50_P200;						//Function for Temperature Sensor
+	{attribute 'hide'}
+	fbNumberDevice					: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	timDissableFunctions			: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL			: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD							: ARRAY[1..2] OF FB_PersistentData_Number;		//Function to save persistent data 
+	{attribute 'hide'}
+	byWaitInStep					: BYTE;											//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData					: INT;											//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diCounterForGVL					: DINT;											//Counter to clean old data on GVL
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 30.08.2021
+//Version : 1.0.0.0
+
+//With this Function block its possible to read in a Temperature Value from a other external function and write to the Lynus GVL
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*-------------------------------------------------------------Calcualte the number of Temperature---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors, 
+	diMaxNumberOfDevices:= Constants_Sensors.diMaxNumberOfTemperatureSensors, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfTempS_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors := diNrOfTempS_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*-----------------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)
+
+IF timDissableFunctions.Q THEN fbTempS.bWarning := TRUE; fbTempS.iWarningCode := 0; ELSE fbTempS.bWarning := FALSE; END_IF   
+	IF Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors > Constants_Sensors.diMaxNumberOfTemperatureSensors THEN fbTempS.bErrorGeneral := TRUE; fbTempS.iErrorCode := 0; ELSE fbTempS.bErrorGeneral := FALSE; END_IF 
+		IF bExtErrorTemp THEN fbTempS.usiState.6 := TRUE; ELSE fbTempS.usiState := 0; END_IF
+		
+fbTempS(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bUseFilter:= TRUE, 
+	bErrorConfig:= FALSE, 
+	bErrorGeneral:= , 
+	bWriteWithDelay:= TRUE, 
+	usiState:= , 
+	iDelayFilter:= 50, 
+	iMaxValuesFilter:= 20, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	rTemperatureOffset:= rTemperatureOffset, 
+	rRawTempIn:= rExtTempValue, 
+	tTimDelayOutput:= T#5S, 
+	stDataTempOut=> , 
+	stDataTempOutDelay=> stDataTempS);
+
+(*-----------------------------------------------------------Handle data to Global structure for the Temperatur System-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diCounterForGVL].bEnabled := FALSE;
+			Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diCounterForGVL].rTemperature := 0;
+		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Sensors.diMaxNumberOfTemperatureSensors);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Sensors.diMaxNumberOfTemperatureSensors THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfTempS_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT].bEnabled := fbTempS.stDataTempOut.bEnabled;
+		Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT].byErrorWarning := fbTempS.stDataTempOut.byErrorWarning;
+			Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT].rTemperature := fbTempS.stDataTempOut.rTemperature;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= REAL_TO_LREAL(rTemperatureOffset), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TempS_Ext_Input">
+      <LineId Id="559" Count="2" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="869" Count="0" />
+      <LineId Id="871" Count="1" />
+      <LineId Id="870" Count="0" />
+      <LineId Id="621" Count="0" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="674" Count="0" />
+      <LineId Id="678" Count="18" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="907" Count="0" />
+      <LineId Id="1031" Count="6" />
+      <LineId Id="908" Count="0" />
+      <LineId Id="700" Count="0" />
+      <LineId Id="954" Count="2" />
+      <LineId Id="702" Count="0" />
+      <LineId Id="999" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="637" Count="14" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="704" Count="15" />
+      <LineId Id="739" Count="2" />
+      <LineId Id="725" Count="8" />
+      <LineId Id="742" Count="1" />
+      <LineId Id="738" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="745" Count="0" />
+      <LineId Id="749" Count="1" />
+      <LineId Id="748" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgKNX" Id="{27734d39-760d-47bd-8318-923a7873e7e1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgKNX
+VAR
+	fbKBusState				: FB_K_Bus_State;
+	fbKNXMaster				: FB_KL6301_KNX_Master;
+	fbRampHeating			: FB_OBC_OnOff_KNX;				//{#lynus.ag#()}
+	fbTreeHeating			: FB_OBC_OnOff_KNX;				//{#lynus.ag#()}
+	fbPumpFishSea			: FB_OBC_OnOff_KNX;				//{#lynus.ag#()}
+	fbPumpSwimSea			: FB_OBC_OnOff_KNX;				//{#lynus.ag#()}
+	bOnEmergPowerOffRH		: BOOL;							//{#lynus.ag#()}
+	bOnEmergPowerOffTH		: BOOL;							//{#lynus.ag#()}
+	bOnEmergPowerOffPFish	: BOOL;							//{#lynus.ag#()}
+	bOnEmergPowerOffPSwim	: BOOL;							//{#lynus.ag#()}
+	bSOnEmergPowerOffRH		: BOOL;							//{#lynus.ag#()}
+	bSOnEmergPowerOffTH		: BOOL;							//{#lynus.ag#()}
+	bSOnEmergPowerOffPFish	: BOOL;							//{#lynus.ag#()}
+	bSOnEmergPowerOffPSwim	: BOOL;							//{#lynus.ag#()}
+	byErrorWarningRH		: BYTE;							//{#lynus.ag#()}
+	byErrorWarningTH		: BYTE;							//{#lynus.ag#()}
+	byErrorWarningPFish		: BYTE;							//{#lynus.ag#()}
+	byErrorWarningPSwim		: BYTE;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Power Data
+//Ramp Heating 34kw
+//Three Heating 13kW 
+//Fish Sea pump 7.5kW
+//Swim Sea Pump 7.5kw
+
+//K-Bus State
+fbKBusState(uiKBusState_OUT=> );
+
+//Configure the KXN Master
+fbKNXMaster.stPhysAddrTerminal.Area := 1;
+	fbKNXMaster.stPhysAddrTerminal.Device := 160;
+		fbKNXMaster.stPhysAddrTerminal.Line := 9;
+		
+fbKNXMaster.arrGroupFilter[1].GROUP_ADDR.MAIN := 6;
+	fbKNXMaster.arrGroupFilter[1].GROUP_ADDR.NUMBER := 0;
+		fbKNXMaster.arrGroupFilter[1].GROUP_ADDR.SUB_MAIN := 1;
+fbKNXMaster.arrGroupFilter[1].GROUP_LEN := 4;	
+	
+fbKNXMaster(
+	stPhysAddrTerminal:= , 
+	arrGroupFilter:= , 
+	iKL6301Mode:= 0, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	bActive=> , 
+	bReady=> , 
+	byErrorWarning=> , 
+	diNrOfKNXMasterLine_OUT=> , 
+	eMessageKNXMaster=> );
+
+fbTreeHeating.strGroupAddr.MAIN := 6;
+	fbTreeHeating.strGroupAddr.SUB_MAIN := 1;
+		fbTreeHeating.strGroupAddr.NUMBER := 0;	
+
+fbTreeHeating.stSetupOBC.bOnEmergPowerOff := bOnEmergPowerOffTH;
+	
+fbTreeHeating(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	diNrOfKNXMasterLine_IN:= fbKNXMaster.diNrOfKNXMasterLine_OUT, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_OBC:= , 
+	stSetupOBC:= , 
+	strGroupAddr:= , 
+	stDataOBC=> , 
+	diNrOfOBC_OUT=> );
+
+byErrorWarningTH := fbTreeHeating.stDataOBC.byErrorWarning;	
+	bSOnEmergPowerOffTH := fbTreeHeating.stDataOBC.bSOnEmergPowerOff;	
+	
+fbPumpFishSea.strGroupAddr.MAIN := 6;
+	fbPumpFishSea.strGroupAddr.SUB_MAIN := 1;
+		fbPumpFishSea.strGroupAddr.NUMBER := 2;	
+
+fbPumpFishSea.stSetupOBC.bOnEmergPowerOff := bOnEmergPowerOffPFish;
+	
+fbPumpFishSea(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	diNrOfKNXMasterLine_IN:= fbKNXMaster.diNrOfKNXMasterLine_OUT, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_OBC:= , 
+	stSetupOBC:= , 
+	strGroupAddr:= , 
+	stDataOBC=> , 
+	diNrOfOBC_OUT=> );
+
+byErrorWarningPFish := fbPumpFishSea.stDataOBC.byErrorWarning;
+	bSOnEmergPowerOffPFish := fbPumpFishSea.stDataOBC.bSOnEmergPowerOff;		
+	
+fbPumpSwimSea.strGroupAddr.MAIN := 6;
+	fbPumpSwimSea.strGroupAddr.SUB_MAIN := 1;
+		fbPumpSwimSea.strGroupAddr.NUMBER := 3;	
+
+fbPumpSwimSea.stSetupOBC.bOnEmergPowerOff := bOnEmergPowerOffPSwim;
+	
+fbPumpSwimSea(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	diNrOfKNXMasterLine_IN:= fbKNXMaster.diNrOfKNXMasterLine_OUT, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_OBC:= , 
+	stSetupOBC:= , 
+	strGroupAddr:= , 
+	stDataOBC=> , 
+	diNrOfOBC_OUT=> );
+
+byErrorWarningPSwim := fbPumpSwimSea.stDataOBC.byErrorWarning;	
+	bSOnEmergPowerOffPSwim := fbPumpSwimSea.stDataOBC.bSOnEmergPowerOff;
+	
+fbRampHeating.strGroupAddr.MAIN := 6;
+	fbRampHeating.strGroupAddr.SUB_MAIN := 1;
+		fbRampHeating.strGroupAddr.NUMBER := 1;	
+
+fbRampHeating.stSetupOBC.bOnEmergPowerOff := bOnEmergPowerOffRH;
+	
+fbRampHeating(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	diNrOfKNXMasterLine_IN:= fbKNXMaster.diNrOfKNXMasterLine_OUT, 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_OBC:= , 
+	stSetupOBC:= , 
+	strGroupAddr:= , 
+	stDataOBC=> , 
+	diNrOfOBC_OUT=> );
+	
+byErrorWarningRH := fbRampHeating.stDataOBC.byErrorWarning;	
+	bSOnEmergPowerOffRH := fbRampHeating.stDataOBC.bSOnEmergPowerOff;	]]></ST>
+    </Implementation>
+    <LineIds Name="prgKNX">
+      <LineId Id="109" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="114" Count="2" />
+      <LineId Id="126" Count="2" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="5" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="131" Count="8" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="182" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="10" Count="8" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="99" Count="1" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="185" Count="1" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="22" Count="8" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="155" Count="1" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="103" Count="1" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="188" Count="1" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="33" Count="8" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="191" Count="1" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="44" Count="8" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="159" Count="1" />
+      <LineId Id="193" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

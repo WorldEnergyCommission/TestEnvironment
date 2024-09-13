@@ -1,0 +1,37 @@
+<div class="container">
+    <div class="flex header" id="header">
+        <div class="width-50">
+            <p class="dark-text" [style.fontSize]="largeFontSize" [style.color]="userData?.colors?.primary">{{userData?.name}}</p>
+            <p class="highlighted-text mb-2" [style.fontSize]="mediumFontSize" [style.color]="userData?.colors?.sub_title">Energy Dashboard</p>
+        </div>
+        <div class="date">
+            <p class="dark-text text-right default-text-transform" [style.fontSize]="largeFontSize" [style.color]="userData?.colors?.primary">
+                {{date}}</p>
+            <p class="highlighted-text mb-2 text-right default-text-transform" [style.fontSize]="mediumFontSize"
+                [style.color]="userData?.colors?.sub_title">{{time}} Uhr</p>
+        </div>
+    </div>
+    <div>
+        <div class="grid" [style.height]="contentHeight">
+            <div class="flex content" id="grid" [style.height]="contentHeight">
+                <div *ngFor="let background of getCurrentBackgrounds()" class="tile background-image"
+                    [ngStyle]="getBackgroundPosition(background)">
+                </div>
+                <div *ngFor="let module of getCurrentModules()" class="tile" [ngStyle]="getModulePosition(module)">
+                    <app-modules [id]="module.id" [userData]="userData" [dashboard]="true"
+                        [module]="module"></app-modules>
+                </div>
+            </div>
+        </div>
+        <div class="flex carousel-indicators" *ngIf="userData && userData.slides.length">
+            <div *ngFor="let slide of userData.slides, let i = index"
+                [ngStyle]="{'background-color': userData && userData.colors ? (i === currentSlide ? userData.colors.secondary : userData.colors.primary ) : ''}"
+                class="carousel-indicator" (click)="setSlide(i)"></div>
+        </div>
+    </div>
+    <div class="footer" id="footer">
+        <div class="logo" [style.background-color]="'#1b223c'">
+            <img src="assets/logo.svg" alt="EfficientIO logo">
+        </div>
+    </div>
+</div>

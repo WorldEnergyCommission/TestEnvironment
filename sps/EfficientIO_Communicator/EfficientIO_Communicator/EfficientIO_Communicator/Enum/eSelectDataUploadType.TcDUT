@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="eSelectDataUploadType" Id="{4ac32e74-eb6a-415f-b682-a556d21f0579}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE eSelectDataUploadType :
+(
+	e_NoChange_Intervall5min	:= 0,
+	e_NoChange_Intervall1min	:= 1,
+	e_Change_noIntervall		:= 2,
+	e_Change_Intervall5min		:= 3,
+	e_Change_Intervall1min		:= 4
+);
+(*
+0: kein Variablen Update bei Änderung; 	Variablen Update intervall 300sek (5min)
+1: kein Variablen Update bei Änderung; 	Variablen Update intervall 60sek (1min)
+2: Variablen Update bei Änderung; 		kein Variablen Update intervall
+3: Variablen Update bei Änderung; 		Variablen Update intervall 300sek (5min)
+4: Variablen Update bei Änderung; 		Variablen Update intervall 60sek (1min)
+*)
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

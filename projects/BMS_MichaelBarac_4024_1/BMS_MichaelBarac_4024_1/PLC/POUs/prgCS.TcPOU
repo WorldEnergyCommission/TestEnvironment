@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{36ea88e6-39ef-4023-a77c-7919fe60b919}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	bSManualyOn				: BOOL;												//{#lynus.ag#()}
+	bEnabled				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPower	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECS			: BYTE;												//{#lynus.ag#()}
+	byErrorWarning			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotal			: LREAL;											//{#lynus.ag#()}
+	lrPower					: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMin		: REAL;												//{#lynus.ag#()}
+	rTargetPower			: REAL;												//{#lynus.ag#()}
+	wState					: WORD;												//{#lynus.ag#()}
+	lrEnergySession			: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergy			: LREAL;											//{#lynus.ag#()}
+	bCarConnected			: BOOL;												//{#lynus.ag#()}
+	FB_MB_FC4		:FB_ModBus_2Registers_FC4;
+	str_ip: STRING(15):='192.168.1.155';
+END_VAR
+VAR PERSISTENT
+	bEnable					: BOOL;												//{#lynus.ag#()}
+	bManualyOn				: BOOL;												//{#lynus.ag#()}
+	byMinPower				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPower	: BYTE;												//{#lynus.ag#()}
+	byPrio					: BYTE;												//{#lynus.ag#()}
+	bySOCEnable				: BYTE;												//{#lynus.ag#()}
+	bySOCDisable			: BYTE;												//{#lynus.ag#()}
+	rMaxPower				: REAL;												//{#lynus.ag#()}
+	
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// temp for reading out the charging power	
+FB_MB_FC4(
+	m_Enable:= TRUE, 
+	str_IPAdress:= '192.168.1.155', 
+	w_Adress:= 782, 
+	int_Divider:= 1, 
+	n_UnitID:= 255, 
+	m_Float32Conversion:= , 
+	m_LittleEndian:= , 
+	m_PollSuccessful=> , 
+	r_ReceivedValue=> , 
+	udint_Error_ID=> );
+	
+lrPower := 	REAL_TO_LREAL(FB_MB_FC4.r_ReceivedValue)/1000;
+lrPowerTotal := lrPower;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="38" Count="10" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="50" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

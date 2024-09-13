@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Setup_Generator" Id="{c91dcb3c-3782-416e-b41f-474201195496}">
+    <Declaration><![CDATA[TYPE ST_Setup_Generator :
+STRUCT
+	bReset						: BOOL;								//{#lynus.ag#()} //Resets an existing error on the generators, only then the generator can restart again.
+	byEnableSOC					: BYTE; 							//{#lynus.ag#()} //When battery SOC falling below this value the generator is switched on
+	byDisableSOC				: BYTE; 							//{#lynus.ag#()} //When battery SOC this value is exceeded, the generator is switched on
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

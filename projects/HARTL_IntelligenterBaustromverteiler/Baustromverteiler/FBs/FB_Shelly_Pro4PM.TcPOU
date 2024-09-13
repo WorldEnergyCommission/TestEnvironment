@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Shelly_Pro4PM" Id="{36b70fb5-8551-4653-a9d1-50f4a5795e6e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_Pro4PM
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME := T#3S;		//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+	bOnP1				: BOOL;
+	bOffP1				: BOOL;
+	bOnP2				: BOOL;
+	bOffP2				: BOOL;
+	bOnP3				: BOOL;
+	bOffP3				: BOOL;
+	bOnP4				: BOOL;
+	bOffP4				: BOOL;
+END_VAR
+
+VAR_IN_OUT
+END_VAR
+
+VAR_OUTPUT
+	bValidResult				: BOOL;															//Valid Result received from Server
+    bBusy						: BOOL;															//Function is Busy
+    bError						: BOOL;															//Error sucess
+	bDone						: BOOL;															//True after the decoding from the received Json File
+	bConnected					: BOOL;															//Connection to the Server
+	lrpowerP1					: LREAL;														//Received Value
+	lrvoltageP1					: LREAL;														//Received Value
+	lrenergyP1					: LREAL;														//Received Value
+	lrpowerP2					: LREAL;														//Received Value
+	lrvoltageP2					: LREAL;														//Received Value
+	lrenergyP2					: LREAL;
+	lrpowerP3					: LREAL;														//Received Value
+	lrvoltageP3					: LREAL;														//Received Value
+	lrenergyP3					: LREAL;
+	lrpowerP4					: LREAL;														//Received Value
+	lrvoltageP4					: LREAL;														//Received Value
+	lrenergyP4					: LREAL;	
+	hrErrorCode       			: HRESULT;														//Error Result from Http Client
+	bStateP1					: BOOL;
+	bStateP2					: BOOL;
+	bStateP3					: BOOL;
+	bStateP4					: BOOL;
+END_VAR
+
+VAR
+	fbClient					: FB_IotHttpClient;
+	fbHttpGet					: FB_Shelly_Pro4PM_Helper;
+	timStartRequest				: TON;															//Timer to Start the Request
+	FPStartRequest				: R_TRIG;														//Internal positive Edge
+	FPDone						: R_TRIG;														//Internal positive Edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+	SwitchOnP1					: R_TRIG;
+	SwitchOffP1					: R_TRIG;
+	SwitchOnP2					: R_TRIG;
+	SwitchOffP2					: R_TRIG;
+	SwitchOnP3					: R_TRIG;
+	SwitchOffP3					: R_TRIG;
+	SwitchOnP4					: R_TRIG;
+	SwitchOffP4					: R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := tDelayRequest;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := TRUE;
+	fbClient.tConnectionTimeout := T#2S;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+	timStartRequest(IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, PT:= tDelayRequest, Q=> , ET=> );
+		IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured)) THEN fbHttpGet.bSend := TRUE; END_IF
+
+				
+//Http Get Function
+fbHttpGet(
+	lrapowerP1 => lrpowerP1, 
+	lrvoltageP1 => lrvoltageP1, 
+	lraenergyP1 => lrenergyP1,
+	lrapowerP2 => lrpowerP2, 
+	lrvoltageP2 => lrvoltageP2, 
+	lraenergyP2 => lrenergyP2,
+	lrapowerP3 => lrpowerP3, 
+	lrvoltageP3 => lrvoltageP3, 
+	lraenergyP3 => lrenergyP3,
+	lrapowerP4 => lrpowerP4, 
+	lrvoltageP4 => lrvoltageP4, 
+	lraenergyP4 => lrenergyP4, 
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> ,
+	sContentS0=> ,
+	sContentS1=> ,
+	sContentS2=> ,
+	sContentS3=> ,
+	bStateP1=>bStateP1,
+	bStateP2=>bStateP2,
+	bStateP3=>bStateP3,
+	bStateP4=>bStateP4 );
+
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+(*
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q THEN fbClient.Disconnect(); END_IF
+*)
+
+fbClient.Execute();
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbClient.hrErrorCode;
+	
+
+// Relay Control, Switch P1
+SwitchOnP1(CLK:=bOnP1);
+IF SwitchOnP1.Q THEN
+	fbHttpGet.bSetOnP1 := TRUE;
+END_IF
+
+SwitchOffP1(CLK:=bOffP1);
+IF SwitchOffP1.Q THEN
+	fbHttpGet.bSetOffP1 := TRUE;
+END_IF
+
+// Relay Control, Switch P2
+SwitchOnP2(CLK:=bOnP2);
+IF SwitchOnP2.Q THEN
+	fbHttpGet.bSetOnP2 := TRUE;
+END_IF
+
+SwitchOffP2(CLK:=bOffP2);
+IF SwitchOffP2.Q THEN
+	fbHttpGet.bSetOffP2 := TRUE;
+END_IF
+
+// Relay Control, Switch P3
+SwitchOnP3(CLK:=bOnP3);
+IF SwitchOnP3.Q THEN
+	fbHttpGet.bSetOnP3 := TRUE;
+END_IF
+
+SwitchOffP3(CLK:=bOffP3);
+IF SwitchOffP3.Q THEN
+	fbHttpGet.bSetOffP3 := TRUE;
+END_IF
+
+// Relay Control, Switch P4
+SwitchOnP4(CLK:=bOnP4);
+IF SwitchOnP4.Q THEN
+	fbHttpGet.bSetOnP4 := TRUE;
+END_IF
+
+SwitchOffP4(CLK:=bOffP4);
+IF SwitchOffP4.Q THEN
+	fbHttpGet.bSetOffP4 := TRUE;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_Pro4PM">
+      <LineId Id="48" Count="39" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="184" Count="2" />
+      <LineId Id="88" Count="4" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="93" Count="4" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="98" Count="3" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="152" Count="2" />
+      <LineId Id="156" Count="4" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="188" Count="8" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="198" Count="8" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="208" Count="8" />
+      <LineId Id="207" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

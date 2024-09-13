@@ -1,0 +1,433 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Decode_Json_SmartMe_ElectricMeter" Id="{f830126b-8544-49a3-948e-42e05ca4ef3c}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Decode_Json_SmartMe_ElectricMeter
+VAR_INPUT
+	{attribute 'hide'}
+	bExecute						: BOOL;																			//Start the decoding from the Json File
+	{attribute 'hide'}
+	sContent         				: STRING(30000);																//Received Content
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	arrListOfDevices				: ARRAY[1..50] OF ST_ListOfValues_SmartMe_ElectricMeter;						//List with all received Values from the Server
+	{attribute 'hide'}
+	bDone							: BOOL;																			//True when the decoding is done
+	{attribute 'hide'}
+	bError							: BOOL;																			//Error Bit
+END_VAR
+VAR
+	fbJsonRead					    : FB_JsonDomParser;																//FB Json Dom reader
+ 	jsonDocInit  					: SJsonValue;																	//Json value
+	jsonDoc		  					: SJsonValue;																	//Json value
+	jsonPropID   					: SJsonValue;																	//Json value
+	jsonIteratorArrayStart			: SJsonAIterator;																//Json AIterator
+	jsonIteratorArrayEnd			: SJsonAIterator;																//Json AIterator
+	FPExecute						: R_TRIG;																		//Internal positive edge
+	byCounterForArray				: BYTE;																			//Counter to fill the output array with conntent
+	byLoopInit						: BYTE;																			//Loop to clear the output array before fill the new content inside
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 29.09.2021
+//Version : 1.0.0.0
+
+//With this Function we can decode the received Json form a Smart-Me Project
+//With this Function its possible to decode only the Data from Electric Meter from the Smart-me Project
+//Other Devices are not supported with this function 
+
+bDone := FALSE;
+
+FPExecute(CLK:= bExecute, Q=> );
+
+//Start with the Json Doc
+jsonDocInit := fbJsonRead.ParseDocument(sContent);
+
+IF FPExecute.Q THEN
+	byCounterForArray := 0;	
+		bError := FALSE;
+
+	//Clear the Output for new Values
+	FOR byLoopInit := 1 TO 50 BY 1 DO
+		arrListOfDevices[byLoopInit].lrActivePower := 0;
+			arrListOfDevices[byLoopInit].sActivePowerUnit := '';
+				arrListOfDevices[byLoopInit].sID := '';
+					arrListOfDevices[byLoopInit].sName := '';
+						arrListOfDevices[byLoopInit].uliSerialNr := 0;
+							arrListOfDevices[byLoopInit].sValueDate := '';	
+								arrListOfDevices[byLoopInit].sCounterReadingUnit := '';
+									arrListOfDevices[byLoopInit].bDigitalOutput1 := FALSE;
+										arrListOfDevices[byLoopInit].bDigitalOutput2 := FALSE;
+											arrListOfDevices[byLoopInit].bNotAllDataIncluded := FALSE;
+												arrListOfDevices[byLoopInit].udiActiveTariff := 0;
+													arrListOfDevices[byLoopInit].lrPowerFactor := 0;
+														arrListOfDevices[byLoopInit].lrVoltageL1 := 0;
+															arrListOfDevices[byLoopInit].lrVoltageL2 := 0;
+																arrListOfDevices[byLoopInit].lrVoltageL3 := 0;
+																	arrListOfDevices[byLoopInit].lrCurrentL1 := 0;
+																		arrListOfDevices[byLoopInit].lrCurrentL2 := 0;
+																			arrListOfDevices[byLoopInit].lrCurrentL3 := 0;
+																				arrListOfDevices[byLoopInit].lrActivePowerL1 := 0;
+																					arrListOfDevices[byLoopInit].lrActivePowerL2 := 0;
+																						arrListOfDevices[byLoopInit].lrActivePowerL3 := 0;
+																							arrListOfDevices[byLoopInit].lrCounterReading := 0;
+																								arrListOfDevices[byLoopInit].lrCounterReadingT1 := 0;
+																									arrListOfDevices[byLoopInit].lrCounterReadingT2 := 0;
+																										arrListOfDevices[byLoopInit].lrCounterReadingT3 := 0;
+																											arrListOfDevices[byLoopInit].lrCounterReadingT4 := 0;
+																												arrListOfDevices[byLoopInit].lrCounterReadingImp := 0;	
+																													arrListOfDevices[byLoopInit].lrCounterReadingExp := 0;
+	END_FOR
+	
+	//Check if the values are inside of a Array 		
+	IF jsonDocInit <> 0 THEN
+		IF fbJsonRead.IsArray(jsonDocInit) THEN
+			jsonIteratorArrayStart := fbJsonRead.ArrayBegin(jsonDocInit);	
+				jsonIteratorArrayEnd := fbJsonRead.ArrayEnd(jsonDocInit);
+		ELSE
+			bError := TRUE;
+		END_IF
+	ELSE
+		bError := TRUE;
+	END_IF
+		//Start to Decode the Json File
+		IF jsonDocInit <> 0 AND jsonIteratorArrayStart <> 0 AND jsonIteratorArrayEnd <> 0 AND NOT bError THEN
+		
+			WHILE jsonIteratorArrayStart <> jsonIteratorArrayEnd DO  
+				jsonDoc := fbJsonRead.GetArrayValue(jsonIteratorArrayStart);
+(*--------------------------------------------------------------------------------------------------Must have Members--------------------------------------------------------------------------------------------------------*)
+					//Find the Member Id
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'Id');	
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsString(jsonPropID) THEN
+								byCounterForArray := byCounterForArray + 1;
+									byCounterForArray := LIMIT(1,byCounterForArray,50);	
+										arrListOfDevices[byCounterForArray].sID := fbJsonRead.GetString(jsonPropID);
+							ELSE
+								bError := TRUE;	
+							END_IF	
+						END_IF 
+					//Find the Member Name
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'Name');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsString(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].sName := fbJsonRead.GetString(jsonPropID);
+							ELSE
+								bError := TRUE;		
+							END_IF
+						END_IF
+					//Find the Member Serial
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'Serial');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsUint64(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].uliSerialNr := fbJsonRead.GetUint64(jsonPropID);
+							ELSE
+								bError := TRUE;	
+							END_IF
+						END_IF
+					//Find the Member Active Power
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ActivePower');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrActivePower := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrActivePower >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrActivePower <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrActivePower := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrActivePower) * 100)) / 100;	
+									END_IF 
+							ELSE
+								bError := TRUE;		
+							END_IF
+						END_IF
+					//Find the Member Active Power Unit
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ActivePowerUnit');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsString(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].sActivePowerUnit := fbJsonRead.GetString(jsonPropID);
+							ELSE
+								bError := TRUE;		
+							END_IF
+						END_IF
+					//Find the Member Value Date
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ValueDate');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsString(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].sValueDate := fbJsonRead.GetString(jsonPropID);
+							ELSE
+								bError := TRUE;		
+							END_IF
+						END_IF
+(*--------------------------------------------------------------------------------------------------Additional Members--------------------------------------------------------------------------------------------------------*)
+					//Find the Member Counter Reading Unit
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReadingUnit');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsString(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].sCounterReadingUnit := fbJsonRead.GetString(jsonPropID);
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Digital Output 1
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'DigitalOutput1');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsBool(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].bDigitalOutput1 := fbJsonRead.GetBool(jsonPropID);
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Digital Output 2
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'DigitalOutput2');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsBool(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].bDigitalOutput2 := fbJsonRead.GetBool(jsonPropID);
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member ActiveTariff
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ActiveTariff');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsUint(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].udiActiveTariff := fbJsonRead.GetUint(jsonPropID);
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member PowerFactor
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'PowerFactor');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrPowerFactor := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrPowerFactor >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrPowerFactor <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrPowerFactor := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrPowerFactor) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Voltage L1
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'VoltageL1');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrVoltageL1 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrVoltageL1 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrVoltageL1 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrVoltageL1 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrVoltageL1) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Voltage L2
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'VoltageL2');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrVoltageL2 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrVoltageL2 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrVoltageL2 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrVoltageL2 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrVoltageL2) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Voltage L3
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'VoltageL3');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrVoltageL3 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrVoltageL3 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrVoltageL3 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrVoltageL3 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrVoltageL3) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Current L1
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CurrentL1');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCurrentL1 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCurrentL1 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCurrentL1 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCurrentL1 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCurrentL1) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Current L2
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CurrentL2');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCurrentL2 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCurrentL2 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCurrentL2 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCurrentL2 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCurrentL2) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Current L3
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CurrentL3');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCurrentL3 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCurrentL3 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCurrentL3 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCurrentL3 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCurrentL3) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Active Power L1
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ActivePowerL1');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrActivePowerL1 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrActivePowerL1 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrActivePowerL1 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrActivePowerL1 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrActivePowerL1) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Active Power L2
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ActivePowerL2');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrActivePowerL2 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrActivePowerL2 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrActivePowerL2 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrActivePowerL2 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrActivePowerL2) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Active Power L3
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ActivePowerL3');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrActivePowerL3 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrActivePowerL3 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrActivePowerL3 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrActivePowerL3 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrActivePowerL3) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Counter Reading
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReading');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCounterReading := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCounterReading >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCounterReading <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCounterReading := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCounterReading) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Counter Reading T1
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReadingT1');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCounterReadingT1 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCounterReadingT1 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCounterReadingT1 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCounterReadingT1 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCounterReadingT1) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Counter Reading T2
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReadingT2');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCounterReadingT2 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCounterReadingT2 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCounterReadingT2 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCounterReadingT2 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCounterReadingT2) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Counter Reading T3
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReadingT3');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCounterReadingT3 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCounterReadingT3 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCounterReadingT3 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCounterReadingT3 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCounterReadingT3) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Counter Reading T4
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReadingT4');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCounterReadingT4 := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCounterReadingT4 >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCounterReadingT4 <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCounterReadingT4 := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCounterReadingT4) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Counter Reading Import
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReadingImport');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCounterReadingImp := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCounterReadingImp >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCounterReadingImp <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCounterReadingImp := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCounterReadingImp) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Find the Member Counter Reading Export
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'CounterReadingExport');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfDevices[byCounterForArray].lrCounterReadingExp := fbJsonRead.GetDouble(jsonPropID);
+									//Limit for 2 commas
+									IF arrListOfDevices[byCounterForArray].lrCounterReadingExp >= - 999999999999999 AND arrListOfDevices[byCounterForArray].lrCounterReadingExp <= 999999999999999 THEN
+										arrListOfDevices[byCounterForArray].lrCounterReadingExp := LINT_TO_LREAL(LREAL_TO_LINT((arrListOfDevices[byCounterForArray].lrCounterReadingExp) * 100)) / 100;	
+									END_IF	
+							END_IF
+						ELSE
+							arrListOfDevices[byCounterForArray].bNotAllDataIncluded := TRUE;
+						END_IF
+					//Start with the next Value from the Array
+					jsonIteratorArrayStart := fbJsonRead.NextArray(jsonIteratorArrayStart);
+			END_WHILE
+				bDone := TRUE;
+		END_IF
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Decode_Json_SmartMe_ElectricMeter">
+      <LineId Id="412" Count="391" />
+      <LineId Id="47" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

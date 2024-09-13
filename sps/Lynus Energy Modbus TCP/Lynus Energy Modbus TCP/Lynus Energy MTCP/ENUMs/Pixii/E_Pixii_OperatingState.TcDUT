@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_Pixii_OperatingState" Id="{fee93ed5-f91d-41ab-92c4-137b8e4b5154}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE E_Pixii_OperatingState :
+(
+	eNoDataReceived := 0,
+	eSleeping := 1,
+	eStarting := 2,
+	eMPPT := 3,
+	eThrottled := 4,
+	eShuttingDown := 5,
+	eFault := 6,
+	eStandby := 7
+);
+END_TYPE
+(*
+Off 			0 	Device is not operating
+Sleeping 		1 	Device is sleeping / auto-shutdown
+Starting 		2 	Device is starting up
+MPPT 			3 	Device is auto tracking maximum power point N/A
+Throttled 		4 	Device is operating at reduced power output
+Shutting down 	5 	Device is shutting down
+Fault 			6 	One or more faults exist
+Standby 		7 	Device is in standby/standard operating mode
+*)]]></Declaration>
+  </DUT>
+</TcPlcObject>

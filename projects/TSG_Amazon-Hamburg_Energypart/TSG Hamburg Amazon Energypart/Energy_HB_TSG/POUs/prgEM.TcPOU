@@ -1,0 +1,386 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgEM" Id="{1c0bba27-fd31-45cc-b497-003c89abb689}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+	fbEM2			: FB_EM_Beckhoff_KL3403;
+	fbEM3			: FB_EM_Beckhoff_KL3403;
+	fbEM4			: FB_EM_Beckhoff_KL3403;
+	fbEM5			: FB_EM_Beckhoff_KL3403;
+	
+	wDataL1, wDataL2, wDataL3   AT%I* : WORD;
+	bySBL1, bySBL2, bySBL3      AT%I* : BYTE;
+	byCBL1, byCBL2, byCBL3      AT%Q*       : BYTE;
+	iDataOutL1, iDataOutL2, iDataOutL3  AT%Q* : INT;
+	
+	fbEM6			: FB_EM_Beckhoff_KL3403;
+	fbEM7			: FB_EM_Beckhoff_KL3403;
+	fbEM8			: FB_EM_Beckhoff_KL3403;
+	fbGrid			: FB_Grid_Power_Ext_Input;			//{#lynus.ag#()}
+	lrPowerEM1		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM2		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM3		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM4		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM5		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM5_1	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM5_2	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM5_3	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM6		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM6_1	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM6_2	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM6_3	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM7		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM7_1	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM7_2	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM7_3	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM8		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM8_1	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM8_2	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM8_3	: LREAL;							//{#lynus.ag#()}
+	lrCounterEM5	: LREAL;							//{#lynus.ag#()}
+	lrCounterEM6	: LREAL;							//{#lynus.ag#()}
+	lrCounterEM7	: LREAL;							//{#lynus.ag#()}
+	lrCounterEM8	: LREAL;							//{#lynus.ag#()}
+	
+	lrCurrent_EM5_1 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM5_2 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM5_3 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM6_1 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM6_2 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM6_3 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM7_1 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM7_2 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM7_3 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM8_1 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM8_2 : LREAL;							//{#lynus.ag#()}
+	lrCurrent_EM8_3 : LREAL;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbKBusState(uiKBusState_OUT=> );
+
+
+//UV1	
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM1 := fbEM1.stDataEMPower.lrPowerTotal;
+
+//UV2	
+fbEM2(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM2 := fbEM2.stDataEMPower.lrPowerTotal;
+
+//UV3	
+fbEM3(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM3 := fbEM3.stDataEMPower.lrPowerTotal;	
+	
+//UV4	
+fbEM4(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM4 := fbEM4.stDataEMPower.lrPowerTotal;	
+
+//UV5	
+fbEM5(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM5 := fbEM5.stDataEMPower.lrPowerTotal;	
+	lrCounterEM5 := fbEM5.stDataEMCounter.lrTotalCounterEnergy_Consumption;	
+		lrPowerEM5_1 := fbEM5.stDataEMPower.lrPowerL1;
+			lrPowerEM5_2 := fbEM5.stDataEMPower.lrPowerL2;
+				lrPowerEM5_3 := fbEM5.stDataEMPower.lrPowerL3;
+					lrCurrent_EM5_1 := fbEM5.stDataEMPower.lrCurrentL1;
+						lrCurrent_EM5_2 := fbEM5.stDataEMPower.lrCurrentL2;
+							lrCurrent_EM5_3 := fbEM5.stDataEMPower.lrCurrentL3;
+	
+//UV6
+fbEM6(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM6 := fbEM6.stDataEMPower.lrPowerTotal;	
+	lrCounterEM6 := fbEM6.stDataEMCounter.lrTotalCounterEnergy_Consumption;	
+		lrPowerEM6_1 := fbEM6.stDataEMPower.lrPowerL1;
+			lrPowerEM6_2 := fbEM6.stDataEMPower.lrPowerL2;
+				lrPowerEM6_3 := fbEM6.stDataEMPower.lrPowerL3;
+					lrCurrent_EM6_1 := fbEM6.stDataEMPower.lrCurrentL1;
+						lrCurrent_EM6_2 := fbEM6.stDataEMPower.lrCurrentL2;
+							lrCurrent_EM6_3 := fbEM6.stDataEMPower.lrCurrentL3;
+	
+//UV7	
+fbEM7(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM7 := fbEM7.stDataEMPower.lrPowerTotal;
+	lrCounterEM7 := fbEM7.stDataEMCounter.lrTotalCounterEnergy_Consumption;	
+		lrPowerEM7_1 := fbEM7.stDataEMPower.lrPowerL1;
+			lrPowerEM7_2 := fbEM7.stDataEMPower.lrPowerL2;
+				lrPowerEM7_3 := fbEM7.stDataEMPower.lrPowerL3;
+					lrCurrent_EM7_1 := fbEM7.stDataEMPower.lrCurrentL1;
+						lrCurrent_EM7_2 := fbEM7.stDataEMPower.lrCurrentL2;
+							lrCurrent_EM7_3 := fbEM7.stDataEMPower.lrCurrentL3;
+	
+//UV8	
+fbEM8(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM8 := fbEM8.stDataEMPower.lrPowerTotal;	
+	lrCounterEM8 := fbEM8.stDataEMCounter.lrTotalCounterEnergy_Consumption;	
+		lrPowerEM8_1 := fbEM8.stDataEMPower.lrPowerL1;
+			lrPowerEM8_2 := fbEM8.stDataEMPower.lrPowerL2;
+				lrPowerEM8_3 := fbEM8.stDataEMPower.lrPowerL3;
+					lrCurrent_EM8_1 := fbEM8.stDataEMPower.lrCurrentL1;
+						lrCurrent_EM8_2 := fbEM8.stDataEMPower.lrCurrentL2;
+							lrCurrent_EM8_3 := fbEM8.stDataEMPower.lrCurrentL3;
+	
+//Sum of all 8 Messurements is the Grid power
+
+//Error
+IF fbEM5.stDataEMPowerRealTime.byErrorWarning = 2 OR
+	fbEM6.stDataEMPowerRealTime.byErrorWarning = 2 OR fbEM7.stDataEMPowerRealTime.byErrorWarning = 2 OR fbEM8.stDataEMPowerRealTime.byErrorWarning = 2 THEN
+		fbGrid.bExtErrorGrid := TRUE;
+ELSE
+		fbGrid.bExtErrorGrid := FALSE;
+END_IF	
+
+//Power and Counter Data
+fbGrid.lrExtGridPower := fbEM5.stDataEMPowerRealTime.lrPowerTotal +
+							fbEM6.stDataEMPowerRealTime.lrPowerTotal + fbEM7.stDataEMPowerRealTime.lrPowerTotal + fbEM8.stDataEMPowerRealTime.lrPowerTotal;
+
+fbGrid.lrExtCounterEnergyT1_Consumption := fbEM5.stDataEMCounterRealTime.lrCounterEnergyT1_Consumption + fbEM6.stDataEMCounterRealTime.lrCounterEnergyT1_Consumption +
+													fbEM7.stDataEMCounterRealTime.lrCounterEnergyT1_Consumption + fbEM8.stDataEMCounterRealTime.lrCounterEnergyT1_Consumption;	
+
+fbGrid.lrExtCounterEnergyT2_Consumption := fbEM5.stDataEMCounterRealTime.lrCounterEnergyT2_Consumption + fbEM6.stDataEMCounterRealTime.lrCounterEnergyT2_Consumption +
+													fbEM7.stDataEMCounterRealTime.lrCounterEnergyT2_Consumption + fbEM8.stDataEMCounterRealTime.lrCounterEnergyT2_Consumption;							
+							
+fbGrid.lrExtTotalCounterEnergy_Consumption := fbEM5.stDataEMCounterRealTime.lrTotalCounterEnergy_Consumption + fbEM6.stDataEMCounterRealTime.lrTotalCounterEnergy_Consumption +
+													fbEM7.stDataEMCounterRealTime.lrTotalCounterEnergy_Consumption + fbEM8.stDataEMCounterRealTime.lrTotalCounterEnergy_Consumption;
+													
+fbGrid.lrExtCounterEnergyT1_Production := fbEM5.stDataEMCounterRealTime.lrCounterEnergyT1_Production + fbEM6.stDataEMCounterRealTime.lrCounterEnergyT1_Production +
+													fbEM7.stDataEMCounterRealTime.lrCounterEnergyT1_Production + fbEM8.stDataEMCounterRealTime.lrCounterEnergyT1_Production; 
+													
+fbGrid.lrExtCounterEnergyT2_Production := fbEM5.stDataEMCounterRealTime.lrCounterEnergyT2_Production + fbEM6.stDataEMCounterRealTime.lrCounterEnergyT2_Production +
+													fbEM7.stDataEMCounterRealTime.lrCounterEnergyT2_Production + fbEM8.stDataEMCounterRealTime.lrCounterEnergyT2_Production; 
+													
+fbGrid.lrExtTotalCounterEnergy_Production := fbEM5.stDataEMCounterRealTime.lrTotalCounterEnergy_Production + fbEM6.stDataEMCounterRealTime.lrTotalCounterEnergy_Production +
+													fbEM7.stDataEMCounterRealTime.lrTotalCounterEnergy_Production + fbEM8.stDataEMCounterRealTime.lrTotalCounterEnergy_Production;
+
+fbGrid(
+	bEnable:= TRUE, 
+	diNrOfEMS_IN:= 1, 
+	rSizeGridConn:= , 
+	bExtErrorGrid:= , 
+	lrExtGridPower:= , 
+	lrExtTotalCounterEnergy_Consumption:= , 
+	lrExtTotalCounterEnergy_Production:= , 
+	lrExtCounterEnergyT1_Consumption:= , 
+	lrExtCounterEnergyT2_Consumption:= , 
+	lrExtCounterEnergyT1_Production:= , 
+	lrExtCounterEnergyT2_Production:= , 
+	stDataGrid=> , 
+	diNrOfGrid_OUT=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="30" Count="0" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="474" Count="13" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="491" Count="16" />
+      <LineId Id="490" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="510" Count="15" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="528" Count="15" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="70" Count="1" />
+      <LineId Id="251" Count="1" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="72" Count="7" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="423" Count="1" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="602" Count="1" />
+      <LineId Id="601" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="254" Count="1" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="84" Count="7" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="426" Count="1" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="605" Count="1" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="291" Count="1" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="96" Count="7" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="315" Count="1" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="429" Count="1" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="608" Count="1" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="293" Count="1" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="108" Count="7" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="432" Count="1" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="611" Count="1" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="145" Count="1" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="148" Count="3" />
+      <LineId Id="153" Count="2" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="131" Count="11" />
+      <LineId Id="129" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

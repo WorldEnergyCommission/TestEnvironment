@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgGrid" Id="{f4b61144-cdd8-47bd-acf8-0fd56439dda6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgGrid
+VAR
+	fbGridCounter				: FB_EnergyCounter;
+	lrPowerGrid					: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterGridProd			: LREAL;						//{#lynus.ag#()}
+	lrCounterGridCon			: LREAL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+lrPowerGrid := prgEM.lrPowerEM3 - prgEnphase.lrPowerPV;
+
+fbGridCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerGrid, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbGridCounter.lrTotalCounterEnergy_Consumption > lrCounterGridCon THEN  	
+	lrCounterGridCon := fbGridCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+	IF fbGridCounter.lrTotalCounterEnergy_Production > lrCounterGridProd THEN  	
+	lrCounterGridProd := fbGridCounter.lrTotalCounterEnergy_Production;
+	END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgGrid">
+      <LineId Id="26" Count="2" />
+      <LineId Id="14" Count="11" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="33" Count="1" />
+      <LineId Id="31" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

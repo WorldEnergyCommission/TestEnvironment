@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_OCHSNER_Web2Com3_Helper" Id="{c30395bd-8657-4f50-b218-76f7ce1111ec}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OCHSNER_Web2Com3_Helper
+VAR_INPUT
+	bSend				: BOOL;
+END_VAR
+
+VAR_IN_OUT
+	fbClient			: FB_IotHttpClient;
+END_VAR
+
+VAR_OUTPUT
+	bBusy				: BOOL;
+	bError				: BOOL;
+	byHP1StateHeatProd		: BYTE;
+	lrHP1TWVtemp			: LREAL;
+	lrHP1TWRtemp			: LREAL;
+	lrHP1TQAtemp			: LREAL;
+	lrHP1TQEtemp			: LREAL;
+	lrHP1ThEnergykWh		: LREAL;
+	lrHP1ThEnergyMWh		: LREAL;
+	byHC1StateHC			: BYTE;
+	lrHC1OutTemp			: LREAL;
+	lrHC1OutTempAvg			: LREAL;
+	lrHC1RoomTemp			: LREAL;
+	lrHC1SPRoomTemp			: LREAL;
+	lrHC1PreFlowTemp		: LREAL;
+	lrHC1SPFlowTemp			: LREAL;
+END_VAR
+
+VAR
+	fbRequest1			: FB_IotHttpRequest;
+	fbRequest2			: FB_IotHttpRequest;
+
+	fbJson				: FB_JsonDomParser;
+	nState				: UDINT;
+	RisingEdge			: R_TRIG;
+	timTimeout			: TON;
+	tTimeOut			: TIME := T#90S;
+	bGetContentResult	: BOOL;
+	sContent1			: STRING(511);
+	sContent2			: STRING(511);
+	
+	bGetJsonResult		: BOOL;
+	jsonDoc				: SJsonValue;
+	jsonVal				: SJsonValue;
+	
+	nReqCount			: UDINT;	
+	nResCount			: UDINT;
+	nValidResCount		: UDINT;
+	nErrCount			: UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN 
+		nState := 0;
+		bBusy := FALSE;
+	END_IF
+
+RisingEdge(CLK:= bSend );
+CASE nState OF
+0:	
+	IF RisingEdge.Q THEN 
+		IF 
+			fbRequest1.SendRequest(sUri:='/web2com_3HP1.php', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) AND
+			fbRequest2.SendRequest(sUri:='/web2com_3HC1.php', fbClient:=fbClient, eRequestType:=ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN				
+			nState:= 1;
+			nReqCount:= nReqCount+1;
+			bBusy:= TRUE;
+			bError:= FALSE;
+		END_IF					
+	END_IF
+1:
+	IF NOT fbRequest1.bBusy AND NOT fbRequest2.bBusy THEN
+		bError:= TRUE;
+		IF NOT fbRequest1.bError THEN				 
+			bGetContentResult:= fbRequest1.GetContent(pContent:= ADR(sContent1), nContentSize:= SIZEOF(sContent1), bSetNullTermination:= TRUE);
+			IF fbRequest1.nStatusCode >= 200 AND fbRequest1.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequest1.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, '1211250')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, '1211250');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsNumber(jsonVal) THEN							
+							byHP1StateHeatProd := DINT_TO_BYTE(fbJson.GetInt(jsonVal));									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1211251');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHP1TWVtemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1211253');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHP1TWRtemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1211254');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHP1TQAtemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1211255');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHP1TQEtemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1211258');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsNumber(jsonVal) THEN							
+							lrHP1ThEnergykWh := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1211259');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsNumber(jsonVal) THEN							
+							lrHP1ThEnergyMWh := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+		END_IF
+		
+		IF NOT fbRequest2.bError THEN				 
+			bGetContentResult:= fbRequest2.GetContent(pContent:= ADR(sContent2), nContentSize:= SIZEOF(sContent2), bSetNullTermination:= TRUE);
+			IF fbRequest2.nStatusCode >= 200 AND fbRequest2.nStatusCode < 300 THEN
+				bGetJsonResult:= FALSE;
+				jsonDoc:= fbRequest2.GetJsonDomContent(fbJson);
+				IF jsonDoc <> 0 THEN
+					bGetJsonResult:= TRUE;
+					IF fbJson.HasMember(jsonDoc, '1241190')  THEN
+						jsonVal:= fbJson.FindMember(jsonDoc, '1241190');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsNumber(jsonVal) THEN							
+							byHC1StateHC := DINT_TO_BYTE(fbJson.GetInt(jsonVal));									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1241191');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHC1OutTemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1241192');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHC1OutTempAvg := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1241193');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHC1RoomTemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1241194');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHC1SPRoomTemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1241195');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHC1PreFlowTemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						jsonVal:= fbJson.FindMember(jsonDoc, '1241196');
+						nValidResCount:= nValidResCount+1;
+						IF fbJson.IsDouble(jsonVal) THEN							
+							lrHC1SPFlowTemp := fbJson.GetDouble(jsonVal);									
+						END_IF
+						
+						bError:= FALSE;
+						END_IF
+					END_IF						
+				nResCount:= nResCount+1;			
+				END_IF
+		END_IF
+		
+		nState:= 0;
+		bBusy:= FALSE;
+		IF bError THEN
+			nErrCount:= nErrCount+1;
+		END_IF
+	END_IF  	
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_OCHSNER_Web2Com3_Helper">
+      <LineId Id="60" Count="13" />
+      <LineId Id="76" Count="21" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="863" Count="3" />
+      <LineId Id="862" Count="0" />
+      <LineId Id="867" Count="0" />
+      <LineId Id="870" Count="3" />
+      <LineId Id="869" Count="0" />
+      <LineId Id="868" Count="0" />
+      <LineId Id="876" Count="3" />
+      <LineId Id="875" Count="0" />
+      <LineId Id="874" Count="0" />
+      <LineId Id="882" Count="3" />
+      <LineId Id="881" Count="0" />
+      <LineId Id="880" Count="0" />
+      <LineId Id="888" Count="3" />
+      <LineId Id="887" Count="0" />
+      <LineId Id="892" Count="0" />
+      <LineId Id="894" Count="3" />
+      <LineId Id="893" Count="0" />
+      <LineId Id="886" Count="0" />
+      <LineId Id="113" Count="5" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="365" Count="12" />
+      <LineId Id="898" Count="0" />
+      <LineId Id="901" Count="3" />
+      <LineId Id="900" Count="0" />
+      <LineId Id="899" Count="0" />
+      <LineId Id="907" Count="3" />
+      <LineId Id="906" Count="0" />
+      <LineId Id="905" Count="0" />
+      <LineId Id="913" Count="3" />
+      <LineId Id="912" Count="0" />
+      <LineId Id="1038" Count="0" />
+      <LineId Id="1040" Count="3" />
+      <LineId Id="1039" Count="0" />
+      <LineId Id="917" Count="0" />
+      <LineId Id="919" Count="3" />
+      <LineId Id="918" Count="0" />
+      <LineId Id="911" Count="0" />
+      <LineId Id="925" Count="3" />
+      <LineId Id="924" Count="0" />
+      <LineId Id="923" Count="0" />
+      <LineId Id="378" Count="4" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="210" Count="5" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

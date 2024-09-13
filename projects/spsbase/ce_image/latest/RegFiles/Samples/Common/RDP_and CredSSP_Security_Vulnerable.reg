@@ -1,0 +1,17 @@
+;-------------------------------------------------------------------------------
+; Security settings for
+; 'Remote Desktop clients and CredSSP authentication protocol'
+;
+; We recommend that you use the registry setting of 0 (force updated clients)
+; or 1 (mitigated). Changes require a restart of the affected system.
+; With Update 69 (September 2018), the default value has been changed
+; to 1 (mitigated). If the value is not set it defaults to 2 (vulnerable).
+; Use a value of 2 (vulnerable) if you have problems to connect to an older
+; not updated Remote Desktop server.
+;-------------------------------------------------------------------------------
+; 0 = Force Updated Clients
+; 1 = Mitigated
+; 2 = Vulnerable
+;-------------------------------------------------------------------------------
+[HKEY_LOCAL_MACHINE\Comm\SecurityProviders\CredSSP]
+    "AllowEncryptionOracle"=dword:2

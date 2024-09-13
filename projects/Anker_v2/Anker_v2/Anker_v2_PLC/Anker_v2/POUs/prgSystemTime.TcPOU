@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgSystemTime" Id="{7174bf4c-e7b8-4208-83bd-50e4eee47971}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgSystemTime
+VAR
+	fbNTGetSystemTime: NT_GetTime;
+	intStateSystemTime: INT;
+	structSystemTime: timestruct;
+	stringSystemTime: STRING(19);
+	stringSystemTime_ms: STRING(23);
+	stringSystemDate: STRING(10);
+	stringTimeOnly_ms: STRING(12);
+	stringTimeOnly: STRING(8);
+	stringMonth: STRING(4);
+	strTimeStampEventrecorder: STRING;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* get system time *)
+CASE intStateSystemTime OF
+	0:	fbNTGetSystemTime(Start:=FALSE);
+		intStateSystemTime:=20;
+	20:	fbNTGetSystemTime(Start:=TRUE);
+		intStateSystemTime:=30;
+	30:	fbNTGetSystemTime();
+		IF NOT fbNTGetSystemTime.BUSY THEN
+			structSystemTime:=fbNTGetSystemTime.TIMESTR;
+			intStateSystemTime:=40;
+		END_IF
+	40:	intStateSystemTime:=0;
+		stringSystemTime := SYSTEMTIME_TO_STRING(IN := structSystemTime);
+		stringSystemTime_ms := SYSTEMTIME_TO_STRING(IN := structSystemTime);
+		stringSystemDate := SYSTEMTIME_TO_STRING(IN := structSystemTime);
+		stringTimeOnly_ms:=RIGHT(stringSystemTime_ms,12);
+		stringTimeOnly:=RIGHT(stringSystemTime,8);
+		CASE structSystemTime.wMonth OF
+			1:	stringMonth:='Jan';
+			2:	stringMonth:='Feb';
+			3:	stringMonth:='Mae';
+			4:	stringMonth:='Apr';
+			5:	stringMonth:='Mai';
+			6:	stringMonth:='Jun';
+			7:	stringMonth:='Jul';
+			8:	stringMonth:='Aug';
+			9:	stringMonth:='Sep';
+			10:	stringMonth:='Okt';
+			11:	stringMonth:='Nov';
+			12:	stringMonth:='Dez';
+		END_CASE
+		strTimeStampEventrecorder := CONCAT(WORD_TO_STRING(structSystemTime.wYear),stringMonth);
+		IF structSystemTime.wDay <10 THEN
+			strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,'0');
+		END_IF
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,WORD_TO_STRING(structSystemTime.wDay));
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,' ');
+		IF structSystemTime.wHour <10 THEN
+			strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,'0');
+		END_IF
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,WORD_TO_STRING(structSystemTime.wHour));
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,':');
+		IF structSystemTime.wMinute <10 THEN
+			strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,'0');
+		END_IF
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,WORD_TO_STRING(structSystemTime.wMinute));
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,':');
+		IF structSystemTime.wSecond <10 THEN
+			strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,'0');
+		END_IF
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,WORD_TO_STRING(structSystemTime.wSecond));
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,'.');
+		IF structSystemTime.wMilliseconds <10 THEN
+			strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,'00');
+		ELSIF structSystemTime.wMilliseconds <100 THEN
+			strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,'0');
+		END_IF
+		strTimeStampEventrecorder := CONCAT(strTimeStampEventrecorder,WORD_TO_STRING(structSystemTime.wMilliseconds));
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="prgSystemTime">
+      <LineId Id="52" Count="57" />
+      <LineId Id="13" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

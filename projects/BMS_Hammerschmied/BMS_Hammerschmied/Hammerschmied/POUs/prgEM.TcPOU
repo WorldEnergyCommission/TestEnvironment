@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgEM" Id="{6495b686-2f46-45c1-b8c2-54d95194a867}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+	bGridEnabled	: BOOL;								//{#lynus.ag#()}
+	lrPowerGrid		: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_1	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_2	: LREAL;							//{#lynus.ag#()}
+	lrPowerEM1_3	: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL1N_V			: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL2N_V			: LREAL;							//{#lynus.ag#()}
+	lr_GridVoltageL3N_V			: LREAL;							//{#lynus.ag#()}
+
+	lrReactivePowerGrid			: LREAL;							//{#lynus.ag#()}
+	lrApparentPowerGrid			: LREAL;							//{#lynus.ag#()}
+
+	r_PF1: REAL;
+	r_PF2: REAL;
+	r_PF3: REAL;
+	r_Current1: REAL;
+	r_Current2: REAL;
+	r_Current3: REAL;
+END_VAR
+VAR PERSISTENT
+END_VAR
+
+	
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//The mapping of this function must be linked with the K-Bus State in the E/A Part
+fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+				
+//The mapping of this function must be linked with the KL3403 in the E/A Part
+//UV1
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE,				//Invert power data when transformer are mounted upside down
+	bChannel2Invers:= FALSE,
+	bChannel3Invers:= FALSE,
+	uiCurrentTransformerRatioL1:= 400, //Transformer ratio on the secondary side
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerGrid := fbEM1.stDataEMPower.lrPowerTotal;	
+lrPowerEM1_1 := fbEM1.stDataEMPower.lrPowerL1;
+lrPowerEM1_2 := fbEM1.stDataEMPower.lrPowerL2;
+lrPowerEM1_3 := fbEM1.stDataEMPower.lrPowerL3;
+bGridEnabled := fbEM1.bEnable;
+					
+					
+lrReactivePowerGrid:=fbEM1.stDataEMPower.lrReactivePowerTotal;
+lrApparentPowerGrid:=fbEM1.stDataEMPower.lrApparentPowerTotal;
+
+lr_GridVoltageL1N_V:=fbEM1.stDataEMPower.lrVoltageL1N;
+lr_GridVoltageL2N_V:=fbEM1.stDataEMPower.lrVoltageL2N;
+lr_GridVoltageL3N_V:=fbEM1.stDataEMPower.lrVoltageL3N;
+
+r_PF1 := fbem1.stDataL1.rPowerfactor;
+r_PF2 := fbem1.stDataL2.rPowerfactor;
+r_PF3 := fbem1.stDataL3.rPowerfactor;
+
+r_Current1 := fbem1.stDataL1.rCurrent;
+r_Current2 := fbem1.stDataL2.rCurrent;
+r_Current3 := fbem1.stDataL3.rCurrent;]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="15" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="109" Count="2" />
+      <LineId Id="18" Count="17" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="59" Count="5" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="75" Count="1" />
+      <LineId Id="79" Count="2" />
+      <LineId Id="73" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

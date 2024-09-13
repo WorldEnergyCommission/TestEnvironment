@@ -1,0 +1,483 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ECS_HTTP_ZaptecAccount" Id="{5a052ac1-11ad-4d1b-9329-daffc7fe882a}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_ECS_HTTP_ZaptecAccount
+VAR_INPUT
+	bStart					: BOOL;													//Start/Stop this Functions
+	byMode					: BYTE;													//Work mode : 0 = Send current to each Charger; 1 = Send current to a Installation of chargers
+	sUsername				: STRING(100);											//Username from the Zaptec Account
+	sPassword				: STRING(100);											//Password from the Zaptec Account
+	arrCharger				: ARRAY[1..100] OF ST_Zaptec_Input_Charger;				//Structure with Data for each Charging Station
+	arrInstallation			: ARRAY[1..100] OF ST_Zaptec_Input_Installation;		//Structure with Data for each Installation of Charging Stations
+END_VAR
+VAR_OUTPUT
+	bValidResult			: BOOL;													//Valid Result received from Server
+	bBusy             		: BOOL;													//Busy Flag
+    bError              	: BOOL;													//Error Flag
+	hrErrorCode       		: HRESULT;												//Error Result from Http Client
+	arrStateCharger			: ARRAY[1..100] OF ST_Zaptec_ECS_State;					//Output Structure with the State from each Charging Station
+END_VAR
+VAR
+	fbHttpClient        	: FB_IotHttpClient :=(sHostName:='api.zaptec.com',		//Http Client Function
+                       		  bKeepAlive:=FALSE, tConnectionTimeout:=T#10S);
+	fbHttpPostToken         : FB_HTTP_Post_Zaptec_ReqToken;							//Http Post to receive the Bearer Token
+ 	fbHttpGetChrgState		: FB_HTTP_Get_Zaptec_ECS_State;							//Http Get to receive the State from each Charging station
+	fbHttpPostCurrent		: FB_HTTP_Post_Zaptec_Current;							//Http Post to control each Chrging station or a installation of charging stations with the current setpoint
+	fbTaskIndex				: GETCURTASKINDEX;										//Function to find the Task Index
+	timDelay				: TON;													//Timer for Delay between the Requests
+	timTimout				: TON;													//Timer for Timeout in the State machine
+	timToken				: TON;													//Timer to make a Request for a new Token
+	FPStart					: R_TRIG;												//Internal positive Edge
+	FPErrorToken			: R_TRIG;												//Internal positive Edge
+	FPErrorGetState			: R_TRIG;												//Internal positive Edge
+	FPErrorPostCurrent		: R_TRIG;												//Internal positive Edge
+	FPErrorClient			: R_TRIG;												//Internal positive Edge
+	FPTimToken				: R_TRIG;												//Internal positive Edge
+	FNStart					: F_TRIG;												//Internal negative Edge
+	byNumberOfChargers		: BYTE;													//Number of charging station with insert ID in the Input Array
+	byNumberOfInstallation	: BYTE;													//Number of Installations with insert ID in the Input Array
+	byECSInProgress			: BYTE;													//Charging station in Progress to read out the State or write the current
+	byInstInProgress		: BYTE;													//Installation of charging stations in Progress to write the current
+	byLPInfo				: BYTE;													//Loop Variable to define some parts in the Code
+	iState					: INT;													//Variabel for state machine
+	iState_CP				: INT;													//Variabel for state machine to compare it for timeout
+	udiCycleTime			: UDINT;												//Cycletime in ms
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 04.11.2021
+//Version : 1.0.0.0
+
+//With this Function its possible to receive information from each charging station in a Zaptec Account in there cloudplattform
+//Its also possible to control the charging station with this function by a curretn setpoint.
+//We can control each Cahrging station with the current or each installation with more charging stations with a sum of current
+//When the Installation mode is active, then the system of the charging station distribute the sum of current among themselves
+//Attention : This Function need allways the Charging IDs. Even if the current is sent to the installation. Becasue the State Get Request for each charging station its possible only with the Charging IDs
+//This Function can handle maximal 100 charging stations and 100 Installations
+
+(*------------------------------------------------------------------------------------Limits------------------------------------------------------------------------------------------------------*)
+
+byMode := LIMIT(0,byMode,1);
+
+(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+IF NOT fbHttpClient.bConfigured THEN
+    fbHttpClient.nHostPort:= 443;
+	fbHttpClient.stTLS.bNoServerCertCheck := TRUE;
+END_IF
+
+(*------------------------------------------------------------------------------------Logic------------------------------------------------------------------------------------------------------*)
+
+//Calculate the number of chargers and installations from the input array
+byNumberOfChargers := 0;
+	byNumberOfInstallation := 0;
+
+FOR byLPInfo := 1 TO 100 BY 1 DO
+	IF arrCharger[byLPInfo].sChargerID <> '' THEN byNumberOfChargers := byNumberOfChargers + 1; END_IF 
+		IF arrInstallation[byLPInfo].sInstallationID <> '' THEN byNumberOfInstallation := byNumberOfInstallation + 1; END_IF  
+END_FOR 	
+
+//Delay between the Requests
+fbTaskIndex(index=> );
+	udiCycleTime := TwinCAT_SystemInfoVarList._TaskInfo[fbTaskIndex.index].CycleTime / 10000;
+		timDelay(IN:= , PT:= T#1MS * udiCycleTime, Q=> , ET=> );
+
+//Timout
+IF iState_CP = iState AND iState <> 0 THEN timTimout.IN := TRUE; ELSE timTimout.IN := FALSE; END_IF
+	timTimout(IN:= , PT:= T#20S, Q=> , ET=> );
+
+//Timer for the Token
+//After received the validation from the Token start this timer.
+//After the Delay stop the State machine and make a request for a new Token
+IF fbHttpPostToken.udiValidityToken <> 0 THEN
+	timToken.PT := (T#1S * (fbHttpPostToken.udiValidityToken - 600));	//Less 10 Minutes
+ELSE
+	timToken.PT := T#600S;
+END_IF
+	timToken(IN:= , PT:= , Q=> , ET=> );	
+
+FPTimToken(CLK:= timToken.Q, Q=> );
+	
+//Start	
+FPStart(CLK:= bStart, Q=> );
+	IF FPStart.Q AND NOT fbHttpPostToken.bBusy AND NOT fbHttpGetChrgState.bBusy AND NOT fbHttpPostCurrent.bBusy AND fbHttpClient.bConfigured THEN istate := 1; END_IF
+		IF NOT bStart THEN istate := 0; END_IF	
+
+CASE iState OF
+
+	0://Init Step	
+		fbHttpPostToken.bPostToken := FALSE;
+			fbHttpGetChrgState.bSend := FALSE;
+				fbHttpPostCurrent.bSend := FALSE;	
+					byECSInProgress := 0;
+						byInstInProgress := 0;
+							timToken.IN := FALSE;
+								bValidResult := FALSE;
+									timdelay.IN := FALSE;
+		
+		FOR byLPInfo := 1 TO 100 BY 1 DO					
+			arrStateCharger[byLPInfo].bIsEnabled := FALSE;	
+				arrStateCharger[byLPInfo].bIsOnline := FALSE;
+					arrStateCharger[byLPInfo].diOperationMode := 0;	
+						arrStateCharger[byLPInfo].diWarnings := 0;
+							arrStateCharger[byLPInfo].rAllocatedCurrent := 0;
+								arrStateCharger[byLPInfo].rMaxCurrect := 0;
+									arrStateCharger[byLPInfo].rMinCurrect := 0;
+										arrStateCharger[byLPInfo].rCurrentL1 := 0;	
+											arrStateCharger[byLPInfo].rCurrentL2 := 0;	
+												arrStateCharger[byLPInfo].rCurrentL3 := 0;	
+													arrStateCharger[byLPInfo].rPower := 0;
+														arrStateCharger[byLPInfo].rEnergySession := 0;		
+															arrStateCharger[byLPInfo].sChargerID := '';	
+		END_FOR		
+				
+	1://Request for Bearer Token
+		iState_CP := iState;
+	
+		fbHttpPostToken.bPostToken := TRUE;
+			timToken.IN := FALSE;
+		
+		IF NOT fbHttpPostToken.bBusy THEN timdelay.IN := TRUE; END_IF 
+	
+		IF NOT fbHttpPostToken.bBusy AND fbHttpPostToken.bValidResult AND NOT fbHttpPostToken.bError AND timdelay.Q THEN
+			istate := 2; 
+				timdelay.IN := FALSE;
+					byECSInProgress := 1;
+						byInstInProgress := 1;
+							fbHttpPostToken.bPostToken := FALSE;
+								timToken.IN := TRUE;
+		END_IF
+		
+		//Valid Result
+		bValidResult := fbHttpPostToken.bValidResult;
+		
+		//Error, Timout or Request for a new Token
+		IF FPErrorToken.Q OR timTimout.Q OR FPTimToken.Q OR FPErrorClient.Q THEN istate := 300; END_IF
+
+	2://Request for State of Each Charging Station
+		iState_CP := iState;
+		
+		fbHttpGetChrgState.bSend := TRUE;
+			fbHttpGetChrgState.sChargerID := arrCharger[byECSInProgress].sChargerID;
+		
+		IF NOT fbHttpGetChrgState.bBusy THEN timdelay.IN := TRUE; END_IF 
+		
+		IF NOT fbHttpGetChrgState.bBusy AND fbHttpGetChrgState.bValidResult AND NOT fbHttpGetChrgState.bError AND timdelay.Q THEN
+			IF byMode = 0 THEN istate := 3; END_IF
+				IF byMode = 1 THEN istate := 4; END_IF
+					timdelay.IN := FALSE;
+						arrStateCharger[byECSInProgress] := fbHttpGetChrgState.stChargerStates;
+							fbHttpGetChrgState.bSend := FALSE;	
+		END_IF
+		
+		//Valid Result
+		bValidResult := fbHttpGetChrgState.bValidResult;
+		
+		//Error, Timout or Request for a new Token
+		IF FPErrorGetState.Q OR timTimout.Q OR FPTimToken.Q OR FPErrorClient.Q THEN istate := 300; END_IF
+		
+	3://Write current to charging station
+		iState_CP := iState;
+		
+		fbHttpPostCurrent.bSend := TRUE;
+			fbHttpPostCurrent.sID := arrCharger[byECSInProgress].sChargerID;
+				fbHttpPostCurrent.rMaxCurrentCharger := arrCharger[byECSInProgress].rMaxCurrentCharger;
+ 					fbHttpPostCurrent.rMinCurrentCharger := arrCharger[byECSInProgress].rMinCurrentCharger;
+		
+		IF NOT fbHttpPostCurrent.bBusy THEN timdelay.IN := TRUE; END_IF 
+		
+		IF NOT fbHttpPostCurrent.bBusy AND fbHttpPostCurrent.bValidResult AND NOT fbHttpPostCurrent.bError AND timdelay.Q THEN
+			iState := 5;
+				timdelay.IN := FALSE;
+					fbHttpPostCurrent.bSend := FALSE;	
+		END_IF
+		
+		//Valid Result
+		bValidResult := fbHttpPostCurrent.bValidResult;
+		
+		//Error, Timout or Request for a new Token
+		IF FPErrorPostCurrent.Q OR timTimout.Q OR FPTimToken.Q OR FPErrorClient.Q THEN istate := 300; END_IF
+		
+	4://Write current to installation of charging stations	
+		iState_CP := iState;	
+	
+		fbHttpPostCurrent.bSend := TRUE;
+			fbHttpPostCurrent.sID := arrInstallation[byInstInProgress].sInstallationID;
+				fbHttpPostCurrent.rAvailableCurrentInstallation := arrInstallation[byInstInProgress].rAvailableCurrentInstallation;
+		
+		IF NOT fbHttpPostCurrent.bBusy THEN timdelay.IN := TRUE; END_IF 
+		
+		IF NOT fbHttpPostCurrent.bBusy AND fbHttpPostCurrent.bValidResult AND NOT fbHttpPostCurrent.bError AND timdelay.Q THEN
+			iState := 5;
+				timdelay.IN := FALSE;
+					fbHttpPostCurrent.bSend := FALSE;	
+		END_IF
+		
+		//Valid Result
+		bValidResult := fbHttpPostCurrent.bValidResult;
+		
+		//Error, Timout or Request for a new Token
+		IF FPErrorPostCurrent.Q OR timTimout.Q OR FPTimToken.Q OR FPErrorClient.Q THEN istate := 300; END_IF
+		
+	5://Next charging station and next installation	
+		iState_CP := iState;
+		
+		byECSInProgress := byECSInProgress + 1;
+		byInstInProgress := byInstInProgress + 1;
+		
+		//Back to read out next state from charging station
+		iState := 2;
+		
+		IF byECSInProgress > byNumberOfChargers THEN byECSInProgress := 1; END_IF
+			IF byInstInProgress > byNumberOfInstallation THEN byInstInProgress := 1; END_IF  	
+		
+		//Reset Error
+		bError := FALSE;
+			
+	300://Error or restart after receive a new Token
+		iState_CP := iState;
+		
+		timdelay.IN := FALSE;
+			fbHttpPostToken.bPostToken := FALSE;
+				fbHttpGetChrgState.bSend := FALSE;
+					fbHttpPostCurrent.bSend := FALSE;	
+						byECSInProgress := 0;
+							byInstInProgress := 0;
+								bError := TRUE;
+								//Restart
+								IF NOT fbHttpPostToken.bBusy AND NOT fbHttpGetChrgState.bBusy AND NOT fbHttpPostCurrent.bBusy THEN 
+									istate := 1;
+								END_IF	
+		
+		
+END_CASE		
+		
+(*------------------------------------------------------------------------------------HTTP Functions------------------------------------------------------------------------------------------------------*)
+
+fbHttpPostToken(
+	sUsername:= sUsername, 
+	sPassword:= sPassword, 
+	bPostToken:= , 
+	tTimeOut:= T#20S,
+	fbClient:= fbHttpClient, 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	udiValidityToken=> , 
+	sToken=> , 
+	sTokenType=> );
+
+FPErrorToken(CLK:= fbHttpPostToken.bError, Q=> );
+	
+fbHttpGetChrgState(
+	bSend:= , 
+	sToken:= fbHttpPostToken.sToken, 
+	sTokenType:= fbHttpPostToken.sTokenType, 
+	sChargerID:= , 
+	tTimeOut:= T#20S,
+	fbClient:= fbHttpClient, 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	stChargerStates=> );
+
+FPErrorGetState(CLK:= fbHttpGetChrgState.bError, Q=> );
+	
+fbHttpPostCurrent(
+	bSend:= , 
+	byMode:= byMode, 
+	rMaxCurrentCharger:= , 
+	rMinCurrentCharger:= , 
+	rAvailableCurrentInstallation:= , 
+	sToken:= fbHttpPostToken.sToken, 
+	sTokenType:= fbHttpPostToken.sTokenType, 
+	sID:= , 
+	tTimeOut:= T#20S,
+	fbClient:= fbHttpClient, 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> );
+
+FPErrorPostCurrent(CLK:= fbHttpPostCurrent.bError, Q=> );	
+
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q THEN fbHttpClient.Disconnect(); END_IF
+
+fbHttpClient.Execute();
+
+FPErrorClient(CLK:= fbHttpClient.bError, Q=> );
+
+//Busy
+IF fbHttpPostToken.bBusy OR fbHttpGetChrgState.bBusy OR fbHttpPostCurrent.bBusy THEN bBusy := TRUE; ELSE bBusy := FALSE; END_IF  
+
+//Error
+hrErrorCode := fbHttpClient.hrErrorCode;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ECS_HTTP_ZaptecAccount">
+      <LineId Id="20" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="63" Count="2" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="115" Count="1" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="126" Count="1" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="131" Count="1" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="192" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="193" Count="1" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="236" Count="7" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="246" Count="1" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="137" Count="3" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="149" Count="2" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="342" Count="5" />
+      <LineId Id="364" Count="4" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="197" Count="1" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="156" Count="6" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="164" Count="1" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="281" Count="1" />
+      <LineId Id="249" Count="6" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="256" Count="4" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="283" Count="1" />
+      <LineId Id="292" Count="1" />
+      <LineId Id="306" Count="1" />
+      <LineId Id="294" Count="4" />
+      <LineId Id="300" Count="1" />
+      <LineId Id="303" Count="1" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="308" Count="2" />
+      <LineId Id="316" Count="2" />
+      <LineId Id="320" Count="8" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="311" Count="2" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="331" Count="1" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="200" Count="1" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="187" Count="1" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="184" Count="2" />
+      <LineId Id="177" Count="1" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="75" Count="3" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="79" Count="5" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="169" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="87" Count="4" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="92" Count="3" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="171" Count="1" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="98" Count="8" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="107" Count="2" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="461" Count="1" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="222" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

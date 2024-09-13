@@ -1,0 +1,227 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_Battery" Id="{5753428a-5799-43e9-a25a-a99a2af7734d}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Battery
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;					//Enable this function
+	{attribute 'hide'}
+	bError								: BOOL;					//Battery has a error
+	{attribute 'hide'}
+	bWarning							: BOOL;					//Battery has a warning
+	{attribute 'hide'}
+	bCalculatePower						: BOOL;					//When its true, then calculate the power with then battery voltage and the battery current
+	{attribute 'hide'}
+	bReset								: BOOL;					//Reset the Error and the warning
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;					//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	iErrorCode							: INT;					//Error Code from external Batterysystem
+	{attribute 'hide'}
+	iWarningCode						: INT;					//Warning Code from external Batterysystem
+	{attribute 'hide'}
+	dwBatterySOC						: DWORD;				//The actual Battery state of Charge
+	{attribute 'hide'}
+	dwBatterySOH						: DWORD;				//The actual battery state of health
+	{attribute 'hide'}
+	rBatteryVoltage						: REAL;					//Battery Voltage with Unit V
+	{attribute 'hide'}
+	rMaxDcChargeCurrentBattery			: REAL;					//Max. dc charge current battery with unit A 
+	{attribute 'hide'}
+	rMaxDcDischargeCurrentBattery		: REAL;					//Max. dc discharge current battery with unit A
+	{attribute 'hide'}
+	rMaxChargeVoltage					: REAL;					//Max. charge voltage from the battery with unit V
+	{attribute 'hide'}
+	lrMaxCapacityBattery				: LREAL;				//Max capacity from the Battery 
+	{attribute 'hide'}
+	lrBatteryPower						: LREAL;				//Battery Power with unit W
+	{attribute 'hide'}
+	lrBatteryCurrent					: LREAL;				//Battery current with unit A
+	{attribute 'hide'}
+	lrBatteryTemp						: LREAL;				//Battery temperarure with unit °C
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;			//Delay Time to write some Data to the Output
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataBatteryOut					: ST_Battery_Output;	//Output Data from the batter
+	{attribute 'hide'}
+	stDataBatteryOutDelay				: ST_Battery_Output;	//Output Data from the batter with delay
+END_VAR
+VAR
+	FPReset								: R_TRIG;				//Internal positive edge
+	FPEnable							: R_TRIG;				//Internal positive Edge
+	FNEnable							: F_TRIG;				//Internal negative Edge
+	timDelayOutputs						: TON;					//Timer to send Data with Delay to the outputs
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 18.05.2021
+//Version : 1.0.0.0
+
+//With this function is possible to read in the most popular values from a battery
+//The function calculate the actual capacity from the battery in kWh
+
+//---------------------------------------------------------------------Check the limits of the inputs--------------------------------------------------------------------------------------
+
+dwBatterySOC := LIMIT(0,dwBatterySOC,100);
+	dwBatterySOH := LIMIT(0,dwBatterySOH,100);	
+		rBatteryVoltage := LIMIT(0,rBatteryVoltage,1000);	
+			rMaxDcChargeCurrentBattery := LIMIT(0,rMaxDcChargeCurrentBattery,10000);
+				rMaxDcDischargeCurrentBattery := LIMIT(0,rMaxDcDischargeCurrentBattery,10000);
+					rMaxChargeVoltage := LIMIT(0,rMaxChargeVoltage,1000);
+						lrMaxCapacityBattery := LIMIT(0,lrMaxCapacityBattery,1000);
+							lrBatteryPower := LIMIT(-1000000,lrBatteryPower,1000000);
+								lrBatteryCurrent := LIMIT(-10000,lrBatteryCurrent,10000);
+									lrBatteryTemp := LIMIT(-40,lrBatteryTemp,150);
+
+//----------------------------------------------------------------------------Power from the battery-----------------------------------------------------------------------------------------------
+IF bCalculatePower THEN 
+	stDataBatteryOut.lrPower := (rBatteryVoltage * lrBatteryCurrent) / 1000; 
+ELSE
+	stDataBatteryOut.lrPower := lrBatteryPower / 1000;
+END_IF
+
+stDataBatteryOut.lrPower := LINT_TO_LREAL(LREAL_TO_LINT(stDataBatteryOut.lrPower * 100)) / 100;	
+
+//Battery charge
+IF stDataBatteryOut.lrPower < 0 THEN 
+	stDataBatteryOut.lrPowerConsumption := stDataBatteryOut.lrPower * - 1;
+	stDataBatteryOut.lrPowerProduction := 0;
+END_IF
+//Battery discharge
+IF stDataBatteryOut.lrPower > 0 THEN 
+	stDataBatteryOut.lrPowerConsumption := 0;
+	stDataBatteryOut.lrPowerProduction := stDataBatteryOut.lrPower;
+END_IF
+//Power = 0
+IF stDataBatteryOut.lrPower = 0 THEN 
+	stDataBatteryOut.lrPowerConsumption := 0;
+	stDataBatteryOut.lrPowerProduction := 0;
+END_IF
+
+//----------------------------------------------------------------------------Battery capacity-----------------------------------------------------------------------------------------------------
+
+stDataBatteryOut.lrCapacity := (lrMaxCapacityBattery * dwBatterySOC) / 100; 
+	stDataBatteryOut.lrCapacity := LINT_TO_LREAL(LREAL_TO_LINT(stDataBatteryOut.lrCapacity * 100)) / 100;	
+								
+//---------------------------------------------------------------------------Data directly to the output-------------------------------------------------------------------------------------------
+
+stDataBatteryOut.bEnabled := bEnable;
+
+IF bEnable THEN
+	stDataBatteryOut.dwSOC := dwBatterySOC;
+		stDataBatteryOut.dwSOH := dwBatterySOH;
+			stDataBatteryOut.rBatteryVoltage := DINT_TO_REAL(REAL_TO_DINT(rBatteryVoltage * 100)) / 100; 
+				stDataBatteryOut.rMaxDcChargeCurrent:= DINT_TO_REAL(REAL_TO_DINT(rMaxDcChargeCurrentBattery * 100)) / 100;
+					stDataBatteryOut.rMaxDcDischargeCurrent := DINT_TO_REAL(REAL_TO_DINT(rMaxDcDischargeCurrentBattery * 100)) / 100;
+						stDataBatteryOut.rMaxChargeVoltage := DINT_TO_REAL(REAL_TO_DINT(rMaxChargeVoltage * 100)) / 100;	
+							stDataBatteryOut.lrCurrent := LINT_TO_LREAL(LREAL_TO_LINT(lrBatteryCurrent * 100)) / 100;
+								stDataBatteryOut.lrTemp := LINT_TO_LREAL(LREAL_TO_LINT(lrBatteryTemp * 100)) / 100;	
+ELSE
+	stDataBatteryOut.dwSOC := 0;
+		stDataBatteryOut.dwSOH := 0;
+			stDataBatteryOut.rBatteryVoltage := 0; 
+				stDataBatteryOut.rMaxDcChargeCurrent := 0;
+					stDataBatteryOut.rMaxDcDischargeCurrent := 0;
+						stDataBatteryOut.rMaxChargeVoltage := 0;	
+							stDataBatteryOut.lrCurrent := 0;
+								stDataBatteryOut.lrTemp := 0;
+									stDataBatteryOut.lrCapacity := 0;
+										stDataBatteryOut.lrPower := 0;
+											stDataBatteryOut.lrPowerConsumption := 0;
+												stDataBatteryOut.lrPowerProduction := 0;	
+END_IF
+
+//--------------------------------------------------------------------------Error or Warning-------------------------------------------------------------------------------------------------
+
+FPReset(CLK:= bReset, Q=> );
+	IF FPReset.Q THEN stDataBatteryOut.byErrorWarning := 0; END_IF
+
+IF bWarning AND stDataBatteryOut.byErrorWarning <> 2 THEN stDataBatteryOut.byErrorWarning := 1; END_IF
+IF bError THEN stDataBatteryOut.byErrorWarning := 2; END_IF
+
+//Error Codes
+IF stDataBatteryOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataBatteryOut.eMessage := E_Message_Battery.eBatteryError;
+ELSIF stDataBatteryOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataBatteryOut.eMessage := E_Message_Battery.eTooMuchBattery;
+ELSE stDataBatteryOut.eMessage := E_Message_Battery.eNoMessage; 
+END_IF
+
+//---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+		
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataBatteryOutDelay := stDataBatteryOut;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Battery">
+      <LineId Id="25" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="39" Count="5" />
+      <LineId Id="46" Count="2" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="86" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="97" Count="3" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="102" Count="3" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="106" Count="1" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="57" Count="6" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="68" Count="11" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="120" Count="2" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="199" Count="4" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="233" Count="2" />
+      <LineId Id="217" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

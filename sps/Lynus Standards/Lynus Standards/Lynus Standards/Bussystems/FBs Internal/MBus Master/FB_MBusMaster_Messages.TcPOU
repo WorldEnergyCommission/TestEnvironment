@@ -1,0 +1,239 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_MBusMaster_Messages" Id="{72f46348-5533-4dcb-a48e-55120dd7cdae}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_MBusMaster_Messages
+VAR_INPUT
+	{attribute 'hide'}
+	bErrorMBus							: BOOL;						//Error from the Mbus Function
+	{attribute 'hide'}
+	bErrorIntern						: BOOL;						//Internal Error
+	{attribute 'hide'}
+	bWarning							: BOOL;						//Warning from the RTU Function
+	{attribute 'hide'}
+	iWarningCode						: INT;						//Warning Code
+	{attribute 'hide'}
+	iErrorCode							: INT;						//Error Code		
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	byErrorWarning						: BYTE;						//Error Warning State
+	eMessageMBusMaster					: E_Message_MBusMaster;		//Message from the MBus Master Function
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 23.08.2021
+//Version : 1.0.0.0
+
+//With this Funciton is possible to handel the Error and Warning Codes from the MBus Master.
+
+//Warnings
+IF bWarning AND iWarningCode = 0 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eNoConnectionToBackend;
+END_IF
+
+//Intern Errors
+IF bErrorIntern AND iErrorCode = 1 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eTooMuchMBusMasters;
+END_IF
+//MBus Errors
+IF bErrorMBus AND iErrorCode = 101 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_CIField_wrong_72hex_expected;
+ELSIF bErrorMBus AND iErrorCode = 102 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_no_data_received;
+ELSIF bErrorMBus AND iErrorCode = 103 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_error_checksum;
+ELSIF bErrorMBus AND iErrorCode = 104 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_error_in_head_data;
+ELSIF bErrorMBus AND iErrorCode = 105 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_usiAddress_over_250;
+ELSIF bErrorMBus AND iErrorCode = 106 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_send_error;
+ELSIF bErrorMBus AND iErrorCode = 108 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_received_address_wrong;
+ELSIF bErrorMBus AND iErrorCode = 109 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_cMBUS_MaxCom_below_1;
+ELSIF bErrorMBus AND iErrorCode = 110 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_iComId_over_cMBUS_MaxCom;	
+ELSIF bErrorMBus AND iErrorCode = 111 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_manufacturer_sign_wrong;
+ELSIF bErrorMBus AND iErrorCode = 112 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_baudrate_wrong;
+ELSIF bErrorMBus AND iErrorCode = 113 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_ReceiveBufferFull;
+ELSIF bErrorMBus AND iErrorCode = 114 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_E5hex_no_received;
+ELSIF bErrorMBus AND iErrorCode = 115 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_no_stop_character;
+ELSIF bErrorMBus AND iErrorCode = 116 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_length_wrong;
+ELSIF bErrorMBus AND iErrorCode = 117 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_wrong_terminal;
+ELSIF bErrorMBus AND iErrorCode = 118 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_Terminal_is_not_initialized;
+ELSIF bErrorMBus AND iErrorCode = 119 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_stSecAdr_udiIdNumber_wrong;
+ELSIF bErrorMBus AND iErrorCode = 120 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_missing_parts_telegram;
+ELSIF bErrorMBus AND iErrorCode = 121 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_no_stop_character_received;
+ELSIF bErrorMBus AND iErrorCode = 122 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_too_many_characters;
+ELSIF bErrorMBus AND iErrorCode = 123 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_TimeOut_FB_KL6781;
+ELSIF bErrorMBus AND iErrorCode = 124 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_TimeOut_MeterFB;
+ELSIF bErrorMBus AND iErrorCode = 201 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_PARAMETERCHANGED;
+ELSIF bErrorMBus AND iErrorCode = 202 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_TXBUFFOVERRUN;
+ELSIF bErrorMBus AND iErrorCode = 210 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_STRINGOVERRUN;
+ELSIF bErrorMBus AND iErrorCode = 211 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_ZEROCHARINVALID;
+ELSIF bErrorMBus AND iErrorCode = 220 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDPOINTER;
+ELSIF bErrorMBus AND iErrorCode = 221 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDRXPOINTER;
+ELSIF bErrorMBus AND iErrorCode = 222 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDRXLENGTH;
+ELSIF bErrorMBus AND iErrorCode = 223 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_DATASIZEOVERRUN;
+ELSIF bErrorMBus AND iErrorCode = 16#1001 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDBAUDRATE;
+ELSIF bErrorMBus AND iErrorCode = 16#1002 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDNUMDATABITS;
+ELSIF bErrorMBus AND iErrorCode = 16#1003 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDNUMSTOPBITS;
+ELSIF bErrorMBus AND iErrorCode = 16#1004 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDPARITY;
+ELSIF bErrorMBus AND iErrorCode = 16#1005 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDHANDSHAKE;
+ELSIF bErrorMBus AND iErrorCode = 16#1006 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDNUMREGISTERS;
+ELSIF bErrorMBus AND iErrorCode = 16#1007 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_INVALIDREGISTER;
+ELSIF bErrorMBus AND iErrorCode = 16#1008 THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eMBUSERROR_COM_TIMEOUT;
+END_IF 
+
+IF bWarning THEN 
+	byErrorWarning := 1;
+END_IF	
+	IF bErrorMBus OR bErrorIntern THEN
+		byErrorWarning := 2;
+	END_IF
+
+//All ok
+IF NOT bErrorMBus AND NOT bErrorIntern AND NOT bWarning THEN
+	eMessageMBusMaster := E_Message_MBusMaster.eAllOk;
+		byErrorWarning := 0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MBusMaster_Messages">
+      <LineId Id="88" Count="2" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="91" Count="1" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="202" Count="1" />
+      <LineId Id="109" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="252" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="161" Count="2" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="164" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

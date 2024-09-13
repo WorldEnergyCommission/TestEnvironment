@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgMisc" Id="{dd7dc983-641c-4b2a-8dec-aa875cb99a53}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMisc
+VAR	
+	H31_SRBVH3_RADH3_TR_RG_extSetpointActive		: INT;											//{#lynus.ag#()}
+	H31_SRBVH3_RADH3_TR_RGextSetpointActiveB 	: BOOL;											//{#lynus.ag#()}
+	m_Enable_HeartBeat								: BOOL;											//{#lynus.ag#()}
+	ton_Delay: Ton;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF m_Enable_HeartBeat AND ton_Delay.Q THEN
+	H31_SRBVH3_RADH3_TR_RG_extSetpointActive := 1;
+	H31_SRBVH3_RADH3_TR_RGextSetpointActiveB := TRUE;
+ELSIF NOT m_Enable_HeartBeat AND ton_Delay.Q THEN
+	H31_SRBVH3_RADH3_TR_RG_extSetpointActive := 0;	
+	H31_SRBVH3_RADH3_TR_RGextSetpointActiveB := FALSE;
+END_IF
+
+ton_Delay(In:= NOT ton_Delay.Q, PT := T#60S);
+	
+	
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMisc">
+      <LineId Id="5" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="12" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

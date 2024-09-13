@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="ARRAY_AVG" Id="{6cb035c2-28d5-4612-991a-5503d287aefb}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION ARRAY_AVG : REAL
+VAR_INPUT
+	{attribute 'hide'}
+	pt   	: POINTER TO ARRAY[0..32000] OF REAL;			//Pointer with the content
+	{attribute 'hide'}
+	size 	: UINT;											//Size of the data
+END_VAR
+VAR
+	{attribute 'hide'}
+	i		: UINT;											//loop internal
+	{attribute 'hide'}
+	stop	: UINT;											//End of the loop
+END_VAR
+
+//this function will calculate the average of a given array.
+//the function needs to be called:	array_avg(adr("array"),sizeof("array"));
+//because this function works with pointers its very time efficient and it needs no extra memory.
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//ARRAY AVG function calculates the mean value of an arbitrary real array
+stop := SHR(size,2)-1;
+	IF stop = 0 THEN
+		ARRAY_AVG := (pt^[0] + pt^[1]) / 2;
+	ELSE
+		ARRAY_AVG := pt^[0];
+	END_IF
+		IF stop > 0 AND stop <= 32000 THEN		
+			FOR i := 1 TO stop DO
+				ARRAY_AVG := ARRAY_AVG + pt^[i];
+			END_FOR;
+		END_IF
+			ARRAY_AVG := ARRAY_AVG / UINT_TO_REAL(stop + 1);]]></ST>
+    </Implementation>
+    <LineIds Name="ARRAY_AVG">
+      <LineId Id="36" Count="11" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

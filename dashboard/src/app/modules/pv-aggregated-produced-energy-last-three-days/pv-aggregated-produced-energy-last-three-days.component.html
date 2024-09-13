@@ -1,0 +1,14 @@
+<div class="box">
+    <div class="box-content flex flex-column">
+        <p class="mb-2" [style.color]="userData?.colors?.default" [style.font-size]="titleFontSize">Produktion in den
+            letzten 3 tagen</p>
+        <div class="margin">
+            <div class="flex mb-2 row" *ngFor="let x of energy" [style.max-height]="graphHeight">
+                <div class="graph" [style.width]="getGraphWidth(x)"
+                    [style.border-bottom-color]="userData?.colors?.secondary"></div>
+                <p class="default-text-transform" [style.color]="userData?.colors?.default"
+                    [style.font-size]="numberFontSize">{{x}} kWh</p>
+            </div>
+        </div>
+    </div>
+</div>

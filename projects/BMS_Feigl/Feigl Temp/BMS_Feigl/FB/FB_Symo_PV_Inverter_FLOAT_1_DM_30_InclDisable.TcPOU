@@ -1,0 +1,931 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Symo_PV_Inverter_FLOAT_1_DM_30_InclDisable" Id="{25bb2e49-1eec-4216-b148-60b3aa0d31bc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Symo_PV_Inverter_FLOAT_1_DM_30_InclDisable
+VAR_INPUT PERSISTENT
+	bEnable						: BOOL;												//True = Function is enabled, FALSE = Function is dissabled, no new Data
+	sIPAdress					: STRING(15);										//IP Adress from the Inverter
+	arrUnitID_Inverter			: ARRAY[1..30] OF BYTE;								//Array with the Unit ID's from each Inverter (Max 30 Inverters) (ID = 1 to 247) (0 = No Inverter)
+	arr_b_EnableWrite			: ARRAY[1..30] OF BOOL;								// Enable write function
+	arr_m_DisableInverter		: ARRAY[1..30] OF BOOL;								// disable inverter 
+	arr_int_InverterSetpoint	: ARRAY[1..30] OF INT;								// inverter setpoint i[1/100 %] 
+END_VAR
+VAR_OUTPUT
+	arrDataSymo10				: ARRAY[1..30] OF ST_Symo_PV_OutData;				//Output structure with Data from Symo 10
+	stDataEMPower_PV			: ST_ElectricMeter_Output_Power;					//Output structure with Data from Electric Meter PV (Power Data)
+	stDataEMCounter_PV			: ST_ElectricMeter_Output_Counter;					//Output structure with Data from Electric Meter PV (Counter Data)
+	diNrOfEM_OUT_PV				: DINT;												//Active Number from the Electric Meter for using on other functions
+END_VAR
+VAR
+	fbElMeter					: FB_ElectricMeter;									//Electric Meter Function 
+	fbNumberDevice				: FB_NumberOfDevice;								//Function block to calcualte the number of the Device
+	fbConvertEnergyRegister		: FB_CV_WORD_TO_DWORD;								//Convert function
+	fbMBRead_FC3				: FB_MBReadRegs;									//Modbus Read Function (FC3)
+	fbMBWrite_FC16				: FB_MBWriteRegs;									//Modbus Write Function (FC16)
+	timDelay					: TON;												//Timer for Delay between Requests
+	timTimeout					: TON;												//Timer for Timeout
+	timDissableFunctions		: TON;												//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL		: TON;												//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	FPEnable					: R_TRIG;											//Internal positive Edge
+	FPError_FC_3				: R_TRIG;											//Internal positive Edge
+	FPError_FC_16				: R_TRIG;											//Internal positive Edge
+	PD_String					: FB_PersistentData_String;							//Function to save persistent data 
+	stFloat						: ST_UN_FLOAT_CONVERT_DWORD_REAL;					//Convert the Float Raw Value
+	arrBuffer_FC3				: ARRAY[1..47] OF WORD;								//Buffer with Data from FC3
+	arrBuffer_FC16				: ARRAY[1..6] OF WORD;								//Buffer with Data from FC16
+	arrBuffer_FC16_old			: ARRAY[1..30,1..6] OF WORD;								//Buffer with Data from FC16
+	arrUnitID_Inverter_CP		: ARRAY[1..30] OF BYTE;								//Array with unit IDs to compare it when we have a change on the Inputs
+	arrCurrentL1				: ARRAY[1..30] OF LREAL;							//Array with the Current from L1 from each Inverter
+	arrCurrentL2				: ARRAY[1..30] OF LREAL;							//Array with the Current from L2 from each Inverter
+	arrCurrentL3				: ARRAY[1..30] OF LREAL;							//Array with the Current from L3 from each Inverter
+	arrVoltageL1L2				: ARRAY[1..30] OF LREAL;							//Array with the Voltage from L1-L2 from each Inverter
+	arrVoltageL2L3				: ARRAY[1..30] OF LREAL;							//Array with the Voltage from L2-L3 from each Inverter
+	arrVoltageL3L1				: ARRAY[1..30] OF LREAL;							//Array with the Voltage from L3-L1 from each Inverter
+	arrVoltageL1N				: ARRAY[1..30] OF LREAL;							//Array with the Voltage from L1-N from each Inverter
+	arrVoltageL2N				: ARRAY[1..30] OF LREAL;							//Array with the Voltage from L2-N from each Inverter
+	arrVoltageL3N				: ARRAY[1..30] OF LREAL;							//Array with the Voltage from L3-N from each Inverter
+	arrACPower					: ARRAY[1..30] OF LREAL;							//Array with the AC Power from each Inverter
+	arrFrequency				: ARRAY[1..30] OF LREAL;							//Array with the Frequency from each Inverter
+	arrApparentPower			: ARRAY[1..30] OF LREAL;							//Array with the Apparent Power from each Inverter
+	arrReactivePower			: ARRAY[1..30] OF LREAL;							//Array with the Reactive Power from each Inverter
+	arrProductionEnergy			: ARRAY[1..30] OF LREAL;							//Array with the Production Energy from each Inverter
+	arrPD						: ARRAY[1..31] OF FB_PersistentData_Number;			//Function to save persistent data
+	bErrorDevice				: BOOL;												//When 1 or more Inverters has a Error, then thsi Flag is true
+	byInverterInProgress		: BYTE;												//Shows what Inverter is at the moment in Progress in the State machine to read out the data
+	byTotalInverter				: BYTE;												//Summ of total Inverters. (Depends on the unit IDs that are not 0.) 
+	byLPForInverter				: BYTE; 											//Variable for Loop to calculate some things for the Inverters
+	byWaitInStep				: BYTE;												//Wait in Step before start to clean data on PLC
+	iStateGVLData				: INT;												//State machine to handle the data on the GVL
+	iStateModbusRead			: INT;												//State variable for Statemachine
+	iStateModbusWrite			: INT;												//State variable for Statemachine
+	iStateModbus_CP				: INT;												//Compare State variable
+	diCounterForGVL				: DINT;												//Counter to clean old data on GVL
+	lrCheckValue				: LREAL;											//Internal Value to check the value before convert
+	lrCounterEnergyProduction	: LREAL;											//Check counter state before write new one
+	iStateModbusError			: INT;											//State variable for Statemachine
+	byInverterInProgressWrite	: BYTE;
+	ton_Wait_write: Ton;
+	x: WORD;
+	int_WriteSucessCounter: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// {attribute 'hide_all_locals'}
+
+//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this function its possible to read out values from the Symo 10 PV Inverter from the factory Fronius
+//This Function read out the Values from 1 Fronius Datamanager with maximal 30 Inverter.
+//The protocol to the Inverter is Modbus TCP
+//Versions that are supported : 1.1.5-0
+//Attention. To access the registers, an offset of 1 must always be subtracted. Register 40001 would then be on register 40000.
+//This Function use the FLOAT Format
+//You can query the register data of the individual devices using the Modbus device ID (UnitID).
+//Each inverter has its own number stored on the display under "Setup" -> "Datcom"-> "Inverter number".
+//Inverter number 00 = Modbus ID 100
+//Inverter number 01 = Modbus ID 01
+//Inverter number 02 = Modbus ID 02 etc.
+//Internal in the GVL this function is 1 PV Plant. We display the summ ov all values from each Inverter
+
+//Changes about AC power
+//Date : 29.03.2020
+//Version : 1.1.0.0
+
+//Date : 22.12.2022
+//Version : 1.2.0.0
+// STEFAN: added write to setpoint to inverter
+
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------------------------------------General Input Part---------------------------------------------------------------------------------------------*)
+
+//Check limitation
+FOR byLPForInverter := 1 TO 30 BY 1 DO
+	arrUnitID_Inverter[byLPForInverter] := LIMIT(0,arrUnitID_Inverter[byLPForInverter],247);
+END_FOR
+
+(*-------------------------------------------------------------Calcualte the number of EM System---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT_PV, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := diNrOfEM_OUT_PV;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------------------------------Calcualte the Max Number of Inverters---------------------------------------------------------------------------------------------*)
+	
+byTotalInverter := 0;
+	FOR byLPForInverter := 1 TO 30 BY 1 DO
+		IF arrUnitID_Inverter[byLPForInverter] <> 0 THEN byTotalInverter := byTotalInverter + 1; END_IF 
+	END_FOR	
+	
+(*------------------------------------------------------------------------------------------State Machine---------------------------------------------------------------------------------------------*)
+	
+//Enable
+FPEnable(CLK:= bEnable, Q=> );
+	IF FPEnable.Q AND iStateModbusRead = 0 AND byTotalInverter > 0 THEN iStateModbusRead := 1; END_IF
+		IF NOT bEnable OR timDissableFunctions.Q OR byTotalInverter = 0 OR MEMCMP(ADR(arrUnitID_Inverter),ADR(arrUnitID_Inverter_CP),SIZEOF(arrUnitID_Inverter_CP)) <> 0 THEN iStateModbusRead := 0; END_IF
+
+//Timer for delay
+timDelay(IN:= , PT:= T#20MS, Q=> , ET=> );	
+
+//Timer for Timeout in Statemachine
+	IF iStateModbusRead = iStateModbus_CP THEN timTimeout.IN := TRUE; ELSE timTimeout.IN := FALSE; END_IF
+		IF iStateModbusRead = 0 THEN timTimeout.IN := FALSE; END_IF
+timTimeout(IN:= , PT:= T#20S, Q=> , ET=> );	
+
+//Statemachine
+CASE iStateModbusRead OF
+	
+	0://Init Step
+		iStateModbus_CP := iStateModbusRead;
+			timDelay.IN := FALSE;
+		
+		FOR byLPForInverter := 1 TO 30 BY 1 DO 
+			arrDataSymo10[byLPForInverter].bFunctionIsActive := FALSE;
+				arrDataSymo10[byLPForInverter].eOperatingStateInverter := E_Symo_PV_OperatingState.eNoDataReceived;
+					arrDataSymo10[byLPForInverter].lrPowerAcInverter := 0;
+			arrCurrentL1[byLPForInverter] := 0;
+				arrCurrentL2[byLPForInverter] := 0;
+			arrCurrentL3[byLPForInverter] := 0;
+				arrVoltageL1L2[byLPForInverter] := 0;
+			arrVoltageL2L3[byLPForInverter] := 0;
+				arrVoltageL3L1[byLPForInverter] := 0;
+			arrVoltageL1N[byLPForInverter] := 0;
+				arrVoltageL2N[byLPForInverter] := 0;
+			arrVoltageL3N[byLPForInverter] := 0;
+				arrACPower[byLPForInverter] := 0;
+			arrFrequency[byLPForInverter] := 0;
+				arrApparentPower[byLPForInverter] := 0;
+			arrReactivePower[byLPForInverter] := 0;
+				arrProductionEnergy[byLPForInverter] := 0;
+		END_FOR
+				fbMBRead_FC3.bExecute := FALSE;
+					lrCheckValue := 0;
+			
+		//After reset the Arrays when we have a change on the Unit ID's we restart the State Machine
+		IF MEMCMP(ADR(arrUnitID_Inverter),ADR(arrUnitID_Inverter_CP),SIZEOF(arrUnitID_Inverter_CP)) <> 0 AND bEnable AND byTotalInverter > 0 THEN
+			iStateModbusRead := 1;
+				arrUnitID_Inverter_CP := arrUnitID_Inverter;
+		END_IF
+		
+	1://Search the Unit ID to read out the Data for each Inverter with Unit ID <> 0
+		iStateModbus_CP := iStateModbusRead;
+		
+		IF byInverterInProgress >= 30 THEN byInverterInProgress := 0; END_IF
+		
+		byInverterInProgress := byInverterInProgress + 1;
+			byInverterInProgress := LIMIT(1,byInverterInProgress,30);	
+		
+		IF arrUnitID_Inverter[byInverterInProgress] <> 0 THEN iStateModbusRead := 2; END_IF
+				
+	2://Read out first Registers from 40072 to 40118
+		arrDataSymo10[byInverterInProgress].bFunctionIsActive := TRUE;
+			iStateModbus_CP := iStateModbusRead;
+		
+		fbMBRead_FC3.nQuantity := 47;
+			fbMBRead_FC3.nMBAddr := 40071;
+				fbMBRead_FC3.bExecute := TRUE;
+					fbMBRead_FC3.nUnitID := arrUnitID_Inverter[byInverterInProgress];
+			
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//Copy Data Current L1
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[3], wInputValue_2:= arrBuffer_FC3[4], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrCurrentL1[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Current L2
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[5], wInputValue_2:= arrBuffer_FC3[6], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrCurrentL2[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Current L3
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[7], wInputValue_2:= arrBuffer_FC3[8], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrCurrentL3[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Voltage L1-L2
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[9], wInputValue_2:= arrBuffer_FC3[10], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrVoltageL1L2[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Voltage L2-L3
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[11], wInputValue_2:= arrBuffer_FC3[12], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrVoltageL2L3[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Voltage L3-L1
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[13], wInputValue_2:= arrBuffer_FC3[14], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrVoltageL3L1[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Voltage L1-N
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[15], wInputValue_2:= arrBuffer_FC3[16], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrVoltageL1N[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Voltage L2-N
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[17], wInputValue_2:= arrBuffer_FC3[18], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrVoltageL2N[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Voltage L3-N
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[19], wInputValue_2:= arrBuffer_FC3[20], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrVoltageL3N[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data AC Power
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[21], wInputValue_2:= arrBuffer_FC3[22], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrACPower[byInverterInProgress] := lrCheckValue;
+								arrDataSymo10[byInverterInProgress].lrPowerAcInverter := arrACPower[byInverterInProgress] / 1000;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Frequency
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[23], wInputValue_2:= arrBuffer_FC3[24], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrFrequency[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Apparent Power
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[25], wInputValue_2:= arrBuffer_FC3[26], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrApparentPower[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data Reactive Power
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[27], wInputValue_2:= arrBuffer_FC3[28], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrReactivePower[byInverterInProgress] := lrCheckValue;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Copy Data AC production Energy
+			fbConvertEnergyRegister(wInputValue_1:= arrBuffer_FC3[31], wInputValue_2:= arrBuffer_FC3[32], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				stFloat.dwRawValue := fbConvertEnergyRegister.dwOutputValue;
+					lrCheckValue := stFloat.rValueFloat;	
+						IF lrCheckValue >= - 3.402823E+38 AND lrCheckValue <= 3.402823E+38 THEN 
+							arrProductionEnergy[byInverterInProgress] := lrCheckValue / 1000;
+						ELSE
+							iStateModbusRead := 300;
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10TooBigValueReceived;		
+						END_IF
+			//Operating State		
+			IF arrBuffer_FC3[47] = 1 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eOff;
+				ELSIF arrBuffer_FC3[47] = 2 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eSleeping;
+				ELSIF arrBuffer_FC3[47] = 3 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eStartingUp;
+				ELSIF arrBuffer_FC3[47] = 4 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eTrackingPowerPoint;
+				ELSIF arrBuffer_FC3[47] = 5 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eForcedPowerReduction;
+				ELSIF arrBuffer_FC3[47] = 6 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eShuttingDown;
+				ELSIF arrBuffer_FC3[47] = 7 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eFaults;
+				ELSIF arrBuffer_FC3[47] = 8 THEN arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eStandby;
+				ELSE arrDataSymo10[byInverterInProgress].eOperatingStateInverter := E_Symo_PV_OperatingState.eNoDataReceived;
+			END_IF
+			//Next Step
+			IF iStateModbusRead = 2 THEN
+				fbMBRead_FC3.bExecute := FALSE;
+					timDelay.IN := FALSE;
+						iStateModbusRead := 3;
+							arrDataSymo10[byInverterInProgress].bError := FALSE; 
+								arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eNoError;
+			END_IF
+		END_IF
+			
+		//Error from Inverter
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q AND arrDataSymo10[byInverterInProgress].eOperatingStateInverter = E_Symo_PV_OperatingState.eFaults THEN
+			iStateModbusRead := 300;
+				arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eSymo10Error;
+		END_IF
+	 
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusRead := 300;
+				arrDataSymo10[byInverterInProgress].eErrorState := E_Symo_PV_Error.eModbusTCPError;
+		END_IF
+
+	3://Calculate the sum of the values
+		iStateModbus_CP := iStateModbusRead;
+		
+		lrCounterEnergyProduction := 0;
+			fbElMeter.lrCurrentL1 := 0;
+		fbElMeter.lrCurrentL2 := 0;	
+			fbElMeter.lrCurrentL3 := 0;
+		fbElMeter.lrVoltageL1N := 0;
+			fbElMeter.lrVoltageL2N := 0;
+		fbElMeter.lrVoltageL3N := 0;
+			fbElMeter.lrVoltageL1L2 := 0;
+		fbElMeter.lrVoltageL2L3 := 0;
+			fbElMeter.lrVoltageL3L1 := 0;
+		fbElMeter.lrPowerTotal := 0;
+			fbElMeter.lrFrequency := 0;
+		fbElMeter.lrReactivePowerTotal := 0;
+			fbElMeter.lrApparentPowerTotal := 0;
+		
+		FOR byLPForInverter := 1 TO 30 BY 1 DO 
+			lrCounterEnergyProduction := lrCounterEnergyProduction + arrProductionEnergy[byLPForInverter];
+			IF lrCounterEnergyProduction > fbElMeter.lrCounterEnergyT1_Production THEN
+				fbElMeter.lrCounterEnergyT1_Production := lrCounterEnergyProduction;
+			END_IF
+				fbElMeter.lrCurrentL1 := fbElMeter.lrCurrentL1 + arrCurrentL1[byLPForInverter];
+			fbElMeter.lrCurrentL2 := fbElMeter.lrCurrentL2 + arrCurrentL2[byLPForInverter];	
+				fbElMeter.lrCurrentL3 := fbElMeter.lrCurrentL3 + arrCurrentL3[byLPForInverter];
+			IF byTotalInverter > 0 THEN
+				fbElMeter.lrVoltageL1N := (fbElMeter.lrVoltageL1N + arrVoltageL1N[byLPForInverter]) / byTotalInverter;
+					fbElMeter.lrVoltageL2N := (fbElMeter.lrVoltageL2N + arrVoltageL2N[byLPForInverter]) / byTotalInverter;
+				fbElMeter.lrVoltageL3N := (fbElMeter.lrVoltageL3N + arrVoltageL3N[byLPForInverter]) / byTotalInverter;
+					fbElMeter.lrVoltageL1L2 := (fbElMeter.lrVoltageL1L2 + arrVoltageL1L2[byLPForInverter]) / byTotalInverter;
+				fbElMeter.lrVoltageL2L3 := (fbElMeter.lrVoltageL2L3 + arrVoltageL2L3[byLPForInverter]) / byTotalInverter;
+					fbElMeter.lrVoltageL3L1 := (fbElMeter.lrVoltageL3L1 + arrVoltageL3L1[byLPForInverter]) / byTotalInverter;
+				fbElMeter.lrFrequency := (fbElMeter.lrFrequency + arrFrequency[byLPForInverter]) / byTotalInverter;
+			END_IF
+					fbElMeter.lrPowerTotal := fbElMeter.lrPowerTotal + arrACPower[byLPForInverter];
+				fbElMeter.lrReactivePowerTotal := fbElMeter.lrReactivePowerTotal + arrReactivePower[byLPForInverter];
+					fbElMeter.lrApparentPowerTotal := fbElMeter.lrApparentPowerTotal + arrApparentPower[byLPForInverter];
+		END_FOR	
+					
+		fbElMeter.lrTotalCounterEnergy_Production := fbElMeter.lrCounterEnergyT1_Production; 
+		
+			iStateModbusRead := 4;
+	
+	4://Wait and go to write
+		iStateModbus_CP := iStateModbusRead;
+		
+		iStateModbusWrite := 1;
+		iStateModbusRead := - 1;	
+				
+	300://Error
+		iStateModbus_CP := iStateModbusRead;
+		timDelay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		arrDataSymo10[byInverterInProgress].bError := TRUE;
+		iStateModbusWrite := 1;
+		iStateModbusRead := - 1;	
+END_CASE
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+	
+CASE iStateModbusWrite OF	
+	1://Search the Unit ID to read out the Data for each Inverter with Unit ID <> 0
+		iStateModbus_CP := iStateModbusWrite;
+		arr_int_InverterSetpoint[byInverterInProgressWrite] := LIMIT (0,arr_int_InverterSetpoint[byInverterInProgressWrite],10000);
+		IF byInverterInProgressWrite >= 30 THEN byInverterInProgressWrite := 0; END_IF
+		
+		byInverterInProgressWrite := byInverterInProgressWrite + 1;
+		byInverterInProgressWrite := LIMIT(1,byInverterInProgressWrite,30);	
+		
+		IF arrUnitID_Inverter[byInverterInProgressWrite] <> 0 THEN iStateModbusWrite := 2; END_IF
+				
+
+	2://write disable inverter bit
+		iStateModbus_CP := iStateModbusWrite;	
+
+		arrBuffer_FC16[1] := BOOL_TO_WORD(NOT arr_m_DisableInverter[byInverterInProgressWrite]);		// reg 40241 / sunspec 40242 Enumerated valued.  Connection control. 0: Disconnected 1: Connected
+		arrBuffer_FC16[2] := INT_TO_WORD(arr_int_InverterSetpoint[byInverterInProgressWrite]);	// reg 40242 / sunspec 40243 Set power output to specified level. [1/100 %]
+	//	arrBuffer_FC16[3] := ;																		// reg 40243 / sunspec 40244 Time window for power limit change. 0-300
+	//	arrBuffer_FC16[4] := ;																		// reg 40244 / sunspec 40245 Timeout period for power limit. 0-28800
+		arrBuffer_FC16[5] := 2;																		// reg 40245 / sunspec 40246 Ramp time for moving from current setpoint to new setpoint. 0 - 65534 (0xFFFF has the same effect as 0x0000)
+		arrBuffer_FC16[6] := 1;																		// reg 40246 / sunspec 40247 Enumerated valued.  Throttle enable/disable control 0: Disabled 1: Enabled
+
+		IF arr_b_EnableWrite[byInverterInProgressWrite] then 
+				//AND (arrBuffer_FC16[1] <> arrBuffer_FC16_old[byInverterInProgressWrite,1] OR arrBuffer_FC16[2] <> arrBuffer_FC16_old[byInverterInProgressWrite,2]) THEN 
+		
+			fbMBWrite_FC16.nQuantity := 6;
+			fbMBWrite_FC16.nMBAddr := 40241;
+			fbMBWrite_FC16.nUnitID := arrUnitID_Inverter[byInverterInProgressWrite];
+			fbMBWrite_FC16.bExecute := TRUE;
+			
+		 
+				
+			IF fbMBWrite_FC16.bBusy THEN timDelay.IN := TRUE; END_IF
+		ELSE
+			fbMBWrite_FC16.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			// go to next write step
+			iStateModbusWrite := 3;
+		END_IF
+	
+		//Wait for Delay and then next step
+		IF NOT fbMBWrite_FC16.bBusy AND NOT fbMBWrite_FC16.bError AND timDelay.Q THEN
+			arrBuffer_FC16_old[byInverterInProgressWrite,1] := arrBuffer_FC16[1];
+			arrBuffer_FC16_old[byInverterInProgressWrite,2] := arrBuffer_FC16[2];
+			int_WriteSucessCounter :=int_WriteSucessCounter+1;
+			
+			fbMBWrite_FC16.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			//Restart from new with the Read out part
+			iStateModbusWrite := 3;
+		END_IF
+				
+		//Error or Timout
+		IF FPError_FC_16.Q OR timTimeout.Q THEN
+			fbMBWrite_FC16.bExecute := FALSE;
+			timDelay.IN := FALSE;
+			iStateModbusError := 300;
+		END_IF
+	
+	3:
+		ton_Wait_write.IN:=TRUE;
+		IF ton_Wait_write.Q THEN
+			ton_Wait_write.IN:=FALSE;
+			iStateModbusRead := 1;
+			iStateModbusWrite := 0;
+		END_IF
+END_CASE
+
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+		timDelay.IN := FALSE;
+		fbMBRead_FC3.bExecute := FALSE;
+		fbMBWrite_FC16.bExecute := FALSE;
+		arrDataSymo10[byInverterInProgressWrite].bError := TRUE;
+		//Restart from new with the Read out part after an Error
+		iStateModbusRead := 1;	
+		iStateModbusError := 0;
+		iStateModbusWrite := 0;
+END_CASE
+ton_Wait_write(pt:= T#50ms);
+(*------------------------------------------------------------------------------------------Modbus TCP Function---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(	sIPAddr:= sIPAdress, 
+				nTCPPort:= 502, 
+				cbLength:= SIZEOF(arrBuffer_FC3), 
+				pDestAddr:= ADR(arrBuffer_FC3), 
+				tTimeout:= T#10S );
+				
+	FPError_FC_3(CLK:= fbMBRead_FC3.bError, Q=> );
+
+fbMBWrite_FC16(
+		sIPAddr		:= sIPAdress, 
+		nTCPPort	:= 502, 
+		cbLength	:= SIZEOF(arrBuffer_FC16), 
+		pSrcAddr	:= ADR(arrBuffer_FC16),     
+		tTimeout	:= T#10S );
+		
+FPError_FC_16(CLK:= fbMBWrite_FC16.bError, Q=> );
+(*----------------------------------------------------------------------------------------Electric Meter Data----------------------------------------------------------------------------------------------*)
+
+//Error and Warning
+bErrorDevice := FALSE;
+	FOR byLPForInverter := 1 TO 30 BY 1 DO
+		IF arrDataSymo10[byLPForInverter].bError THEN bErrorDevice := TRUE; END_IF 
+	END_FOR 
+
+IF timDissableFunctions.Q THEN fbElMeter.bWarning := TRUE; fbElMeter.iWarningCode := 0; ELSE fbElMeter.bWarning := FALSE; END_IF   
+	IF bErrorDevice OR Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN fbElMeter.bError := TRUE; ELSE fbElMeter.bError := FALSE; END_IF  
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN fbElMeter.iErrorCode := 1;
+ELSIF bErrorDevice THEN fbElMeter.iErrorCode := 0;
+END_IF  
+
+//Read Out Data done for EM Function
+IF iStateModbusRead <> 3 THEN fbElMeter.bReadOutDataDone := TRUE; ELSE fbElMeter.bReadOutDataDone := FALSE; END_IF
+
+//Function block for meter data
+fbElMeter(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= FALSE, 
+	bWriteWithDelay:= TRUE,
+	bPowerDataInvers:= TRUE, 
+	bReadOutDataDone:= ,
+	iTimeReadOutInterval:= , 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= , 
+	lrVoltageL1N:= , 
+	lrVoltageL1L2:= , 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= , 
+	lrVoltageL2N:= , 
+	lrVoltageL2L3:= , 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= , 
+	lrVoltageL3N:= , 
+	lrVoltageL3L1:= , 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= , 
+	lrReactivePowerTotal:= , 
+	lrApparentPowerTotal:= , 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> , 
+	stDataEMOutPowerDelay=> stDataEMPower_PV, 
+	stDataEMOutCounter=> ,
+	stDataEMOutCounterDelay=> stDataEMCounter_PV, 
+	bReadOutMeter=> );
+
+(*-----------------------------------------------------------Handle data to Global structure for the Electric Meter system-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].bEnabled := FALSE;	
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Consumption := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Production := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Consumption := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Production := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPower := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerProduction := 0;
+												Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Consumption := 0;
+													Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Production := 0;
+		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricMeters);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricMeters THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfEM_OUT_PV > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].bEnabled := fbElMeter.stDataEMOutPower.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].byErrorWarning := fbElMeter.stDataEMOutPower.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Production;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Consumption;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Production;		
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPower := fbElMeter.stDataEMOutPower.lrPowerTotal;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerConsumption := fbElMeter.stDataEMOutPower.lrPowerConsumption;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerProduction := fbElMeter.stDataEMOutPower.lrPowerProduction;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Consumption := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Production := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[1]), bEventBasedActive=> );
+arrPD[3](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[2]), bEventBasedActive=> );
+arrPD[4](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[3]), bEventBasedActive=> );
+arrPD[5](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[4]), bEventBasedActive=> );
+arrPD[6](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[5]), bEventBasedActive=> );
+arrPD[7](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[6]), bEventBasedActive=> );
+arrPD[8](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[7]), bEventBasedActive=> );
+arrPD[9](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[8]), bEventBasedActive=> );
+arrPD[10](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[9]), bEventBasedActive=> );
+arrPD[11](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[10]), bEventBasedActive=> );
+arrPD[12](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[11]), bEventBasedActive=> );
+arrPD[13](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[12]), bEventBasedActive=> );
+arrPD[14](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[13]), bEventBasedActive=> );
+arrPD[15](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[14]), bEventBasedActive=> );
+arrPD[16](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[15]), bEventBasedActive=> );
+arrPD[17](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[16]), bEventBasedActive=> );
+arrPD[18](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[17]), bEventBasedActive=> );
+arrPD[19](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[18]), bEventBasedActive=> );
+arrPD[20](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[19]), bEventBasedActive=> );
+arrPD[21](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[20]), bEventBasedActive=> );
+arrPD[22](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[21]), bEventBasedActive=> );
+arrPD[23](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[22]), bEventBasedActive=> );
+arrPD[24](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[23]), bEventBasedActive=> );
+arrPD[25](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[24]), bEventBasedActive=> );
+arrPD[26](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[25]), bEventBasedActive=> );
+arrPD[27](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[26]), bEventBasedActive=> );
+arrPD[28](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[27]), bEventBasedActive=> );
+arrPD[29](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[28]), bEventBasedActive=> );
+arrPD[30](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[29]), bEventBasedActive=> );
+arrPD[31](lrValue:= BYTE_TO_LREAL(arrUnitID_Inverter[30]), bEventBasedActive=> );
+PD_String(sText:= sIPAdress, bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Symo_PV_Inverter_FLOAT_1_DM_30_InclDisable">
+      <LineId Id="10" Count="0" />
+      <LineId Id="2259" Count="0" />
+      <LineId Id="2258" Count="0" />
+      <LineId Id="11" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="1542" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="1442" Count="0" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="1408" Count="0" />
+      <LineId Id="1629" Count="4" />
+      <LineId Id="1628" Count="0" />
+      <LineId Id="2095" Count="3" />
+      <LineId Id="2157" Count="0" />
+      <LineId Id="2162" Count="0" />
+      <LineId Id="2158" Count="2" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="1060" Count="1" />
+      <LineId Id="1059" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="1634" Count="2" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="810" Count="0" />
+      <LineId Id="812" Count="18" />
+      <LineId Id="811" Count="0" />
+      <LineId Id="1149" Count="0" />
+      <LineId Id="1151" Count="1" />
+      <LineId Id="1919" Count="4" />
+      <LineId Id="1150" Count="0" />
+      <LineId Id="1637" Count="0" />
+      <LineId Id="1639" Count="4" />
+      <LineId Id="1638" Count="0" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="769" Count="0" />
+      <LineId Id="591" Count="0" />
+      <LineId Id="1644" Count="10" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="772" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="1655" Count="2" />
+      <LineId Id="2038" Count="0" />
+      <LineId Id="1658" Count="13" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="1674" Count="3" />
+      <LineId Id="1673" Count="0" />
+      <LineId Id="1672" Count="0" />
+      <LineId Id="1680" Count="7" />
+      <LineId Id="1679" Count="0" />
+      <LineId Id="1678" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="1101" Count="0" />
+      <LineId Id="916" Count="0" />
+      <LineId Id="1244" Count="7" />
+      <LineId Id="1242" Count="0" />
+      <LineId Id="925" Count="0" />
+      <LineId Id="1254" Count="7" />
+      <LineId Id="1252" Count="0" />
+      <LineId Id="934" Count="0" />
+      <LineId Id="1264" Count="7" />
+      <LineId Id="1262" Count="0" />
+      <LineId Id="943" Count="0" />
+      <LineId Id="1239" Count="0" />
+      <LineId Id="1197" Count="6" />
+      <LineId Id="1195" Count="1" />
+      <LineId Id="1274" Count="7" />
+      <LineId Id="1272" Count="0" />
+      <LineId Id="961" Count="0" />
+      <LineId Id="1284" Count="7" />
+      <LineId Id="1282" Count="0" />
+      <LineId Id="970" Count="0" />
+      <LineId Id="1294" Count="7" />
+      <LineId Id="1292" Count="0" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="1304" Count="7" />
+      <LineId Id="1302" Count="0" />
+      <LineId Id="988" Count="0" />
+      <LineId Id="1314" Count="7" />
+      <LineId Id="1312" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="1357" Count="4" />
+      <LineId Id="2039" Count="0" />
+      <LineId Id="1362" Count="2" />
+      <LineId Id="1355" Count="0" />
+      <LineId Id="997" Count="0" />
+      <LineId Id="1367" Count="7" />
+      <LineId Id="1365" Count="0" />
+      <LineId Id="1006" Count="0" />
+      <LineId Id="1377" Count="7" />
+      <LineId Id="1375" Count="0" />
+      <LineId Id="1015" Count="0" />
+      <LineId Id="1387" Count="7" />
+      <LineId Id="1385" Count="0" />
+      <LineId Id="871" Count="0" />
+      <LineId Id="1397" Count="7" />
+      <LineId Id="1395" Count="0" />
+      <LineId Id="1407" Count="0" />
+      <LineId Id="503" Count="8" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="518" Count="0" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="514" Count="3" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="1102" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="1718" Count="18" />
+      <LineId Id="1977" Count="0" />
+      <LineId Id="1979" Count="2" />
+      <LineId Id="1738" Count="18" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="2171" Count="0" />
+      <LineId Id="2175" Count="0" />
+      <LineId Id="2172" Count="2" />
+      <LineId Id="2170" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="2482" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="2177" Count="2" />
+      <LineId Id="2245" Count="9" />
+      <LineId Id="2180" Count="2" />
+      <LineId Id="2474" Count="0" />
+      <LineId Id="2468" Count="5" />
+      <LineId Id="2475" Count="0" />
+      <LineId Id="2183" Count="0" />
+      <LineId Id="2550" Count="0" />
+      <LineId Id="2439" Count="0" />
+      <LineId Id="2451" Count="0" />
+      <LineId Id="2440" Count="4" />
+      <LineId Id="2308" Count="0" />
+      <LineId Id="2193" Count="5" />
+      <LineId Id="2200" Count="4" />
+      <LineId Id="2477" Count="2" />
+      <LineId Id="2476" Count="0" />
+      <LineId Id="2205" Count="1" />
+      <LineId Id="2208" Count="5" />
+      <LineId Id="2298" Count="1" />
+      <LineId Id="2214" Count="0" />
+      <LineId Id="2294" Count="0" />
+      <LineId Id="2300" Count="1" />
+      <LineId Id="2304" Count="1" />
+      <LineId Id="2307" Count="0" />
+      <LineId Id="2438" Count="0" />
+      <LineId Id="2306" Count="0" />
+      <LineId Id="2216" Count="16" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="2163" Count="4" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="2233" Count="0" />
+      <LineId Id="2454" Count="4" />
+      <LineId Id="2234" Count="0" />
+      <LineId Id="2459" Count="0" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="1147" Count="0" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="1759" Count="2" />
+      <LineId Id="1758" Count="0" />
+      <LineId Id="1757" Count="0" />
+      <LineId Id="1158" Count="0" />
+      <LineId Id="656" Count="0" />
+      <LineId Id="866" Count="3" />
+      <LineId Id="1815" Count="0" />
+      <LineId Id="1817" Count="0" />
+      <LineId Id="1816" Count="0" />
+      <LineId Id="771" Count="0" />
+      <LineId Id="1818" Count="37" />
+      <LineId Id="832" Count="0" />
+      <LineId Id="657" Count="0" />
+      <LineId Id="661" Count="14" />
+      <LineId Id="696" Count="1" />
+      <LineId Id="699" Count="5" />
+      <LineId Id="706" Count="3" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="683" Count="6" />
+      <LineId Id="1856" Count="9" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="658" Count="0" />
+      <LineId Id="759" Count="2" />
+      <LineId Id="1688" Count="29" />
+      <LineId Id="763" Count="0" />
+      <LineId Id="765" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

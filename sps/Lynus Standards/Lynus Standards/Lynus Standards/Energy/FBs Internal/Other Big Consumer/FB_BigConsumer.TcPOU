@@ -1,0 +1,286 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_BigConsumer" Id="{3fc0b7a0-66d5-462c-baa3-4e6185d01c3a}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_BigConsumer
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;									//Enable or dissable this function
+	{attribute 'hide'}
+	bError								: BOOL;									//Error from the big consumer
+	{attribute 'hide'}
+	bWarning							: BOOL;									//Warning from the big consumer
+	{attribute 'hide'}
+	bEPOIsActive						: BOOL;									//Emergency power operation is active
+	{attribute 'hide'}
+	bExternalLock						: BOOL;									//External lock (All functions are locked)
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;									//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	iErrorCode							: INT;									//Error Code from external OBC
+	{attribute 'hide'}
+	iWarningCode						: INT;									//Warning Code from external OBC
+	{attribute 'hide'}
+	dwBatterySOC						: DWORD;								//Actual Battery SOC in %
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;								//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;								//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;								//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;								//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;								//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;								//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrPowerOBC							: LREAL;								//Input Value from the power of the big consumer with unit W
+	{attribute 'hide'}
+	rTargetPower						: REAL;									//Target power from 0% to +100%
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;							//Delay Time to write some Data to the Output	
+	{attribute 'hide'}
+	stSetupOBC							: ST_Setup_OBC;							//Setup other big consumer
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataOBCOut						: ST_OBC_Output;						//Other big consumer output data
+	{attribute 'hide'}
+	stDataOBCOutDelay					: ST_OBC_Output;						//Other big consumer output data with delay
+END_VAR
+VAR
+	FPEnable							: R_TRIG;								//Internal positive Edge
+	FNEnable							: F_TRIG;								//Internal negative Edge
+	FNManualy							: F_TRIG;								//Internal negative edge
+	timDelayOutputs						: TON;									//Timer to send Data with Delay to the outputs
+	timSOCOff							: TON;									//Timer to dissable the Device when the SOC from the Battery is under the Setpoint
+	timError							: TOF;									//Timer to set the error
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 29.05.2021
+//Version : 1.0.0.0
+
+//With this function its possible to control a other big consumer with the plc
+//When the big consumer is switching maualy, then the target power from the ems function is without functionality
+//The output from the big consumer will be set when the target power from the ems is >= 100%
+//When the target power is < Constants.byTargetOffPowerOnOffDevices then the output for On/Off will be reset
+//When the big consumer is controllable then the target power is set linear to the output
+//When the big consumer is controlled by the target power mode, then the soc from the battery must have a value between the On soc and Off soc fromt he setups and the On soc must be reached on time to enable the big consumer. 
+//Optional this function has a external lock possibility. If this lock is active, then the big consumer is off and without functionality.  
+//When the system is in emergency power mode, then its possible to switch off this big consumer automatically.
+
+(*---------------------------------------------------------------Limits-------------------------------------------------------------------------------*)
+
+stSetupOBC.rMaxPower := LIMIT(0,stSetupOBC.rMaxPower,500);
+	rTargetPower := LIMIT(0,rTargetPower,100);
+		dwBatterySOC := LIMIT(0,dwBatterySOC,100);
+			stSetupOBC.byManualyTargetPower := LIMIT(0,stSetupOBC.byManualyTargetPower,100);
+
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrPowerOBC := LIMIT(-999999999999999,lrPowerOBC,999999999999999);
+				
+IF stSetupOBC.byDisableSOC > stSetupOBC.byEnableSOC THEN stSetupOBC.byEnableSOC := stSetupOBC.byDisableSOC + 1; END_IF
+
+stSetupOBC.byDisableSOC := LIMIT(0,stSetupOBC.byDisableSOC,100);
+	stSetupOBC.byEnableSOC := LIMIT(1,stSetupOBC.byEnableSOC,100);
+
+(*---------------------------------------------------------------Enable-------------------------------------------------------------------------------*)
+
+stDataOBCOut.bEnabled := bEnable;
+
+(*---------------------------------------------------------------Error and Waring-------------------------------------------------------------------------------*)
+
+timError(IN:= bError, PT:= T#5S, Q=> , ET=> );
+
+stDataOBCOut.byErrorWarning := 0;
+	IF bWarning THEN stDataOBCOut.byErrorWarning := 1; END_IF 
+	IF timError.Q THEN stDataOBCOut.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF bExternalLock THEN stDataOBCOut.eMessage := E_Message_OBC.eExternalLockActive;
+ELSIF stDataOBCOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataOBCOut.eMessage := E_Message_OBC.eNoConnectionToBackend;
+ELSIF stDataOBCOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataOBCOut.eMessage := E_Message_OBC.eErrorOBC;
+ELSIF stDataOBCOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataOBCOut.eMessage := E_Message_OBC.eTooMuchOBC;
+ELSE stDataOBCOut.eMessage := E_Message_OBC.eNoMessage; 
+END_IF
+
+(*---------------------------------------------------------------Logic-------------------------------------------------------------------------------*)
+
+//Timer for SOC dissabling
+timSOCOff(IN:= dwBatterySOC <= stSetupOBC.byDisableSOC, PT:= T#30S, Q=> , ET=> );
+
+//Target power
+stDataOBCOut.rTargetPower := DINT_TO_REAL(REAL_TO_DINT(rTargetPower * 100)) / 100;
+IF stSetupOBC.bManualyOn THEN stDataOBCOut.rTargetPower := BYTE_TO_REAL(stSetupOBC.byManualyTargetPower); END_IF
+
+ //Switch off
+FNManualy(CLK:= stSetupOBC.bManualyOn, Q=> ); 
+ 
+IF NOT bEnable OR bExternalLock OR stDataOBCOut.byErrorWarning = 2 OR stDataOBCOut.rTargetPower <= 0 OR timSOCOff.Q OR (bEPOIsActive AND stSetupOBC.bOnEmergPowerOff) OR FNManualy.Q THEN
+	stDataOBCOut.bOutput := FALSE;
+END_IF
+
+//Switch On
+IF (bEnable AND NOT bExternalLock AND stDataOBCOut.byErrorWarning <> 2 AND NOT bEPOIsActive AND rTargetPower > 0 AND dwBatterySOC >= stSetupOBC.byEnableSOC) OR 
+	(bEnable AND NOT bExternalLock AND stDataOBCOut.byErrorWarning <> 2 AND bEPOIsActive AND NOT stSetupOBC.bOnEmergPowerOff AND rTargetPower > 0 AND dwBatterySOC >= stSetupOBC.byEnableSOC) OR
+		(bEnable AND NOT bExternalLock AND stDataOBCOut.byErrorWarning <> 2 AND stSetupOBC.bManualyOn) THEN				
+			stDataOBCOut.bOutput := TRUE; 
+ END_IF
+
+ //Use this Output to switch Charging station on and off without possibility to send a target power value (Not controllable)
+IF stDataOBCOut.rTargetPower >= 100 AND stDataOBCOut.bOutput THEN stDataOBCOut.bOutputOnOff := TRUE; END_IF  
+IF stDataOBCOut.rTargetPower < Constants_Energy.byTargetOffPowerForOnOffDevices OR NOT stDataOBCOut.bOutput THEN stDataOBCOut.bOutputOnOff := FALSE; END_IF  
+
+IF NOT stDataOBCOut.bOutput THEN stDataOBCOut.rTargetPower := 0; END_IF 
+ 
+(*---------------------------------------------------------------Power data-------------------------------------------------------------------------------*)
+
+IF bEnable THEN
+	stDataOBCOut.lrPower := LINT_TO_LREAL(LREAL_TO_LINT((lrPowerOBC / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataOBCOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataOBCOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataOBCOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataOBCOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataOBCOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataOBCOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF   
+				
+		IF stDataOBCOut.lrPower < 0 THEN
+				stDataOBCOut.lrPowerProduction := (stDataOBCOut.lrPower * - 1);
+				stDataOBCOut.lrPowerConsumption := 0;
+		ELSIF stDataOBCOut.lrPower > 0 THEN
+				stDataOBCOut.lrPowerProduction := 0;
+				stDataOBCOut.lrPowerConsumption := stDataOBCOut.lrPower;
+		ELSIF stDataOBCOut.lrPower = 0 THEN
+				stDataOBCOut.lrPowerProduction := 0;
+				stDataOBCOut.lrPowerConsumption := 0;
+		END_IF
+		
+ELSE
+	stDataOBCOut.lrPower := 0;
+		stDataOBCOut.lrCounterEnergyT1_Consumption := 0;
+			stDataOBCOut.lrCounterEnergyT2_Consumption := 0;
+				stDataOBCOut.lrCounterEnergyT1_Production := 0;
+					stDataOBCOut.lrCounterEnergyT2_Production := 0;
+						stDataOBCOut.lrPowerProduction := 0;
+							stDataOBCOut.lrPowerConsumption := 0;	
+								stDataOBCOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataOBCOut.lrTotalCounterEnergy_Production := 0;
+END_IF
+
+(*---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+stDataOBCOut.byPriority := stSetupOBC.byPriority;
+	stDataOBCOut.rMaxPower := DINT_TO_REAL(REAL_TO_DINT(stSetupOBC.rMaxPower * 100)) / 100;
+		stDataOBCOut.bSOnEmergPowerOff := stSetupOBC.bOnEmergPowerOff;
+			stDataOBCOut.bSManualyOn := stSetupOBC.bManualyOn;
+				stDataOBCOut.bySManualyTargetPower := stSetupOBC.byManualyTargetPower;
+				
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+		
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataOBCOutDelay := stDataOBCOut;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_BigConsumer">
+      <LineId Id="342" Count="2" />
+      <LineId Id="340" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="345" Count="1" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="39" Count="2" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="689" Count="4" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="191" Count="1" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="127" Count="1" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="411" Count="1" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="442" Count="1" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="399" Count="3" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="165" Count="4" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="67" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="406" Count="2" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="694" Count="4" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="107" Count="8" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="119" Count="5" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="272" Count="1" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="372" Count="1" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="458" Count="1" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="477" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

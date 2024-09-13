@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgHeatPump" Id="{1c22508a-87a8-44fb-9157-cda44770dc05}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHeatPump
+VAR
+	byte_OperationMode_H1: BYTE;							//{#lynus.ag#()}
+	real_ComfortSetpoint_H1 :REAL;							//{#lynus.ag#()}
+	real_ReducedSetpoint_H1: REAL;							//{#lynus.ag#()}
+	real_HeatingCurveSlope_H1:REAL;							//{#lynus.ag#()}
+	real_HeatingCurveDisplacement_H1: REAL;					//{#lynus.ag#()}
+	real_RelativeRoomHumidity1_H1: REAL;	
+	real_RoomTemperature1_H1 : REAL;
+	real_RoomSetpoint1_H1 : REAL;
+	real_FlowTemperature1_H1 : REAL;						//{#lynus.ag#()}
+	real_FlowTemperatureSetpoint1_H1 : REAL;				//{#lynus.ag#()}
+	m_RoomThermostat1_H1 : BOOL;							//{#lynus.ag#()}
+	real_HeatOutput :REAL;									//{#lynus.ag#()}
+	real_HeatInputSource :REAL;								//{#lynus.ag#()}
+	real_PowerConsumption :REAL;							//{#lynus.ag#()}
+	m_Heatingcircuit1_H1 : BOOL;							//{#lynus.ag#()}
+	FB_DwordToWord :FB_CV_WORD_TO_DWORD;
+
+	real_Outside_Temp : REAL;								//{#lynus.ag#()}
+	real_Outside_Temp_min : REAL;							//{#lynus.ag#()}
+	real_Outside_Temp_max : REAL;							//{#lynus.ag#()}
+	real_Outside_Temp_attenuated : REAL;					//{#lynus.ag#()}
+	real_Outside_Temp_composite : REAL;						//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MODBUS_RTU_Olymp();
+
+byte_OperationMode_H1 		:= 	WORD_TO_BYTE(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[0]);
+real_ComfortSetpoint_H1		:= 	word_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[1])/64;
+real_ReducedSetpoint_H1		:= 	word_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[2])/64;
+real_HeatingCurveSlope_H1	:= 	WORD_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[4])/50;
+real_HeatingCurveDisplacement_H1:= 	WORD_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[5])/64;
+real_RelativeRoomHumidity1_H1:= 	word_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[16])/1;
+real_RoomTemperature1_H1	:= 	WORD_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[18])/64;
+real_RoomSetpoint1_H1		:= 	word_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[1].wArrayReceiveBuffer[20])/64;
+real_FlowTemperature1_H1	:= 	word_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[2].wArrayReceiveBuffer[0])/64;
+real_FlowTemperatureSetpoint1_H1:= 	WORD_TO_REAL(Modbus_RTU_Olymp.structArrayModbusRTU[2].wArrayReceiveBuffer[2])/64;
+m_RoomThermostat1_H1		:= 	WORD_TO_BOOL(Modbus_RTU_Olymp.structArrayModbusRTU[2].wArrayReceiveBuffer[4]);
+m_Heatingcircuit1_H1		:= 	WORD_TO_BOOL(Modbus_RTU_Olymp.structArrayModbusRTU[2].wArrayReceiveBuffer[9]);
+
+
+FB_DwordToWord( 	wInputValue_1 := Modbus_RTU_Olymp.structArrayModbusRTU[5].wArrayReceiveBuffer[0],
+					wInputValue_2 := Modbus_RTU_Olymp.structArrayModbusRTU[5].wArrayReceiveBuffer[1],
+					eByteOrderForConvert :=,
+					dwOutputValue =>);
+real_HeatOutput				:= 	DWORD_TO_REAL(FB_DwordToWord.dwOutputValue)/100;
+
+FB_DwordToWord( 	wInputValue_1 := Modbus_RTU_Olymp.structArrayModbusRTU[5].wArrayReceiveBuffer[3],
+					wInputValue_2 := Modbus_RTU_Olymp.structArrayModbusRTU[5].wArrayReceiveBuffer[4],
+					eByteOrderForConvert :=,
+					dwOutputValue =>);
+real_HeatInputSource			:= 	DWORD_TO_REAL(FB_DwordToWord.dwOutputValue)/100;
+					
+FB_DwordToWord( 	wInputValue_1 := Modbus_RTU_Olymp.structArrayModbusRTU[5].wArrayReceiveBuffer[6],
+					wInputValue_2 := Modbus_RTU_Olymp.structArrayModbusRTU[5].wArrayReceiveBuffer[7],
+					eByteOrderForConvert :=,
+					dwOutputValue =>);
+real_PowerConsumption			:= 	DWORD_TO_REAL(FB_DwordToWord.dwOutputValue)/100;
+
+
+
+real_Outside_Temp 				:= INT_TO_REAL(WORD_TO_INT(Modbus_RTU_Olymp.structArrayModbusRTU[6].wArrayReceiveBuffer[4]))/64;
+real_Outside_Temp_min			:= INT_TO_REAL(WORD_TO_INT(Modbus_RTU_Olymp.structArrayModbusRTU[6].wArrayReceiveBuffer[6]))/64;
+real_Outside_Temp_max			:= INT_TO_REAL(WORD_TO_INT(Modbus_RTU_Olymp.structArrayModbusRTU[6].wArrayReceiveBuffer[7]))/64;
+real_Outside_Temp_attenuated	:= INT_TO_REAL(WORD_TO_INT(Modbus_RTU_Olymp.structArrayModbusRTU[6].wArrayReceiveBuffer[8]))/64;
+real_Outside_Temp_composite		:= INT_TO_REAL(WORD_TO_INT(Modbus_RTU_Olymp.structArrayModbusRTU[6].wArrayReceiveBuffer[9]))/64;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgHeatPump">
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="26" Count="1" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="41" Count="1" />
+      <LineId Id="45" Count="2" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="49" Count="4" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="55" Count="4" />
+      <LineId Id="88" Count="2" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="94" Count="3" />
+      <LineId Id="93" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

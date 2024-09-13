@@ -1,0 +1,283 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres
+  namespace: lynus
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 255Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres
+  namespace: lynus
+data:
+  small_postgresql.conf: |
+    listen_addresses = '*'
+    max_connections = 192
+    shared_buffers = 1GB
+    effective_cache_size = 3GB
+    maintenance_work_mem = 512MB
+    work_mem = 5MB
+    dynamic_shared_memory_type = posix
+    effective_io_concurrency = 256
+    max_worker_processes = 22
+    max_parallel_workers_per_gather = 2
+    max_parallel_workers = 2
+    wal_buffers = 16MB
+    checkpoint_completion_target = 0.9
+    max_wal_size = 1GB  # maybe still room for improvements?
+    min_wal_size = 512MB
+    random_page_cost = 1.1
+    default_statistics_target = 500
+    idle_in_transaction_session_timeout = 3600000
+    log_timezone = 'Etc/UTC'
+    autovacuum_max_workers = 10
+    autovacuum_naptime = 10
+    datestyle = 'iso, mdy'
+    timezone = 'Etc/UTC'
+    lc_messages = 'C.UTF-8'
+    lc_monetary = 'C.UTF-8'
+    lc_numeric = 'C.UTF-8'
+    lc_time = 'C.UTF-8'
+    default_text_search_config = 'pg_catalog.english'
+    shared_preload_libraries = 'timescaledb'
+    max_locks_per_transaction = 2048
+    timescaledb.telemetry_level=basic
+    timescaledb.max_background_workers = 16  # might need to increase them 
+    timescaledb.last_tuned = '2024-02-26T15:15:43Z'
+    timescaledb.last_tuned_version = '0.15.0'
+  medium_postgresql.confg: |
+    listen_addresses = '*'
+    max_connections = 192
+    shared_buffers = 1989MB
+    effective_cache_size = 5968MB
+    work_mem = 5093kB
+    maintenance_work_mem = 1018619kB
+    dynamic_shared_memory_type = posix
+    effective_io_concurrency = 256
+    max_worker_processes = 32
+    max_parallel_workers_per_gather = 8
+    max_parallel_workers = 16
+    wal_buffers = 16MB
+    checkpoint_completion_target = 0.9
+    max_wal_size = 1GB
+    min_wal_size = 512MB
+    random_page_cost = 1.1
+    default_statistics_target = 500
+    idle_in_transaction_session_timeout = 3600000
+    log_timezone = 'Etc/UTC'
+    autovacuum_max_workers = 10
+    autovacuum_naptime = 10
+    datestyle = 'iso, mdy'
+    timezone = 'Etc/UTC'
+    lc_messages = 'C.UTF-8'
+    lc_monetary = 'C.UTF-8'
+    lc_numeric = 'C.UTF-8'
+    lc_time = 'C.UTF-8'
+    default_text_search_config = 'pg_catalog.english'
+    shared_preload_libraries = 'timescaledb'
+    max_locks_per_transaction = 2048
+    timescaledb.telemetry_level=basic
+    timescaledb.max_background_workers = 24
+    timescaledb.last_tuned = '2023-06-07T09:05:44Z'
+    timescaledb.last_tuned_version = '0.14.3'
+  large_postgresql.conf: |
+    listen_addresses = '*'
+    max_connections = 192
+    shared_buffers = 6GB
+    work_mem = 20MB
+    maintenance_work_mem = 2GB
+    effective_cache_size = 10GB
+    dynamic_shared_memory_type = posix
+    effective_io_concurrency = 256
+    max_worker_processes = 48
+    max_parallel_workers_per_gather = 8
+    max_parallel_workers = 16 # equal or more as cpu cores
+    wal_buffers = 16MB
+    checkpoint_completion_target = 0.9
+    max_wal_size = 1GB
+    min_wal_size = 512MB
+    random_page_cost = 1.1
+    default_statistics_target = 100
+    idle_in_transaction_session_timeout = 3600000
+    log_timezone = 'Etc/UTC'
+    autovacuum_max_workers = 10
+    autovacuum_naptime = 10
+    datestyle = 'iso, mdy'
+    timezone = 'Etc/UTC'
+    lc_messages = 'C.UTF-8'
+    lc_monetary = 'C.UTF-8'
+    lc_numeric = 'C.UTF-8'
+    lc_time = 'C.UTF-8'
+    default_text_search_config = 'pg_catalog.english'
+    shared_preload_libraries = 'timescaledb'
+    max_locks_per_transaction = 2048
+    timescaledb.telemetry_level=basic
+    timescaledb.max_background_workers = 24
+    timescaledb.last_tuned = '2024-02-27T07:16:33Z'
+    timescaledb.last_tuned_version = '0.15.0'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: lynus
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      initContainers:
+        - name: copy-configmap-to-volume-and-change-ownership
+          image: alpine:3.19.0
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            [
+              "mkdir -p /var/lib/postgresql/data/pgdata && cp -f /postgresql.conf /var/lib/postgresql/data/postgresql.conf && chown -R 1000:1000 /var/lib/postgresql/data",
+            ]
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: data
+            - mountPath: /postgresql.conf
+              readOnly: true
+              name: config
+              subPath: POSTGRES_CONFIG_BIG_SERVICES
+      containers:
+        - name: postgres
+          image: timescale/timescaledb-ha:pg14.11-ts2.14.2-all
+          resources:
+            requests:
+              memory: "MINIMUM_RAM_BIG_SERVICES"
+              cpu: "MINIMUM_CPU_BIG_SERVICES"
+            limits:
+              memory: "MAXIMUM_RAM_POSTGRES"
+              cpu: "MAXIMUM_CPU_POSTGRES"
+          imagePullPolicy: Always
+          args: ["-c", "config_file=/var/lib/postgresql/data/postgresql.conf"]
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: data
+            - mountPath: /dev/shm
+              name: dshm
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+        - name: exporter
+          image: prometheuscommunity/postgres-exporter:v0.15.0
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          env:
+            - name: DB_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_ADDRESS
+                  name: lynus-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PORT
+                  name: lynus-credentials
+            - name: DB_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_SSLMODE
+                  name: lynus-credentials
+            - name: DATA_SOURCE_URI
+              value: $(DB_ADDR):$(DB_PORT)?sslmode=$(DB_MODE)
+            - name: DATA_SOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USERNAME
+                  name: lynus-credentials
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: lynus-credentials
+          ports:
+            - containerPort: 9187
+              protocol: TCP
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres
+        - name: config
+          configMap:
+            name: postgres
+        - name: dshm
+          emptyDir:
+            medium: Memory
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: nodetype
+                    operator: In
+                    values:
+                      - huge
+            - weight: 50
+              preference:
+                matchExpressions:
+                  - key: nodetype
+                    operator: In
+                    values:
+                      - huge-cpu
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: lynus
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: psql
+    - port: 9187
+      targetPort: 9187
+      name: metrics
+  type: ClusterIP

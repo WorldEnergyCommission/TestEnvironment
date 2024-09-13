@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCS" Id="{91d5cffb-995d-4f6e-8ea3-b4b543e3e39d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbCS1	:	FB_ECS_Keba_P30;
+	bEnableCS1	: BOOL:=TRUE;
+	
+	lr_KEBA_TotalPower_KebaP30: LREAL;		//{#lynus.ag#()}
+	b_KEBA_CarConnected: BOOL;				//{#lynus.ag#()}
+	b_KEBA_Enabled: BOOL;					//{#lynus.ag#()}
+	b_KEBA_OutputOn: BOOL;					//{#lynus.ag#()}
+	dw_KEBA_ChargingState: DWORD;			//{#lynus.ag#()}
+	dw_KEBA_ErrorCode: DWORD;				//{#lynus.ag#()}
+	lreal_KEBA_TotalEnergyConsumption: LREAL;	//{#lynus.ag#()}
+	lreal_KEBA_EnergySession: LREAL;		//{#lynus.ag#()}
+	r_trig_Errror	:r_trig;
+	iCount: INT;
+	Str_IP: STRING(25):='192.168.1.195';
+	i_ErrorCount: INT;
+END_VAR
+VAR PERSISTENT
+	lreal_KEBA_Energy_Current_Month		: LREAL;	//{#lynus.ag#()}
+	lreal_KEBA_Energy_Last_Month		: LREAL;	//{#lynus.ag#()}
+	wMonthOld:WORD;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCS1(
+	bEnable:= bEnableCS1, 
+	bPowerDataInvers:=TRUE , 
+	byElectricFuseLine:= ,
+	uiFailsafeCurrent:=32000,
+	uiFailsafeTimeOut:=600,
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= Str_IP,        //'192.168.1.194', // DHCP zugewiesen am 11.04.2023
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> );
+	
+	
+	lr_KEBA_TotalPower_KebaP30 		:=	fbCS1.lrTotalPowerECSRealTime;
+	b_KEBA_CarConnected			 	:=	fbCS1.stDataECS.bCarConnected;
+	b_KEBA_Enabled					:= 	fbCS1.stDataECS.bEnabled;
+	b_KEBA_OutputOn					:=	fbCS1.stDataECS.bOutputOnOff;
+	dw_KEBA_ChargingState			:=  fbCs1.dwChargingState;
+	dw_KEBA_ErrorCode				:=  fbCs1.dwErrorCode;
+	lreal_KEBA_TotalEnergyConsumption	:=	fbCS1.lrTotalCounterEnergy_Consumption;
+	lreal_KEBA_EnergySession		:=	fbCS1.lrChargedEnergySession;
+
+
+// kWh current month / last month
+IF prg_SystemTime.structSystemTime.wMonth <> wMonthOld AND prg_SystemTime.structSystemTime.wDay=1 THEN
+	lreal_KEBA_Energy_Last_Month:=lreal_KEBA_Energy_Current_Month;
+	wMonthOld:=prg_SystemTime.structSystemTime.wMonth;
+END_IF
+lreal_KEBA_Energy_Current_Month := prgEM.lrEnergyKeba-lreal_KEBA_Energy_Last_Month;
+
+
+
+
+
+
+// scan Modbus IP address
+(*
+r_trig_Errror(CLK:=fbCS1.fbMBRead_FC3.bError);
+
+IF r_trig_Errror.Q THEN
+	i_ErrorCount := i_ErrorCount+1;
+	IF i_ErrorCount>10 THEN 
+		i_ErrorCount:=0;
+		iCount:=iCount+1;
+		IF iCount <0 OR iCount >255 THEN
+			iCount := 100;
+		END_IF
+	ELSE
+		i_ErrorCount:=i_ErrorCount+1;
+	END_IF
+END_IF	
+
+Str_IP := concat('192.168.1.',INT_TO_STRING(iCount));
+*)
+	
+
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="20" Count="3" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="28" Count="5" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="137" Count="1" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="176" Count="4" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="101" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="93" Count="2" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="79" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

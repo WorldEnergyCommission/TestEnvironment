@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgHoneywell" Id="{76f538b5-983a-43af-94fa-68d5b800d087}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHoneywell
+VAR
+	fbHoneywellCntr			: FB_Honeywell_Excange_Data;
+	fbTempH01				: FB_TempS_Ext_Input;
+	fbH01_1					: FB_EHE_Linear_AO;			//{#lynus.ag#()}
+	fbH01_2					: FB_EHE_Linear_AO;			//{#lynus.ag#()}
+	fbH01_3					: FB_EHE_Linear_AO;			//{#lynus.ag#()}
+	bSOnEmergPowerOffH01_1	: BOOL;						//{#lynus.ag#()}
+	bSOnEmergPowerOffH01_2	: BOOL;						//{#lynus.ag#()}
+	bSOnEmergPowerOffH01_3	: BOOL;						//{#lynus.ag#()}
+	rBufferTemp_H01_Top		: REAL;						//{#lynus.ag#()}
+	rBufferTemp_H01_Below	: REAL;						//{#lynus.ag#()}
+	rBufferTemp_H08_Top		: REAL;						//{#lynus.ag#()}
+	rBufferTemp_H08_Below	: REAL;						//{#lynus.ag#()}
+	bErrorHoneywell			: BOOL;						//{#lynus.ag#()}
+	byErrorWarningH01_1		: BYTE;						//{#lynus.ag#()}
+	byErrorWarningH01_2		: BYTE;						//{#lynus.ag#()}
+	byErrorWarningH01_3		: BYTE;						//{#lynus.ag#()}
+	dwHeatingMeterHouse		: DWORD;					//{#lynus.ag#()}
+	dwHeatingMeterStable	: DWORD;					//{#lynus.ag#()}
+	dwWaterMeterMain1		: DWORD;					//{#lynus.ag#()}
+	dwWaterMeterService1	: DWORD;					//{#lynus.ag#()}
+	dwWaterMeterStable1		: DWORD;					//{#lynus.ag#()}
+	dwElectricMeterCounter	: DWORD;					//{#lynus.ag#()}
+	dwElectricMeterPower	: LREAL;					//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bOnEmergPowerOffH01_1	: BOOL;						//{#lynus.ag#()}
+	bOnEmergPowerOffH01_2	: BOOL;						//{#lynus.ag#()}
+	bOnEmergPowerOffH01_3	: BOOL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Updated : M.Schwarzmann
+//Date : 11.07.2022
+//Version : 1.0.0.4
+
+//changes
+//1.0.0.1 : added dwWaterMeterMain, dwWaterMeterService, dwElectricMeterCounter, dwElectricMeterPower at fbHoneywellCntr
+//1.0.0.2 : changed Variable dwElectricMeterPower from Type REAL to LREAL
+//1.0.0.3 : re-named Variables dwWaterMeterMain, dwWaterMeterService
+//1.0.0.4 : added dwWaterMeterStable1
+
+
+//Power Data
+//Each EHE 9 kW
+
+fbHoneywellCntr(
+	bEnable:= TRUE, 
+	byUnitID:= 1, 
+	rTargetPowerEHEH01_1:= fbH01_1.rTargetPowerForExtFunc, 
+	rTargetPowerEHEH01_2:= fbH01_2.rTargetPowerForExtFunc, 
+	rTargetPowerEHEH01_3:= fbH01_3.rTargetPowerForExtFunc, 
+	rTargetPowerEHEH08_1:= prgEHE.fbH08_1.rTargetPowerForExtFunc, 
+	rTargetPowerEHEH08_2:= prgEHE.fbH08_2.rTargetPowerForExtFunc, 
+	rTargetPowerEHEH09_1:= prgEHE.fbH09_1.rTargetPowerForExtFunc, 
+	sIPAdress:= '10.68.10.60', 
+	bErrorTemp_H01_Top=> , 
+	bErrorTemp_H01_Below=> , 
+	bErrorTemp_H08_Top=> , 
+	bErrorTemp_H08_Below=> , 
+	bErrorTemp_H09_WW=> , 
+	bErrorFunction=> bErrorHoneywell, 
+	dwHeatingMeterHouse=> dwHeatingMeterHouse,
+	dwHeatingMeterStable=> dwHeatingMeterStable,
+	dwWaterMeterMain1=> dwWaterMeterMain1,
+	dwWaterMeterService1=> dwWaterMeterService1,
+	dwWaterMeterStable1=> dwWaterMeterStable1,
+	dwElectricMeterCounter=> dwElectricMeterCounter,
+	dwElectricMeterPower=> dwElectricMeterPower,
+	rBufferTemp_H01_Top=> rBufferTemp_H01_Top, 
+	rBufferTemp_H01_Below=> rBufferTemp_H01_Below, 
+	rBufferTemp_H08_Top=> rBufferTemp_H08_Top, 
+	rBufferTemp_H08_Below=> rBufferTemp_H08_Below, 
+	rBufferTemp_H09_WW=> );
+
+fbTempH01(
+	bEnable:= TRUE, 
+	rTemperatureOffset:= , 
+	bExtErrorTemp:= fbHoneywellCntr.bErrorFunction OR fbHoneywellCntr.bErrorTemp_H01_Below OR fbHoneywellCntr.bErrorTemp_H01_Top, 
+	rExtTempValue:= (fbHoneywellCntr.rBufferTemp_H01_Below + fbHoneywellCntr.rBufferTemp_H01_Top) / 2, 
+	stDataTempS=> , 
+	diNrOfTempS_OUT=> );
+
+//Buffer Workshop 	
+fbH01_1.stSetupEHE.bOnEmergPowerOff := bOnEmergPowerOffH01_1;
+	fbH01_1.stSetupEHE.bDisableLegionellaPr := TRUE;
+	
+fbH01_1(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	bNoLinear:= FALSE,
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_EHE:= , 
+	diNrOfTempS_IN:= fbTempH01.diNrOfTempS_OUT, 
+	stSetupEHE:= , 
+	stDataEHE=> , 
+	diNrOfEHE_OUT=> , 
+	rTargetPowerForExtFunc=> );
+
+byErrorWarningH01_1 := fbH01_1.stDataEHE.byErrorWarning;
+	bSOnEmergPowerOffH01_1 := fbH01_1.stDataEHE.bSOnEmergPowerOff;	
+
+fbH01_2.stSetupEHE.bOnEmergPowerOff := bOnEmergPowerOffH01_2;
+	fbH01_2.stSetupEHE.bDisableLegionellaPr := TRUE;
+	
+fbH01_2(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	bNoLinear:= FALSE,
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_EHE:= , 
+	diNrOfTempS_IN:= fbTempH01.diNrOfTempS_OUT, 
+	stSetupEHE:= , 
+	stDataEHE=> , 
+	diNrOfEHE_OUT=> , 
+	rTargetPowerForExtFunc=> );
+
+byErrorWarningH01_2 := fbH01_2.stDataEHE.byErrorWarning;
+	bSOnEmergPowerOffH01_2 := fbH01_2.stDataEHE.bSOnEmergPowerOff;	
+
+fbH01_3.stSetupEHE.bOnEmergPowerOff := bOnEmergPowerOffH01_3;
+	fbH01_3.stSetupEHE.bDisableLegionellaPr := TRUE;
+	
+fbH01_3(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	bNoLinear:= FALSE,
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_EHE:= , 
+	diNrOfTempS_IN:= fbTempH01.diNrOfTempS_OUT, 
+	stSetupEHE:= , 
+	stDataEHE=> , 
+	diNrOfEHE_OUT=> , 
+	rTargetPowerForExtFunc=> );
+	
+byErrorWarningH01_3 := fbH01_3.stDataEHE.byErrorWarning;
+	bSOnEmergPowerOffH01_3 := fbH01_3.stDataEHE.bSOnEmergPowerOff;]]></ST>
+    </Implementation>
+    <LineIds Name="prgHoneywell">
+      <LineId Id="248" Count="6" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="64" Count="15" />
+      <LineId Id="181" Count="1" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="80" Count="3" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="42" Count="5" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="13" Count="2" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="16" Count="4" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="116" Count="1" />
+      <LineId Id="146" Count="1" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="2" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="26" Count="4" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="118" Count="1" />
+      <LineId Id="150" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="36" Count="4" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="120" Count="1" />
+      <LineId Id="154" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

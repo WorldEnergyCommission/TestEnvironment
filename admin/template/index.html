@@ -1,0 +1,36 @@
+{{define "index"}} {{template "header"}}
+<h1>Home</h1>
+<div class="row">
+  <div class="col-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <h2 class="mb-0">{{.users}}</h2>
+        <p class="mb-0">Users</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <h2 class="mb-0">{{.projects}}</h2>
+        <p class="mb-0">Projects</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <h2 class="mb-0" id="measurements">{{.measurements}}</h2>
+        <p class="mb-0">Measurements</p>
+        <script>
+          // thousand separator
+          const value = document.querySelector("#measurements");
+          value.innerHTML = new Intl.NumberFormat("en-US").format(
+            parseInt(value.innerHTML)
+          );
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

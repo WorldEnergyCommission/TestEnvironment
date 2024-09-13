@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_K_Bus_State" Id="{ec286298-7c58-45dc-9497-7e15e8371516}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_K_Bus_State
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	uiKBusState_OUT					AT%I*		: UINT;											//K-Bus State from the Basestation on wich the Terminal KL6301 is connected
+	b_Kbus_notOk			: BOOL;			// KBus not OK, State <> 0
+	word_ErrorCount			: WORD;			// Counts 1 up every time the KBus gets reset
+END_VAR
+VAR
+	FB_IOF_DeviceReset	: IOF_DeviceReset;
+    DEVICEID  : UDINT;
+    RESET     : BOOL;
+	ton_Delay_ResetKBus: Ton;
+	Count_up: CTU;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Stefan Lackner
+//Company : EfficientIO
+//Date : 09.02.2023
+//Version : 1.0.0.0
+
+//With this Function Block its possible to connect the Variable on the output to the State Variable with the K-Bus Box
+//if the State <> 0 for longer then one Minute, the KBus gets reset
+
+IF uiKBusState_OUT <> 0 AND NOT FB_IOF_DeviceReset.BUSY THEN
+	ton_Delay_ResetKBus.IN := TRUE;
+ELSE
+	ton_Delay_ResetKBus.IN := FALSE;
+END_IF
+ton_Delay_ResetKBus( PT := T#1M);
+ 
+FB_IOF_DeviceReset(
+	NETID:= '', 
+	DEVICEID:= 2, 		// ID 2 is the first terminal
+	RESET:= ton_Delay_ResetKBus.Q, 
+	TMOUT:= T#5S, 
+	BUSY=> , 
+	ERR=> , 
+	ERRID=> );
+	
+IF uiKBusState_OUT <> 0 THEN
+	b_Kbus_notOk := TRUE;
+ELSE
+	b_Kbus_notOk := FALSE;
+END_IF
+
+Count_up(
+	CU:= b_Kbus_notOk, 
+	RESET:= FALSE , 
+	PV:= , 
+	Q=> , 
+	CV=> word_ErrorCount);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_K_Bus_State">
+      <LineId Id="92" Count="35" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="67" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

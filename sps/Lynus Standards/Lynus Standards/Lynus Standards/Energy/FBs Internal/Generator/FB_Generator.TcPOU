@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Generator" Id="{ae2fbe09-bbce-45e7-a981-a56d9c79a1e6}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Generator
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;									//Enable or disable this function
+	{attribute 'hide'}
+	bError								: BOOL;									//Generator has a error
+	{attribute 'hide'}
+	bWarning							: BOOL;									//Generator has a warning
+	{attribute 'hide'}
+	bReset								: BOOL;									//Reset the function after a error (Read the Reset output back with a negative edge because send a active reset signal to the generator)
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;									//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	iErrorCode							: INT;									//Error Code from external Generator
+	{attribute 'hide'}
+	iWarningCode						: INT;									//Warning Code from external Generator
+	{attribute 'hide'}
+	dwBatterySOC						: DWORD;								//Actual Battery SOC in %
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption	: LREAL;								//Total Counter for Energy consumption with unit Wh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production		: LREAL;								//Total Counter for Energy production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption		: LREAL;								//Total counter for energy Tariff 1 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption		: LREAL;								//Total counter for energy Tariff 2 consumption with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production		: LREAL;								//Total counter for energy Tariff 1 production with unit Wh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production		: LREAL;								//Total counter for energy Tariff 2 production with unit Wh
+	{attribute 'hide'}
+	lrPowerGenerator					: LREAL;								//Input Value from the power of the Generator with unit W
+	{attribute 'hide'}
+	tDelaySwitchOn						: TIME;									//Delay befor the generator is switching on
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;							//Delay Time to write some Data to the Output
+	{attribute 'hide'}
+	stSetupGenerator					: ST_Setup_Generator;					//Setup Generator
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataGeneratorOut					: ST_Generator_Output;					//Generator Output data
+	{attribute 'hide'}
+	stDataGeneratorOutDelay				: ST_Generator_Output;					//Generator Output data with delay
+END_VAR
+VAR
+	FPReset								: R_TRIG;								//Internal positive edge
+	FPResetIntern						: R_TRIG;								//Internal positive edge
+	FPEnable							: R_TRIG;								//Internal positive Edge
+	FNEnable							: F_TRIG;								//Internal negative Edge
+	timDelayOutputs						: TON;									//Timer to send Data with Delay to the outputs
+	timGenEin							: TON;									//Timer to switch on the generator
+	timResetOut							: TOF;									//Timer Reset Out
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.05.2021
+//Version : 1.0.0.0
+
+//With this function its possible to control the basics from a generator
+//The generator is switching on and off with the SOC from the battery
+
+(*---------------------------------------------------------------Limit Inputs-------------------------------------------------------------------------------*)
+
+dwBatterySOC := LIMIT(0,dwBatterySOC,100);
+
+IF stSetupGenerator.byEnableSOC > stSetupGenerator.byDisableSOC THEN stSetupGenerator.byDisableSOC := stSetupGenerator.byEnableSOC + 1; END_IF
+
+stSetupGenerator.byDisableSOC := LIMIT(1,stSetupGenerator.byDisableSOC,100);
+	stSetupGenerator.byEnableSOC := LIMIT(0,stSetupGenerator.byEnableSOC,100);
+		tDelaySwitchOn := LIMIT(T#10S,tDelaySwitchOn,T#2M);
+		
+IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN lrTotalCounterEnergy_Consumption := LIMIT(0,lrTotalCounterEnergy_Consumption,999999999999999); END_IF
+	IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN lrTotalCounterEnergy_Production := LIMIT(0,lrTotalCounterEnergy_Production,999999999999999); END_IF
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN lrCounterEnergyT1_Consumption := LIMIT(0,lrCounterEnergyT1_Consumption,999999999999999); END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN lrCounterEnergyT2_Consumption := LIMIT(0,lrCounterEnergyT2_Consumption,999999999999999); END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN lrCounterEnergyT1_Production := LIMIT(0,lrCounterEnergyT1_Production,999999999999999); END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN lrCounterEnergyT2_Production := LIMIT(0,lrCounterEnergyT2_Production,999999999999999); END_IF
+						lrPowerGenerator := LIMIT(-999999999999999,lrPowerGenerator,999999999999999);
+	
+(*---------------------------------------------------------------------------enable----------------------------------------------------------------------------------*)
+
+stDataGeneratorOut.bEnabled := bEnable;
+
+(*-----------------------------------------------------------------------------Error-Warning and Reset----------------------------------------------------------------------------*)
+
+IF bWarning THEN stDataGeneratorOut.byErrorWarning := 1; END_IF 
+	IF bError THEN stDataGeneratorOut.byErrorWarning := 2; END_IF
+
+FPReset(CLK:= stSetupGenerator.bReset AND stDataGeneratorOut.byErrorWarning <> 0, Q=> ); 
+
+timResetOut(IN:= FPReset.Q, PT:= T#2S, Q=> , ET=> );	
+
+	stDataGeneratorOut.bSReset := timResetOut.Q;
+
+FPResetIntern(CLK:= bReset, Q=> );	
+	
+IF NOT bError AND NOT bWarning AND FPResetIntern.Q THEN stDataGeneratorOut.byErrorWarning := 0; END_IF
+
+//Messages and Error Codes
+IF stDataGeneratorOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataGeneratorOut.eMessage := E_Message_Generator.eNoConnectionToBackend;
+ELSIF stDataGeneratorOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataGeneratorOut.eMessage := E_Message_Generator.eGeneratorError;
+ELSIF stDataGeneratorOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataGeneratorOut.eMessage := E_Message_Generator.eTooMuchGenerators;
+ELSE stDataGeneratorOut.eMessage := E_Message_Generator.eNoMessage; 
+END_IF
+
+(*----------------------------------------------------------------------------Logic------------------------------------------------------------------------------------*)
+
+//Switch on
+timGenEin(IN:= bEnable AND stDataGeneratorOut.byErrorWarning <> 2 AND dwBatterySOC <= stSetupGenerator.byEnableSOC, PT:= tDelaySwitchOn, Q=> , ET=> );
+IF timGenEin.Q THEN stDataGeneratorOut.bOutput := TRUE; END_IF 
+
+//Switch off
+IF NOT bEnable OR stDataGeneratorOut.byErrorWarning = 2 OR dwBatterySOC >= stSetupGenerator.byDisableSOC THEN stDataGeneratorOut.bOutput := FALSE; END_IF 
+
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------------------------*)
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+
+IF bEnable THEN
+	stDataGeneratorOut.lrPower:= LINT_TO_LREAL(LREAL_TO_LINT((lrPowerGenerator / 1000) * 100)) / 100;
+		IF IsFinite(F_LREAL(lrCounterEnergyT1_Consumption)) THEN stDataGeneratorOut.lrCounterEnergyT1_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Consumption / 1000) * 100)) / 100; END_IF
+			IF IsFinite(F_LREAL(lrCounterEnergyT2_Consumption)) THEN stDataGeneratorOut.lrCounterEnergyT2_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Consumption / 1000) * 100)) / 100; END_IF
+				IF IsFinite(F_LREAL(lrCounterEnergyT1_Production)) THEN stDataGeneratorOut.lrCounterEnergyT1_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT1_Production / 1000) * 100)) / 100; END_IF
+					IF IsFinite(F_LREAL(lrCounterEnergyT2_Production)) THEN stDataGeneratorOut.lrCounterEnergyT2_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrCounterEnergyT2_Production / 1000) * 100)) / 100; END_IF
+						IF IsFinite(F_LREAL(lrTotalCounterEnergy_Consumption)) THEN stDataGeneratorOut.lrTotalCounterEnergy_Consumption := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Consumption / 1000) * 100)) / 100; END_IF
+							IF IsFinite(F_LREAL(lrTotalCounterEnergy_Production)) THEN stDataGeneratorOut.lrTotalCounterEnergy_Production := LINT_TO_LREAL(LREAL_TO_LINT((lrTotalCounterEnergy_Production / 1000) * 100)) / 100; END_IF 	
+			
+	IF stDataGeneratorOut.lrPower < 0 THEN
+		stDataGeneratorOut.lrPowerProduction := 0;
+		stDataGeneratorOut.lrPowerConsumption := (stDataGeneratorOut.lrPower * - 1);
+	ELSIF stDataGeneratorOut.lrPower > 0 THEN
+		stDataGeneratorOut.lrPowerProduction := stDataGeneratorOut.lrPower;
+		stDataGeneratorOut.lrPowerConsumption := 0;
+	ELSIF stDataGeneratorOut.lrPower = 0 THEN
+		stDataGeneratorOut.lrPowerProduction := 0;
+		stDataGeneratorOut.lrPowerConsumption := 0;
+	END_IF
+ELSE	
+	stDataGeneratorOut.lrPower := 0;
+		stDataGeneratorOut.lrCounterEnergyT1_Consumption := 0;
+			stDataGeneratorOut.lrCounterEnergyT2_Consumption := 0;
+				stDataGeneratorOut.lrCounterEnergyT1_Production := 0;
+					stDataGeneratorOut.lrCounterEnergyT2_Production := 0;
+						stDataGeneratorOut.lrPowerProduction := 0;
+							stDataGeneratorOut.lrPowerConsumption := 0;	
+								stDataGeneratorOut.lrTotalCounterEnergy_Consumption := 0;
+									stDataGeneratorOut.lrTotalCounterEnergy_Production := 0;
+END_IF
+
+(*---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataGeneratorOutDelay := stDataGeneratorOut; 
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Generator">
+      <LineId Id="280" Count="2" />
+      <LineId Id="278" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="450" Count="4" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="152" Count="1" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="150" Count="1" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="313" Count="2" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="85" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="455" Count="4" />
+      <LineId Id="247" Count="12" />
+      <LineId Id="261" Count="8" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="330" Count="4" />
+      <LineId Id="326" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

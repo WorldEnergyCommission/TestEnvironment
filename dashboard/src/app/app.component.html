@@ -1,0 +1,23 @@
+<body [style.font-family]="userData?.font" *ngIf="project && username && password && token; else incorrect">
+    <app-dashboard *ngIf="!module; else singleModule" [userData]="userData"></app-dashboard>
+
+    <ng-template #singleModule>
+        <div class="singleModule">
+            <div class="background flex width-100"
+                [ngStyle]="{'background': userData && userData.colors ? userData.colors.primary : ''}">
+                <div class="box flex width-100"
+                    [ngStyle]="{'border-color': userData && userData.colors ? userData.colors.default : ''}">
+                    <app-modules [id]="module" [userData]="userData" [dashboard]="false"></app-modules>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+</body>
+
+<ng-template #incorrect>
+    <div class="error">
+        <p *ngIf="error">Incorrect credentials or wrong project id.</p>
+        <p *ngIf="!(project && username && password)">Missing query params in url.</p>
+        <p *ngIf="!(project && username && password)">Required params: project_id, password, username</p>
+    </div>
+</ng-template>

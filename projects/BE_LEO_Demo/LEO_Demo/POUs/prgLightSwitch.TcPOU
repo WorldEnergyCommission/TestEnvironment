@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgLightSwitch" Id="{81341900-eb74-404d-8e3c-ae2de52a0211}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgLightSwitch
+VAR
+	fbLight : FB_Light;
+	bSwitchOn : BOOL; //{#lynus.ag#()}
+	bSwitchOff : BOOL; //{#lynus.ag#()}
+	bStateLight : BOOL; //{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbLight(bOn:=bSwitchOn, bOff:=bSwitchOff, bLight=>bStateLight);]]></ST>
+    </Implementation>
+    <LineIds Name="prgLightSwitch">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgBattery" Id="{445907d2-f3d3-45e0-82fc-94f744324500}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgBattery
+VAR
+	fbBatt						: FB_SunSpec_PV_Inverter_T;
+	fbBattCounter				: FB_EnergyCounter;
+	lrPowerBatt					: LREAL;						//{#lynus.ag#()}
+	dwSOCBattery				: DWORD;						//{#lynus.ag#()}
+	byErrorWarningBatt			: BYTE;							//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterBatt				: LREAL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// To-Do:
+// adopt FB Declaration, change to correct FB
+// adopt FB Definition, change to correct in/out Vars
+// correct lrPowerBatt definition
+// correct lrCounterBatt definition
+// correct byErrorWarningBatt definition
+
+fbBatt(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.1.25', 
+	byUnitID_Inverter:= 1, 
+	stDataSunSpec=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+lrPowerBatt := fbBatt.stDataEMPower_PV.lrPowerTotal;
+byErrorWarningBatt := fbBatt.stDataEMPower_PV.byErrorWarning;
+
+fbBattCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerBatt, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbBattCounter.lrTotalCounterEnergy_Consumption > lrCounterBatt THEN  	
+	lrCounterBatt := fbBattCounter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgBattery">
+      <LineId Id="51" Count="3" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="20" Count="12" />
+      <LineId Id="39" Count="11" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HTTP_Post_Zaptec_ReqToken" Id="{46afe3b1-899b-4f6c-8948-64bf976f9896}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HTTP_Post_Zaptec_ReqToken
+VAR_INPUT
+	{attribute 'hide'}
+	sUsername			: STRING(100);											//Username from the Zaptec Account
+	{attribute 'hide'}
+	sPassword			: STRING(100);											//Password from the Zaptec Account
+	{attribute 'hide'}
+    bPostToken          : BOOL;													//Send Post Request for Token		
+	{attribute 'hide'}
+	tTimeOut			: TIME := T#10S;										//Timer for Timeout
+END_VAR
+VAR_IN_OUT
+	{attribute 'hide'}
+    fbClient            : FB_IotHttpClient;										//FB Http Client
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bValidResult		: BOOL;													//Valid Result received from Server
+	{attribute 'hide'}
+	bBusy             	: BOOL;													//Busy Flag
+	{attribute 'hide'}
+    bError              : BOOL;													//Error Flag
+	{attribute 'hide'}
+	udiValidityToken	: UDINT;												//Validity from the Token in seconds. (Token is valid only for this time)
+	{attribute 'hide'}
+	sToken				: STRING(1500);											//Bearer Token
+	{attribute 'hide'}
+	sTokenType			: STRING(50);											//Token Type
+END_VAR
+VAR
+	fbJsonRead			: FB_JsonDomParser;										//Json Parser
+	jsonDoc		  		: SJsonValue;											//Json Value
+	jsonProp			: SJsonValue;											//Json Value
+    fbRequest           : FB_IotHttpRequest;									//HTTP Request
+	fbHeader            : FB_IotHttpHeaderFieldMap;								//Header Function
+	timTimeout			: TON;													//Timer for Timeout
+    RisingEdge          : R_TRIG;												//Internal Risig Edge
+    bOnce               : BOOL:= TRUE;											//Add the addidional Header Part
+    bGetContentResult   : BOOL;													//Content Received
+ 	nState              : UDINT;												//State
+	nReqCount           : UDINT;												//Request Counter
+    nResCount           : UDINT;												//Receive Conter
+    nValidResCount      : UDINT;												//Valid receive Counter
+    nErrCount           : UDINT;												//Error Counter
+	sUsernameInt		: STRING(200);											//Internal Username
+	sPasswordInt		: STRING(200);											//Internal Password
+   	sContent            : STRING(500);											//Content to send with the psot request
+	sReceiveContent		: STRING(2000);											//Received Content
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 03.11.2021
+//Version : 1.0.0.0
+
+//With this Function is possible to make a POST Request to a Zaptec Account to receive the Bearer Token
+//This Token is neccessary for all other Requests to the Zaptec Account
+//Each Token has a Validity
+
+RisingEdge(CLK:= bPostToken);
+
+//Content with Username and PW
+sUsernameInt := sUsername;
+sPasswordInt := sPassword;
+
+//URL Encoding for Username
+IF FIND(sUsernameInt,'@') <> 0 THEN
+	sUsernameInt := REPLACE(sUsernameInt,'%40',1,FIND(sUsernameInt,'@'));
+END_IF
+
+//URL Encoding for Password
+IF FIND(sPasswordInt,'@') <> 0 THEN
+	sPasswordInt := REPLACE(sPasswordInt,'%40',1,FIND(sPasswordInt,'@'));
+END_IF
+
+//Prepear the Payload for the Post Request to receive the Token
+sContent := 'grant_type=password&username=';
+	CONCAT2(ADR(sContent),ADR(sUsernameInt),ADR(sContent),SIZEOF(sContent));
+		sContent := CONCAT(sContent,'&password=');
+			CONCAT2(ADR(sContent),ADR(sPasswordInt),ADR(sContent),SIZEOF(sContent));
+
+//Add the Content type in the Header
+IF bOnce THEN
+    fbHeader.AddField('content-type','application/x-www-form-urlencoded', FALSE);
+    bOnce:= FALSE;
+END_IF
+
+//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN nState := 0; bBusy := FALSE; END_IF
+
+CASE nState OF
+	
+	0://Request
+		IF RisingEdge.Q THEN
+			IF fbRequest.SendRequest(sUri:= '/oauth/token', fbClient:= fbClient, 
+									 eRequestType:= ETcIotHttpRequestType.HTTP_POST, 
+									 pContent:= ADR(sContent), 
+									 nContentSize:= LEN2(ADR(sContent)), fbHeader) THEN
+				nState:= 1;
+				nReqCount:= nReqCount+1;
+				bBusy:= TRUE;
+				bError:= FALSE;
+				bValidResult := FALSE;
+			END_IF
+		END_IF
+		
+	1://Wait for the Response
+		IF NOT fbRequest.bBusy THEN
+			bError:= TRUE;
+			IF NOT fbRequest.bError THEN
+				bGetContentResult:= fbRequest.GetContent(pContent:= ADR(sReceiveContent),
+														 nContentSize:= SIZEOF(sReceiveContent), 
+														 bSetNullTermination:= TRUE);
+				IF fbRequest.nStatusCode >= 200 AND fbRequest.nStatusCode < 300 THEN
+					bValidResult := TRUE;
+					//Parse Document
+					jsonDoc := fbJsonRead.ParseDocument(sReceiveContent);
+						//Token
+						jsonProp := fbJsonRead.FindMember(jsonDoc,'access_token');
+							IF jsonProp <> 0 AND fbJsonRead.IsString(jsonProp) THEN
+								fbJsonRead.CopyString(jsonProp,sToken,SIZEOF(sToken));	
+							END_IF
+						//Token Type
+						jsonProp := fbJsonRead.FindMember(jsonDoc,'token_type');
+							IF jsonProp <> 0 AND fbJsonRead.IsString(jsonProp) THEN
+								sTokenType := fbJsonRead.GetString(jsonProp);	
+							END_IF	
+						//Expires IN
+						jsonProp := fbJsonRead.FindMember(jsonDoc,'expires_in');
+							IF jsonProp <> 0 AND fbJsonRead.IsUint(jsonProp) THEN
+								udiValidityToken := fbJsonRead.GetUint(jsonProp);	
+							END_IF
+					bError:= FALSE;   
+					nResCount:= nResCount+1;
+				END_IF
+			END_IF
+				nState:= 0;
+				bBusy:= FALSE;
+					IF bError THEN
+						nErrCount:= nErrCount+1;
+					END_IF
+		END_IF
+		
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HTTP_Post_Zaptec_ReqToken">
+      <LineId Id="339" Count="2" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="342" Count="1" />
+      <LineId Id="379" Count="1" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="167" Count="1" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="236" Count="1" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="176" Count="1" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="281" Count="1" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="124" Count="2" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="440" Count="1" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="43" Count="7" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="53" Count="7" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="320" Count="2" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="326" Count="2" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="334" Count="2" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="75" Count="7" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

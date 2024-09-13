@@ -1,0 +1,1379 @@
+{
+  "HeatingCircuitOptimization": {
+    "title": "Heizkreis-Optimierung",
+    "name": "Heizkreis-Optimierung",
+    "overview": "<div> Dieser Regler ist für die optimale Temperaturregelung in Gebäuden konzipiert. Alle 15 Minuten sagt der Regler die Raumtemperatur für die nächsten sechs Stunden voraus und berechnet die optimale Ventilstellung, um den Energieverbrauch zu minimieren und gleichzeitig den Komfort hoch zu halten. Der Regler gibt die berechnete Ventilstellung und eine Vorhersage für die Raumtemperatur aus, die auf dem Feldgerät abgebildet werden kann. Der Regler hat verschiedene Betriebs Modi die eingestellt werden können. Je nach eingestelltem Modus verbraucht der Regler deutlich weniger Energie. <div style=\"text-align: center; margin-top: 10px\">Der Regler benötigt die folgenden Variablen: <br>Vor- und Rücklauftemperatur des Heizkreises <br>Raumtemperatur <br>Ventilstellung <br>Temperatur der Nebenräume <br>Lage des Gebäudes <br>Eingestellte Temperatur</div> <div style=\"margin-top: 10px\">WICHTIG: Es ist wichtig, dass der aktuelle Wert der Ventilposition auf der Steuerung auch derjenigen entspricht die dem MPC Controller geschickt werden. </div> </div>",
+    "table": [
+      {
+        "name": "Aktuelle Werte im Diagramm",
+        "description": "Zeigt die berechnete Ventilstellung des MPC-Service für diesen Bereich und die berechnete Raumtemperatur des MPC-Service für diesen Bereich für die nächsten 6 Stunden. ODER Mit Forcast werden die Daten, die von der API angefordert werden, 6 Stunden im Voraus angezeigt. Diese Daten können für jeden Bereich gleich angezeigt werden. Auch die eingesparte Energie wird einmal pro Tag aktualisiert.",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Plus (Befehl Plus)",
+        "description": "Stellt die Soll Temperatur im MPC-Service um 0,5 °C höher ein.",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Minus (Befehl Minus)",
+        "description": "Stellt die Soll Temperatur im MPC-Service um 0,5 °C tiefer ein.",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Ausgangsfeld 1 (Istwert Solltemperatur)",
+        "description": "Zeigt die eingestellte Solltemperatur an. Beim Wechsel zwischen Normalbetrieb und Absenkbetrieb wird hier die jeweilige Solltemperatur angezeigt.",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Ereignis anzeigen (Heizen Aktiv)",
+        "description": "Zeigt an, wenn das Ventil durch den MPC-Dienst zum heizen angesteuert wird.",
+        "allowedValues": "251 = Rot <br>Alle anderen Werte = Dunkel."
+      },
+      {
+        "name": "Ereignis anzeigen (MPC Aktiv)",
+        "description": "Zeigt an, ob der MPC-Controller bereit ist, das Ventil auf der SPS zu steuern oder nicht.",
+        "allowedValues": "251 = Grün <br>Alle anderen Werte = Dunkel."
+      },
+      {
+        "name": "Eingabefeld 1 (Sollwert Phase 1 EIN-Stunden)",
+        "description": "Zeiteinstellung, wann der Absenkbetrieb aktiv sein soll oder nicht. Außerhalb dieser Zeit ist der normale Modus aktiv. Stunden EIN",
+        "allowedValues": "0-23"
+      },
+      {
+        "name": "Eingabefeld 2 (Sollwert Phase 1 AUS Stunden)",
+        "description": "Zeiteinstellung, wann der Absenkbetrieb aktiv sein soll oder nicht. Außerhalb dieser Zeit ist der Normalmodus aktiv. Stunden AUS",
+        "allowedValues": "0-23"
+      },
+      {
+        "name": "Eingabefeld 3 (Sollwert Phase 1 EIN-Minuten)",
+        "description": "Zeiteinstellung, wann der Absenkbetrieb aktiv sein soll oder nicht. Außerhalb dieser Zeit ist der Normalbetrieb aktiv. Minuten EIN",
+        "allowedValues": "0-59"
+      },
+      {
+        "name": "Eingabefeld 4 (Sollwert Phase 1 AUS Minuten)",
+        "description": "Zeiteinstellung, wann der Absenkbetrieb aktiv sein soll oder nicht. Außerhalb dieser Zeit ist der Normalmodus aktiv. Minuten AUS",
+        "allowedValues": "0-59"
+      },
+      {
+        "name": "Eingabefeld 5 (Sollwert Absenktemperatur)",
+        "description": "Hier kann die Temperatur für den Absenkbetrieb eingestellt werden.",
+        "allowedValues": "5-30°C"
+      },
+      {
+        "name": "Eingabefeld 6 (Sollwert Service Aus Temperatur)",
+        "description": "Hier kann die Temperatur eingegeben werden, ab welcher durchschnitts Außentemperatur der Regler abschalten soll.",
+        "allowedValues": "15-20°C"
+      },
+      {
+        "name": "Schalter 1(Absenkbetrieb Ein, Absenkbetrieb Aus, Status Absenkbetrieb)",
+        "description": "Über diesen Schalter kann der Absenkbetrieb ein oder ausgeschalten werden.",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ereignis anzeigen (Service Ein/Aus)",
+        "description": "Zeigt an ob der Regler eingeschalten oder ausgeschalten ist. Die kann z.B. der Fall sein wenn die Außentemperatur zu hoch ist. ",
+        "allowedValues": "251 = Grün <br> Alle anderen Werte = Rot"
+      },
+      {
+        "name": "Auswahl Startdatum für Historische Daten",
+        "description": "Hier kann ein Startdatum ausgewählt werden, ab wann die Daten aus der Datenbank rückwirkend für diesen Controller zum lernen verwendet werden können. Es handelt sich dabei um die sogenannten Historischen Daten. Wird kein Datum angegeben, nimmt der Controller zum lernen keine Historischen Daten. Das lernen und bis der Controller dann Bereit für den Einsatz ist, dauert somit dann länger. ",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Vorlauftemperatur",
+        "description": "Vorlauftemperatur des Heizkreises aus dem zu regelnden Raum",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Rücklauftemperatur",
+        "description": "Rücklauftemperatur des Heizkreises aus dem zu regelnden Raum",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Raumtemperatur",
+        "description": "Raumtemperatur, die geregelt werden soll.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Ventilstellung",
+        "description": "Ventilstellung aus dem zu regelnden Raum von der SPS zum MPC-Regler.",
+        "allowedValues": "0-1 oder 0-100"
+      },
+      {
+        "name": "Neue Ventilstellung",
+        "description": "Neue Ventilstellung, die der MPC-Regler berechnet hat, um sie an die SPS zu senden",
+        "allowedValues": "0-1 oder 0-100"
+      },
+      {
+        "name": "Neue Raumtemperatur",
+        "description": "Neu berechnete Raumtemperatur, die in der nächsten Stunde erreicht werden soll.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Neue Solltemperatur",
+        "description": "Hier kann die aktuelle Solltemperatur vom MPC an die SPS geschickt werden. ",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Der MPC-Service generiert optional einen Heartbeat, um auf der SPS zu überwachen, ob der Service aktiv ist oder nicht. Der Wert wechselt alle 60 Sekunden zwischen 1 und 0.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Fehler/Warnung",
+        "description": "Fehler-/Warnungsstatus vom MPC-Controller, der an die SPS gesendet werden soll.",
+        "allowedValues": "0= OK <br> 1 = Warnung <br> 2= Fehler"
+      },
+      {
+        "name": "MPC bereit",
+        "description": "Diese Variable zeigt an, ob der MPC-Controller bereit ist, das Ventil auf der SPS zu steuern oder nicht.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Zusätzlich Raumtemperatur",
+        "description": " Hier können zusätzliche Raumtemperaturen angegeben werden, z. B. die Raumtemperaturen der Nachbarräume des jeweiligen Raumes, in dem sich der MPC-Regler befindet.",
+        "allowedValues": "32-Bit-Wert"
+      }
+    ]
+  },
+  "PVProductionService": {
+    "title": "PV Produktions Service",
+    "name": "PV Produktions Service",
+    "overview": "Mit diesem Dienst kann auf Basis der aktuellen PV-Leistung eine Vorhersage getroffen werden, wie viel PV-Leistung in den nächsten 24 Stunden zu erwarten ist. Der Dienst gibt die Leistung in KW für die nächsten 24 Stunden und die Summe der Energie in KWh für die nächsten 24 Stunden aus.",
+    "table": [
+      {
+        "name": "Auswahl Startdatum für Historische Daten",
+        "description": "Hier kann ein Startdatum ausgewählt werden, ab wann die Daten aus der Datenbank rückwirkend für diesen Controller zum lernen verwendet werden können. Es handelt sich dabei um die sogenannten Historischen Daten. Wird kein Datum angegeben, nimmt der Controller zum lernen keine Historischen Daten. Das lernen und bis der Controller dann Bereit für den Einsatz ist, dauert somit dann länger. ",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Aktuelle Werte im Diagramm",
+        "description": "Zeigt die Vorhersage für die berechnete PV-Leistung und die Summe für die berechnete PV-Energie für die nächsten 24 Stunden. Zusätzlich zeigt das Diagramm den historischen Verlauf der berechneten Werte einschließlich der aktuellen PV-Leistung.",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Ereignis anzeigen (Service bereit)",
+        "description": "Zeigt an, ob der Verbrauchs Service bereit ist oder nicht.",
+        "allowedValues": "251 = Grün <br> Alle anderen Werte = Dunkel"
+      },
+      {
+        "name": "Ausgangsfeld 1 (Istleistung Verbrauch)",
+        "description": "Zeigt die aktuelle Leistung des Verbrauchs an, die von der SPS ausgegeben wird.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Ausgabefeld 2 (berechnete Leistung 24h)",
+        "description": "Zeigt die berechnete Leistung des Verbrauchs der nächsten 24 Stunden an, die der Dienst an die SPS sendet",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Ausgabefeld 3 (berechnete Energie 24h)",
+        "description": "Zeigt die berechnete Summe der Energie des Verbrauchs aus den nächsten 24 Stunden, die der Dienst an die SPS sendet",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Der Verbrauchsservice erzeugt einen optionalen Heartbeat, um auf der SPS zu überwachen, ob der Dienst aktiv ist oder nicht. Der Wert wechselt alle 60 Sekunden zwischen 0 und 1.  ",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Fehler/Warnung",
+        "description": "Fehler-/Warnungsstatus vom Verbrauchsservice, der an die SPS gesendet werden soll.",
+        "allowedValues": "0= OK <br> 1 = Warnung <br> 2= Fehler"
+      },
+      {
+        "name": "Service Bereit",
+        "description": "Diese Variable zeigt an, ob der Verbrauchsservice bereit ist.",
+        "allowedValues": "0-1"
+      }
+    ]
+  },
+  "ConsumptionService": {
+    "title": "Verbrauchs Service",
+    "name": "Verbrauchs Service",
+    "overview": "Mit diesem Dienst kann auf Basis der aktuellen Verbrauchsleistung eine Vorhersage getroffen werden, wie viel Verbrauch in den nächsten 24 Stunden zu erwarten ist. Der Dienst gibt die Leistung in KW für die nächsten 24 Stunden und die Summe der Energie in KWh für die nächsten 24 Stunden aus.",
+    "table": [
+      {
+        "name": "Aktuelle Werte im Diagramm",
+        "description": "Zeigt die Vorhersage für den berechneten Verbrauch und die Summe für die Energie des Verbrauchs für die nächsten 24 Stunden. Zusätzlich zeigt das Diagramm den historischen Verlauf der berechneten Werte einschließlich des aktuellen Verbrauchs.",
+        "allowedValues": "Benutzt für die interne Kommunikation"
+      },
+      {
+        "name": "Ereignis anzeigen (Service bereit)",
+        "description": "Zeigt an, ob der Verbrauchs Service bereit ist oder nicht.",
+        "allowedValues": "251 = Grün <br> Alle anderen Werte = Dunkel"
+      },
+      {
+        "name": "Ausgangsfeld 1 (Istleistung Verbrauch)",
+        "description": "Zeigt die aktuelle Leistung des Verbrauchs an, die von der SPS ausgegeben wird.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Ausgabefeld 2 (berechnete Leistung 24h)",
+        "description": "Zeigt die berechnete Leistung des Verbrauchs der nächsten 24 Stunden an, die der Dienst an die SPS sendet.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Ausgabefeld 3 (berechnete Energie 24h)",
+        "description": "Zeigt die berechnete Summe der Energie des Verbrauchs aus den nächsten 24 Stunden, die der Dienst an die SPS sendet.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Der Verbrauchsservice erzeugt einen optionalen Heartbeat, um auf der SPS zu überwachen, ob der Dienst aktiv ist oder nicht. Der Wert wechselt alle 60 Sekunden zwischen 0 und 1. ",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Fehler/Warnung",
+        "description": "Fehler-/Warnungsstatus vom Verbrauchsservice, der an die SPS gesendet werden soll.",
+        "allowedValues": "0= OK <br> 1 = Warnung <br> 2= Fehler"
+      },
+      {
+        "name": "Service Bereit",
+        "description": "Diese Variable zeigt an, ob der Verbrauchsservice bereit ist.",
+        "allowedValues": "0-1"
+      }
+    ]
+  },
+  "EMS": {
+    "title": "EMS",
+    "name": "EMS",
+    "overview": "Mit diesem Logarithmus ist es über künstliche Intelligenz und Wetterdaten möglich, die erzeugte Energie im Gebäude möglichst optimal zu nutzen und zu verteilen. Die Erzeuger inkl. Netzanschluss können individuell hinzugefügt werden. Auch die üblichen Verbraucher wie Wärmepumpen, Ladestationen und Batterien können individuell angelegt werden. Die Daten werden dann im Backend aufbereitet und zur Ausführung an den Controller weitergeleitet. Im Betrieb können dann verschiedene Einstellungen an den Geräten vorgenommen werden. Zusätzlich bietet der Dienst die Möglichkeit, die Erzeugung und den Verbrauch für die nächsten 24 Stunden einzusehen. Auch diese Daten werden parallel historisch gespeichert und stehen somit auch später zur Verfügung.",
+    "table": [
+      {
+        "name": "Heartbeat",
+        "description": "Die Energieoptimierung erzeugt einen optionalen Heartbeat, um auf der SPS zu überwachen, ob der Service aktiv ist oder nicht. Der Wert wechselt alle 60 Sekunden zwischen 0 und 1.",
+        "allowedValues": "32 Bit Wert"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung)\n",
+        "description": "Fehler/Warnung Der Status der Energieoptimierung wird an die SPS gesendet.\n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Ereignis anzeigen (Energieoptimierung bereit)\n",
+        "description": "Diese Variable zeigt an, ob die Energieoptimierung bereit ist oder nicht.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Neue Batterieleistung\n",
+        "description": "Diese Variable zeigt die neue Batterieleistung vom Backend an die SPS an. Alle 15 Minuten.\n",
+        "allowedValues": "32 Bit Wert\n"
+      },
+      {
+        "name": "Wärmepumpen aktivieren\n",
+        "description": "Diese Variable zeigt an, wann auf der SPS die Wärmepumpen eingeschaltet werden kann, wenn wir in den nächsten 24 Stunden keinen Überschuss haben. Somit kann die Wärmepumpe z.B. eingeschalten werden wenn man sich im Niedertarif des Strompreises befindet. \n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Ansteuerungsmodus\n",
+        "description": "Hier wird der Ansteuerungsmodus des Service verknüpft.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Eingabefeld 1 (Größe Hauptsicherung Ladestation)\n",
+        "description": "Gibt die Größe der Hauptsicherung der Ladestationen in kW an\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Dropdown (Betriebsart EMS)\n",
+        "description": "Betriebsart EMS\n",
+        "allowedValues": "0 = Alles aus; 1 = Eigenverbrauch; 2 = Spitzenlastkappung; 3 = Lastmanagemen; 4 = Adaptive Eigenverbrauchsoptimierung; \n"
+      },
+      {
+        "name": "Eingabefeld 2 (Max Entladetiefe im Notstrombetrieb)\n",
+        "description": "Wenn die Inselbetriebsart aktiv ist, kann hier die maximale Entladetiefe der Batterien bis zur Abschaltung des Wechselrichters eingestellt werden.\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Eingabefeld 3 (Reserve-Batterie-SOC für Notstrombetrieb)",
+        "description": "Reserve SOC in Batterie für Notstrombetrieb\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Eingabefeld 4 (Minimaler SOC für adaptive Eigenverbrauchsoptimierung)",
+        "description": "Minimaler SOC für adaptive Eigenverbrauchsoptimierung\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Eingabefeld 5 (Vorrangige Mindestladung Batterie SOC im Notstrombetrieb)\n",
+        "description": "Bei aktivem Notstrombetrieb zuerst die Batterie/Wechseklrichter Kombination laden bis zu diesem Wert welche das Inselnetz aufbaut. Erst danach wird die überschüssig Leistung nach Prioritäten verteilt.\n",
+        "allowedValues": "25-75\n"
+      },
+      {
+        "name": "Eingabefeld 6 (Reserveladung vom Netz)\n",
+        "description": "Reserve in der Batterie, die vom Netz geladen wird, wenn das gemessene Netz < Netzmaximum liegt (nur aktiv im Modus Spitzenlastkappung und Lastmanagement).\n",
+        "allowedValues": "0-100\n"
+      },
+      {
+        "name": "Eingabefeld 7 (Aktualisierungszeit EMS)\n",
+        "description": "Aktualisierungszeitpunkt, wenn EMS neuen Energieüberschuss oder Energieverbrauch berechnet und dann die Verbraucher steuert. Die Einheit ist Sekunden.\n",
+        "allowedValues": "1-600\n"
+      },
+      {
+        "name": "DropDown (Meldung EMS)\n",
+        "description": "Meldungen von der EMS Funktion\n",
+        "allowedValues": "0 = Deaktiviert; 1 = Aktivier; 2 = Alle Prioritäten auf dem Minimum; 3 = Alle Prioritäten auf dem Maximum; 4 = Fehlende Leistungswerte bei Geräteeinstellung; 5 = Zu viele Geräte\n"
+      },
+      {
+        "name": "Schalter_V2(Status Freigabe EMS)\n",
+        "description": "Aktivieren oder Deaktivieren der EMS-Funktion\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe EMS) \n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status der Freigabetaste liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Taster um laden vom Netz zu erlauben)\n",
+        "description": "Mit diesem Taster ist es möglich, das Laden der Batterie aus dem Netz zu erlauben. Dies ist nur im Lastmanagement-Modus und im Spitzenlastkappung-Modus aktiv.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Laden vom Netz erlauben)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des erlaubten Ladens der Batterie vom Netz zurückliefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Startdatum für historische Daten\n",
+        "description": "Hier kann ein Startdatum gewählt werden, ab dem die Daten aus der Datenbank rückwirkend für diesen Dienst zum Lernen verwendet werden können. Dies sind die sogenannten historischen Daten. Wenn kein Datum angegeben wird, verwendet der Dienst keine historischen Daten zum Lernen. Das Lernen und bis der Dienst dann einsatzbereit ist, dauert dann länger.\n",
+        "allowedValues": "Wird für die interne Kommunikation verwendet\n"
+      },
+      {
+        "name": "Aktuelle Werte im Diagramm",
+        "description": "Zeigt die Vorhersage für die Leistung und Summe der Energie für die verschiedenen und addierten Verbraucher und Erzeuger für die nächsten 24 Stunden. Zusätzlich zeigt das Diagramm den historischen Verlauf der berechneten Werte einschließlich der aktuellen Leistungswerte.",
+        "allowedValues": "Wird für die interne Kommunikation verwendet"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (PV-Istleistung) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und gibt die aktuelle PV-Leistung an. Die Einheit ist kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung PV-Anlage) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler.\n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (Aktuelle Generatorleistung) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und gibt die aktuelle Generatorleistung an. Die Einheit ist kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Reset-Taste Generator) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, die den Status des Reset-Prozesses zurückgibt.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Taste Reset Generator) (1-10)\n",
+        "description": "Mit dieser Variable kann der Reset-Befehl an die SPS gesendet werden\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung Generator) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Ereignis anzeigen (Status Generator) (1-10)\n",
+        "description": "Hier kann der Zustand des Generators verknüpft werden, ob er ein- oder ausgeschaltet ist. \n",
+        "allowedValues": "1 = Grünes Licht. Alle anderen Werte kein Licht\n"
+      },
+      {
+        "name": "Eingabefeld (SOC-Generator aktivieren) (1-10)\n",
+        "description": "Wenn der Batterie-SOC diesen Wert unterschreitet, wird der Generator eingeschaltet\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (SOC-Generator deaktivieren) (1-10)\n",
+        "description": "Wenn der Batterie-SOC diesen Wert überschreitet, wird der Generator ausgeschaltet\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Schalter_V2 (Generator Freigabe) (1-10)\n",
+        "description": "Gerät freigeben oder sperren\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe Generator) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Freigabetasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (Ist-Netzleistung) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und gibt die aktuelle Netzleistung an. Die Einheit ist kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung Raster) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Eingabefeld (Größe Netzanschluss) (1-10)\n",
+        "description": "Max Größe des Netzanschluss. Die Einheit ist kW\n",
+        "allowedValues": "0.1-1000 KW\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (Tatsächliche Batterieleistung) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und gibt die aktuelle Batterieleistung an. Die Einheit ist kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung Batterie) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Ausgabefeld (Aktueller Batterie-SOC) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, die den aktuellen Batterie-SOC enthält.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld (Aktuelle Batteriekapazität) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, die die aktuelle Batteriekapazität in kWh enthält.\n",
+        "allowedValues": "32 Bit Wert\n"
+      },
+      {
+        "name": "Eingabefeld (Ladezustandsbereich: max) (1-10)\n",
+        "description": "Die maximale Reichweite des Ladezustands.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Ladezustandsbereich: min) (1-10)\n",
+        "description": "Die minimale Reichweite des Ladezustands.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld (Status Ladezustandsbereich: max) (1-10)\n",
+        "description": "Der Zustand der maximalen Reichweite des Ladezustand.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld (Status Ladezustandsbereich: min) (1-10)\n",
+        "description": "Der Zustand der minimalen Reichweite des Ladezustand.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld (Sollleistung Batterie) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, die die aktuelle Batterieleistung von -100% (Laden) bis +100% (Entladen) enthält. \n",
+        "allowedValues": "-100 +100\n"
+      },
+      {
+        "name": "Eingabefeld (Größe Kapazität Batterie) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die die maximale Größe der Batterie in kWh angibt.\n",
+        "allowedValues": "0-1000 kWh\n"
+      },
+      {
+        "name": "Eingabefeld (Priorität Batterie) (1-10)\n",
+        "description": "Priorität des Geräts, mit dem es im EMS gesteuert wird.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Schalter_V2 (Freigabe Batterie) (1-10)\n",
+        "description": "Aktivieren oder Deaktivieren des Geräts\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe Batterie) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Freigabetasters angibt.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Reset-Taste Batterie) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, die den Status des Reset-Vorgangs liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Taster Reset Batterie) (1-10)\n",
+        "description": "Mit dieser Variable kann der Reset-Befehl an die SPS gesendet werden\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (Aktuelle Hausleistung) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und gibt die aktuelle Leistung vom Hausverbrauch an. Die Einheit ist kW.\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung Haus) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Schalter_V2 (Freigabe Hausstrom) (1-10)\n",
+        "description": "Gerät freigeben oder sperren\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe Hausstrom) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Freigabetasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (Aktuelle Leistung der Ladestation) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und liefert die aktuelle Leistung der Ladestation. Die Einheit ist kW\n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung Ladestation) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Ereignis anzeigen (Auto angeschlossen Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable verlinkt werden, die anzeigt, ob die Ladestation mit einem Fahrzeug verbunden ist.\n",
+        "allowedValues": "1 = Grünes Licht. Alle anderen Werte kein Licht\n"
+      },
+      {
+        "name": "Ausgabefeld (Ladedauer Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable verlinkt werden, die anzeigt, wie viel Zeit seit dem Start des Ladevorgangs vergangen ist\n",
+        "allowedValues": "32 Bit Wert\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Status Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable verlinkt werden, die anzeigt, ob die Ladestation eingeschaltet ist oder nicht.\n",
+        "allowedValues": "1 = Grünes Licht. Alle anderen Werte kein Licht\n"
+      },
+      {
+        "name": "Schalter_V2 (Ladestation Aus Notstrombetrieb) (1-10)\n",
+        "description": "Mit dieser Variable kann der Verbraucher im Notstrombetrieb deaktiviert werden.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Ladestation Aus Notstrombetrieb) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Notstromtasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Ladestation Manuell Ein) (1-10)\n",
+        "description": "Gerät manuell einschalten\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Manuell ein Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des manuell einschaltenden Tasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schieberegler(Leistung manuell Ladestation) (1-10)\n",
+        "description": "% der maximalen Leistung in kW, wenn das Gerät manuell eingeschaltet ist\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Status Leistung manuell Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den aktuellen Wert des Schiebereglers für die manuelle Leistung liefert.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Schieberegler(Min Leistung Ladestation) (1-10)\n",
+        "description": "Min. Leistung in % der max. Leistung in kW. Mit dieser Leistung wird die Ladestation betrieben, auch wenn kein Überschuss vorhanden ist. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Status min Leistung Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den aktuellen Wert des Schiebereglers für die Min-Leistung zurückgibt.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Soll-Leistung Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable gemappt werden, die die aktuelle Leistung der Ladestation von 0% bis 100% enthält. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Priorität Ladestation) (1-10)\n",
+        "description": "Priorität des Gerätes, mit dem es im EMS gesteuert wird.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Eingabefeld (SOC-Ladestation aktivieren) (1-10)\n",
+        "description": "Über diese Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher eingeschaltet werden kann.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (SOC-Ladestation deaktivieren) (1-10)\n",
+        "description": "Über diese Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher ausgeschaltet werden muss.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Maximale Leistung Ladestation) (1-10)\n",
+        "description": "Max. Leistung von der Ladestation mit Einheit kW.\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Schalter_V2 (Freigabe Ladestation) (1-10)\n",
+        "description": "Gerät freigeben oder sperren\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe Ladestation) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Freigabetasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgangsfeld (Aktuelle elektrische Heizelementleistung) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und gibt die aktuelle Leistung des elektrischen Heizelements an. Die Einheit ist kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Ausgabefeld (Temperatur Boiler elektrisches Heizelement) (1-10)\n",
+        "description": "Temperatur im Boiler, der mit dem Heizelement beheizt wird.\n",
+        "allowedValues": "-30 +120 \n"
+      },
+      {
+        "name": "Ereignis anzeigen (Zustand elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die anzeigt, ob das elektrische Heizelement eingeschaltet ist oder nicht.\n",
+        "allowedValues": "1 = Grünes Licht. Alle anderen Werte kein Licht\n"
+      },
+      {
+        "name": "Schalter_V2 (Elektrisches Heizelement Aus Notstrombetrieb) (1-10)\n",
+        "description": "Diese Variable kann verwendet werden, um den Verbraucher im Notstrombetrieb zu deaktivieren.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Elektrisches Heizelement Aus Notstrombetrieb) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Notstromtasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Manuelles Ein elektrisches Heizelement) (1-10)\n",
+        "description": "Gerät manuell einschalten\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Manuell ein elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des manuell einschaltenden Buttons liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schieberegler(Manuelle Leistung elektrisches Heizelement) (1-10)\n",
+        "description": "% der maximalen Leistung in kW, wenn das Gerät manuell eingeschaltet ist\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Status manuelle Leistung elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann eine Variaable verknüpft werden, die den aktuellen Wert des Schiebereglers für die manuelle Leistung liefert.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Schalter_V2 (Zeitsteuerung aktivieren elektrisches Heizelement) (1-10)\n",
+        "description": "Heizelement wird nur zwischen der angegebenen Zeit aktiviert, wenn die Temperatur unter die Einschalttemperatur fällt. \n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Zeitsteuerung aktivieren elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Zeitfreigabetasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Legionellenschutz deaktivieren elektrisches Heizelement) (1-10)\n",
+        "description": "Mit dieser Variable kann der Legionellenschutz deaktiviert werden.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Zustand Legionellenschutz deaktivieren elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status der Schaltfläche Legionellenschutz deaktivieren bereitstellt.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Ausgabefeld (Sollleistung elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann eine Variable gemappt werden, die die aktuelle Heizelementleistung von 0% bis 100% enthält. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Priorität elektrisches Heizelement) (1-10)\n",
+        "description": "Priorität des Gerätes, mit dem es im EMS gesteuert wird.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Eingabefeld (SOC elektrisches Heizelement aktivieren) (1-10)\n",
+        "description": "Über diese Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher eingeschaltet werden kann.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (SOC elektrisches Heizelement deaktivieren) (1-10)\n",
+        "description": "Über diese Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher ausgeschaltet werden muss.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Stunde Ein elektrisches Heizelement) (1-10)\n",
+        "description": "Stunde, ab der das Heizelement einschalten kann \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Eingabefeld (Minuten Ein elektrisches Heizelement) (1-10)\n",
+        "description": "Minuten, ab denen das Heizelement einschalten kann \n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Eingabefeld (Stunde Aus elektrisches Heizelement) (1-10)\n",
+        "description": "Stunde, ab der das Heizelement ausschalten kann\n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Eingabefeld (Minuten Aus elektrisches Heizelement) (1-10)\n",
+        "description": "Minuten, ab denen das Heizelement ausschalten kann\n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Eingabefeld (Soll-Temp Ein elektrisches Heizelement) (1-10)\n",
+        "description": "Unterhalb dieses Temperaturwertes wird das Heizelement im Normalbetrieb eingeschaltet.\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Eingabefeld (Soll-Temp Aus elektrisches Heizelement) (1-10)\n",
+        "description": "Wenn die Temperatur im Normalbetrieb diesen Wert erreicht, schaltet das Heizelement aus.\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Eingabefeld (Soll-Temp Max elektrisches Heizelement) (1-10)\n",
+        "description": "Temperatursollwert, der bei einer Überleistung angefahren wird. (Überhitzung)\n",
+        "allowedValues": "0-120\n"
+      },
+      {
+        "name": "Eingabefeld (Max. Leistung elektrisches Heizelement 1-10) (1-10)\n",
+        "description": "Max. Leistung des elektrischen Heizelements mit der Einheit kW. Das elektrische Heizelement kann max. 10 verschiedene Max-Leistungen haben. (Stufengeschalten)\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Schalter_V2 (Freigabe elektrisches Heizelement) (1-10)\n",
+        "description": "Gerät freigeben oder sperren\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe elektrisches Heizelement) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status der Freigabetaste liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (Aktuelle Wärmepumpenleistung) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und gibt die aktuelle Leistung der Wärmepumpe an. Die Einheit ist kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Taster (Status Reset-Taste Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, die den Status des Reset-Prozesses zurückgibt.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Taste Reset Wärmepumpe) (1-10)\n",
+        "description": "Mit dieser Variable kann der Reset-Befehl an die SPS gesendet werden\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Status Wärmepumpe) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die anzeigt, ob die Wärmepumpe eingeschaltet ist oder nicht.\n",
+        "allowedValues": "1 = Grünes Licht. Alle anderen Werte kein Licht\n"
+      },
+      {
+        "name": "Schalter_V2 (Wärmepumpe Aus Notstrombetrieb) (1-10)\n",
+        "description": "Mit dieser Variable kann der Verbraucher im Notstrombetrieb abgeschaltet werden.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Zustand Wärmepumpe Aus Notstrombetrieb) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Notstromtasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Manuell Ein Wärmepumpe) (1-10)\n",
+        "description": "Gerät manuell einschalten\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Manuell ein Wärmepumpe) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des manuell einschaltenden Buttons liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schieberegler(Manuelle Leistung der Wärmepumpe) (1-10)\n",
+        "description": "% der maximalen Leistung in kW, wenn das Gerät manuell eingeschaltet ist\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Status manuelle Leistung der Wärmepumpe) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den aktuellen Wert des Schiebereglers für die manuelle Leistung liefert.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Schalter (Zeitsteuerung aktivieren Wärmepumpe) (1-10)\n",
+        "description": "Wenn True, wird die Wärmepumpe zwischen der angegebenen Zeit in den erhöhten Modus geschaltet\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter (Status Zeitsteuerung Wärmepumpe) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Zeitfreigabetasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schieberegler(Leistungsvorgabe wenn Zeitsteuerung aktiviert Wärmepumpe) (1-10)\n",
+        "description": "Leistungsvorgabe in % innerhalb der Freigabezeit, wenn die Wärmepumpe nicht stufenweise geschaltet wird\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Status Leistungsvorgabe wenn Zeitsteuerung aktiviert Wärmepumpe) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den aktuellen Wert des Schiebereglers für die Leistung liefert, wenn die Wärmepumpe im Zeitmodus aktiv ist.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Istwert Vorlauftemperatur Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, um anzuzeigen, welche Vorlauftemperatur an der Wärmepumpe auf der SPS vorhanden ist\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Ausgabefeld(Istwert Rücklauftemperatur Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, um anzuzeigen, welche Rücklauftemperatur an der Wärmepumpe auf der SPS vorhanden ist\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Ausgabefeld (Quelle Vorlauftemperatur Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, um anzuzeigen, welche Quellenvorlauftemperatur an der Wärmepumpe auf der SPS anliegt.  \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Ausgabefeld(Quelle Rücklauftemperatur Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, um anzuzeigen, welche Quellen-Ausgangstemperatur an der Wärmepumpe auf der SPS anliegt.\n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Ausgabefeld(Boiler Temp Heizsystem Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, um anzuzeigen welche Boilertemperatur vom Heizsystem der Wärmepumpe auf der SPS vorhanden ist. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Ausgabefeld(Boiler-Temp Brauchwasser-Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, um anzuzeigen welche Boilertemperatur vom Brauchwassersystem der Wärmepumpe auf der SPS vorhanden ist. \n",
+        "allowedValues": "-30 + 120\n"
+      },
+      {
+        "name": "Ausgabefeld(Soll-Leistung Wärmepumpe) (1-10)\n",
+        "description": "Hier kann die Variable gemappt werden, die die aktuelle Wärmepumpenleistung von 0% bis 100% enthält. \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Priorität Wärmepumpe) (1-10)\n",
+        "description": "Priorität des Gerätes, mit dem es im EMS gesteuert wird.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Eingabefeld (SOC Wärmepumpe aktivieren) (1-10)\n",
+        "description": "Mit dieser Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher eingeschaltet werden kann.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (SOC Wärmepumpe deaktivieren) (1-10)\n",
+        "description": "Über diese Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher ausgeschaltet werden muss.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Stunde Ein Wärmepumpe) (1-10)\n",
+        "description": "Stunde, ab der die Wärmepumpe im erhöhten Betrieb arbeiten kann \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Eingabefeld (Minuten Ein Wärmepumpe) (1-10)\n",
+        "description": "Minuten, ab denen die Wärmepumpe in erhöhtem Betrieb arbeiten kann \n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Eingabefeld (Stunde Aus Wärmepumpe) (1-10)\n",
+        "description": "Stunde, ab der die Wärmepumpe nicht mehr im erhöhten Betrieb arbeiten kann \n",
+        "allowedValues": "0-23\n"
+      },
+      {
+        "name": "Eingabefeld (Minuten Aus Wärmepumpe) (1-10)\n",
+        "description": "Minuten, ab denen die Wärmepumpe nicht mehr im erhöhten Betrieb arbeiten kann\n",
+        "allowedValues": "0-59\n"
+      },
+      {
+        "name": "Eingabefeld (Max. Leistung Wärmepumpe 1-2) (1-10)\n",
+        "description": "Max. Leistung der Wärmepumpe mit der Einheit kW. Die Heizungspumpe kann max. 2 verschiedene Max-Leistungen haben. (Stufen geschalten)\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Schalter_V2 (Freigabe Wärmepumpe) (1-10)\n",
+        "description": "Gerät freigeben oder sperren\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe Wärmepumpe) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status der Freigabetaste liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Ausgabefeld (Aktuelle Leistung anderer großer Verbraucher) (1-10)\n",
+        "description": "Hier kann die Variable verknüpft werden und liefert die aktuelle Leistung eines anderen großen Verbrauchers. Die Einheit ist kW. \n",
+        "allowedValues": "-1000 +1000 KW\n"
+      },
+      {
+        "name": "Ereignis anzeigen (Fehler/Warnung anderer großer Verbraucher) (1-10)\n",
+        "description": "Hier kann die Variable mit einer Variable verknüpft werden, die einen Fehler oder eine Warnung von der SPS an das Backend sendet. 1 = Warnung, 2 = Fehler. \n",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Ereignis anzeigen (Zustand anderer großer Verbraucher) (1-10)\n",
+        "description": "Hier kann eine Variable verlinkt werden, die anzeigt, ob der großer Verbraucher eingeschaltet ist oder nicht.\n",
+        "allowedValues": "1 = Grünes Licht. Alle anderen Werte kein Licht\n"
+      },
+      {
+        "name": "Schalter_V2 (Großer Verbraucher Aus Notstrombetrieb) (1-10)\n",
+        "description": "Diese Variable kann verwendet werden, um den Verbraucher im Notstrombetrieb zu deaktivieren.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Zustand Großer Verbraucher Aus Notstrombetrieb) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Notstromtasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Manuell ein großer Verbraucher) (1-10)\n",
+        "description": "Gerät manuell einschalten\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Zustand Manuell Ein großer Verbraucher) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des manuell einschaltenden Tasters bereitstellt.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schieberegler(Manuelle Leistung des großern Verbrauchers) (1-10)\n",
+        "description": "% der maximalen Leistung in kW, wenn das Gerät manuell eingeschaltet ist\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld(Status manuelle Leistung des großen Verbrauchers) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den aktuellen Wert des Schiebereglers für die manuelle Leistung liefert.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (Priorität großer Verbraucher) (1-10)\n",
+        "description": "Priorität des Gerätes, mit dem es im EMS gesteuert wird.\n",
+        "allowedValues": "0-255\n"
+      },
+      {
+        "name": "Eingabefeld (SOC großer Verbraucher aktivieren) (1-10)\n",
+        "description": "Über diese Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher eingeschaltet werden kann.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Eingabefeld (SOC großer Verbraucher deaktivieren) (1-10)\n",
+        "description": "Mit dieser Variable wird eingestellt, ab welchem SOC der Batterie der Verbraucher ausgeschaltet werden muss.\n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Ausgabefeld (Sollleistng großer Verbraucher) (1-10)\n",
+        "description": "Hier kann die Variable abgebildet werden, die die aktuelle Sollleistung von 0% bis 100% enthält.  \n",
+        "allowedValues": "0-100%\n"
+      },
+      {
+        "name": "Schalter_V2 (Freigabe großer Verbraucher) (1-10)\n",
+        "description": "Gerät freigeben oder sperren\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Schalter_V2 (Status Freigabe großer Verbraucher) (1-10)\n",
+        "description": "Hier kann eine Variable verknüpft werden, die den Status des Freigabetasters liefert.\n",
+        "allowedValues": "0-1\n"
+      },
+      {
+        "name": "Eingabefeld (Maximale Leistung große Verbraucher) (1-10)\n",
+        "description": "Max. Leistung von den großen Verbrauchern mit Einheit kW.\n",
+        "allowedValues": "0-500\n"
+      },
+      {
+        "name": "Status Batterie-Standby-Optimierung",
+        "description": "Diese Variable zeigt an, welcher Modus der Batterie-Standby-Optimierung gerade aktiv ist",
+        "allowedValues": "0, 1, 2"
+      },
+      {
+        "name": "Modus Batterie-Standby-Optimierung",
+        "description": "Modus der Batterie-Standby-Optimierung",
+        "allowedValues": "0 = Deaktiviert, 2 = Lastabhängig"
+      },
+      {
+        "name": "Zeitschwelle “Ein” (Minuten)",
+        "description": "Definiert den zeitlichen Schwellwert, nach welcher Zeit die BSO eingeschaltet werden soll, sofern der Leistungs-Schwellwert erreicht wird",
+        "allowedValues": "Beliebiger Byte-Wert"
+      },
+      {
+        "name": "Zeitschwelle “Aus” (Minuten)",
+        "description": "Definiert den zeitlichen Schwellwert, nach welcher Zeit die BSO ausgeschaltet werden soll, sofern der Leistungs-Schwellwert erreicht wird",
+        "allowedValues": "Beliebiger Byte-Wert"
+      },
+      {
+        "name": "Schwellenwert Leistung “Ein” (kW)",
+        "description": "Definiert den Schwellwert der Leistung, ab welcher die BSO eingeschaltet werden soll",
+        "allowedValues": "Beliebiger Integer-Wert"
+      },
+      {
+        "name": "Schwellenwert Leistung “Aus” (kW)",
+        "description": "Definiert den Schwellwert der Leistung, ab welcher die BSO ausgeschaltet werden soll",
+        "allowedValues": "Beliebiger Integer-Wert"
+      }
+    ]
+  },
+  "PVMonitoringService": {
+    "title": "PV-Überwachung",
+    "name": "PV-Überwachung",
+    "overview": "Dieser Algorithmus nimmt die PV-Leistungswerte eines Standorts während eines bestimmten Zeitraums. Er vergleicht dann täglich den Live-Datenstrom des Standorts mit den referenzierten Daten. Somit können Leistungseinbrüche der PV Anlage ermittelt werden. Dies kann z.B. durch Verschmutzung der PV Module sein oder durch das altern der PV Anlage.",
+    "table": [
+      {
+        "name": "Eingabefeld PV-Leistung",
+        "description": "Dieses Eingabefeld bildet die PV-Leistungsgröße des zu überwachenden Standortes ab.",
+        "allowedValues": "Nur numerische Werte"
+      },
+      {
+        "name": "Eingabefeld Start-Datum",
+        "description": "Dieses Eingabefeld nimmt den Starttag des Referenzzeitraums auf ",
+        "allowedValues": "Datum und Uhrzeit in Sekunden"
+      },
+      {
+        "name": "Eingabefeld End-Datum",
+        "description": "Dieses Eingabefeld nimmt den Endtag des Referenzzeitrahmens auf",
+        "allowedValues": "Datumsangabe in Sekunden"
+      },
+      {
+        "name": "Heartbeat",
+        "description": "Der Verbrauchsservice erzeugt einen optionalen Heartbeat, um auf der SPS zu überwachen, ob der Dienst aktiv ist oder nicht. Der Wert wechselt alle 60 Sekunden zwischen 0 und 1. ",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Fehler/Warnung",
+        "description": "Fehler-/Warnungsstatus vom Verbrauchsservice, der an die SPS gesendet werden soll.",
+        "allowedValues": "0= OK\n1 = Warnung\n2= Fehler"
+      },
+      {
+        "name": "Service Bereit",
+        "description": "Diese Variable zeigt an, ob der Verbrauchsservice bereit ist.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Ausgabefeld PV-Effizienz",
+        "description": "Dieses Ausgabefeld bildet den berechneten Wirkungsgrad der PV-Anlage auf eine Variable der SPS ab",
+        "allowedValues": "0-100%"
+      }
+    ]
+  },
+  "SetpointOptimizer": {
+    "title": "Sollwert-Optimierer",
+    "name": "Sollwert-Optimierer",
+    "overview": "Dieser Algorithmus kann ein bestehendes Heiz- oder Kühlsystem auf der Grundlage eines neuen Sollwerts optimieren. Dies kann z.B. eine optimierte Vorlauftemperatur oder eine optimierte Zulufttemperatur sein. Dieses Gerät kann für Heiz- oder Kühlkreisläufe mit flüssigem Medium oder auch für Kreisläufe mit Luftmedium verwendet werden. Es ist auch möglich, Heizen und Kühlen in einem Kreislauf zu mischen.",
+    "table": [
+      {
+        "name": "Heartbeat",
+        "description": "Der Sollwert-Optimierer erzeugt einen optionalen Heartbeat, um auf der SPS zu überwachen, ob der Dienst aktiv ist oder nicht. Der Wert wechselt alle 60 Sekunden zwischen 0 und 1.",
+        "allowedValues": "0-1"
+      },
+      {
+        "name": "Fehler/Warnung",
+        "description": "Fehler/Warnung Status des Sollwertoptimierers, der an die SPS gesendet wird.",
+        "allowedValues": "0-2 0 = OK, 1=Warnung, 2=Fehler"
+      },
+      {
+        "name": "Service Bereit",
+        "description": "Diese Variable zeigt an, ob der Sollwertoptimierer bereit ist oder nicht.",
+        "allowedValues": "0-1, 0=Nicht bereit, 1=Bereit, wenn 0 grünes Licht sonst grau"
+      },
+      {
+        "name": "Eingabefeld Start-Datum",
+        "description": "Dieses Eingabefeld nimmt den Starttag des Referenzzeitrahmens ",
+        "allowedValues": "Datumsangabe in Sekunden"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Eingangsfeld Vorlauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Vorlauftemperatur des Wasserkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Rücklauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Rücklauftemperatur des Wasserkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Ein/Aus-Status",
+        "description": "Dieses Eingangsmapping bildet den aktuellen Status des Heizwasserkreises ab. 0 bedeutet, der Heizkreis ist ausgeschaltet, 1 bedeutet, der Heizkreis ist eingeschaltet.",
+        "allowedValues": "0-1, 0=Aus, 1=Ein und leuchtet rot"
+      },
+      {
+        "name": "Eingangsfeld Raumtemperatur",
+        "description": "Dieses Eingangsmapping bildet die Raumtemperatur der Räume ab, die an den Wasserkreislauf angeschlossen sind, kann dynamisch auf max. 10 Raumtemperaturen addiert werden, 1 ist Pflicht, der Rest ist optional",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Ausgangsfeld Optimierte Vorlauftemperatur",
+        "description": "Dieses Ausgangsmapping gibt die optimierte Vorlauftemperatur des Sollwertoptimierers an die SPS weiter.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingabefeld Titel",
+        "description": "Dieser Eingang nimmt den Namen des Wasserkreislaufs auf, um ihn in der Benutzeroberfläche anzuzeigen",
+        "allowedValues": "Text"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Eingangsfeld Luftvorlauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Luftvorlauftemperatur des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Luft-Rücklauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Luftrücklauftemperatur des Luftkreises auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Ein/Aus-Status",
+        "description": "Dieses Eingangsmapping bildet den aktuellen Status des Heizluftkreises ab. 0 bedeutet, der Heizkreis ist ausgeschaltet, 1 bedeutet, der Heizkreis ist eingeschaltet.",
+        "allowedValues": "0-1, 0=Aus, 1=Ein und leuchtet rot"
+      },
+      {
+        "name": "Eingabefeld Raumtemperatur",
+        "description": "Dieses Eingangsmapping bildet die Raumtemperatur der Räume ab, die an den Luftkreislauf angeschlossen sind, kann dynamisch auf max. 10 Raumtemperaturen addiert werden, 1 ist Pflicht, der Rest ist optional",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Ausgangsfeld Optimierte Luftstromtemperatur",
+        "description": "Dieses Ausgangsmapping bildet die optimierte Luftstromtemperatur des Sollwertoptimierers an die SPS ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingabefeld Titel",
+        "description": "Dieser Eingang nimmt den Namen des Luftkreislaufs auf, um ihn auf der Benutzeroberfläche anzuzeigen",
+        "allowedValues": "Text"
+      },
+      {
+        "name": "Luftstromtemperatur von Innen nach Außen",
+        "description": "Dieses Eingangsmapping bildet die Luftstromtemperatur von Innen nach Aussen des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Luftstromtemperatur von Außen nach Innen",
+        "description": "Dieses Eingangsmapping bildet die Luftstromtemperatur von Aussen nach Innen des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Eingangsfeld Vorlauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Vorlauftemperatur des Wasserkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Rücklauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Rücklauftemperatur des Wasserkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Ein/Aus-Status",
+        "description": "Dieses Eingangsmapping bildet den aktuellen Status des Kühlwasserkreislaufs ab. 0 bedeutet, dass der Kühlkreislauf ausgeschaltet ist, 1 bedeutet, dass der Kühlkreislauf eingeschaltet ist.",
+        "allowedValues": "0-1, 0=Aus, 1=Ein und leuchtet blau"
+      },
+      {
+        "name": "Eingangsfeld Raumtemperatur",
+        "description": "Dieses Eingangsmapping bildet die Raumtemperatur der Räume ab, die an den Wasserkreislauf angeschlossen sind, kann dynamisch auf max. 10 Raumtemperaturen addiert werden, 1 ist obligatorisch der Rest ist optional",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Ausgangsfeld Optimierte Vorlauftemperatur",
+        "description": "Dieses Ausgangsmapping gibt die optimierte Vorlauftemperatur des Sollwertoptimierers an die SPS weiter.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingabefeld Titel",
+        "description": "Dieser Eingang nimmt den Namen des Wasserkreislaufs auf, um ihn in der Benutzeroberfläche anzuzeigen",
+        "allowedValues": "Text"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Eingangsfeld Luftvorlauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Luftvorlauftemperatur des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Luft-Rücklauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Rücklufttemperatur des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Ein/Aus-Status",
+        "description": "Dieses Eingangsmapping bildet den aktuellen Status des Kühlluftkreises ab. 0 bedeutet, dass der Kühlkreislauf ausgeschaltet ist, 1 bedeutet, dass der Kühlkreislauf eingeschaltet ist.",
+        "allowedValues": "0-1, 0=Aus, 1=Ein und leuchtet blau"
+      },
+      {
+        "name": "Eingabefeld Raumtemperatur",
+        "description": "Dieses Eingangsmapping bildet die Raumtemperatur der Räume ab, die an den Luftkreislauf angeschlossen sind, kann dynamisch auf max. 10 Raumtemperaturen addiert werden, 1 ist obligatorisch der Rest ist optional",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Ausgangsfeld Optimierte Luftstromtemperatur",
+        "description": "Dieses Ausgangsmapping bildet die optimierte Luftstromtemperatur des Sollwertoptimierers an die SPS ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingabefeld Titel",
+        "description": "Dieser Eingang nimmt den Namen des Luftkreislaufs auf, um ihn auf der Benutzeroberfläche anzuzeigen",
+        "allowedValues": "Text"
+      },
+      {
+        "name": "Luftstromtemperatur von Innen nach Außen",
+        "description": "Dieses Eingangsmapping bildet die Luftstromtemperatur von Innen nach Aussen des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Luftstromtemperatur von Außen nach Innen",
+        "description": "Dieses Eingangsmapping bildet die Luftstromtemperatur von Aussen nach Innen des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Eingangsfeld Vorlauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Vorlauftemperatur des Wasserkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Rücklauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Rücklauftemperatur des Wasserkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Hybridstatus",
+        "description": "Dieses Eingangsmapping bildet den aktuellen Status des Hybridwasserkreislaufs ab. 0 bedeutet, der Hybridkreislauf ist ausgeschaltet, 1 bedeutet, die Heizung ist eingeschaltet, 2 bedeutet, die Kühlung ist eingeschaltet.",
+        "allowedValues": "0-2, 0=Aus, 1= Kühlen und leuchtet blau , 2=Heizen und leuchet rot"
+      },
+      {
+        "name": "Eingangsfeld Raumtemperatur",
+        "description": "Dieses Eingangsmapping bildet die Raumtemperatur der Räume ab, die an den Wasserkreislauf angeschlossen sind, kann dynamisch auf maximal 10 Raumtemperaturen erweitert werden, 1 ist obligatorisch, der Rest ist optional",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Ausgangsfeld Optimierte Vorlauftemperatur",
+        "description": "Dieses Ausgangsmapping gibt die optimierte Vorlauftemperatur des Sollwertoptimierers an die SPS weiter.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingabefeld Titel",
+        "description": "Dieser Eingang nimmt den Namen des Wasserkreislaufs auf, um ihn in der Benutzeroberfläche anzuzeigen",
+        "allowedValues": "Text"
+      },
+      {
+        "name": "",
+        "description": "",
+        "allowedValues": ""
+      },
+      {
+        "name": "Eingangsfeld Luftvorlauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Luftvorlauftemperatur des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingangsfeld Luft-Rücklauftemperatur",
+        "description": "Dieses Eingangsmapping bildet die Rücklufttemperatur des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingabefeld Hybridstatus",
+        "description": "Dieses Eingangsmapping bildet den aktuellen Status des Hybrid-Luftkreises ab. 0 bedeutet, der Hybridkreislauf ist ausgeschaltet, 1 bedeutet, die Heizung ist eingeschaltet, 2 bedeutet, die Kühlung ist eingeschaltet.",
+        "allowedValues": "0-2, 0=Aus, 1= Kühlen und leuchtet blau , 2=Heizen und leuchet rot"
+      },
+      {
+        "name": "Eingabefeld Raumtemperatur",
+        "description": "Dieses Input Mapping bildet die Raumtemperatur der Räume ab, die an den Luftkreislauf angeschlossen sind, kann dynamisch auf max. 10 Raumtemperaturen erweitert werden, 1 ist obligatorisch, der Rest ist optional",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Ausgangsfeld Optimierte Luftstromtemperatur",
+        "description": "Dieses Ausgangsmapping bildet die optimierte Luftstromtemperatur des Sollwertoptimierers an die SPS ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Eingabefeld Titel",
+        "description": "Dieser Eingang nimmt den Namen des Luftkreislaufs auf, um ihn auf der Benutzeroberfläche anzuzeigen",
+        "allowedValues": "Text"
+      },
+      {
+        "name": "Luftstromtemperatur von innen nach außen",
+        "description": "Dieses Eingangsmapping bildet die Luftstromtemperatur von Innen nach Aussen des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      },
+      {
+        "name": "Außen nach Innen Luftstromtemperatur",
+        "description": "Dieses Eingangsmapping bildet die Luftstromtemperatur von Aussen nach Innen des Luftkreislaufs auf den Sollwertoptimierer ab.",
+        "allowedValues": "Nur numerische Werte (max 2 Kommastellen)"
+      }
+    ]
+  }
+}

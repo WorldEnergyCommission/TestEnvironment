@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCalc" Id="{8f293646-b958-4b3c-a62b-c5b5b0996568}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCalc
+VAR
+	fbQ56Counter	: FB_EnergyCounter;
+	lrPowerQ56		: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterQ56	: LREAL;						//{#lynus.ag#()}
+	lrCO2Enphase	: LREAL;						//{#lynus.ag#()}
+	lrCO2PV			: LREAL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// calc Output 5 & 6, 230V 16A, Schuko
+// choose one of the two calc-options
+
+// 1 -- if prgPV is in use
+// lrPowerQ56 := (prgEM.lrPowerEM1 + prgBattery.lrPowerBatt + prgPV.lrPowerPV) - (prgEM.lrPowerEM2 + prgEM.lrPowerEM3 + prgEM.lrPowerEM4 + prgCS.lrPowerCS);
+lrPowerQ56 := LIMIT(0,(prgEM.lrPowerEM1+ prgPV.lrPowerPV) - (prgEM.lrPowerEM2 + prgEM.lrPowerEM3 + prgEM.lrPowerEM4 + prgCS.lrPowerCS),10);
+
+// 2 -- if prgEnphase is in use
+// lrPowerQ56 := (prgEM.lrPowerEM1 + prgBattery.lrPowerBatt + prgEnphase.lrPowerPV) - (prgEM.lrPowerEM2 + prgEM.lrPowerEM3 + prgEM.lrPowerEM4 + prgCS.lrPowerCS);
+
+fbQ56Counter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerQ56, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbQ56Counter.lrTotalCounterEnergy_Consumption > lrCounterQ56 THEN  	
+	lrCounterQ56 := fbQ56Counter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+// calc saved CO2
+// lrCO2Enphase := prgEnphase.lrCounterPV * 0.428;
+lrCO2PV := prgPV.lrCounterPV * 0.428;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCalc">
+      <LineId Id="5" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="49" Count="12" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="37" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

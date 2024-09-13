@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPersistent" Id="{ccd67b8a-d866-4216-a145-3575a5a9eafe}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPersistent
+VAR
+	fbUSV		: FB_WritePersistentData_CX81xx;
+	
+	fb_Reboot		: NT_reboot;
+	m_Reboot		: BOOL:=FALSE;
+	
+	uinit_KbusState: UINT;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbUSV(
+	eSaveModeData:= eUSVSaveMode.eSaveOnBoth, 
+	bLoadPersistentDataOk=> , 
+	bPowerFailDetect=> , 
+	bError=> , 
+	bySaveProcess=> , 
+	dwStorageLast24h=> , 
+	udiErrorCode=> );
+	
+	
+fb_Reboot(	netid := '',
+			delay := 2,
+			start := m_Reboot);
+	
+uinit_KbusState := prgGrid.fbKBusState.uiKBusState_OUT;
+
+
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgPersistent">
+      <LineId Id="3" Count="6" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="16" Count="4" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="91" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

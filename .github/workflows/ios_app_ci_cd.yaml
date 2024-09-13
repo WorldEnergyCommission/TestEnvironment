@@ -1,0 +1,167 @@
+name: ios_app_ci_cd
+
+on:
+  workflow_dispatch:
+
+jobs:
+  environment:
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          [
+            efficientio,
+            peneder,
+            bmsystems,
+            tsg,
+            be,
+            dev,
+            powerlink,
+            smartsitepower,
+            effectas,
+          ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: string
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ matrix.flavor }}
+      - uses: efficientIO/keepass-to-environment@v1.2
+        with:
+          keepass-file-path: "keepass/secrets.kdbx"
+          keepass-master-password: ${{ secrets.KEEPASS_MASTER_PASSWORD }}
+          keepass-group-filter: "app/${{ steps.string.outputs.lowercase }}"
+      - name: Store bundle artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-${{ matrix.flavor }}
+          path: env.json
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          [
+            efficientio,
+            peneder,
+            bmsystems,
+            tsg,
+            be,
+            dev,
+            powerlink,
+            smartsitepower,
+            effectas,
+          ]
+    needs: environment
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: run number with offset
+        env:
+          NUM: ${{ github.run_number }}
+        run: echo "GITHUB_RUN_NUMBER_WITH_OFFSET=$(($NUM + 1000))" >> $GITHUB_ENV
+      - name: get Previous tag
+        id: previoustag
+        uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+      - uses: LarsenLP/actions-find-and-replace-string@v3
+        id: tag
+        with:
+          source: ${{ steps.previoustag.outputs.tag }}
+          find: "v"
+          replace: ""
+      - name: show app new version
+        run: echo "${{ steps.tag.outputs.value }}-$GITHUB_RUN_NUMBER_WITH_OFFSET"
+      - name: set sha value
+        run: sed -i "" -e "s/SHA/${{ github.sha }}/g" version.json
+        working-directory: console/
+      - run: npm install
+        working-directory: console/
+      - run: npm run build
+        working-directory: console/
+      - run: npx cap sync ios
+        working-directory: console/
+        env:
+          APP_FLAVOR: ${{ matrix.flavor }}
+      - id: string
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ matrix.flavor }}
+      - name: Get bundle artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: env-${{ matrix.flavor }}
+      - name: Get environment variables from json file
+        uses: rgarcia-phi/json-to-variables@v1.1.0
+        with:
+          filename: "env.json"
+          prefix: "JSON"
+          masked: false
+      - name: get Certificate
+        id: certFileDecode
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: "certificate.p12"
+          fileDir: "console"
+          encodedString: ${{ env[format('JSON_{0}_P12_FILE_BASE64', steps.string.outputs.uppercase)] }}
+      - name: copy Certificate
+        working-directory: console/
+        run: |
+          mkdir -p ~/Library/MobileDevice/Certificates/
+          touch ~/Library/MobileDevice/Certificates/certificate.p12
+          mv certificate.p12 ~/Library/MobileDevice/Certificates/certificate.p12
+      - name: Get Profile
+        id: profFileDecode
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: "decoded.mobileprovision"
+          fileDir: "console"
+          encodedString: ${{ env[format('JSON_{0}_MOBILEPROVISION_BASE64', steps.string.outputs.uppercase)] }}
+      - name: copy Profiles
+        working-directory: console/
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+          touch ~/Library/MobileDevice/Provisioning\ Profiles/decoded.mobileprovision
+          mv decoded.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/decoded.mobileprovision
+      - name: Install python and codemagic tools
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: install python dependencies
+        run: python -m pip install codemagic-cli-tools
+      - name: initialize Keychain with certificate
+        working-directory: console/
+        run: |
+          keychain initialize
+          keychain add-certificates --certificate ~/Library/MobileDevice/Certificates/certificate.p12 --certificate-password '${{ env[format('JSON_{0}_P12_PASSWORD', steps.string.outputs.uppercase)] }}'
+      - run: npx capacitor-set-version set:ios -v ${{ steps.tag.outputs.value }} -b $GITHUB_RUN_NUMBER_WITH_OFFSET
+        working-directory: console/
+      - name: Building IPA
+        working-directory: console/
+        run: |
+          xcode-project use-profiles --project ios/App/App.xcodeproj --profile ~/Library/MobileDevice/Provisioning\ Profiles/decoded.mobileprovision --export-options-plist exportOptions.plist
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme ${{ env.APP_FLAVOR }} clean archive -configuration Release -sdk iphoneos -archivePath App.xcarchive
+          xcodebuild -exportArchive -archivePath App.xcarchive -exportPath ipa -exportOptionsPlist exportoptions.plist
+        env:
+          APP_FLAVOR: ${{ matrix.flavor }}
+      - name: collect ipa artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: adhoc-ipa
+          path: console/ipa/*.ipa
+      - name: copy private key
+        working-directory: console/
+        env:
+          API_KEY: ${{ env[format('JSON_{0}_API_KEY', steps.string.outputs.uppercase)] }}
+          AUTH_KEY: ${{ env[format('JSON_{0}_AUTH_KEY', steps.string.outputs.uppercase)] }}
+        run: |
+          mkdir ~/private_keys
+          echo "$AUTH_KEY" > ~/private_keys/AuthKey_$API_KEY.p8
+      - name: upload app to App Store Connect
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 10
+          command: xcrun altool --upload-app -f console/ipa/*.ipa -t ios --apiKey "${{ env[format('JSON_{0}_API_KEY', steps.string.outputs.uppercase)] }}" --apiIssuer "${{ env[format('JSON_{0}_ISSUER_ID', steps.string.outputs.uppercase)] }}"

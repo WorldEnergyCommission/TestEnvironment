@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<measuringManagement
+        xmlns="http://innosolv.ch/namespace/isag">
+    <package>
+        <sender>
+            <user>
+                <userName>{{.Report.Meta.Zev.Innosolv.Username}}</userName>
+            </user>
+            <swSystemID>362</swSystemID>
+            <swSystemName>Lynus</swSystemName>
+        </sender>
+        <receiver>
+            <swSystemID>2</swSystemID>
+            <swSystemName>IS-E</swSystemName>
+        </receiver>
+        <transaction>
+            <transactionID>{{.TransactionID}}</transactionID>
+            <transactionCase>2100</transactionCase>
+            <transactionDate>{{.End.Format "2006-01-02"}}</transactionDate>
+            <transactionAcknowledge>false</transactionAcknowledge>
+            <transactionDescription>ZEV_Daten</transactionDescription>
+        </transaction>
+    </package>
+    {{$root := . -}}
+    {{range $key, $val := .Consumption.Consumers -}}
+    <device>
+        <meteringcode>{{$val.MeteringID}}</meteringcode>
+        <accountingPeriodeFrom>{{$root.Start.Format "2006-01-02"}}</accountingPeriodeFrom>
+        <accountingPeriodeTo>{{$root.End.Format "2006-01-02"}}</accountingPeriodeTo>
+        <meteredValue>
+            <obis>1-5:1.9.1</obis>
+            <readingDate>{{$root.End.Format "2006-01-02"}}</readingDate>
+            <time>{{$root.End.Format "2006-01-02T15:04:05Z07:00"}}</time>
+            <status>Kalkulierter Wert</status>
+            <includedFactor>true</includedFactor>
+            <value>{{round $val.External.High}}</value>
+        </meteredValue>
+        <meteredValue>
+            <obis>1-5:1.9.2</obis>
+            <readingDate>{{$root.End.Format "2006-01-02"}}</readingDate>
+            <time>{{$root.End.Format "2006-01-02T15:04:05Z07:00"}}</time>
+            <status>Kalkulierter Wert</status>
+            <includedFactor>true</includedFactor>
+            <value>{{round $val.External.Low}}</value>
+        </meteredValue>
+        <meteredValue>
+            <obis>1-5:10.9.4</obis>
+            <readingDate>{{$root.End.Format "2006-01-02"}}</readingDate>
+            <time>{{$root.End.Format "2006-01-02T15:04:05Z07:00"}}</time>
+            <status>Kalkulierter Wert</status>
+            <includedFactor>true</includedFactor>
+            <value>{{round $val.Internal.High}}</value>
+        </meteredValue>
+        <meteredValue>
+            <obis>1-5:10.9.5</obis>
+            <readingDate>{{$root.End.Format "2006-01-02"}}</readingDate>
+            <time>{{$root.End.Format "2006-01-02T15:04:05Z07:00"}}</time>
+            <status>Kalkulierter Wert</status>
+            <includedFactor>true</includedFactor>
+            <value>{{round $val.Internal.Low}}</value>
+        </meteredValue>
+    </device>
+    {{end -}}
+</measuringManagement>

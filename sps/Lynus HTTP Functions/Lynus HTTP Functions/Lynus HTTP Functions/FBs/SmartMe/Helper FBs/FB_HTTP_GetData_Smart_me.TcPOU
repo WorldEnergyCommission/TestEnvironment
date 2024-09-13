@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HTTP_GetData_Smart_me" Id="{06767026-8dce-4724-b648-2fff3889b8bb}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HTTP_GetData_Smart_me
+VAR_INPUT
+	{attribute 'hide'}
+   	bSend               : BOOL;													//Send the Request to the Service
+	{attribute 'hide'}
+	sUsername			: STRING(50);											//Username from the smart-me Project
+	{attribute 'hide'}
+	sPassword			: STRING(50);											//Password from the smart-me Project
+	{attribute 'hide'}
+	tTimeOut			: TIME := T#10S;										//Timer for Timeout
+END_VAR
+VAR_IN_OUT
+	{attribute 'hide'}
+    fbClient            : FB_IotHttpClient;										//Connection to the HTTP Client Function
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bValidResult		: BOOL;													//Valid Result received from Server
+	{attribute 'hide'}
+    bBusy               : BOOL;													//Function is Busy
+	{attribute 'hide'}
+    bError              : BOOL;													//Function has a error
+	{attribute 'hide'}
+	sContent            : STRING(30000);										//Received Content
+END_VAR
+VAR
+	fbRequest           : FB_IotHttpRequest;									//Http Request Function
+    fbHeader            : FB_IotHttpHeaderFieldMap;								//Header Function
+	fbJsonWrite     	: FB_JsonSaxWriter;										//Json Write function to generate the based64 Part for the Header
+ 	timTimeout			: TON;													//Timer for Timeout
+	RisingEdge          : R_TRIG;												//Internal rising edge
+   	bGetContentResult   : BOOL;													//True when we receive content												
+    nState              : UDINT;												//Statemachine for the http request
+    nReqCount           : UDINT;												//Request Counter
+    nResCount           : UDINT;												//Receive Counter
+    nValidResCount      : UDINT;												//Valid Receive Counter
+    nErrCount           : UDINT;												//Error Counter
+    bOnce               : BOOL:= TRUE;											//Add the addidional Header Part
+	sbase64				: STRING(255);											//Based 64 string from the username and Password
+	sbase64_CP			: STRING(255);											//Based 64 string from the username and Password to compare it and modify the header
+	sCompleteString		: STRING(101);											//Complete string with username and password
+	iLen				: INT;													//Lengh from the string
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 29.09.2021
+//Version : 1.0.0.0
+
+//With this Function its possible to make a Request to the smart-me Database to receive Information from a Project and his devices.
+
+//Convert the Username and the password from string to Ascii and then in a Based64 format
+sCompleteString := CONCAT(CONCAT(sUsername,':'),sPassword);
+	iLen := LEN(sCompleteString); 
+		fbJsonWrite.AddBase64(ADR(sCompleteString),iLen);
+			sbase64 := fbJsonWrite.GetDocument();
+				fbJsonWrite.ResetDocument();
+
+sbase64 := DELETE(sbase64,1,FIND(sbase64,'"'));	
+	sbase64 := DELETE(sbase64,1,FIND(sbase64,'"'));		
+	
+sbase64 := CONCAT('Basic ',sbase64);
+
+//Add Username and Password to the Header of the Request
+IF sbase64 <> sbase64_CP AND nState = 0 THEN bOnce := TRUE; sbase64_CP := sbase64; END_IF  
+
+IF bOnce THEN
+    fbHeader.AddField('Authorization',sbase64, FALSE);
+    bOnce:= FALSE;
+END_IF
+
+//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN nState := 0; bBusy := FALSE; END_IF
+
+//Statemachine to generate the Request
+
+RisingEdge(CLK:= bSend);
+	CASE nState OF
+		
+		0://Request
+			IF RisingEdge.Q THEN
+				IF fbRequest.SendRequest(sUri:= '/api/Devices', fbClient:= fbClient, 
+										 eRequestType:= ETcIotHttpRequestType.HTTP_GET, 0, 0, fbHeader) THEN
+					nState:= 1;
+					nReqCount:= nReqCount + 1;
+					bBusy:= TRUE;
+					bError:= FALSE;
+					bValidResult := FALSE;
+				END_IF
+			END_IF
+			
+		1://Wait for the Response
+			IF NOT fbRequest.bBusy THEN
+				bError:= TRUE;
+					IF NOT fbRequest.bError THEN
+						bGetContentResult:= fbRequest.GetContent(pContent:= ADR(sContent),
+																 nContentSize:= SIZEOF(sContent), 
+																 bSetNullTermination:= TRUE);
+						IF fbRequest.nStatusCode >= 200 AND fbRequest.nStatusCode < 300 THEN
+							bValidResult := TRUE;
+							nResCount:= nResCount + 1;
+							bError:= FALSE;
+						END_IF
+					END_IF
+						nState:= 0;
+						bBusy:= FALSE;
+							IF bError THEN
+								nErrCount:= nErrCount + 1;
+							END_IF
+			END_IF
+			
+	END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HTTP_GetData_Smart_me">
+      <LineId Id="364" Count="67" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_OCHSNER_Web2Com1" Id="{a950d140-40e8-4ddc-adf5-700611d47af7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OCHSNER_Web2Com1
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME;		//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+END_VAR
+
+VAR_IN_OUT
+END_VAR
+
+VAR_OUTPUT
+	bValidResult		: BOOL;							//Valid Result received from Server
+    bBusy				: BOOL;							//Function is Busy
+    bError				: BOOL;							//Error sucess
+	bDone				: BOOL;							//True after the decoding from the received Json File
+	bConnected			: BOOL;							//Connection to the Server
+	hrErrorCode       	: HRESULT;						//Error Result from Http Client
+	byHP1StateHeatProd		: BYTE;
+	lrHP1TWVtemp			: LREAL;
+	lrHP1TWRtemp			: LREAL;
+	lrHP1TQAtemp			: LREAL;
+	lrHP1TQEtemp			: LREAL;
+	lrHP1ThEnergykWh		: LREAL;
+	lrHP1ThEnergyMWh		: LREAL;
+	byHC1StateHC			: BYTE;
+	lrHC1OutTemp			: LREAL;
+	lrHC1OutTempAvg			: LREAL;
+	lrHC1SPRoomTemp			: LREAL;
+	lrHC1PreFlowTemp		: LREAL;
+	lrHC1SPFlowTemp			: LREAL;
+	byHP2StateHeatProd		: BYTE;
+	lrHP2TWVtemp			: LREAL;
+	lrHP2TWRtemp			: LREAL;
+	lrHP2TQAtemp			: LREAL;
+	lrHP2TQEtemp			: LREAL;
+	lrHP2ThEnergykWh		: LREAL;
+	lrHP2ThEnergyMWh		: LREAL;
+END_VAR
+
+VAR
+	fbClient			: FB_IotHttpClient;
+	fbHttpGet			: FB_OCHSNER_Web2Com1_Helper;
+	timStartRequest		: TON;							//Timer to Start the Request
+	FPStartRequest		: R_TRIG;						//Internal positive Edge
+	FPDone				: R_TRIG;						//Internal positive Edge
+	FNStart				: F_TRIG;						//Internal negative Edge
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := T#20S;
+fbClient.bKeepAlive := FALSE;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := FALSE;
+	fbClient.tConnectionTimeout := T#20S;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+	timStartRequest(IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, PT:= tDelayRequest, Q=> , ET=> );
+		IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured)) THEN fbHttpGet.bSend := TRUE; END_IF
+
+				
+//Http Get Function
+fbHttpGet(
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> ,
+	byHP1StateHeatProd => byHP1StateHeatProd,
+	lrHP1TWVtemp => lrHP1TWVtemp,
+	lrHP1TWRtemp => lrHP1TWRtemp,
+	lrHP1TQAtemp => lrHP1TQAtemp,
+	lrHP1TQEtemp => lrHP1TQEtemp,
+	lrHP1ThEnergykWh => lrHP1ThEnergykWh,
+	lrHP1ThEnergyMWh => lrHP1ThEnergyMWh,
+	byHC1StateHC => byHC1StateHC,
+	lrHC1OutTemp => lrHC1OutTemp,
+	lrHC1OutTempAvg => lrHC1OutTempAvg,
+	lrHC1SPRoomTemp => lrHC1SPRoomTemp,
+	lrHC1PreFlowTemp => lrHC1PreFlowTemp,
+	lrHC1SPFlowTemp => lrHC1SPFlowTemp,
+	byHP2StateHeatProd => byHP2StateHeatProd,
+	lrHP2TWVtemp => lrHP2TWVtemp,
+	lrHP2TWRtemp => lrHP2TWRtemp,
+	lrHP2TQAtemp => lrHP2TQAtemp,
+	lrHP2TQEtemp => lrHP2TQEtemp,
+	lrHP2ThEnergykWh => lrHP2ThEnergykWh,
+	lrHP2ThEnergyMWh => lrHP2ThEnergyMWh );
+
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+fbClient.Execute();
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbClient.hrErrorCode;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_OCHSNER_Web2Com1">
+      <LineId Id="48" Count="20" />
+      <LineId Id="82" Count="3" />
+      <LineId Id="166" Count="19" />
+      <LineId Id="90" Count="5" />
+      <LineId Id="102" Count="3" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

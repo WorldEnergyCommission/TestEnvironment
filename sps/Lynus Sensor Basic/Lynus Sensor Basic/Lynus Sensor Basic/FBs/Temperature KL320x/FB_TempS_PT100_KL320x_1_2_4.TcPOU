@@ -1,0 +1,308 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_TempS_PT100_KL320x_1_2_4" Id="{7518f65a-bc41-45a8-afb2-3f0c7a16015b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_TempS_PT100_KL320x_1_2_4
+VAR_INPUT PERSISTENT
+	bEnable							: BOOL;											//Enable or dissable the function
+	rTemperatureOffset				: REAL;											//Temperatur Offset (-10 to +10)
+END_VAR
+VAR_INPUT
+	uiKBusState_IN					: UINT;											//K-Bus State from the K-Bus Box on wich the Terminal is connected. (Connect with FB_K_Bus_state)
+END_VAR
+VAR_OUTPUT
+	stDataTempS						: ST_Temperature_Output;						//{#lynus.ag#()} //Temperature output data
+	diNrOfTempS_OUT					: DINT;											//Active Number from the Temperature Sensor for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbTempS							: FB_TempSensor_M50_P200;						//Function for Temperature Sensor
+	{attribute 'hide'}
+	fbNumberDevice					: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	fbConfig						: FB_Config_KL320x;								//Function to configure the right sensortype on the KL320x 
+	{attribute 'hide'}
+	timConfig						: TON;											//Timer to configure the KL320x with delay after restart the plc
+	{attribute 'hide'}
+	timDissableFunctions			: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL			: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD							: ARRAY[1..2] OF FB_PersistentData_Number;		//Function to save persistent data 
+	{attribute 'hide'}
+	bStartConfig					: BOOL := TRUE;									//Variable to start the configuration after restart the plc 
+	{attribute 'hide'}
+	byWaitInStep					: BYTE;											//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	byDelayCounterConfig			: BYTE;											//Delay Counter to wait in state machine steps when we read out or configurate the temperature terminal
+	{attribute 'hide'}
+	iStateConfig					: INT;											//State machine to read out or configure the temperature terminal
+	{attribute 'hide'}
+	iStateGVLData					: INT;											//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diCounterForGVL					: DINT;											//Counter to clean old data on GVL
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 07.06.2021
+//Version : 1.0.0.0
+
+//With this Function block its possible to configure a PT100 Sensor on a Beckhoff KL320x Card and received after the configuration the Temperture Value
+//KL3208 not work with this Function Block
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*------------------------------------------------------------Configuration----------------------------------------------------------------------------------*)
+
+timConfig(IN:= uiKBusState_IN = 0 AND bStartConfig, PT:= T#500MS, Q=> , ET=> );
+	IF timConfig.Q THEN iStateConfig := 1; END_IF
+
+CASE iStateConfig OF
+	
+	0://Init
+		fbConfig.bWriteConfig := FALSE;
+			fbConfig.bReadConfig := FALSE;
+				byDelayCounterConfig := 0;
+
+	1://Read out the Config after Restart
+		fbConfig.bWriteConfig := FALSE;
+			fbConfig.bReadConfig := TRUE;
+			
+		byDelayCounterConfig := byDelayCounterConfig + 1;
+			byDelayCounterConfig := LIMIT(0,byDelayCounterConfig,2);
+
+			IF NOT fbConfig.bConfigModeAktiv AND byDelayCounterConfig > 1 THEN
+				//If the Terminal is just configured then back to step 0
+				IF fbConfig.sSensorType = 'PT100' THEN 
+					iStateConfig := 0; 
+						bStartConfig := FALSE;
+				ELSE 
+					//Or write right configuration to the terminal on next step
+					iStateConfig := 2; 
+						fbConfig.bReadConfig := FALSE;
+							bStartConfig := FALSE;
+								byDelayCounterConfig := 0;
+				END_IF
+			END_IF 	
+
+			//Error
+			IF NOT fbConfig.bConfigModeAktiv AND byDelayCounterConfig > 1 AND fbConfig.bError THEN
+				iStateConfig := 0;
+			END_IF 
+			
+	2://Write Config to the Terminal
+		fbConfig.bWriteConfig := TRUE;
+		
+		byDelayCounterConfig := byDelayCounterConfig + 1;
+			byDelayCounterConfig := LIMIT(0,byDelayCounterConfig,2);
+		
+		//Configuration is done	
+		IF NOT fbConfig.bConfigModeAktiv AND byDelayCounterConfig > 1 AND fbConfig.sSensorType = 'PT100' THEN
+			iStateConfig := 0;	
+		END_IF
+			
+		//Error
+		IF NOT fbConfig.bConfigModeAktiv AND byDelayCounterConfig > 1 AND fbConfig.bError THEN
+			iStateConfig := 0;
+		END_IF
+		
+END_CASE
+
+//Before Start the configuration the Sensor Function is in Error State
+IF iStateConfig <> 0 THEN 
+	fbTempS.bErrorConfig := TRUE; 
+ELSE
+	fbTempS.bErrorConfig := fbConfig.bError;	
+END_IF
+
+fbConfig(
+		eChooseSensorType:= Lynus_Standards.E_ChooseSensortype_KL320x.ePT100_KL320x, 
+		iTimeout:= 2, 
+		bWriteConfig:= , 
+		bReadConfig:= , 
+		bConfigModeAktiv=> , 
+		bError=> , 
+		b2Wire=> , 
+		iRawValueTerminal=> , 
+		usiState=> , 
+		sSensorType=> );	
+
+(*-------------------------------------------------------------Calcualte the number of Temperature---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors, 
+	diMaxNumberOfDevices:= Constants_Sensors.diMaxNumberOfTemperatureSensors, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfTempS_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors := diNrOfTempS_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*-----------------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)
+
+IF timDissableFunctions.Q THEN fbTempS.bWarning := TRUE; fbTempS.iWarningCode := 0; ELSE fbTempS.bWarning := FALSE; END_IF   
+	IF Lynus_Standards.GVL_Sensors.diNumberOfTemperatureSensors > Constants_Sensors.diMaxNumberOfTemperatureSensors THEN fbTempS.bErrorGeneral := TRUE; fbTempS.iErrorCode := 0; ELSE fbTempS.bErrorGeneral := FALSE; END_IF 
+		
+fbTempS(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bUseFilter:= TRUE, 
+	bErrorConfig:= , 
+	bErrorGeneral:= , 
+	bWriteWithDelay:= TRUE, 
+	usiState:= fbConfig.usiState, 
+	iDelayFilter:= 50, 
+	iMaxValuesFilter:= 20, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	rTemperatureOffset:= rTemperatureOffset, 
+	rRawTempIn:= fbConfig.iRawValueTerminal, 
+	tTimDelayOutput:= T#5S, 
+	stDataTempOut=> , 
+	stDataTempOutDelay=> stDataTempS);
+
+(*-----------------------------------------------------------Handle data to Global structure for the Temperatur System-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diCounterForGVL].bEnabled := FALSE;
+			Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diCounterForGVL].rTemperature := 0;
+		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Sensors.diMaxNumberOfTemperatureSensors);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Sensors.diMaxNumberOfTemperatureSensors THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfTempS_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT].bEnabled := fbTempS.stDataTempOut.bEnabled;
+		Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT].byErrorWarning := fbTempS.stDataTempOut.byErrorWarning;
+			Lynus_Standards.GVL_Sensors.stDataTemperatureSensors[diNrOfTempS_OUT].rTemperature := fbTempS.stDataTempOut.rTemperature;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= REAL_TO_LREAL(rTemperatureOffset), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TempS_PT100_KL320x_1_2_4">
+      <LineId Id="559" Count="2" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="566" Count="0" />
+      <LineId Id="869" Count="0" />
+      <LineId Id="871" Count="1" />
+      <LineId Id="870" Count="0" />
+      <LineId Id="621" Count="1" />
+      <LineId Id="1038" Count="1" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="774" Count="2" />
+      <LineId Id="840" Count="3" />
+      <LineId Id="839" Count="0" />
+      <LineId Id="779" Count="0" />
+      <LineId Id="784" Count="0" />
+      <LineId Id="780" Count="0" />
+      <LineId Id="785" Count="1" />
+      <LineId Id="791" Count="0" />
+      <LineId Id="790" Count="0" />
+      <LineId Id="789" Count="0" />
+      <LineId Id="794" Count="0" />
+      <LineId Id="793" Count="0" />
+      <LineId Id="797" Count="0" />
+      <LineId Id="801" Count="0" />
+      <LineId Id="798" Count="0" />
+      <LineId Id="844" Count="0" />
+      <LineId Id="800" Count="0" />
+      <LineId Id="809" Count="0" />
+      <LineId Id="830" Count="0" />
+      <LineId Id="810" Count="0" />
+      <LineId Id="799" Count="0" />
+      <LineId Id="792" Count="0" />
+      <LineId Id="823" Count="0" />
+      <LineId Id="795" Count="0" />
+      <LineId Id="825" Count="0" />
+      <LineId Id="827" Count="0" />
+      <LineId Id="826" Count="0" />
+      <LineId Id="824" Count="0" />
+      <LineId Id="778" Count="0" />
+      <LineId Id="812" Count="4" />
+      <LineId Id="822" Count="0" />
+      <LineId Id="817" Count="2" />
+      <LineId Id="796" Count="0" />
+      <LineId Id="834" Count="2" />
+      <LineId Id="832" Count="1" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="802" Count="0" />
+      <LineId Id="782" Count="0" />
+      <LineId Id="803" Count="0" />
+      <LineId Id="805" Count="0" />
+      <LineId Id="807" Count="0" />
+      <LineId Id="804" Count="0" />
+      <LineId Id="783" Count="0" />
+      <LineId Id="626" Count="9" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="674" Count="0" />
+      <LineId Id="678" Count="18" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="907" Count="0" />
+      <LineId Id="909" Count="1" />
+      <LineId Id="994" Count="4" />
+      <LineId Id="908" Count="0" />
+      <LineId Id="700" Count="1" />
+      <LineId Id="954" Count="1" />
+      <LineId Id="702" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="637" Count="14" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="704" Count="15" />
+      <LineId Id="739" Count="2" />
+      <LineId Id="725" Count="8" />
+      <LineId Id="742" Count="1" />
+      <LineId Id="738" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="745" Count="0" />
+      <LineId Id="749" Count="1" />
+      <LineId Id="748" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

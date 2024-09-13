@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCS" Id="{43bd36c5-f12c-4ed4-82bf-a768294c69ef}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbAlfen1					: FB_ECS_Alfen_NG9xx_Platform_V2;		
+	fbAlfen2					: FB_ECS_Alfen_NG9xx_Platform_V2;		
+	lreal_Alfen1_Power			: LREAL;								//{#lynus.ag#()}
+	lreal_Alfen2_Power			: LREAL;								//{#lynus.ag#()}
+	lreal_Alfen1_Energy			: LREAL;								//{#lynus.ag#()}
+	lreal_Alfen2_Energy			: LREAL;								//{#lynus.ag#()}
+	m_Alfen1_CarConnected		: BOOL;									//{#lynus.ag#()}
+	m_Alfen2_CarConnected		: BOOL;									//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+fbAlfen1(
+	bEnable:= TRUE, 
+	bEnableWrite := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= 1, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.0.3', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+lreal_Alfen1_Power 		:= fbAlfen1.stDataECS.lrTotalPower;
+lreal_Alfen1_Energy 	:= fbAlfen1.stDataECS.lrCounterEnergyT1_Consumption;
+m_Alfen1_CarConnected	:= fbAlfen1.stDataECS.bCarConnected;
+ 
+fbAlfen2(
+	bEnable:= TRUE, 
+	bEnableWrite := FALSE,
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= 1, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.0.4', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+	
+lreal_Alfen2_Power 		:= fbAlfen2.stDataECS.lrTotalPower;
+lreal_Alfen2_Energy 	:= fbAlfen2.stDataECS.lrCounterEnergyT1_Consumption;
+m_Alfen2_CarConnected	:= fbAlfen2.stDataECS.bCarConnected;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="49" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="11" Count="10" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="75" Count="1" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="27" Count="9" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="77" Count="2" />
+      <LineId Id="42" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_HP_Output" Id="{24d4c294-6d55-470d-977c-dc1201da7a62}">
+    <Declaration><![CDATA[TYPE ST_HP_Output :
+STRUCT
+	bOutput										: BOOL;										//Output heating Pump
+	bEnabled									: BOOL;										//{#lynus.ag#()} //Heating pump is enabled
+	bSReset										: BOOL;										//{#lynus.ag#()} //Reset heating pump
+	bIsStepSwitched								: BOOL;										//Heating pump is step switched or not
+	bSOnEmergPowerOff							: BOOL;										//Shows the state of the bOnEmergPowerOff input from the setups
+	bSManualyOn									: BOOL;										//Shows the state of the bManualyOn input from the setups
+	bSTimeEnabled								: BOOL;										//{#lynus.ag#()} //Shows the state of the bTimeEnabled input from the setups
+	bExtOnCommandIsActive						: BOOL;										//Shows that the pump runs at the moment with the external on command
+	byErrorWarning								: BYTE;										//Show if the function has a Error or a Warning
+	byNumberOfSteps								: BYTE;										//Numer of steps form the heating pump
+	byPriority									: BYTE; 									//Priority of the device if controlled via the EMS block = 1 2 3 (If 0 then this device does not exist for the EMS block)
+	bySManualyTargetPower						: BYTE;										//Shows the state of the byManualyTargetPower input from the setups
+	bySTimeEnabledTargetPower					: BYTE;										//{#lynus.ag#()} //Shows the state of the byTimeEnabledTargetPower input from the setups
+	rBoilerTempHeatingSys						: REAL;										//Boiler temperature heating system
+	rBoilerTempServiceWater						: REAL;										//Boiler temperature service water
+	rFlowTemp									: REAL;										//Flow temperature Heat pump
+	rReturnTemp									: REAL;										//Return temperature Heat pump
+	rFlowTempEnergySource						: REAL;										//Flow temperature Energy Source
+	rReturnTempEnergySource						: REAL;										//Return temperature Energy Source
+	arrMaxPower									: ARRAY[1..2] OF REAL; 						//Maximum power of the load in kW (Per stage) (If no stage or only On Off then max power in array[1])
+	rTargetPower								: REAL;										//{#lynus.ag#()} //Target power from 0% to +100%
+	lrElPower									: LREAL;									//Electric Power Heating pump with unit kW
+	lrElPowerConsumption						: LREAL;									//Consumption heating pump with unit kW
+	lrElPowerProduction							: LREAL;									//Production heating pump with unit kW
+	lrTotalCounterEnergy_Consumption			: LREAL;									//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production				: LREAL;									//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption				: LREAL;									//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption				: LREAL;									//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production				: LREAL;									//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production				: LREAL;									//Total counter for energy Tariff 2 production with unit kWh
+	lrCounterThermalHeatingSys					: LREAL;									//Total meter reading thermal for heating in kwh
+	lrCounterThermalServiceWater				: LREAL;									//Total meter reading thermal for the domestic water in kwh
+	eMessage									: E_Message_HP;								//Message from the HP
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

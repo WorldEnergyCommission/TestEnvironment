@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_USINT" Id="{d5b0fff5-e5d4-457f-bb66-c9f359c8ef7e}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_CV_WORD_TO_USINT
+VAR_INPUT
+	{attribute 'hide'}
+	wInputValue					: WORD;									//Input value that is converted into the output value
+	{attribute 'hide'}
+	eByteOrderForConvert		: eByteOrder;							//Byte Format
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	usiOutputValue_1			: USINT;								//Converted output value	
+	{attribute 'hide'}						
+	usiOutputValue_2			: USINT;								//Converted output value
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//The byte order can be selected between BigEndian and LittleEndian
+//WORD TO USINT
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+IF eByteOrderForConvert = eByteOrder.eBigEndian THEN
+	usiOutputValue_1 := WORD_TO_USINT(SHR(wInputValue,8) AND 16#FFFF);
+	usiOutputValue_2 := WORD_TO_USINT(wInputValue AND 16#FFFF);
+ELSE
+	usiOutputValue_2 := WORD_TO_USINT(SHR(wInputValue,8) AND 16#FFFF);
+	usiOutputValue_1 := WORD_TO_USINT(wInputValue AND 16#FFFF);
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_USINT">
+      <LineId Id="44" Count="2" />
+      <LineId Id="17" Count="5" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="28" Count="4" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

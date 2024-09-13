@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPV" Id="{260d6b64-a551-4329-9d80-d303019bc725}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbKBusState		: FB_K_Bus_State;
+	fbEM1			: FB_EM_Beckhoff_KL3403;
+	lrPowerEM1		: LREAL;							//{#lynus.ag#()}
+	lrCounterEM1	: LREAL;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbKBusState(uiKBusState_OUT=> );
+
+//Leistung * 2 weil PV Straenge parallel gefuehrt
+fbEM1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= TRUE,
+	bChannel2Invers:= TRUE,
+	bChannel3Invers:= TRUE,
+	uiCurrentTransformerRatioL1:= 600, 
+	uiCurrentTransformerRatioL2:= 600, 
+	uiCurrentTransformerRatioL3:= 600, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPowerEM1 := fbEM1.stDataEMPower.lrPowerTotal * 2;	
+	lrCounterEM1 := fbEM1.stDataEMCounter.lrTotalCounterEnergy_Consumption * 2;	]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="17" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

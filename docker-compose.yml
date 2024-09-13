@@ -1,0 +1,87 @@
+---
+version: "3.7"
+name: efficientio-eio
+services:
+  # Port forwarder to live cluster
+  proxy:
+    restart: unless-stopped
+    build:
+      context: ./scripts
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ${KUBECONFIG_PATH}:/app/config
+    ports:
+      - 5432:5432
+      - 1883:1883
+      - 6379:6379
+      - 9000:9000
+      - 7000:7000
+
+  # The UI
+  console:
+    build:
+      context: .
+      dockerfile: console/dev.Dockerfile
+    restart: unless-stopped
+    environment:
+      - VUE_APP_CUSTOM_API_URL
+      - VUE_APP_CLIENT_ID
+      - VUE_CLI_TEST=false
+    ports:
+      - 8080:8080
+    volumes:
+      - ./console:/app
+
+  # The main server
+  api:
+    build:
+      context: .
+      dockerfile: ./api/dev.Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./api:/app
+      - ./api/.air.toml:/local/.air.toml
+    ports:
+      - 8000:8000
+      - 4000:4000
+    env_file:
+      - .env
+    depends_on:
+      - proxy
+
+  # Rules service
+  rule:
+    build:
+      context: .
+      dockerfile: ./local/golang-dev.Dockerfile
+      args:
+        - SOURCE_PROJECT_PATH=./rule
+    restart: unless-stopped
+    volumes:
+      - ./rule:/app
+      - ./local/.air.toml:/local/.air.toml
+    ports:
+      - 8001:8000
+      - 4001:4000
+    env_file:
+      - .env
+    depends_on:
+      - proxy
+
+  # Reports
+  # Doesn't hot reload as it uses headless chrome base image
+  report:
+    build:
+      context: .
+      dockerfile: ./report/Dockerfile
+    cap_add:
+      - SYS_ADMIN
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - 8003:8000
+    volumes:
+      - ./report/template:/usr/src/app/template
+    depends_on:
+      - proxy

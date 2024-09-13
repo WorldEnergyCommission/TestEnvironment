@@ -1,0 +1,407 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MODBUS_RTU_Olymp" Id="{0e434d4e-3413-4dcf-a085-561ea54c2fb5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MODBUS_RTU_Olymp
+
+VAR_INPUT
+
+END_VAR
+VAR_OUTPUT
+	dword_MB_Error		:ARRAY[1..3] OF DWORD;
+END_VAR
+VAR
+//	fbModbusRtuMaster_KL6x22B: ModbusRtuMaster_KL6x22B;
+	fbModbusRtuMaster_KL6x22B: ModbusRtuMasterV2_KL6x22B;
+	fbConfigKL6041 : KL6Configuration;
+	uintPollOrderCount: UINT;
+	mBusy: BOOL;
+	mError: BOOL;
+	mStart: BOOL;
+	udintMemoryDestAddress: UDINT;
+	udintBytesReceived: UDINT;
+	intState: INT:=0;
+	timerT1: TON;
+	timeWaitT1: TIME:=T#500MS;
+	timeWaitT2: TIME:=T#500MS;
+	timeNoRxTimeout:	TIME:=T#2S;
+	timerT2: TON;
+
+	fb_F_TRIG1: F_TRIG;
+	timerTimeout: TON;
+	mError_Rx: BOOL;
+	udintErrorID: MODBUS_ERRORS;
+	byteClientSlaveID: BYTE;
+	uintNoOfWords: UINT;
+	uintStartAddress: UINT;
+	dw_Mask: DWORD;
+	dw_Mask_Not: DWORD;
+	uint_TestPollOrder: UINT;
+	mTestMode: BOOL;
+	mInit_Done: BOOL;
+	
+	structArrayModbusRTU	:ARRAY[1..60] OF ModbusRTURequest;
+	uintMaxModbusRTUOrders: UINT;
+	mExecute: BOOL;
+	int_Handshake: ComHandshake_t:=4;
+	mode: ComSerialLineMode_t:=3;
+	byte_DataBits: BYTE:=8;
+	i: UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*
+The function block "ModbusRtuMaster_KL6x22B" has 22 bytes where it communicates with the plc
+software. These 22 bytes have to be assigned to the hardware device (for example KL/EL6021) in the
+system manager plus the control and status byte.
+If devices with less then 22 bytes are used, the other function blocks have to be used (for 5 bytes for example).
+*)
+
+(*
+IF fbModbusRtuMaster_KL6x22B.MBmaster.TimeoutTON.Q=TRUE AND mTimeOUT_Qold=FALSE THEN mTimeOUT_Q_Rising; END_IF
+mTimeOUT_Qold:=fbModbusRtuMaster_KL6x22B.MBmaster.TimeoutTON.Q;
+*)
+
+fb_F_TRIG1(CLK:=mBusy);
+
+CASE intState OF
+
+0: 	(* reset the start bit *)
+	mStart:=FALSE;
+	IF mInit_Done AND NOT fbConfigKL6041.Busy THEN 
+		intState:=10;
+		mExecute:=FALSE;		
+	ELSE
+		INIT();
+		mExecute:=TRUE;		// necessary to write the communication parameters to the KL terminal. only necessary once if the terminal is brand new
+	END_IF
+10:
+	(* set next poll order *)
+	uintPollOrderCount:=uintPollOrderCount+1; (* next slave *)
+	WHILE NOT structArrayModbusRTU[uintPollOrderCount].mRequestActive DO
+		uintPollOrderCount:=uintPollOrderCount+1; (* next slave *)
+	END_WHILE
+	
+	(* trouble shooting *)
+	IF mTestMode THEN
+		uintPollOrderCount:=uint_TestPollOrder; (* next slave *)
+	END_IF
+	
+	IF uintPollOrderCount > uintMaxModbusRTUOrders OR uintPollOrderCount<1 THEN
+		uintPollOrderCount:=1;
+	END_IF
+
+	udintMemoryDestAddress:=ADR(structArrayModbusRTU[uintPollOrderCount].wArrayReceiveBuffer[0]);
+	structArrayModbusRTU[uintPollOrderCount].udintBytesReceived:=0;
+	mStart:=TRUE;
+	timerTimeout.IN:=TRUE;
+	intState:=20;
+
+20: (* wait for busy falling or time out *)
+	IF fb_F_TRIG1.Q OR timerTimeout.Q THEN
+
+		(* check answer time *)
+		structArrayModbusRTU[uintPollOrderCount].timeTimeForRequest:=timerTimeout.ET;
+
+		(* reset timer *)
+		timerTimeout.IN:=FALSE;
+
+		(* reset start bit *)
+		mStart:=FALSE;
+
+		(* save number of bytes received *)
+		structArrayModbusRTU[uintPollOrderCount].udintBytesReceived:=udintBytesReceived;
+		udintBytesReceived:=0;
+
+		(* Error Detection *)
+		IF timerTimeout.Q THEN
+			mError_Rx:=TRUE;
+			structArrayModbusRTU[uintPollOrderCount].udintErrorID:=9998;
+			structArrayModbusRTU[uintPollOrderCount].strErrorMessage:='Timeout';
+		ELSIF structArrayModbusRTU[uintPollOrderCount].udintBytesReceived=0 AND structArrayModbusRTU[uintPollOrderCount].uintNoOfWords>0 THEN
+			mError_Rx:=TRUE;
+			structArrayModbusRTU[uintPollOrderCount].udintErrorID:=9999;
+			structArrayModbusRTU[uintPollOrderCount].strErrorMessage:='0 bytes received';
+		ELSIF fbModbusRtuMaster_KL6x22B.Error THEN
+			mError_Rx:=TRUE;
+			structArrayModbusRTU[uintPollOrderCount].udintErrorID:=udintErrorID;
+//			structArrayModbusRTU[uintPollOrderCount].strErrorMessage:=F_ADSERRORTEXT(structArrayModbusRTU[uintPollOrderCount].udintErrorID);
+		ELSE
+			mError_Rx:=FALSE;
+			structArrayModbusRTU[uintPollOrderCount].udintErrorID:=0;
+			structArrayModbusRTU[uintPollOrderCount].strErrorMessage:='';
+		END_IF
+
+
+		IF mError_Rx THEN
+			structArrayModbusRTU[uintPollOrderCount].udintCommErrorCounter:=structArrayModbusRTU[uintPollOrderCount].udintCommErrorCounter+1;
+		ELSIF structArrayModbusRTU[uintPollOrderCount].udintBytesReceived>0 THEN (* Rev 3 *)
+			structArrayModbusRTU[uintPollOrderCount].udintCommSuccessCounter:=structArrayModbusRTU[uintPollOrderCount].udintCommSuccessCounter+1;
+		END_IF
+
+		structArrayModbusRTU[uintPollOrderCount].timerOKTimer.IN:=NOT mError_Rx;
+		structArrayModbusRTU[uintPollOrderCount].timerErrorTimer.IN:=mError_Rx;
+
+		dw_Mask:=1;
+		dw_Mask:=SHL(dw_Mask,(structArrayModbusRTU[uintPollOrderCount].intDeviceNumber));
+		dw_Mask_Not:=NOT dw_Mask;
+		
+		IF structArrayModbusRTU[uintPollOrderCount].timerErrorTimer.Q THEN
+			structArrayModbusRTU[uintPollOrderCount].mError:=TRUE;
+			IF structArrayModbusRTU[uintPollOrderCount].intDeviceClass>=1 AND structArrayModbusRTU[uintPollOrderCount].intDeviceClass<=3 THEN
+				dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass]:=dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass] OR dw_Mask;
+			END_IF
+		END_IF
+
+		IF structArrayModbusRTU[uintPollOrderCount].timerOKTimer.Q THEN
+			structArrayModbusRTU[uintPollOrderCount].mError:=FALSE;
+			IF structArrayModbusRTU[uintPollOrderCount].intDeviceClass>=1 AND structArrayModbusRTU[uintPollOrderCount].intDeviceClass<=3 THEN
+				dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass]:=dword_MB_Error[structArrayModbusRTU[uintPollOrderCount].intDeviceClass] AND dw_Mask_Not;
+			END_IF
+		END_IF
+
+		(* clear buffer *)
+		IF mError_Rx THEN
+			MEMSET(destAddr:=udintMemoryDestAddress,fillByte:=0,130);
+		END_IF
+
+		(* set next state *)
+		intState:=30;
+	END_IF
+
+30:		(* wait *)
+		timerT1(IN:=TRUE);
+		IF timerT1.Q THEN
+			timerT1(IN:=FALSE);
+			intState:=0; (* back to start *)
+		END_IF
+
+END_CASE
+
+(* Timer calls *)
+structArrayModbusRTU[uintPollOrderCount].timerErrorTimer(PT:=timeNoRxTimeout);
+structArrayModbusRTU[uintPollOrderCount].timerOKTimer(PT:=T#2S);
+timerT1(PT:=timeWaitT1);
+timerT2(PT:=timeWaitT2);
+timerTimeout(PT:=timeNoRxTimeout+timeWaitT1);
+
+
+(* Timers *)
+structArrayModbusRTU[uintPollOrderCount].timerErrorTimer.PT:=T#5S;
+structArrayModbusRTU[uintPollOrderCount].timerOKTimer.PT:=T#5S;
+
+
+//fbModbusRtuMaster_KL6x22B.ReadInputRegs(
+fbModbusRtuMaster_KL6x22B.ReadRegs(
+	UnitID:= structArrayModbusRTU[uintPollOrderCount].byteClientSlaveID, 
+	Quantity:= structArrayModbusRTU[uintPollOrderCount].uintNoOfWords, 
+	MBAddr:= structArrayModbusRTU[uintPollOrderCount].uintStartAddress , 
+	cbLength:= 2*structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	pMemoryAddr:= udintMemoryDestAddress, 
+	AuxQuantity:= , 
+	AuxMBAddr:= , 
+	AuxcbLength:= , 
+	pAuxMemoryAddr:= , 
+	Execute:= mStart, 
+	Timeout:= T#1S, 
+	BUSY=> mBusy, 
+	Error=> mError, 
+	ErrorId=> udintErrorID, 
+	cbRead=> udintBytesReceived);
+	
+(*fbModbusRtuMaster_KL6x22B.ReadRegs(
+	UnitID		:=structArrayModbusRTU[uintPollOrderCount].byteClientSlaveID,
+	Quantity	:=structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	MBAddr		:=structArrayModbusRTU[uintPollOrderCount].uintStartAddress,
+	cbLength	:=2*structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	pMemoryAddr	:=udintMemoryDestAddress,
+	Execute		:=mStart,
+	Timeout		:=t#1s,
+	BUSY		=>mBusy,
+	Error		=>mError,
+	ErrorId		=>udintErrorID,
+	cbRead		=>udintBytesReceived
+);
+*)
+(*
+(*fbModbusRtuMaster_KL6x22B.ReadInputRegs(
+*)
+fbModbusRtuMaster_KL6x22B.ReadInputRegs(
+	UnitID		:=structArrayModbusRTU[uintPollOrderCount].byteClientSlaveID,
+	Quantity	:=structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	MBAddr		:=structArrayModbusRTU[uintPollOrderCount].uintStartAddress,
+	cbLength	:=2*structArrayModbusRTU[uintPollOrderCount].uintNoOfWords,
+	pMemoryAddr	:=udintMemoryDestAddress,
+	Execute		:=mStart,
+	Timeout		:=t#1s,
+	BUSY		=>mBusy,
+	Error		=>mError,
+	ErrorId		=>udintErrorID,
+	cbRead		=>udintBytesReceived
+);
+*)
+// necessary for KL6041 to wirte the com settings
+fbConfigKL6041(
+	Execute 		:= mExecute,
+	Mode 			:= mode,
+	Baudrate 		:= 19200,
+	NoDatabits 		:= byte_DataBits,
+	Parity 			:= 1,
+	Stopbits 		:= 1,
+	Handshake  		:= int_Handshake,
+	ContinousMode 	:= FALSE,
+	pComIn 			:= ADR(fbModbusRtuMaster_KL6x22B.InData),
+	pComOut 		:= ADR(fbModbusRtuMaster_KL6x22B.OutData),
+	SizeComIn 		:= SIZEOF(fbModbusRtuMaster_KL6x22B.InData)
+);
+
+]]></ST>
+    </Implementation>
+    <Action Name="INIT" Id="{ed956e64-c6b3-4ced-be54-05e8649f8ec1}">
+      <Implementation>
+        <ST><![CDATA[
+
+i:=1;
+(* Poll 1 Heating circuit 1 *)
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1024;
+structArrayModbusRTU[i].uintNoOfWords:=22;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+(* Poll 2 Heating Circuit 1 *)
+i:=i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1046;
+structArrayModbusRTU[i].uintNoOfWords:=22;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+(* Poll 3 Heating Circuit 1 *)
+i:=i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1068;
+structArrayModbusRTU[i].uintNoOfWords:=22;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+(* Poll 4 Heating Circuit 1 *)
+i:=i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=1090;
+structArrayModbusRTU[i].uintNoOfWords:=2;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+(* Poll 5 Power*)
+i:=i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=20823;
+structArrayModbusRTU[i].uintNoOfWords:=11;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+(* Poll 6 outside Temp*)
+i:=i+1;
+structArrayModbusRTU[i].byteClientSlaveID:=1;
+structArrayModbusRTU[i].uintStartAddress:=35847;
+structArrayModbusRTU[i].uintNoOfWords:=11;
+structArrayModbusRTU[i].mRequestActive:=TRUE;
+
+
+
+uintMaxModbusRTUOrders:=i;
+mInit_Done:=TRUE;
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="MODBUS_RTU_Olymp">
+      <LineId Id="39" Count="5" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="48" Count="10" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="477" Count="1" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="62" Count="2" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="433" Count="1" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="72" Count="24" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="97" Count="2" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="100" Count="2" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="376" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="121" Count="1" />
+      <LineId Id="124" Count="1" />
+      <LineId Id="127" Count="4" />
+      <LineId Id="389" Count="2" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="132" Count="1" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="396" Count="2" />
+      <LineId Id="138" Count="25" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="174" Count="3" />
+      <LineId Id="186" Count="2" />
+      <LineId Id="637" Count="14" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="189" Count="3" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="194" Count="6" />
+      <LineId Id="653" Count="0" />
+      <LineId Id="578" Count="14" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="513" Count="11" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="MODBUS_RTU_Olymp.INIT">
+      <LineId Id="2" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="10" Count="3" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="21" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="30" Count="5" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="36" Count="3" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="45" Count="2" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="53" Count="4" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="59" Count="2" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

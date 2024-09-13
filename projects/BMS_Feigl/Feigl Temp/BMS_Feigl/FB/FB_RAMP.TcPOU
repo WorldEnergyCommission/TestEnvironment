@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_RAMP" Id="{5e240f73-e6b9-42ba-94ed-d31e5a6c6167}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RAMP
+VAR_INPUT
+	realRampInput: REAL;		(* input value *)
+	mEnableRamp: BOOL;			(* bit=0:Output=Input, bit=1: Ramp active, mZeroOutout has higher priority *)
+	mZeroOutput:BOOL;			(* bit=0 normal operation, bit=1 output zero *)
+	realRampSpeed: REAL;		(* speed value/second *)
+	realRampSampleTime: REAL; 	(* based on 100ns increments *)
+	realEqualize: REAL;
+END_VAR
+VAR_OUTPUT
+	realRampOutput: REAL;		(* output value *)
+	mRampSaturised: BOOL;		(* ramp on the end *)
+END_VAR
+
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* 	24NOV2010:
+	- new input variable: equalize value => when intput - output < equalize vale then output = input
+*)
+IF mEnableRamp AND NOT mZeroOutput THEN
+	IF ABS(realRampOutput-realRampInput)<realEqualize THEN
+		realRampOutput:=realRampInput; (* direct *)
+		mRampSaturised:=TRUE;
+	ELSE
+		IF realRampOutput<realRampInput THEN (* increment *)
+			realRampOutput:=realRampOutput+realRampSpeed*realRampSampleTime; (* realSampleTime in s *)
+		END_IF
+		IF realRampOutput>realRampInput THEN (* decrement *)
+			realRampOutput:=realRampOutput-realRampSpeed*realRampSampleTime; (* realSampleTime in s *)
+		END_IF
+		mRampSaturised:=FALSE;
+	END_IF
+ELSE
+	IF mZeroOutput THEN
+		realRampOutput:=0;
+	ELSE
+		realRampOutput:=realRampInput; (* direct *)
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_RAMP">
+      <LineId Id="16" Count="16" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="34" Count="4" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

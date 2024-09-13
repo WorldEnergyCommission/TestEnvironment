@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgTCP" Id="{d4c9d290-e21a-4170-9400-f934f523dfb1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgTCP
+VAR
+	FB_SocketConnect : FB_SocketConnect;
+	bExecuteSC: BOOL;
+	hSocket : T_HSOCKET;
+	FB_SocketSend : FB_SocketSend;
+	sSendString : STRING(255);
+	byteSendString : ARRAY[1..12] OF BYTE;
+	bExecuteSS: BOOL;
+	FB_SocketReceive : FB_SocketReceive;
+	byteReceiveString : ARRAY[1..200] OF BYTE;
+	FB_BYTE_TO_WORD : FB_CV_BYTE_TO_WORD;
+	FB_WORD_TO_INT : FB_CV_WORD_TO_INT;
+	wTemp : WORD;
+	iOutput : INT;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FB_SocketConnect(
+	sSrvNetId := '',
+	sRemoteHost := '10.0.0.4',
+	nRemotePort := 502,
+	bExecute := bExecuteSC,
+	tTimeout := T#1S,
+	bBusy =>,
+	bError =>,
+	nErrId =>,
+	hSocket => hSocket);
+	
+FB_SocketSend(
+	sSrvNetId:= '', 
+	hSocket:= hSocket, 
+	cbLen:= 12,
+	pSrc:= ADR( byteSendString ), 
+	bExecute:= bExecuteSS, 
+	tTimeout:= T#3S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+
+FB_SocketReceive(
+	sSrvNetId:= '', 
+	hSocket:= hSocket, 
+	cbLen:= 200, 
+	pDest:= ADR( byteReceiveString ), 
+	bExecute:= , 
+	tTimeout:= T#3S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> , 
+	nRecBytes=> );
+	
+FB_BYTE_TO_WORD(byInputValue_1 := byteReceiveString[12],byInputValue_2 := byteReceiveString[13], Ebyteorderforconvert := Ebyteorder.EBIGENDIAN, woutputvalue => wTemp);
+FB_WORD_TO_INT(wInputValue := wTemp, iOutputValue => iOutput);
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgTCP">
+      <LineId Id="9" Count="0" />
+      <LineId Id="13" Count="4" />
+      <LineId Id="19" Count="3" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="39" Count="8" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="57" Count="10" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="75" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

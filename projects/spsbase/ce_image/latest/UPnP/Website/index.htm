@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <title>Device Manager</title>
+        <link rel="icon" href="favicon.png" type="image/png" sizes="16x16">
+        <link rel="stylesheet" type="text/css" href="style/style.css" />
+        <script type="text/javascript" src="upnp.js"></script>
+        <!-- helper -->
+        <script type="text/javascript" src="helper/defines.js"></script>
+        <script type="text/javascript" src="helper/helper.js"></script>
+        <script type="text/javascript" src="helper/dataStream.js"></script>
+        <!-- framework -->
+        <script type="text/javascript" src="DeviceManager.js"></script>
+        <!--    controls    -->
+        <link rel="stylesheet" type="text/css" href="controls/controlLib.css" />
+        <script type="text/javascript" src="controls/controlLib.js"></script>
+        <!--    communication   -->
+        <script type="text/javascript" src="communication/error.js"></script>
+        <script type="text/javascript" src="communication/moduleList.js"></script>
+        <script type="text/javascript" src="communication/mdp.js"></script>
+        <!--    websites    -->
+        <script type="text/javascript" src="pages/_template_page.js"></script>
+        <script type="text/javascript" src="pages/page_Device_System.js"></script>
+        <script type="text/javascript" src="pages/page_Device_Connectivity.js"></script>
+        <script type="text/javascript" src="pages/page_Device_BootOptions.js"></script>
+        <script type="text/javascript" src="pages/page_Device_Webconsole.js"></script>
+        <script type="text/javascript" src="pages/page_Hardware_Mainboard.js"></script>
+        <script type="text/javascript" src="pages/page_Hardware_Equipment.js"></script>
+        <script type="text/javascript" src="pages/page_Hardware_HDD.js"></script>
+        <script type="text/javascript" src="pages/page_Hardware_RAID.js"></script>
+        <script type="text/javascript" src="pages/page_Hardware_Nic.js"></script>
+        <script type="text/javascript" src="pages/page_Software_OperatingSystem.js"></script>
+        <script type="text/javascript" src="pages/page_Software_SystemSettings.js"></script>
+        <script type="text/javascript" src="pages/page_Software_FileSystem.js"></script>
+        <script type="text/javascript" src="pages/page_Software_SMB.js"></script>
+        <script type="text/javascript" src="pages/page_TwinCAT_Status.js"></script>
+        <script type="text/javascript" src="pages/page_TwinCAT_Connectivity.js"></script>
+        <script type="text/javascript" src="pages/page_Security_Wizard.js"></script>
+        <script type="text/javascript" src="pages/page_Security_AccessRights.js"></script>
+        <script type="text/javascript" src="pages/page_Security_Certificate.js"></script>
+    </head>
+    <body>
+        <div id="OverlayLoading" class="overlay"></div>
+        <div id="OverlayError" class="overlay"></div>
+        <div id="OverlaySecurityWarning" class="security_warning_container"></div>
+        <div id="Head">
+            <img id="TitleImage" alt="" src="res/website/other/main-icon.png" />
+            <div id="TitleText">BECKHOFF Device Manager</div>
+            <div id="TitleLogout"></div>
+        </div>
+        <div id="Body"></div>
+        <div id="gradient_top"></div>
+        <div id="gradient_bottom"></div>
+        <script type="text/javascript">
+            if (document.addEventListener) {
+                document.addEventListener("load", window.DevMan.StartDeviceManager(), false);
+            }
+            else {
+                document.attachEvent("onload", window.DevMan.StartDeviceManager());
+            }
+        </script>
+    </body>
+</html>

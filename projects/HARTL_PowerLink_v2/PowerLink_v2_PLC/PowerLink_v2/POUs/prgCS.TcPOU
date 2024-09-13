@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{17859a96-3cb0-4ed2-bbf5-f9c982d3f006}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbCS						: FB_EM24_DIN; 
+	fbCS_2						: FB_PAC2200; 
+	fbCSCounter					: FB_EnergyCounter;
+	lrPowerCS					: LREAL;						//{#lynus.ag#()}
+	// udintErrorWarningCS			: UDINT;
+	FB_MB_Test :FB_ModBus_100Registers_FC3_inclID;
+	
+	fbLIBREO_1					: FB_ECS_LIBREO;
+	bEnable_LIBREO_1			: BOOL;
+	bCarConnected_LIBREO_1				: BOOL;						//{#lynus.ag#()}
+	bCarCharging_LIBREO_1				: BOOL;						//{#lynus.ag#()}
+	lrTotalPower_LIBREO_1				: LREAL;					//{#lynus.ag#()}
+	uiChrgCurr_LIBREO_1					: UINT;						//{#lynus.ag#()}
+	uiExtChrgCurr_LIBREO_1				: UINT;						//{#lynus.ag#()}
+	bCarConnLED_LIBREO_1				: UINT;						//{#lynus.ag#()}
+END_VAR
+VAR_INPUT
+	m_EM24_DIN					: BOOL;
+	m_PAC2200					: BOOL;
+END_VAR
+VAR PERSISTENT
+	lrCounterCS					: LREAL;						//{#lynus.ag#()}
+	lrCounterCSeIO				: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// To-Do:
+// adopt FB Declaration, change to new FB for ENERGYMID
+// adopt FB Definition, change to correct in/out Vars for ENERGYMID
+// correct lrPowerCS definition
+// correct lrCounterCS definition
+// correct byErrorWarningCS definition
+
+IF 	m_PAC2200 THEN 
+	fbCS_2(
+		m_Enable:= TRUE, 
+		str_IPAdress:=  '192.168.1.20',   
+		real_RealPower_kW=> , 
+		real_RealPowerL1_kW=> , 
+		real_RealPowerL2_kW=> , 
+		real_RealPowerL3_kW=> , 
+		real_ReactivePower_kVAr=> , 
+		real_ApparentPower_kVA=> , 
+		real_Frequency_Hz=> , 
+		real_VoltageL1N_V=> , 
+		real_VoltageL2N_V=> , 
+		real_VoltageL3N_V=> , 
+		real_VoltageL1L2_V=> , 
+		real_VoltageL2L3_V=> , 
+		real_VoltageL3L1_V=> , 
+		real_CurrentL1_A=> , 
+		real_CurrentL2_A=> , 
+		real_CurrentL3_A=> , 
+		real_EnergyTotal_Import_T1_kWh=> , 
+		real_EnergyTotal_Import_T2_kWh=> , 
+		real_EnergyTotal_Export_T1_kWh=> , 
+		real_EnergyTotal_Export_T2_kWh=> , 
+		m_PollSuccessful=> , 
+		udint_Error_ID=> );
+		
+	lrPowerCS := fbCS_2.real_RealPower_kW;
+	// uErrorWarningCS := fbCS.udint_Error_ID;
+	
+	// MID conform Counter, read from Energymeter
+	IF fbCS_2.real_EnergyTotal_Import_T1_kWh > lrCounterCS THEN  	
+		lrCounterCS := fbCS_2.real_EnergyTotal_Import_T1_kWh;
+	END_IF
+	
+	// internal Counter, for comparing purpose
+	fbCSCounter(
+		byActiveTariff:= 1, 
+		lrPowerInput:= lrPowerCS, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+		
+	IF fbCSCounter.lrTotalCounterEnergy_Consumption > lrCounterCSeIO THEN  	
+		lrCounterCSeIO := fbCSCounter.lrTotalCounterEnergy_Consumption;
+	END_IF
+END_IF
+IF m_EM24_DIN THEN
+	fbCS(
+		m_Enable:= TRUE , 
+		str_IPAdress:= '192.168.1.20', 
+		real_RealPower_kW=> , 
+		real_RealPowerL1_kW=> , 
+		real_RealPowerL2_kW=> , 
+		real_RealPowerL3_kW=> , 
+		real_ReactivePower_kVAr=> , 
+		real_ApparentPower_kVA=> , 
+		real_Frequency_Hz=> , 
+		real_VoltageL1N_V=> , 
+		real_VoltageL2N_V=> , 
+		real_VoltageL3N_V=> , 
+		real_VoltageL1L2_V=> , 
+		real_VoltageL2L3_V=> , 
+		real_VoltageL3L1_V=> , 
+		real_CurrentL1_A=> , 
+		real_CurrentL2_A=> , 
+		real_CurrentL3_A=> , 
+		real_EnergyTotal_Import_kWh=> , 
+		real_EnergyTotal_Export_kWh=> , 
+		real_EnergyTotal_ExportT1_kWh=> , 
+		real_EnergyTotal_ExportT2_kWh=> , 
+		real_EnergyTotal_ExportT3_kWh=> , 
+		real_EnergyTotal_ExportT4_kWh=> , 
+		m_PollSuccessful=> , 
+		udint_Error_ID=> );
+	
+	lrPowerCS := fbCS.real_RealPower_kW;
+	// uErrorWarningCS := fbCS.udint_Error_ID;
+	
+	// MID conform Counter, read from Energymeter
+	IF fbCS.real_EnergyTotal_Import_kWh > lrCounterCS THEN  	
+		lrCounterCS := fbCS.real_EnergyTotal_Import_kWh;
+	END_IF
+	
+	// internal Counter, for comparing purpose
+	fbCSCounter(
+		byActiveTariff:= 1, 
+		lrPowerInput:= lrPowerCS, 
+		lrTotalCounterEnergy_Consumption=> , 
+		lrTotalCounterEnergy_Production=> , 
+		lrCounterEnergyT1_Consumption=> , 
+		lrCounterEnergyT2_Consumption=> , 
+		lrCounterEnergyT1_Production=> , 
+		lrCounterEnergyT2_Production=> );
+		
+	IF fbCSCounter.lrTotalCounterEnergy_Consumption > lrCounterCSeIO THEN  	
+		lrCounterCSeIO := fbCSCounter.lrTotalCounterEnergy_Consumption;
+	END_IF
+END_IF
+
+//correct CS Power
+IF lrPowerCS < 0.01 THEN 
+	lrPowerCS := 0;
+END_IF
+
+FB_MB_Test(
+	m_Enable:= , 
+	str_IPAdress:= '192.168.1.20', 
+	w_Adress:= , 
+	usint_Quantity:= , 
+	usint_ID:= , 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+	
+	
+fbLIBREO_1(
+	bStart:= bEnable_LIBREO_1, 
+	tDelayRequest:= T#2S, 
+	sHostname:= '10.11.96.140', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	bCarConnected=> bCarConnected_LIBREO_1,
+	bCarCharging=> bCarCharging_LIBREO_1,
+	lrTotalPower=> lrTotalPower_LIBREO_1,
+	uiChrgCurr=> uiChrgCurr_LIBREO_1,
+	uiExtChrgCurr=> uiExtChrgCurr_LIBREO_1);
+
+IF bCarConnected_LIBREO_1 THEN 
+	bCarConnLED_LIBREO_1 := 251;
+ELSE 
+	bCarConnLED_LIBREO_1 := 0;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="28" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="156" Count="1" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="255" Count="23" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="303" Count="20" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="183" Count="25" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="280" Count="19" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="175" Count="7" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="363" Count="1" />
+      <LineId Id="366" Count="8" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="376" Count="1" />
+      <LineId Id="379" Count="1" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="393" Count="3" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

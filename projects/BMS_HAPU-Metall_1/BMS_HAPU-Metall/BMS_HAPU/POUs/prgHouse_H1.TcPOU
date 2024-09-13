@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgHouse_H1" Id="{1004e12f-88fd-4838-a3c1-f7a079c901cf}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHouse_H1
+VAR
+	fbHouse				: FB_HouseC_Power_Virtual;
+	bHouseEnabled		: BOOL;						//{#lynus.ag#()}
+	lrPowerHouse		: LREAL;					//{#lynus.ag#()}
+	lrPowerHouse_Manual	: LREAL;					//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bEnableHouse		: BOOL;						//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbHouse(
+	bEnable:= bEnableHouse, 
+	diNrOfEMS_IN:= prgEMS_H1.fbEMS.diNrOfEMS_OUT, 
+	bSetDefault:= , 
+	lrCounterConsumptionSetDefault:= , 
+	lrCounterProductionSetDefault:= , 
+	stDataHouseC=> , 
+	diNrOfHouseC_OUT=> );
+	
+bHouseEnabled := fbHouse.stDataHouseC.bEnabled;
+lrPowerHouse := fbHouse.stDataHouseC.lrPower;	
+lrPowerHouse_Manual := prgPV_H1.lrPowerPV + prgGrid_H1.fbEM1.stDataEMPowerRealTime.lrPowerTotal + prgBattery_H1.lrPowerBattery;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgHouse_H1">
+      <LineId Id="3" Count="9" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="31" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

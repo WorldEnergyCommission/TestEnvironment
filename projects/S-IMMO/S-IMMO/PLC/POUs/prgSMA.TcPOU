@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgSMA" Id="{c9952685-c9f2-48f8-b196-956bc3255382}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgSMA
+VAR
+	fbSMA : FB_SmartMeterAdapter;
+	lrenergy_consumption			: LREAL;		//{#lynus.ag#()}
+	lrenergy_production				: LREAL;		//{#lynus.ag#()}
+	lrreactive_energy_consumption	: LREAL;		//{#lynus.ag#()}
+	lrreactive_energy_production	: LREAL;		//{#lynus.ag#()}
+	lrpower_consumption				: LREAL;		//{#lynus.ag#()}
+	lrpower_production				: LREAL;		//{#lynus.ag#()}
+	lrreactive_power_consumption	: LREAL;		//{#lynus.ag#()}
+	lrreactive_power_production		: LREAL;		//{#lynus.ag#()}
+	lrpower_total					: LREAL;		//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+// trigger command execution
+	bEnableSMA 						: BOOL;			//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbSMA(
+	bStart:= bEnableSMA, 
+	tDelayRequest:= T#10S, 
+	sHostname:= '192.168.1.20', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrenergy_consumption => lrenergy_consumption,
+	lrenergy_production => lrenergy_production,
+	lrreactive_energy_consumption => lrreactive_energy_consumption,
+	lrreactive_energy_production => lrreactive_energy_production,
+	lrpower_consumption => lrpower_consumption,
+	lrpower_production => lrpower_production,
+	lrreactive_power_consumption => lrreactive_power_consumption,
+	lrreactive_power_production => lrreactive_power_production,
+	lrpower_total => lrpower_total );]]></ST>
+    </Implementation>
+    <LineIds Name="prgSMA">
+      <LineId Id="6" Count="8" />
+      <LineId Id="34" Count="7" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

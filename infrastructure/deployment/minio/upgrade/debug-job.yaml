@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-debug-job
+  namespace: lynus
+spec:
+  template:
+    spec:
+      containers:
+        - name: minio-debug-job
+          image: minio/mc:RELEASE.2022-10-29T10-09-23Z
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args: [
+              "echo 'Setting Export Alias';
+              mc alias set minio $MINIO_HOST_EXPORT $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
+              echo 'ls minio;';
+              mc ls minio;",
+            ]
+          env:
+            - name: DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: DOMAIN
+                  name: lynus-credentials
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  key: MINIO_USERNAME
+                  name: lynus-credentials
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MINIO_PASSWORD
+                  name: lynus-credentials
+            - name: MINIO_PROMETHEUS_AUTH_TYPE
+              value: public
+            - name: MINIO_HOST_EXPORT
+              value: http://minio:9000
+            - name: MINIO_HOST_IMPORT
+              value: http://minio-migrator:9000
+      nodeSelector:
+        nodetype: large
+      restartPolicy: Never

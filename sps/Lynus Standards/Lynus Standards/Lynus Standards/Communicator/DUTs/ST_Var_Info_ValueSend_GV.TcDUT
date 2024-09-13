@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Var_Info_ValueSend_GV" Id="{81f6b93b-12e8-408f-b03f-a6c4ebfceab5}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_Var_Info_ValueSend_GV :
+STRUCT
+	//Values from ads read function
+	{attribute 'hide'}
+	sFullSymbolName				: STRING(48);																	//Full Symbol name of plc variable uncoded
+	{attribute 'hide'}
+	sSymbolType					: STRING(255);																	//Symbol type of plc variable uncoded	
+	{attribute 'hide'}
+	sSymbolUnit					: STRING(255);																	//Symbol Unit
+	{attribute 'hide'}
+	arrValue					: ARRAY[1..Constants_Communicator.bySizeOfValueArray] OF STRING(30);			//Value from the Variable
+	//Values from sending function and buffer
+	{attribute 'hide'}
+	bBufferOK					: BOOL;																			//Buffer state ok
+	{attribute 'hide'}
+	bBusy						: BOOL;																			//Send Message is busy
+	{attribute 'hide'}
+	bErrorSending				: BOOL;																			//After send messege success a error	
+	{attribute 'hide'}
+	udiCountBuffer				: UDINT;																		//Return the counter of stored values in the buffer after read	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgCS" Id="{a4c72149-9223-420c-b5d8-f838d6d99901}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR
+	fbAlfen1					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen2					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	bSManualyOnCS1				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerCS1	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningCS1			: BYTE;												//{#lynus.ag#()}
+	bSManualyOnCS2				: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerCS2	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningCS2			: BYTE;												//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bManualyOnCS1				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerCS1		: BYTE;												//{#lynus.ag#()}
+	bManualyOnCS2				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerCS2		: BYTE;												//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//CS1 - EV DMU50120
+
+//Manual Power
+fbAlfen1.stSetupECS.bManualyOn := bManualyOnCS1;
+	fbAlfen1.stSetupECS.byManualyTargetPower := byManualyTargetPowerCS1;
+
+fbAlfen1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.0.3', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOnCS1 := fbAlfen1.stDataECS.bSManualyOn;
+	bySManualyTargetPowerCS1 := fbAlfen1.stDataECS.bySManualyTargetPower;
+		byErrorWarningCS1 := fbAlfen1.stDataECS.byErrorWarning;
+
+
+//CS2 - EV DMU50089
+
+//Manual Power
+fbAlfen2.stSetupECS.bManualyOn := bManualyOnCS2;
+	fbAlfen2.stSetupECS.byManualyTargetPower := byManualyTargetPowerCS2;
+
+fbAlfen2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= , 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.0.4', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOnCS2 := fbAlfen2.stDataECS.bSManualyOn;
+	bySManualyTargetPowerCS2 := fbAlfen2.stDataECS.bySManualyTargetPower;
+		byErrorWarningCS2 := fbAlfen2.stDataECS.byErrorWarning;	]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="40" Count="1" />
+      <LineId Id="8" Count="20" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="43" Count="23" />
+      <LineId Id="42" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

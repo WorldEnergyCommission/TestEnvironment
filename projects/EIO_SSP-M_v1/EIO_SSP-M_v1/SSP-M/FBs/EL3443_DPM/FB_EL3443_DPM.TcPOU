@@ -1,0 +1,413 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_EL3443_DPM" Id="{b2c214f9-ada3-4694-a93c-ed661665ec05}" SpecialFunc="None">
+    <Declaration><![CDATA[(*  This function block calls up the variant values supplied by the EL3443 terminal. The multiplexer channels of the terminal are queried by the use of selectors.
+    Due to the multiplexing of the values in the variant values, reading the terminal information requires several PLC cycles.
+    In contrast, values that can be retrieved via the process image are output cyclically. 
+    
+    To use the function block:
+    ▪ the predefined PDO assignment "DPM" (DPM: Distributed Power Measurement) must be selected for the terminal under "Process data".
+    
+    ▪ Then the PLC data type (structure from the process data, MDP5001_341_93A85FAB) must be activated in the "PLC" tab of the terminal.
+    
+    ▪ After creating the data type, the PLC project must be rebuilt.
+    
+    ▪ Finally, the terminal must be linked to the function block on the "PLC" tab*)
+    
+FUNCTION_BLOCK FB_EL3443_DPM
+VAR_INPUT
+    bEnable : BOOL; //Enables the Variant values to be queried using the multiplexer functions of the block
+    stEL3443_IO : MDP5001_341_7CD731EE;
+				//MDP5001_341_93A85FAB; //External data type that can be generated within the terminal on the PLC tab
+				// MDP5001_341_66E0DA41
+END_VAr
+
+VAR_OUTPUT
+    stStatusTotal 	 : ST_EL3443_DPM_StatusTotal; //General cyclical process data
+    stStatusPhase_L1 : ST_EL3443_DPM_StatusLx; //Phase L1 specific cyclical process data 
+    stStatusPhase_L2 : ST_EL3443_DPM_StatusLx; //Phase L2 specific cyclical process data
+    stStatusPhase_L3 : ST_EL3443_DPM_StatusLx; //Phase L3 specific cyclical process data
+    stVariantValues  : ST_EL3443_DPM_VariantValues; //Variant Values (non-cyclical values). Due to the multiplexing of the values in the Variant Values, the reading of the terminal information requires several PLC cycles.
+    
+    pDpmData : POINTER TO ARRAY[1..20] OF UDINT;
+    
+    bError : BOOL; //Becomes TRUE as soon as an error situation occurs.
+END_VAR
+
+VAR
+    {attribute 'no_copy'}
+    astEL3443MuxReal_Ch1: ARRAY [0..nARRAYSIZEMUXREAL] OF ST_EL3443_DPM_MUX_REAL; //Structure for the (Real) Multiplexer Channel 1 contains the selector and a reference to the corresponding memory location
+    {attribute 'no_copy'}
+    astEL3443MuxReal_Ch2: ARRAY [0..nARRAYSIZEMUXREAL] OF ST_EL3443_DPM_MUX_REAL; //Structure for the (Real) Multiplexer Channel 2 contains the selector and a reference to the corresponding memory location
+    {attribute 'no_copy'}
+    astEL3443MuxReal_Ch3: ARRAY [0..nARRAYSIZEMUXREAL] OF ST_EL3443_DPM_MUX_REAL; //Structure for the (Real) Multiplexer Channel 3 contains the selector and a reference to the corresponding memory location
+    {attribute 'no_copy'}
+    stEL3443MuxUlint_Ch4: ARRAY [0..nARRAYSIZEMUXULINT] OF ST_EL3443_DPM_MUX_ULINT; //Structure for the (ULINT/LINT) multiplexer channel 4 contains the selector and a pointer to the corresponding memory location
+    
+    {attribute 'no_copy'}
+    bInit : BOOL; //Flag to indicate the initialised state of the function block
+    nMuxRealState : INT := 0; //Position der Multplexer-Abfragen (Channel 1-3 (REAL))
+    nCounterNotRepliedMuxReal : INT; //Number of cycles in which the multiplexer has not responded
+    nMuxUlintState : INT := 0; //Position der Multplexer-Abfragen (Channel 4 (ULINT))
+    nCounterNotRepliedMuxUlint : INT; //Number of cycles in which the multiplexer has not responded
+    
+    {attribute 'no_copy'}
+    nNumberOfSelectorsCh1 : UINT; //number of selectors in channel 1
+    {attribute 'no_copy'}
+    nNumberOfSelectorsCh2 : UINT; //number of selectors in channel 2
+    {attribute 'no_copy'}
+    nNumberOfSelectorsCh3 : UINT; //number of selectors in channel 3
+    {attribute 'no_copy'}
+    nNumberOfSelectorsCh4 : UINT; //number of selectors in channel 4      
+END_VAR
+
+VAR CONSTANT
+    nARRAYSIZEMUXREAL : INT := 122; //Array size of the REAL multiplexer channel
+    nARRAYSIZEMUXULINT : INT := 74; //Array size of the ULINT multiplexer channel
+    nERROR_NOT_REPLIED : INT := 10; //Maximum number of cycles the multiplexer may use before the error output is set 
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//The output bError is set if the block is enabled and one of the multiplexer channels does not respond
+bError := bEnable AND (nCounterNotRepliedMuxUlint >= nERROR_NOT_REPLIED OR nCounterNotRepliedMuxReal >= nERROR_NOT_REPLIED) ;
+
+IF bEnable THEN
+      
+    IF NOT bInit THEN
+        bInit := TRUE;
+        Initialize();
+    END_IF
+    
+    //===================================================================================================================================
+    // Multiplexer channels 1-3 (REAL)
+
+    //comparison of the transmitting and receiving selectors 
+    IF astEL3443MuxReal_Ch1[nMuxRealState].nSelector = stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_1_REAL AND
+       astEL3443MuxReal_Ch2[nMuxRealState].nSelector = stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_2_REAL AND 
+       astEL3443MuxReal_Ch3[nMuxRealState].nSelector = stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_3_REAL THEN
+        												
+    
+        //assignment of the received values to the referenced references
+        IF __ISVALIDREF(astEL3443MuxReal_Ch1[nMuxRealState].fValueRef) THEN
+            astEL3443MuxReal_Ch1[nMuxRealState].fValueRef := stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_1_REAL;
+        END_IF
+        IF __ISVALIDREF(astEL3443MuxReal_Ch2[nMuxRealState].fValueRef) THEN
+            astEL3443MuxReal_Ch2[nMuxRealState].fValueRef := stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_2_REAL;
+        END_IF
+        IF __ISVALIDREF(astEL3443MuxReal_Ch3[nMuxRealState].fValueRef) THEN
+            astEL3443MuxReal_Ch3[nMuxRealState].fValueRef := stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_3_REAL;
+        END_IF
+       
+       //selection of the new selector group
+       nMuxRealState := nMuxRealState + 1;
+     
+       IF nMuxRealState > nARRAYSIZEMUXREAL THEN
+         nMuxRealState := 0;  
+       END_IF
+       
+       nCounterNotRepliedMuxReal := 0;
+    ELSIF
+        stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_1_REAL = E_EL3443_DPM_Phase.Error_INDEX_Not_Valid OR    
+        stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_2_REAL = E_EL3443_DPM_Phase.Error_INDEX_Not_Valid OR 
+        stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_3_REAL = E_EL3443_DPM_Phase.Error_INDEX_Not_Valid THEN
+    
+        nCounterNotRepliedMuxReal := MIN(nCounterNotRepliedMuxReal + 1,nERROR_NOT_REPLIED);
+    ELSE
+        nCounterNotRepliedMuxReal := MIN(nCounterNotRepliedMuxReal + 1,nERROR_NOT_REPLIED); 
+    END_IF
+       
+    // transfer of the selectors to the process image 
+    stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_1_REAL := astEL3443MuxReal_Ch1[nMuxRealState].nSelector;
+    stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_2_REAL := astEL3443MuxReal_Ch2[nMuxRealState].nSelector;
+    stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_3_REAL := astEL3443MuxReal_Ch3[nMuxRealState].nSelector;
+    
+    //===================================================================================================================================
+    // Multiplexer channels 4 (ULINT)
+    
+    //comparison of the transmitting and receiving selector
+    IF stEL3443MuxUlint_Ch4[nMuxUlintState].nSelector = stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_4_ULINT THEN
+        
+        //assigns the received values to the assigned pointer address.
+        IF stEL3443MuxUlint_Ch4[nMuxUlintState].nValueRef <> 0 THEN
+            stEL3443MuxUlint_Ch4[nMuxUlintState].nValueRef^ := stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Value_4_ULINT;
+        END_IF
+        
+    //selection of the new selector group
+       nMuxUlintState := nMuxUlintState + 1;
+     
+       IF nMuxUlintState > nARRAYSIZEMUXULINT THEN
+         nMuxUlintState := 0;  
+       END_IF
+       
+       nCounterNotRepliedMuxUlint := 0;
+    ELSIF stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Variant_Value_In_Index_4_ULINT = E_EL3443_DPM_Phase.Error_INDEX_Not_Valid THEN
+    
+        nCounterNotRepliedMuxUlint := MIN(nCounterNotRepliedMuxUlint + 1, nERROR_NOT_REPLIED);
+    ELSE
+        nCounterNotRepliedMuxUlint := MIN(nCounterNotRepliedMuxUlint + 1, nERROR_NOT_REPLIED);  
+    END_IF
+    
+    // transfer of the selectors to the process image
+    stEL3443_IO.MDP5001_341_Output.MDP5001_341_Total_Variant_Value_Out_Index_4_ULINT := stEL3443MuxUlint_Ch4[nMuxUlintState].nSelector;
+END_IF
+
+//===================================================================================================================================
+// Update the cyclic outputs
+
+// Set pointer address to transmit DPM communication information
+pDpmData := ADR(stEL3443_IO.MDP5001_341_Input.MDP5001_341_DPM_Data_Data_1);
+
+// Transfer of process data to PLC common data types. Status total.
+stStatusTotal.bStatus_System_State :=                       stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_System_State;
+stStatusTotal.bStatus_Grid_Direction :=                     stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Grid_Direction;
+stStatusTotal.bStatus_Frequency_Guard_Warning :=            stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Frequency_Guard_Warning;
+stStatusTotal.bStatus_Frequency_Guard_Error :=              stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Frequency_Guard_Error;
+stStatusTotal.bStatus_Neutral_Current_Guard_Warning :=      stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Neutral_Current_Guard_Warning;
+stStatusTotal.bStatus_Neutral_Current_Guard_Error :=        stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Neutral_Current_Guard_Error;
+stStatusTotal.bStatus_Active_Power_Guard_Warning :=         stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Active_Power_Guard_Warning;    
+stStatusTotal.bStatus_Active_Power_Guard_Error :=           stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Active_Power_Guard_Error;
+stStatusTotal.bStatus_Apparent_Power_Guard_Warning :=       stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Apparent_Power_Guard_Warning;
+stStatusTotal.bStatus_Apparent_Power_Guard_Error :=         stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Apparent_Power_Guard_Error; 
+stStatusTotal.bStatus_Power_Quality_Guard_Warning :=        stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Power_Quality_Guard_Warning; 
+stStatusTotal.bStatus_Power_Quality_Guard_Error :=          stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Power_Quality_Guard_Error; 
+stStatusTotal.bStatus_TxPDO_State :=                        stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_TxPDO_State; 
+stStatusTotal.bStatus_TxPDO_Toggle :=                       stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_TxPDO_Toggle; 
+stStatusTotal.fStatus_Power_Quality_Factor :=               stEL3443_IO.MDP5001_341_Input.MDP5001_341_Total_Status_Power_Quality_Factor; 
+
+//Transfer of process data to PLC common data types. Status phase L1.
+stStatusPhase_L1.bStatus_Voltage_Sign_Bit  :=               stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Voltage_Sign_Bit;
+stStatusPhase_L1.bStatus_Overvoltage  :=                    stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Overvoltage;
+stStatusPhase_L1.bStatus_Overcurrent  :=                    stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Overcurrent;
+stStatusPhase_L1.bStatus_Inaccurate_Voltage  :=             stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Inaccurate_Voltage;
+stStatusPhase_L1.bStatus_Inaccurate_Current  :=             stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Inaccurate_Current;
+stStatusPhase_L1.bStatus_Voltage_Guard_Warning  :=          stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Voltage_Guard_Warning;
+stStatusPhase_L1.bStatus_Voltage_Guard_Error  :=            stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Voltage_Guard_Error;
+stStatusPhase_L1.bStatus_Current_Guard_Warning  :=          stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Current_Guard_Warning;
+stStatusPhase_L1.bStatus_Current_Guard_Error  :=            stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_Current_Guard_Error;
+stStatusPhase_L1.bStatus_TxPDO_Toggle  :=                   stEL3443_IO.MDP5001_341_Input.MDP5001_341_L1_Status_TxPDO_Toggle;
+
+//Transfer of process data to PLC common data types. Status phase L2.
+stStatusPhase_L2.bStatus_Voltage_Sign_Bit  :=               stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Voltage_Sign_Bit;
+stStatusPhase_L2.bStatus_Overvoltage  :=                    stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Overvoltage;
+stStatusPhase_L2.bStatus_Overcurrent  :=                    stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Overcurrent;        
+stStatusPhase_L2.bStatus_Inaccurate_Voltage  :=             stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Inaccurate_Voltage;		
+stStatusPhase_L2.bStatus_Inaccurate_Current  :=             stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Inaccurate_Current;		
+stStatusPhase_L2.bStatus_Voltage_Guard_Warning  :=          stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Voltage_Guard_Warning;		
+stStatusPhase_L2.bStatus_Voltage_Guard_Error  :=            stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Voltage_Guard_Error;		
+stStatusPhase_L2.bStatus_Current_Guard_Warning  :=          stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Current_Guard_Warning;		
+stStatusPhase_L2.bStatus_Current_Guard_Error  :=            stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_Current_Guard_Error;		
+stStatusPhase_L2.bStatus_TxPDO_Toggle  :=                   stEL3443_IO.MDP5001_341_Input.MDP5001_341_L2_Status_TxPDO_Toggle;		
+		
+//Transfer of process data to PLC common data types. Status phase L3.		
+stStatusPhase_L3.bStatus_Voltage_Sign_Bit  :=               stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Voltage_Sign_Bit;		
+stStatusPhase_L3.bStatus_Overvoltage  :=                    stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Overvoltage;                                             
+stStatusPhase_L3.bStatus_Overcurrent  :=                    stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Overcurrent;
+stStatusPhase_L3.bStatus_Inaccurate_Voltage  :=             stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Inaccurate_Voltage;
+stStatusPhase_L3.bStatus_Inaccurate_Current  :=             stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Inaccurate_Current;
+stStatusPhase_L3.bStatus_Voltage_Guard_Warning  :=          stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Voltage_Guard_Warning;
+stStatusPhase_L3.bStatus_Voltage_Guard_Error  :=            stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Voltage_Guard_Error;
+stStatusPhase_L3.bStatus_Current_Guard_Warning  :=          stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Current_Guard_Warning;
+stStatusPhase_L3.bStatus_Current_Guard_Error  :=            stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_Current_Guard_Error;
+stStatusPhase_L3.bStatus_TxPDO_Toggle  :=                   stEL3443_IO.MDP5001_341_Input.MDP5001_341_L3_Status_TxPDO_Toggle;]]></ST>
+    </Implementation>
+    <Method Name="Initialize" Id="{005fd164-9c74-4fab-ac2f-7517f975a9aa}">
+      <Declaration><![CDATA[(* This method initializes the lookup table and establishes a connection between selector index and variable by references. *)
+METHOD PRIVATE Initialize : HRESULT
+VAR
+    nPhase : INT; // Three-phase
+    stEL3443MuxReal : REFERENCE TO ARRAY [0..nARRAYSIZEMUXREAL] OF ST_EL3443_DPM_MUX_REAL;
+    nNumberOfSelector : REFERENCE TO UINT;
+    nOFFSET : UINT;
+    i : UINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// - The process data of phases L1, L2 and L3 are distributed to the three REAL multiplexers. (Channel1 = L1, Channel2 = L2 ...)
+// - The ULINT multiplexer is initialized with data from all three phases.
+FOR nPhase := 1 TO 3 DO
+    
+    // Selection of the structures, selector counters and offset based on the phase
+    CASE nPhase OF
+    1: // Phase L1
+       stEL3443MuxReal REF= astEL3443MuxReal_Ch1;
+       nNumberOfSelector REF= nNumberOfSelectorsCh1;
+       nOFFSET := E_EL3443_DPM_Phase.nPhaseL1_OFFSET;  
+    2: // Phase L2 
+       stEL3443MuxReal REF= astEL3443MuxReal_Ch2;
+       nNumberOfSelector REF= nNumberOfSelectorsCh2;
+       nOFFSET := E_EL3443_DPM_Phase.nPhaseL2_OFFSET; 
+    3: // Phase L3 
+       stEL3443MuxReal REF= astEL3443MuxReal_Ch3;
+       nNumberOfSelector REF= nNumberOfSelectorsCh3;
+       nOFFSET := E_EL3443_DPM_Phase.nPhaseL3_OFFSET;
+    ELSE
+       EXIT;   
+	END_CASE
+    
+    // Initializing the REAL multiplexers on channels 1 to 3
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fU_RMS,         nOFFSET, E_EL3443_DPM_Phase.U_RMS         );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fU_peak,        nOFFSET, E_EL3443_DPM_Phase.U_peak        );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fU_RMS_Minimum, nOFFSET, E_EL3443_DPM_Phase.U_RMS_Minimum);
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fU_RMS_Maximum, nOFFSET, E_EL3443_DPM_Phase.U_RMS_Maximum);
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fULL,           nOFFSET, E_EL3443_DPM_Phase.ULL          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fI_RMS,         nOFFSET, E_EL3443_DPM_Phase.I_RMS        );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fI_peak,        nOFFSET, E_EL3443_DPM_Phase.I_peak       ); 
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fI_RMS_Minimum, nOFFSET, E_EL3443_DPM_Phase.I_RMS_Minimum );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fI_RMS_Maximum, nOFFSET, E_EL3443_DPM_Phase.I_RMS_Maximum );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fFrequency,     nOFFSET, E_EL3443_DPM_Phase.Frequency     );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fPhi,           nOFFSET, E_EL3443_DPM_Phase.Phi,          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fCOS_phi,       nOFFSET, E_EL3443_DPM_Phase.Cos_phi       );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fPower_Factor,  nOFFSET, E_EL3443_DPM_Phase.Power_Factor  );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fP,             nOFFSET, E_EL3443_DPM_Phase.P             );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fPavg,          nOFFSET, E_EL3443_DPM_Phase.Pavg          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fPmin,          nOFFSET, E_EL3443_DPM_Phase.Pmin          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fPmax,          nOFFSET, E_EL3443_DPM_Phase.Pmax          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fS,             nOFFSET, E_EL3443_DPM_Phase.S_            );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fSavg,          nOFFSET, E_EL3443_DPM_Phase.Savg          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fSmin,          nOFFSET, E_EL3443_DPM_Phase.Smin          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fSmax,          nOFFSET, E_EL3443_DPM_Phase.Smax          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fQ,             nOFFSET, E_EL3443_DPM_Phase.Q             );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fQavg,          nOFFSET, E_EL3443_DPM_Phase.Qavg          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fQmin,          nOFFSET, E_EL3443_DPM_Phase.Qmin          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fQmax,          nOFFSET, E_EL3443_DPM_Phase.Qmax          );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fTHD_U,         nOFFSET, E_EL3443_DPM_Phase.THD_U         );     
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fRMS_fund_U,    nOFFSET, E_EL3443_DPM_Phase.RMS_fund_U    );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fF_Ref_U,       nOFFSET, E_EL3443_DPM_Phase.F_Ref_U       );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fTHD_I,         nOFFSET, E_EL3443_DPM_Phase.THD_I        );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fTDD_I,         nOFFSET, E_EL3443_DPM_Phase.TDD_I        );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fRMS_fund_I,    nOFFSET, E_EL3443_DPM_Phase.RMS_fund_I   );
+    InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fF_Ref_I,       nOFFSET, E_EL3443_DPM_Phase.F_Ref_I      );
+    
+    // Initializing the Real Arrays on channel 1 to 3
+    FOR i := 0 TO 41 DO
+        InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fHarmonics_U[i], nOFFSET  + i, E_EL3443_DPM_Phase.Harmonics_U);
+    END_FOR
+    FOR i := 0 TO 41 DO
+        InitSelectorReal(stEL3443MuxReal, nNumberOfSelector, stVariantValues.astLx[nPhase].fHarmonics_I[i], nOFFSET  + i, E_EL3443_DPM_Phase.Harmonics_I);   
+    END_FOR
+
+    // Initializing the ULINT multiplexer on channel 4
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nU_Last_Zero_Cross, nOFFSET, E_EL3443_DPM_Phase.U_Last_Zero_Cross	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEP,                nOFFSET, E_EL3443_DPM_Phase.EP               	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEP_pos,            nOFFSET, E_EL3443_DPM_Phase.EP_pos           	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEP_neg,            nOFFSET, E_EL3443_DPM_Phase.EP_neg          	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEP_interval,    	 nOFFSET, E_EL3443_DPM_Phase.EP_interval    	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEP_pos_interval,	 nOFFSET, E_EL3443_DPM_Phase.EP_pos_interval	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEP_neg_interval,	 nOFFSET, E_EL3443_DPM_Phase.EP_neg_interval	);
+	InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nES,                nOFFSET, E_EL3443_DPM_Phase.ES               	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nES_pos,            nOFFSET, E_EL3443_DPM_Phase.ES_pos           	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nES_neg,            nOFFSET, E_EL3443_DPM_Phase.ES_neg          	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nES_interval,    	 nOFFSET, E_EL3443_DPM_Phase.ES_interval    	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nES_pos_interval,	 nOFFSET, E_EL3443_DPM_Phase.ES_pos_interval	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nES_neg_interval,	 nOFFSET, E_EL3443_DPM_Phase.ES_neg_interval	);
+	InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEQ,                nOFFSET, E_EL3443_DPM_Phase.EQ_              	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEQ_pos,            nOFFSET, E_EL3443_DPM_Phase.EQ_pos           	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEQ_neg,            nOFFSET, E_EL3443_DPM_Phase.EQ_neg           	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEQ_interval,    	 nOFFSET, E_EL3443_DPM_Phase.EQ_interval    	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEQ_pos_interval,	 nOFFSET, E_EL3443_DPM_Phase.EQ_pos_interval	);
+    InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.astLx[nPhase].nEQ_neg_interval,	 nOFFSET, E_EL3443_DPM_Phase.EQ_neg_interval	);        
+END_FOR
+
+// All data that is not assigned to a phase is appended to channels 1 to 4. 
+
+// Real values for multiplexer channel 1   
+InitSelectorReal(astEL3443MuxReal_Ch1, nNumberOfSelectorsCh1, stVariantValues.stTotal.fIn_RMS,         E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.In_RMS        );
+InitSelectorReal(astEL3443MuxReal_Ch1, nNumberOfSelectorsCh1, stVariantValues.stTotal.fPower_Factor,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Power_Factor  );
+InitSelectorReal(astEL3443MuxReal_Ch1, nNumberOfSelectorsCh1, stVariantValues.stTotal.fPtot,           E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Ptot          );
+InitSelectorReal(astEL3443MuxReal_Ch1, nNumberOfSelectorsCh1, stVariantValues.stTotal.fPtotavg,        E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Ptotavg       );
+InitSelectorReal(astEL3443MuxReal_Ch1, nNumberOfSelectorsCh1, stVariantValues.stTotal.fPtotmin,        E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Ptotmin       );
+InitSelectorReal(astEL3443MuxReal_Ch1, nNumberOfSelectorsCh1, stVariantValues.stTotal.fPtotmax,        E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Ptotmax       );
+InitSelectorReal(astEL3443MuxReal_Ch1, nNumberOfSelectorsCh1, stVariantValues.stTotal.fStot,           E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Stot          );
+
+// Real values for multiplexer channel 2
+InitSelectorReal(astEL3443MuxReal_Ch2, nNumberOfSelectorsCh2, stVariantValues.stTotal.fStotavg,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Stotavg);                                                                                                                        
+InitSelectorReal(astEL3443MuxReal_Ch2, nNumberOfSelectorsCh2, stVariantValues.stTotal.fStotmin,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Stotmin);
+InitSelectorReal(astEL3443MuxReal_Ch2, nNumberOfSelectorsCh2, stVariantValues.stTotal.fStotmax,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Stotmax);
+InitSelectorReal(astEL3443MuxReal_Ch2, nNumberOfSelectorsCh2, stVariantValues.stTotal.fQtot,      E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Qtot   );
+InitSelectorReal(astEL3443MuxReal_Ch2, nNumberOfSelectorsCh2, stVariantValues.stTotal.fQtotavg,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Qtotavg);
+InitSelectorReal(astEL3443MuxReal_Ch2, nNumberOfSelectorsCh2, stVariantValues.stTotal.fQtotmin,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Qtotmin);
+InitSelectorReal(astEL3443MuxReal_Ch2, nNumberOfSelectorsCh2, stVariantValues.stTotal.fQtotmax,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Qtotmax);
+
+//Real values for multiplexer channel 3
+InitSelectorReal(astEL3443MuxReal_Ch3, nNumberOfSelectorsCh3, stVariantValues.stTotal.fPhiL1L2,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.PhiL1L2  );
+InitSelectorReal(astEL3443MuxReal_Ch3, nNumberOfSelectorsCh3, stVariantValues.stTotal.fPhiL1L3,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.PhiL1L3  );
+InitSelectorReal(astEL3443MuxReal_Ch3, nNumberOfSelectorsCh3, stVariantValues.stTotal.fUnbalance, E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Unbalance);
+InitSelectorReal(astEL3443MuxReal_Ch3, nNumberOfSelectorsCh3, stVariantValues.stTotal.fPQF,       E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.PQF      );
+InitSelectorReal(astEL3443MuxReal_Ch3, nNumberOfSelectorsCh3, stVariantValues.stTotal.fPQF_Avg,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.PQF_Avg  );
+InitSelectorReal(astEL3443MuxReal_Ch3, nNumberOfSelectorsCh3, stVariantValues.stTotal.fPQF_Min,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.PQF_MIN  );
+InitSelectorReal(astEL3443MuxReal_Ch3, nNumberOfSelectorsCh3, stVariantValues.stTotal.fPQF_Max,   E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.PQF_MAX);
+
+
+// Ulint values for multiplexer channel 4
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEptot,                    E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Eptot         	);
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEPtot_pos,                E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EPtot_pos        );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEPtot_neg,                E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EPtot_neg        );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEptot_interval,          E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.Eptot_interval    );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEPtot_pos_interval,      E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EPtot_pos_interval);
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEPtot_neg_interval,      E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EPtot_neg_interval);
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEStot,                    E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EStot            );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEStot_pos,                E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EStot_pos        );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEStot_neg,                E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EStot_neg        );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEStot_interval,          E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EStot_interval    );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEStot_pos_interval,      E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EStot_pos_interval);
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEStot_neg_interval,      E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EStot_neg_interval);
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEQtot,                    E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EQtot            );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEQtot_pos,                E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EQtot_pos        );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEQtot_neg,                E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EQtot_neg        );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEQtot_interval,          E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EQtot_interval    );
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEQtot_pos_interval,      E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EQtot_pos_interval);
+InitSelectorUlint(stEL3443MuxUlint_Ch4, nNumberOfSelectorsCh4, stVariantValues.stTotal.nEQtot_neg_interval,      E_EL3443_DPM_Total.nTotal_OFFSET, E_EL3443_DPM_Total.EQtot_neg_interval);]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InitSelectorReal" Id="{9e64c76e-1c98-4298-b007-1d49cbc7f9ba}">
+      <Declaration><![CDATA[(*This method calculates the selector based on the offset and the base selector and sets the corresponding reference*)
+METHOD PRIVATE InitSelectorReal : HRESULT
+VAR_IN_OUT
+    stEL3443MuxReal : ARRAY [0..nARRAYSIZEMUXREAL] OF ST_EL3443_DPM_MUX_REAL;
+    nNumberOfSelectors : UINT;    
+    fValue : REAL;  
+END_VAR
+VAR_INPUT
+    nOFFSET : UINT;
+    nSelector : UINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[    stEL3443MuxReal[nNumberOfSelectors].nSelector := nSelector + nOFFSET; //Basis Selector + Channel(Phase) Offset
+    stEL3443MuxReal[nNumberOfSelectors].fValueRef REF= fValue; //Set reference to create a link between selector and output value
+    nNumberOfSelectors := nNumberOfSelectors + 1;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InitSelectorUlint" Id="{cd79e0a4-ddac-424a-968c-434fa4e2ee06}">
+      <Declaration><![CDATA[(*This method calculates the selector based on the offset and the base selector and sets the corresponding pointer address*)
+METHOD PRIVATE InitSelectorUlint : HRESULT
+VAR_IN_OUT
+    stEL3443MuxUlint : ARRAY [0..nARRAYSIZEMUXULINT] OF ST_EL3443_DPM_MUX_ULINT;
+    nNumberOfSelectors : UINT;  
+END_VAR
+VAR_INPUT
+    nValue : ANY_INT;
+    nOFFSET : UINT;
+    nSelector : UINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[    stEL3443MuxUlint[nNumberOfSelectors].nSelector := nSelector + nOFFSET; //Basis Selector + Channel(Phase) Offset
+    stEL3443MuxUlint[nNumberOfSelectors].nValueRef := nValue.pValue; //Set reference to create a link between selector and output value
+    nNumberOfSelectors := nNumberOfSelectors + 1;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_EL3443_DPM">
+      <LineId Id="3" Count="139" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_EL3443_DPM.Initialize">
+      <LineId Id="3" Count="133" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_EL3443_DPM.InitSelectorReal">
+      <LineId Id="3" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_EL3443_DPM.InitSelectorUlint">
+      <LineId Id="3" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

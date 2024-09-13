@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_XL2XXX_DO" Id="{9cc459de-6ce3-4d6a-b86f-68e62178870b}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_XL2XXX_DO
+VAR_INPUT
+	{attribute 'hide'}
+	bInvers							: BOOL;				//Invert the output signal
+	{attribute 'hide'}
+	bSignal							: BOOL;				//Signal to send to the terminal
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	bDataOut		AT%Q*			: BOOL;				//Output Data for the terminal
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.06.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to send a digital signal from the plc to a digital output terminal from Beckhoff
+//We have also the possibility to invert the output signal
+	
+IF NOT bInvers THEN
+	bDataOut := bSignal;
+ELSE
+	bDataOut := NOT bSignal;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_XL2XXX_DO">
+      <LineId Id="217" Count="2" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="222" Count="1" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <GVL Name="GVL_Communicator" Id="{96f595ed-e44c-4538-b137-09e36e798a46}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'conditionalshow'}
+VAR_GLOBAL
+	//Info Interface of al variable
+	{attribute 'hide'}
+	arrInterfaceInfoAlVariables				: ARRAY[1..10,1..Constants_Communicator.udiArraySizeMarkedSymobls] OF ST_Var_Info_GV;	//Info of all of found symbols in plc
+	{attribute 'hide'}
+	arrReadWriteArrayNumberInUse			: ARRAY[1..10] OF BOOL;																	//State from one array number if its just in use or not
+	{attribute 'hide'}
+	arrReadWriteArrayNumber					: ARRAY[1..10] OF BYTE;																	//Array Number Read Write
+	{attribute 'hide'}
+	arrCounterVariableInArray				: ARRAY[1..10] OF UDINT;																//Counter variables in output array
+	{attribute 'hide'}
+	bBusyInfoAlVariables					: BOOL;																					//Function Var Info Busy
+	{attribute 'hide'}
+	bErrorInfoAlVariables					: BOOL;																					//Function Var Info Error
+	{attribute 'hide'}
+	bInfoAlVariablesOK						: BOOL;																					//Necessary to start read/write and send/receive 
+	{attribute 'hide'}
+	byNumberOfReadWriteFunction				: BYTE;																					//Numbers of read write functions on plc
+	//Value from read function <=> sending function and buffer
+	{attribute 'hide'}
+	arrInterfaceInfoValueSendTo				: ARRAY[1..10] OF ST_Var_Info_ValueSend_GV;												//read value and after that transport the data to the send function
+	//Value from write function <=> received function and buffer
+	{attribute 'hide'}
+	arrInterfaceInfoValueWriteTo			: ARRAY[1..10] OF ST_Var_Info_ValueWrite_GV;											//write value on plc after received the data from the received function	
+	//Indicates if we are connected with the Lynus Communicator to the Backend. (Withou this Lynus Functions not work after 7 Days)
+	{attribute 'hide'}
+	bStateConnectionToEnableFunctions		: BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

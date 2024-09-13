@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_HTTP_Get_Iosys" Id="{e4cfa4d6-b95c-42dc-97b8-3d79a1741292}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_HTTP_Get_Iosys
+VAR_INPUT
+	{attribute 'hide'}
+    bSend				: BOOL;													//Send the Request
+	{attribute 'hide'}
+	bTokenMode			: BOOL;													//Make the Request with the Token
+	{attribute 'hide'}
+	byQuantity			: BYTE;													//Quantity of Datapoints
+	{attribute 'hide'}
+	sToken		      	: STRING(255);											//Token for the Request
+	{attribute 'hide'}
+	sProjectname		: STRING(30);											//Projectname
+	{attribute 'hide'}
+	sRuntimeSystem		: STRING(30);											//Name from the Runtime System
+	{attribute 'hide'}
+	tTimeOut			: TIME := T#10S;										//Timer for Timeout
+	{attribute 'hide'}
+	arrListDatapoints	: ARRAY[0..249] OF STRING(38);							//List with all the Datapoints
+END_VAR
+VAR_IN_OUT
+	{attribute 'hide'}
+    fbClient			: FB_IotHttpClient;										//HTTP Client Data
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	bValidResult		: BOOL;													//Valid Result received from Server
+	{attribute 'hide'}
+    bBusy				: BOOL;													//Function is Busy
+	{attribute 'hide'}
+    bError				: BOOL;													//Error sucess
+	{attribute 'hide'}
+	sContent			: STRING(35000);										//Received Content
+END_VAR
+VAR
+    fbRequest			: FB_IotHttpRequest;									//Http Function
+	timTimeout			: TON;													//Timer for Timeout
+	RisingEdge			: R_TRIG;												//Internal positive edge
+	bGetContentResult	: BOOL;													//Get Content Result	
+	byLoop				: BYTE;													//Variable foor Loop to prepear the URI
+    nState				: UDINT;												//Statemaschine
+  	nReqCount			: UDINT;												//Counter requests
+    nResCount			: UDINT;												//Counter results
+    nValidResCount		: UDINT;												//Counter valid results
+    nErrCount			: UDINT;												//Error Counter
+	sUriStart			: STRING(81);											//Start URI
+	sUriComplete		: STRING(10000);										//Complete URI
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.02.2021
+//Version : 1.0.0.0
+
+//With this Fuction is possible to send a HTTP Get Request to the Iosys Interface from the Aprol Server from the B&R Company.
+//To make a  requerst to the right Project, the Projectname and the Ruhntime System is necessary.
+//In the Input Array you can insert all Datapoint with rifht Name from the System form what do you want the Values
+//The Request can send with each Datapoint. Then The Token Mode is disabled
+//Its also possible to use the Token Mode. To use this, make first the Request with all Datapoitns that are needed to the API. With the Response you received a Token.
+//With this Token then you can make within 10 seconds a Request and you receive all Datapoint from the first Request.
+
+//Timer for Timeout
+timTimeout(IN:= nState = 1 AND bBusy, PT:= tTimeOut, Q=> , ET=> );
+	IF timTimeout.Q THEN nState := 0; bBusy := FALSE; END_IF
+
+byQuantity := LIMIT(0,byQuantity,249);
+
+RisingEdge(CLK:= bSend);
+
+CASE nState OF
+0:
+	IF RisingEdge.Q THEN
+		//Prepear URI
+		IF NOT bTokenMode THEN
+			sUriComplete := '';
+				sUriStart := CONCAT(CONCAT('/iosys/',sProjectname),CONCAT(CONCAT('/',sRuntimeSystem),'/json/get?id='));
+					sUriComplete := sUriStart;
+						FOR byLoop := 0 TO byQuantity BY 1 DO
+							CONCAT2(ADR(sUriComplete),ADR(arrListDatapoints[byLoop]),ADR(sUriComplete),SIZEOF(sUriComplete));
+								IF byLoop < (byQuantity - 1) THEN CONCAT2(ADR(sUriComplete),ADR(','),ADR(sUriComplete),SIZEOF(sUriComplete)); END_IF	
+						END_FOR
+							CONCAT2(ADR(sUriComplete),ADR(';'),ADR(sUriComplete),SIZEOF(sUriComplete));		
+		ELSE
+			sUriComplete := '';
+				sUriStart := CONCAT(CONCAT('/iosys/',sProjectname),CONCAT(CONCAT('/',sRuntimeSystem),'/json/get?token='));
+					sUriComplete := CONCAT(CONCAT(sUriStart,sToken),';');			
+		END_IF
+
+		bValidResult := FALSE;
+			
+			IF fbRequest.SendRequest(sUri:= sUriComplete,
+									 fbClient:= fbClient, 
+										eRequestType:= ETcIotHttpRequestType.HTTP_Get, 0, 0, 0) THEN
+				nState:= 1;
+				nReqCount:= nReqCount+1;
+				bBusy:= TRUE;
+				bError:= FALSE;
+			END_IF
+    END_IF
+1:
+    IF NOT fbRequest.bBusy THEN
+        bError:= TRUE;
+        IF NOT fbRequest.bError THEN
+            bGetContentResult:= fbRequest.GetContent(pContent:= ADR(sContent), 
+                                                     nContentSize:= SIZEOF(sContent), 
+                                                     bSetNullTermination:= TRUE);
+            IF fbRequest.nStatusCode >= 200 AND fbRequest.nStatusCode < 300 THEN
+				bValidResult := TRUE;
+				bError := FALSE;
+				nValidResCount:= nValidResCount+1;
+               	nResCount:= nResCount+1;
+            END_IF
+        END_IF
+        nState:= 0;
+        bBusy:= FALSE;
+        IF bError THEN
+            nErrCount:= nErrCount+1;
+        END_IF
+    END_IF
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_HTTP_Get_Iosys">
+      <LineId Id="321" Count="2" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="324" Count="1" />
+      <LineId Id="386" Count="1" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="384" Count="1" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="439" Count="1" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="374" Count="3" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="43" Count="15" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="7" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

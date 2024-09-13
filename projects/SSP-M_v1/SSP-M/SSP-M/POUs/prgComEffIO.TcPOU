@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComEffIO
+VAR
+	fbCom		: FB_MqttCommunicator_V2;
+	int_SSPNumber: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	strAuthKey:= 'EIO08031879806', 
+	sUserName:= , 
+	sUserPassword:= , 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk,  
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+
+prg_ReadDeviceName();
+IF prg_ReadDeviceName.sDeviceName = '' THEN
+	prg_ReadDeviceName.bStart := TRUE;
+END_IF
+
+
+// select user / pass according device name:
+
+IF prg_ReadDeviceName.sDeviceName = 'EIOSM000002' THEN
+	fbCom.sUserName:= '0b42849c-4998-452d-bcd9-1344b044b06a'; 
+    fbCom.sUserPassword:= '8be448ae-72bb-402a-8881-f106399ccc0a';
+	int_SSPNumber :=2;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOSM000003' THEN
+	fbCom.sUserName:= '0bf90bac-e4b4-4293-8d11-723425492058'; 
+    fbCom.sUserPassword:= 'f175a015-0875-4d33-925a-678b18e42479';
+	int_SSPNumber :=3;
+ELSIF prg_ReadDeviceName.sDeviceName = 'EIOSM000004' THEN
+	fbCom.sUserName:= 'c938aafa-9a8d-47b6-9d90-e88759d88525'; 
+    fbCom.sUserPassword:= '03531b94-b497-4a3f-9018-b2efc52058ad';
+	int_SSPNumber :=4;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgComEffIO">
+      <LineId Id="155" Count="27" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="189" Count="2" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="143" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

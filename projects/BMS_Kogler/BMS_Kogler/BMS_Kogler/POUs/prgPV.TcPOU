@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV" Id="{3940a3f5-dd31-4276-b197-0a9b05eb909c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV_Symo1				: FB_Symo_PV_Inverter_FLOAT_1_DM_30_Inverter;
+	fbPV_Symo2				: FB_Symo_PV_Inverter_FLOAT_1_DM_30_Inverter;
+	fbPV_Tauro1				: FB_Symo_PV_Inverter_FLOAT_1_DM_1_Inverter;
+	fbPV_Tauro2				: FB_Symo_PV_Inverter_FLOAT_1_DM_1_Inverter;
+	fbPVInt					: FB_PV_Power_Ext_Input;
+	fbPVCounter				: FB_EnergyCounter;
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV		: BYTE;					//{#lynus.ag#()}
+	
+	// extend or reduce amount of PV Inverters
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_3				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_4				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_5				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_6				: LREAL;				//{#lynus.ag#()}
+	x: BYTE;
+	mtest: BOOL;
+END_VAR
+VAR PERSISTENT
+	lrCounterPV				: LREAL;				//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbPV_Tauro1(
+	bEnable:= true, 
+	sIPAdress:= '10.11.90.110', 		//'192.168.0.110', 			// modify IP Adress
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+	
+// extend or reduce amount of PV Inverters
+lrPowerPV_1 := fbPV_Tauro1.stDataEMPower_PV.lrPowerTotal;
+
+// extend or reduce amount of PV Inverters
+fbPV_Symo1.arrUnitID_Inverter[1] := 1;
+fbPV_Symo1.arrUnitID_Inverter[2] := 2;
+
+fbPV_Symo1(
+	bEnable:= TRUE, 
+	sIPAdress:= '10.11.90.111',    //'192.168.0.111', 			// modify IP Adress
+	arrUnitID_Inverter:= , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+	
+// extend or reduce amount of PV Inverters
+lrPowerPV_2 := fbPV_Symo1.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_3 := fbPV_Symo1.arrDataSymo10[2].lrPowerAcInverter;
+
+
+fbPV_Tauro2(
+	bEnable:= TRUE, 
+	sIPAdress:= '10.11.90.112', //'192.168.0.112', 			// modify IP Adress
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+	
+// extend or reduce amount of PV Inverters
+lrPowerPV_4 := fbPV_Tauro2.stDataEMPower_PV.lrPowerTotal;
+
+// extend or reduce amount of PV Inverters
+fbPV_Symo2.arrUnitID_Inverter[1] := 1;
+fbPV_Symo2.arrUnitID_Inverter[2] := 2;
+
+fbPV_Symo2(
+	bEnable:= TRUE, 
+	sIPAdress:= '10.11.90.113',   //'192.168.0.113', 			// modify IP Adress
+	arrUnitID_Inverter:= , 
+	arrDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+// extend or reduce amount of PV Inverters
+lrPowerPV_5 := fbPV_Symo2.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_6 := fbPV_Symo2.arrDataSymo10[2].lrPowerAcInverter;
+
+
+
+
+fbPVInt(
+	bEnable:= TRUE, 
+	lrExtPvPower:= lrPowerPV_1 + lrPowerPV_2 + lrPowerPV_3 + lrPowerPV_4 + lrPowerPV_5 + lrPowerPV_6, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+	
+lrPowerPV := fbPVInt.stDataPv.lrPower;
+	byErrorWarningPV := fbPVInt.stDataPv.byErrorWarning;
+
+// EnergyCounter
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="152" Count="2" />
+      <LineId Id="157" Count="5" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="3" Count="1" />
+      <LineId Id="10" Count="8" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="115" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="125" Count="1" />
+      <LineId Id="165" Count="7" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="94" Count="10" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="122" Count="2" />
+      <LineId Id="27" Count="3" />
+      <LineId Id="32" Count="3" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="57" Count="13" />
+      <LineId Id="56" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

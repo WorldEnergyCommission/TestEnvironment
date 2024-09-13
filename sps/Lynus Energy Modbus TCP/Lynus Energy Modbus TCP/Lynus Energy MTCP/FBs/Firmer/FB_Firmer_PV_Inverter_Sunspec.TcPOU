@@ -1,0 +1,677 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Firmer_PV_Inverter_Sunspec" Id="{5032caca-c700-4ca3-8330-9f341b4ebe11}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Firmer_PV_Inverter_Sunspec
+VAR_INPUT PERSISTENT
+	///{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bEnable: BOOL;
+	///Unit ID for the Inverter
+	byUnitID_Inverter: BYTE;
+	///IP Adress from the Inverter
+	sIPAdress: STRING(15);
+END_VAR
+VAR_OUTPUT
+	///Structure with specific Firmer Inverter Data
+	stFirmerInverterData: ST_FirmerPvInverter_Data;
+	///Output structure with Data from Electric Meter PV (Power Data)
+	stDataEMPower_PV: ST_ElectricMeter_Output_Power;
+	///Output structure with Data from Electric Meter PV (Counter Data)
+	stDataEMCounter_PV: ST_ElectricMeter_Output_Counter;
+	///Active Number from the Electric Meter for using on other functions
+	diNrOfEM_OUT_PV: DINT;
+END_VAR
+VAR
+	///Electric Meter Function 
+	{attribute 'hide' := ''}
+	fbElMeter: FB_ElectricMeter;
+	///Function block to calcualte the number of the Device
+	{attribute 'hide' := ''}
+	fbNumberDevice: FB_NumberOfDevice;
+	///Modbus Read Function (FC3)
+	{attribute 'hide' := ''}
+	fbMBRead_FC3: FB_MBReadRegs;
+	///Timer for Delay between Requests
+	{attribute 'hide' := ''}
+	timDelay: TON;
+	///Timer for Timeout
+	{attribute 'hide' := ''}
+	timTimeout: TON;
+	///Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide' := ''}
+	timDissableFunctions: TON;
+	///Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide' := ''}
+	timResetConnectionOnGVL: TON;
+	///Timer to Close the Socket after to much Errors
+	{attribute 'hide' := ''}
+	timCloseSocket: TON;
+	///Internal positive Edge
+	{attribute 'hide' := ''}
+	FPEnable: R_TRIG;
+	///Internal positive Edge
+	{attribute 'hide' := ''}
+	FPError_FC_3: R_TRIG;
+	///Convert 2 WORD in a DWORD
+	{attribute 'hide' := ''}
+	fbConvertWord: FB_CV_WORD_TO_DWORD;
+	///Function to save persistent string data
+	{attribute 'hide' := ''}
+	fbPDString: FB_PersistentData_String;
+	///Function to save persistent data
+	{attribute 'hide' := ''}
+	arrPD: ARRAY[1..2] OF FB_PersistentData_Number;
+	///Buffer with Data from FC3
+	{attribute 'hide' := ''}
+	arrBuffer_FC3: ARRAY[1..120] OF WORD;
+	///Error or Fault from Inverter
+	{attribute 'hide' := ''}
+	bErrorInverter: BOOL;
+	///Error Counter when we have TCP Error or Timeout Error
+	{attribute 'hide' := ''}
+	byErrorCounterTCP: BYTE;
+	///Wait in Step before start to clean data on PLC
+	{attribute 'hide' := ''}
+	byWaitInStep: BYTE;
+	///Variable for Loop to fill default values in the Firmer output structure
+	{attribute 'hide' := ''}
+	byLPFillDefaultData: BYTE;
+	///State machine to handle the data on the GVL
+	{attribute 'hide' := ''}
+	iStateGVLData: INT;
+	///State machine for read out Data over Modbus RTU
+	{attribute 'hide' := ''}
+	iStateModbusRead: INT;
+	///State machine for error out Data over Modbus RTU	
+	{attribute 'hide' := ''}
+	iStateModbusError: INT;
+	///Variable to compare the state machine variable to set or reset the timeout timer
+	{attribute 'hide' := ''}
+	iStateModbus_CP: INT;
+	///Scale Factor for MPPT Power
+	{attribute 'hide' := ''}
+	iSFPowerMPPT: INT;
+	///Number of MPPT
+	{attribute 'hide' := ''}
+	wNumberOfMPPT: WORD;
+	///Variable for Loop to fill the power for each MPPT in the output structure
+	{attribute 'hide' := ''}
+	wLPPowerMPPT: WORD;
+	///Next Modbus Start Adress why in Pic 160 the Number of Registers is variabel and so the next Modbus Registers in the next Pics can be different
+	{attribute 'hide' := ''}
+	wNextModbusStartAdress: WORD;
+	///Number of Inputs from Pic 401 to calculate the Next Modbus Start Adress
+	{attribute 'hide' := ''}
+	wNumberOfInputs: WORD;
+	///ID of the PIC
+	{attribute 'hide' := ''}
+	wPicID: WORD;
+	///Counter to clean old data on GVL
+	{attribute 'hide' := ''}
+	diCounterForGVL: DINT;
+	///Rest of the calculation for new Star Adress. In Sunspec each new PIC start with a even adress
+	{attribute 'hide' := ''}
+	lrRestNextAdress: LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 19.07.2022
+//Version : 1.0.0.0
+
+//With this function its possible to read out values from the Firmer PV Inverter over Modbus TCP
+//The Protocoll is the Sunspec Protocol
+//Versions that are supported : 1.0.11
+//This Function use the INT + Scalfactor Format
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*-------------------------------------------------------------Calcualte the number of ECS---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT_PV, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := diNrOfEM_OUT_PV;	
+		iStateGVLData := 1;
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+			
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timDelay(IN:= , PT:= T#250MS, Q=> , ET=> );
+
+//Timer for Timeout in Statemachine
+IF iStateModbusRead > 0 AND iStateModbusRead <= 5 AND iStateModbusRead = iStateModbus_CP THEN
+		timTimeout.IN := TRUE;
+ELSE	
+		timTimeout.IN := FALSE;
+END_IF
+	//Timeout Timer is dissabled when the slave wait that his adress is in porgress on the RTU Master, or is dissabled or the Terminal is not configured
+	IF iStateModbusRead = 0 OR NOT bEnable THEN timTimeout.IN := FALSE; END_IF
+		timTimeout(IN:= , PT:= T#15S, Q=> , ET=> );
+
+//Enable the State Machine
+FPEnable(CLK:= bEnable, Q=> );
+	IF FPEnable.Q AND iStateModbusRead = 0 THEN iStateModbusRead := 1; END_IF		
+		
+//Not Enabled
+IF NOT bEnable THEN iStateModbusRead := 0; iStateModbusError := 0; END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step (Wait that the Slave is enabled and the Terminal is configured)
+		iStateModbus_CP := 0;
+			timDelay.IN := FALSE;
+				fbMBRead_FC3.bExecute := FALSE;
+					iSFPowerMPPT := 0;
+						wNumberOfMPPT := 0;
+							wNextModbusStartAdress := 0;
+								wNumberOfInputs := 0;
+									lrRestNextAdress := 0;	
+	
+		//Set Firmer Output Structure to default
+		stFirmerInverterData.rTotalMPPTPower := 0;
+			stFirmerInverterData.rCabinetTemp := 0;
+				stFirmerInverterData.rHeatSinkTemp := 0;
+					FOR byLPFillDefaultData := 1 TO 6 BY 1 DO
+						stFirmerInverterData.arrMPPTPower[byLPFillDefaultData] := 0;
+					END_FOR
+						stFirmerInverterData.eEvent1 := eFirmerEvent.eNoInfo;
+							stFirmerInverterData.eOperatingState := eFirmerOperatingState.eNoInfo;
+								stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.eNoInfo;
+									stFirmerInverterData.eVendorEvent2 := eFirmerVendorEvent2.eNoInfo;
+										stFirmerInverterData.eVendorEvent3 := eFirmerVendorEvent3.eNoInfo;	
+	
+	1://Read Out Values from Pic 103 of the Sunspec Protocol (Register 40073)
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Start Read
+		fbMBRead_FC3.nQuantity := 45;
+			fbMBRead_FC3.nMBAddr := 40073;
+				fbMBRead_FC3.bExecute := TRUE;
+					fbMBRead_FC3.nUnitID := byUnitID_Inverter;
+		
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		//Copy the read out Data
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//Current L1
+			IF WORD_TO_INT(arrBuffer_FC3[4]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[4]) <= 10 THEN
+				fbElMeter.lrCurrentL1 := arrBuffer_FC3[1] * EXPT(10,WORD_TO_INT(arrBuffer_FC3[4]));
+			END_IF
+			//Current L2
+			IF WORD_TO_INT(arrBuffer_FC3[4]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[4]) <= 10 THEN
+				fbElMeter.lrCurrentL2 := arrBuffer_FC3[2] * EXPT(10,WORD_TO_INT(arrBuffer_FC3[4]));
+			END_IF
+			//Current L3
+			IF WORD_TO_INT(arrBuffer_FC3[4]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[4]) <= 10 THEN
+				fbElMeter.lrCurrentL3 := arrBuffer_FC3[3] * EXPT(10,WORD_TO_INT(arrBuffer_FC3[4]));
+			END_IF
+			//Voltage L1/N
+			IF WORD_TO_INT(arrBuffer_FC3[11]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[11]) <= 10 THEN
+				fbElMeter.lrVoltageL1N := arrBuffer_FC3[8] * EXPT(10,WORD_TO_INT(arrBuffer_FC3[11]));
+			END_IF
+			//Voltage L2/N
+			IF WORD_TO_INT(arrBuffer_FC3[11]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[11]) <= 10 THEN
+				fbElMeter.lrVoltageL2N := arrBuffer_FC3[9] * EXPT(10,WORD_TO_INT(arrBuffer_FC3[11]));
+			END_IF
+			//Voltage L3/N
+			IF WORD_TO_INT(arrBuffer_FC3[11]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[11]) <= 10 THEN
+				fbElMeter.lrVoltageL3N := arrBuffer_FC3[10] * EXPT(10,WORD_TO_INT(arrBuffer_FC3[11]));
+			END_IF
+			//AC Power
+			IF WORD_TO_INT(arrBuffer_FC3[13]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[13]) <= 10 THEN  
+				fbElMeter.lrPowerTotal := WORD_TO_INT(arrBuffer_FC3[12]) * EXPT(10,WORD_TO_INT(arrBuffer_FC3[13]));
+			END_IF
+			//Hz
+			IF WORD_TO_INT(arrBuffer_FC3[15]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[15]) <= 10 THEN  
+				fbElMeter.lrFrequency := arrBuffer_FC3[14] * EXPT(10,WORD_TO_INT(arrBuffer_FC3[15]));
+			END_IF
+			//Apparent Power
+			IF WORD_TO_INT(arrBuffer_FC3[17]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[17]) <= 10 THEN  
+				fbElMeter.lrApparentPowerTotal := WORD_TO_INT(arrBuffer_FC3[16]) * EXPT(10,WORD_TO_INT(arrBuffer_FC3[17]));
+			END_IF
+			//Reactive Power
+			IF WORD_TO_INT(arrBuffer_FC3[19]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[19]) <= 10 THEN  
+				fbElMeter.lrReactivePowerTotal := WORD_TO_INT(arrBuffer_FC3[18]) * EXPT(10,WORD_TO_INT(arrBuffer_FC3[19]));
+			END_IF
+			//Produced Energy
+			IF WORD_TO_INT(arrBuffer_FC3[24]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[24]) <= 10 THEN  
+				fbConvertWord(wInputValue_1:= arrBuffer_FC3[22], wInputValue_2:= arrBuffer_FC3[23], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+					fbElMeter.lrCounterEnergyT1_Production := fbConvertWord.dwOutputValue * EXPT(10,WORD_TO_INT(arrBuffer_FC3[24]));
+						fbElMeter.lrCounterEnergyT1_Production := fbElMeter.lrCounterEnergyT1_Production / 1000;
+							fbElMeter.lrTotalCounterEnergy_Production := fbElMeter.lrCounterEnergyT1_Production; 	
+			END_IF
+			//Cabinet Temperature
+			IF WORD_TO_INT(arrBuffer_FC3[35]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[35]) <= 10 THEN  
+				stFirmerInverterData.rCabinetTemp := LREAL_TO_REAL(WORD_TO_INT(arrBuffer_FC3[31]) * EXPT(10,WORD_TO_INT(arrBuffer_FC3[35])));
+			END_IF
+			//Heat Sink Temperature
+			IF WORD_TO_INT(arrBuffer_FC3[35]) >= - 10 AND WORD_TO_INT(arrBuffer_FC3[35]) <= 10 THEN  
+				stFirmerInverterData.rHeatSinkTemp := LREAL_TO_REAL(WORD_TO_INT(arrBuffer_FC3[32]) * EXPT(10,WORD_TO_INT(arrBuffer_FC3[35])));
+			END_IF
+			//Operating State
+			stFirmerInverterData.eOperatingState := eFirmerOperatingState.eNoInfo;
+			IF arrBuffer_FC3[36] = 1 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eOff;
+			ELSIF arrBuffer_FC3[36] = 2 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eSleeping;
+			ELSIF arrBuffer_FC3[36] = 3 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eStarting;
+			ELSIF arrBuffer_FC3[36] = 4 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eMppt;
+			ELSIF arrBuffer_FC3[36] = 5 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eThrottled;
+			ELSIF arrBuffer_FC3[36] = 6 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eShuttingDown;
+			ELSIF arrBuffer_FC3[36] = 7 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eFault;
+			ELSIF arrBuffer_FC3[36] = 8 THEN stFirmerInverterData.eOperatingState := eFirmerOperatingState.eStandby;
+			END_IF 
+			//Event 1
+			fbConvertWord(wInputValue_1:= arrBuffer_FC3[38], wInputValue_2:= arrBuffer_FC3[39], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+			stFirmerInverterData.eEvent1 := eFirmerEvent.eNoInfo;
+			IF fbConvertWord.dwOutputValue.0 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eGroundFault;
+			ELSIF fbConvertWord.dwOutputValue.1 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eDCOverVolt;
+			ELSIF fbConvertWord.dwOutputValue.2 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eACDisconnect;
+			ELSIF fbConvertWord.dwOutputValue.3 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eDCDisconnect;
+			ELSIF fbConvertWord.dwOutputValue.4 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eGridDisconnect;
+			ELSIF fbConvertWord.dwOutputValue.5 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eCabinetOpen;
+			ELSIF fbConvertWord.dwOutputValue.6 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eManualShutdown;
+			ELSIF fbConvertWord.dwOutputValue.7 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eOverTemp;
+			ELSIF fbConvertWord.dwOutputValue.8 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eOverFrequency;
+			ELSIF fbConvertWord.dwOutputValue.9 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eUnderFrequency;
+			ELSIF fbConvertWord.dwOutputValue.10 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eACOverVolt;
+			ELSIF fbConvertWord.dwOutputValue.11 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eACUnderVolt;
+			ELSIF fbConvertWord.dwOutputValue.12 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eBlownStringFuse;
+			ELSIF fbConvertWord.dwOutputValue.13 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eUnderTemp;
+			ELSIF fbConvertWord.dwOutputValue.14 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eMemoryLoss;
+			ELSIF fbConvertWord.dwOutputValue.15 THEN stFirmerInverterData.eEvent1 := eFirmerEvent.eHWTestFailure;
+			END_IF
+			//Vendor Event 1
+			fbConvertWord(wInputValue_1:= arrBuffer_FC3[40], wInputValue_2:= arrBuffer_FC3[41], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+			stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.eNoInfo;
+			IF fbConvertWord.dwOutputValue.0 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerCurtailmentFromExternalCommand;
+			ELSIF fbConvertWord.dwOutputValue.1 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromFrequencyWatt;
+			ELSIF fbConvertWord.dwOutputValue.2 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromHighAverageGridVoltage;
+			ELSIF fbConvertWord.dwOutputValue.3 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromAntiIslandingProtection;
+			ELSIF fbConvertWord.dwOutputValue.4 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromGridCurrentRatingLimitation;
+			ELSIF fbConvertWord.dwOutputValue.5 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationForHighTemperature;
+			ELSIF fbConvertWord.dwOutputValue.6 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationForHighDCVoltage;
+			ELSIF fbConvertWord.dwOutputValue.8 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromRampRateConnectionRamp;
+			ELSIF fbConvertWord.dwOutputValue.9 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromMomentaryCessation;
+			ELSIF fbConvertWord.dwOutputValue.10 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromRampRateNormalRampUp;
+			ELSIF fbConvertWord.dwOutputValue.11 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromVoltWatt;
+			ELSIF fbConvertWord.dwOutputValue.12 THEN stFirmerInverterData.eVendorEvent1 := eFirmerVendorEvent1.ePowerLimitationFromCapabilityRating;	
+			END_IF
+			//Vendor Event 2
+			fbConvertWord(wInputValue_1:= arrBuffer_FC3[42], wInputValue_2:= arrBuffer_FC3[43], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+			stFirmerInverterData.eVendorEvent2 := eFirmerVendorEvent2.eNoInfo;
+			IF fbConvertWord.dwOutputValue.0 THEN stFirmerInverterData.eVendorEvent2 := eFirmerVendorEvent2.ePowerLimitationForHighTemperature;
+			ELSIF fbConvertWord.dwOutputValue.1 THEN stFirmerInverterData.eVendorEvent2 := eFirmerVendorEvent2.ePowerLimitationForHighDCVoltage;
+			ELSIF fbConvertWord.dwOutputValue.2 THEN stFirmerInverterData.eVendorEvent2 := eFirmerVendorEvent2.ePowerLimitationFromCapabilityRating;	
+			END_IF
+			//Vendor Event 3
+			fbConvertWord(wInputValue_1:= arrBuffer_FC3[44], wInputValue_2:= arrBuffer_FC3[45], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+			stFirmerInverterData.eVendorEvent3 := eFirmerVendorEvent3.eNoInfo;
+			IF fbConvertWord.dwOutputValue.0 THEN stFirmerInverterData.eVendorEvent3 := eFirmerVendorEvent3.eFanFault;
+			ELSIF fbConvertWord.dwOutputValue.1 THEN stFirmerInverterData.eVendorEvent3 := eFirmerVendorEvent3.eStatisticsMemoryFault;
+			ELSIF fbConvertWord.dwOutputValue.2 THEN stFirmerInverterData.eVendorEvent3 := eFirmerVendorEvent3.eRTCClockNotSet;
+			ELSIF fbConvertWord.dwOutputValue.4 THEN stFirmerInverterData.eVendorEvent3 := eFirmerVendorEvent3.eRTCLowBatteryFault;
+			ELSIF fbConvertWord.dwOutputValue.5 THEN stFirmerInverterData.eVendorEvent3 := eFirmerVendorEvent3.eRTCQuartzFault;	
+			END_IF
+			
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 2;	
+						wNextModbusStartAdress := 40122;
+		END_IF
+
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+	
+	2://Read Out Values from Pic 120 to Start Adress for PIC 160 of the Sunspec Protocoll		
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Start Read
+		fbMBRead_FC3.nQuantity := 2;
+			fbMBRead_FC3.nMBAddr := wNextModbusStartAdress;
+				fbMBRead_FC3.bExecute := TRUE;
+					fbMBRead_FC3.nUnitID := byUnitID_Inverter;
+		
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		//Copy the read out Data
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//PIC ID
+			wPicID := arrBuffer_FC3[1];
+			//Number of Inputs
+			wNumberOfInputs := arrBuffer_FC3[2];
+			
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 3;	
+						lrRestNextAdress := 0;
+							//Calculate next Modbus Start Adress for next Pic
+							wNextModbusStartAdress := wNextModbusStartAdress + wNumberOfInputs + 2;
+								lrRestNextAdress := FRAC(WORD_TO_REAL(wNextModbusStartAdress) / 2);	
+									//If it ends with an odd number, the next PIC starts with an even address
+									IF lrRestNextAdress <> 0 THEN wNextModbusStartAdress := wNextModbusStartAdress + 1; END_IF
+		END_IF     					
+		
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF	
+	
+	3://Check the PIC ID
+		iStateModbus_CP := iStateModbusRead;
+		
+		IF wPicID < 160 THEN
+			//Back to Step 2
+			iStateModbusRead := 2;
+		ELSE
+			//next Step with values
+			iStateModbusRead := 4;
+				//Calculate next Modbus Start Adress for next Pic
+				wNextModbusStartAdress := wNextModbusStartAdress - wNumberOfInputs - 2;
+		END_IF
+		
+	
+	4://Read Out Values from Pic 160 of the Sunspec Protocol
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Start Read
+		fbMBRead_FC3.nQuantity := 9;
+			fbMBRead_FC3.nMBAddr := wNextModbusStartAdress;
+				fbMBRead_FC3.bExecute := TRUE;
+					fbMBRead_FC3.nUnitID := byUnitID_Inverter;
+		
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		//Copy the read out Data
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//PIC ID
+			wPicID := arrBuffer_FC3[1];
+			//Number of Inputs
+			wNumberOfInputs := arrBuffer_FC3[2];
+			//Scale Factor for String Power
+			iSFPowerMPPT := WORD_TO_INT(arrBuffer_FC3[5]);
+			//Number of MPPT Moduls
+			wNumberOfMPPT := arrBuffer_FC3[9];
+			
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 5;	
+						wNextModbusStartAdress := wNextModbusStartAdress + 10;
+		END_IF     				
+		
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+
+	5://Read Out Values from Pic 160 of the Sunspec Protocol
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Start Read
+		fbMBRead_FC3.nQuantity := 20 * wNumberOfMPPT;
+			fbMBRead_FC3.nMBAddr := wNextModbusStartAdress;
+				fbMBRead_FC3.bExecute := TRUE;
+					fbMBRead_FC3.nUnitID := byUnitID_Inverter;
+		
+		wNumberOfMPPT := LIMIT(1,wNumberOfMPPT,6);
+			iSFPowerMPPT := LIMIT(-10,iSFPowerMPPT,10);
+		
+		IF fbMBRead_FC3.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		IF wNumberOfMPPT <= 1 THEN
+			stFirmerInverterData.arrMPPTPower[2] := 0;
+				stFirmerInverterData.arrMPPTPower[3] := 0;
+					stFirmerInverterData.arrMPPTPower[4] := 0;
+						stFirmerInverterData.arrMPPTPower[5] := 0;
+							stFirmerInverterData.arrMPPTPower[6] := 0;
+		ELSIF  wNumberOfMPPT = 2 THEN
+			stFirmerInverterData.arrMPPTPower[3] := 0;
+				stFirmerInverterData.arrMPPTPower[4] := 0;
+					stFirmerInverterData.arrMPPTPower[5] := 0;
+						stFirmerInverterData.arrMPPTPower[6] := 0;
+		ELSIF  wNumberOfMPPT = 3 THEN
+			stFirmerInverterData.arrMPPTPower[4] := 0;
+				stFirmerInverterData.arrMPPTPower[5] := 0;
+					stFirmerInverterData.arrMPPTPower[6] := 0;
+		ELSIF  wNumberOfMPPT = 4 THEN
+			stFirmerInverterData.arrMPPTPower[5] := 0;
+				stFirmerInverterData.arrMPPTPower[6] := 0;	
+		ELSIF  wNumberOfMPPT = 5 THEN
+			stFirmerInverterData.arrMPPTPower[6] := 0;
+		END_IF
+		
+		//Copy the read out Data
+		IF NOT fbMBRead_FC3.bBusy AND NOT fbMBRead_FC3.bError AND timDelay.Q THEN
+			//MPPT Power
+			FOR wLPPowerMPPT := 1 TO (20 * wNumberOfMPPT) BY 1 DO
+				IF wNumberOfMPPT >= 1 AND wLPPowerMPPT = 12 THEN stFirmerInverterData.arrMPPTPower[1] := LREAL_TO_REAL(arrBuffer_FC3[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 2 AND wLPPowerMPPT = 32 THEN stFirmerInverterData.arrMPPTPower[2] := LREAL_TO_REAL(arrBuffer_FC3[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 3 AND wLPPowerMPPT = 52 THEN stFirmerInverterData.arrMPPTPower[3] := LREAL_TO_REAL(arrBuffer_FC3[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 4 AND wLPPowerMPPT = 72 THEN stFirmerInverterData.arrMPPTPower[4] := LREAL_TO_REAL(arrBuffer_FC3[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 5 AND wLPPowerMPPT = 92 THEN stFirmerInverterData.arrMPPTPower[5] := LREAL_TO_REAL(arrBuffer_FC3[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 6 AND wLPPowerMPPT = 112 THEN stFirmerInverterData.arrMPPTPower[6] := LREAL_TO_REAL(arrBuffer_FC3[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				END_IF     
+			END_FOR 
+			
+			//Go to Next Step
+			fbMBRead_FC3.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 1;
+						byErrorCounterTCP := 0;
+							iSFPowerMPPT := 0;
+								wNumberOfMPPT := 0;
+									wNextModbusStartAdress := 0;
+										wNumberOfInputs := 0;
+											lrRestNextAdress := 0;
+		END_IF     				
+		
+		//Total DC Power
+		stFirmerInverterData.rTotalMPPTPower := 0;
+			FOR wLPPowerMPPT := 1 TO 6 BY 1 DO
+				stFirmerInverterData.rTotalMPPTPower := stFirmerInverterData.rTotalMPPTPower + stFirmerInverterData.arrMPPTPower[wLPPowerMPPT];
+			END_FOR
+			
+		//Error or Timeout
+		IF FPError_FC_3.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+	
+END_CASE
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+
+bErrorInverter := FALSE;
+	IF stFirmerInverterData.eOperatingState = eFirmerOperatingState.eFault THEN bErrorInverter := TRUE; END_IF
+		IF stFirmerInverterData.eEvent1 <> eFirmerEvent.eNoInfo THEN bErrorInverter := TRUE; END_IF
+			IF stFirmerInverterData.eVendorEvent3 <> eFirmerVendorEvent3.eNoInfo THEN bErrorInverter := TRUE; END_IF     
+
+IF timDissableFunctions.Q OR stFirmerInverterData.eVendorEvent1 <> eFirmerVendorEvent1.eNoInfo OR stFirmerInverterData.eVendorEvent2 <> eFirmerVendorEvent2.eNoInfo THEN fbElMeter.bWarning := TRUE; ELSE fbElMeter.bWarning := FALSE; fbElMeter.iWarningCode := 0; END_IF   
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters OR bErrorInverter OR byErrorCounterTCP > 10 THEN 
+		fbElMeter.bError := TRUE;
+	ELSE 
+		fbElMeter.bError := FALSE;
+			fbElMeter.iErrorCode := 0;
+	END_IF
+
+IF stFirmerInverterData.eVendorEvent1 <> eFirmerVendorEvent1.eNoInfo OR stFirmerInverterData.eVendorEvent2 <> eFirmerVendorEvent2.eNoInfo THEN fbElMeter.iWarningCode := 1; END_IF   	
+	
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN fbElMeter.iErrorCode := 1; END_IF
+	IF byErrorCounterTCP > 10 OR bErrorInverter THEN fbElMeter.iErrorCode := 0; END_IF   
+
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+
+//Read Out Data done for EM Function
+IF iStateModbusRead <> 1 THEN fbElMeter.bReadOutDataDone := TRUE; ELSE fbElMeter.bReadOutDataDone := FALSE; END_IF
+
+//Function block for meter data
+fbElMeter(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= FALSE, 
+	bWriteWithDelay:= TRUE,
+	bPowerDataInvers:= FALSE, 
+	bReadOutDataDone:= ,
+	iTimeReadOutInterval:= , 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= , 
+	lrVoltageL1N:= , 
+	lrVoltageL1L2:= , 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= , 
+	lrVoltageL2N:= , 
+	lrVoltageL2L3:= , 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= , 
+	lrVoltageL3N:= , 
+	lrVoltageL3L1:= , 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= , 
+	lrReactivePowerTotal:= , 
+	lrApparentPowerTotal:= , 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> , 
+	stDataEMOutPowerDelay=> stDataEMPower_PV, 
+	stDataEMOutCounter=> ,
+	stDataEMOutCounterDelay=> stDataEMCounter_PV, 
+	bReadOutMeter=> );
+	
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+			timDelay.IN := FALSE;
+				fbMBRead_FC3.bExecute := FALSE;
+					iSFPowerMPPT := 0;
+						wNumberOfMPPT := 0;
+							wNextModbusStartAdress := 0;
+								wNumberOfInputs := 0;
+									lrRestNextAdress := 0;
+										byErrorCounterTCP := byErrorCounterTCP + 1;
+										byErrorCounterTCP := LIMIT(0,byErrorCounterTCP,11);
+											//Restart from new with the Read out part after an Error
+											IF byErrorCounterTCP < 10 THEN
+												iStateModbusRead := 1;
+													iStateModbusError := 0;
+											ELSE
+												//Wait here in the Error State for the Delay Timer and then we dont have a Timeout Error
+												iStateModbusRead := - 1;
+													//Start from New when the Delay is paste
+													IF timCloseSocket.Q THEN
+														iStateModbusRead := 1;	
+															iStateModbusError := 0;
+																byErrorCounterTCP := 0;
+													END_IF	
+											END_IF
+END_CASE
+
+//Timer to close the Socket after to much TCP Errors and reopen a new one
+timCloseSocket(IN:= byErrorCounterTCP > 10 AND fbElMeter.stDataEMOutPower.bEnabled, PT:= T#1M, Q=> , ET=> );
+
+(*------------------------------------------------------------------------------------------Modbus TCP Function---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC3(sIPAddr:= sIPAdress, nTCPPort:= 502, cbLength:= SIZEOF(arrBuffer_FC3), pDestAddr:= ADR(arrBuffer_FC3), tTimeout:= T#10S );
+	FPError_FC_3(CLK:= fbMBRead_FC3.bError, Q=> );
+
+(*-----------------------------------------------------------Handle data to Global structure for Electric Meter system and Modbus RTU Communication-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].bEnabled := FALSE;	
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Consumption := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Production := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Consumption := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Production := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPower := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerProduction := 0;
+												Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Consumption := 0;
+													Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Production := 0;		
+		
+			//Counter for EM
+			diCounterForGVL := diCounterForGVL + 1;
+				diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricMeters);
+					//Back to the init step
+					IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricMeters THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfEM_OUT_PV > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].bEnabled := fbElMeter.stDataEMOutPower.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].byErrorWarning := fbElMeter.stDataEMOutPower.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Production;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Consumption;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Production;		
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPower := fbElMeter.stDataEMOutPower.lrPowerTotal;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerConsumption := fbElMeter.stDataEMOutPower.lrPowerConsumption;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerProduction := fbElMeter.stDataEMOutPower.lrPowerProduction;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Consumption := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Production := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BYTE_TO_LREAL(byUnitID_Inverter), bEventBasedActive=> );
+fbPDString(sText:= sIPAdress, bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Firmer_PV_Inverter_Sunspec">
+      <LineId Id="3" Count="552" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,124 @@
+name: android_app_ci_cd
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          [
+            efficientio,
+            peneder,
+            bmsystems,
+            tsg,
+            be,
+            dev,
+            powerlink,
+            smartsitepower,
+            effectas,
+          ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: string
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ matrix.flavor }}
+      - uses: efficientIO/keepass-to-environment@v1.2
+        with:
+          keepass-file-path: "keepass/secrets.kdbx"
+          keepass-master-password: ${{ secrets.KEEPASS_MASTER_PASSWORD }}
+          keepass-group-filter: "app/appIndependent"
+      - name: Set correct Java version for android build
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+      - name: calculate version number with offset
+        env:
+          NUM: ${{ github.run_number }}
+        run: echo "GITHUB_RUN_NUMBER_WITH_OFFSET=$(($NUM + 1000))" >> $GITHUB_ENV
+      - name: get previous tag
+        id: previoustag
+        uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+      - uses: LarsenLP/actions-find-and-replace-string@v3
+        id: tag
+        with:
+          source: ${{ steps.previoustag.outputs.tag }}
+          find: "v"
+          replace: ""
+      - name: show app new version
+        run: echo "${{ steps.tag.outputs.value }}-$GITHUB_RUN_NUMBER_WITH_OFFSET"
+      - name: set sha value
+        run: sed -i "s/SHA/${{ github.sha }}/g" version.json
+        working-directory: console/
+      - run: npm install
+        working-directory: console/
+      - run: npm run build
+        working-directory: console/
+      - run: npx cap sync android
+        working-directory: console/
+        env:
+          APP_FLAVOR: ${{ matrix.flavor }}
+      - name: Create jks file
+        id: jksFileDecode
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: "key.jks"
+          fileDir: "console"
+          encodedString: ${{ env.JKS_FILE_BASE64 }}
+      - run: npx capacitor-set-version set:android -v ${{ steps.tag.outputs.value }} -b $GITHUB_RUN_NUMBER_WITH_OFFSET
+        working-directory: console/
+      - run: npx cap build android --keystorepath ../key.jks --keystorepass "${{ env.JKS_PASSWORD }}" --keystorealias efficientio --keystorealiaspass "${{ env.JKS_PASSWORD }}" --androidreleasetype AAB --signing-type jarsigner
+        working-directory: console
+        env:
+          APP_FLAVOR: ${{ matrix.flavor }}
+      - name: Store bundle artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle-${{ matrix.flavor }}
+          path: console/android/app/build/outputs/bundle/${{ matrix.flavor }}Release/app-${{ matrix.flavor }}-release-signed.aab
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor:
+          [
+            efficientio,
+            peneder,
+            bmsystems,
+            tsg,
+            be,
+            dev,
+            powerlink,
+            smartsitepower,
+            effectas,
+          ]
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get bundle artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: bundle-${{ matrix.flavor }}
+      - id: string
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ matrix.flavor }}
+      - uses: efficientIO/keepass-to-environment@v1.2
+        with:
+          keepass-file-path: "keepass/secrets.kdbx"
+          keepass-master-password: ${{ secrets.KEEPASS_MASTER_PASSWORD }}
+          keepass-group-filter: "app/${{ steps.string.outputs.lowercase }}"
+      - name: Create service account json file
+        id: serviceAccountJsonFileDecode
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: "json_key"
+          fileDir: "."
+          encodedString: ${{ env[format('{0}_SERVICE_ACCOUNT_JSON_BASE64', steps.string.outputs.uppercase)] }}
+      - name: deploy to Play Store
+        run: fastlane supply --aab './app-${{ matrix.flavor }}-release-signed.aab' --json_key '${{ steps.serviceAccountJsonFileDecode.outputs.filePath }}' --package_name '${{ env[format('{0}_APP_NAME', steps.string.outputs.uppercase)] }}' --track 'internal' --release_status 'draft'

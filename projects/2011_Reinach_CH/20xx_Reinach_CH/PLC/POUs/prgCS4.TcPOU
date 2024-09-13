@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS4" Id="{b8e112b4-dd70-48f4-91a0-dab81f101013}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS4
+VAR
+	fbApliT					: FB_ECS_Alpitronic_Hypercharger;
+	
+	bSManualyOn_DC			: BOOL;												//{#lynus.ag#()}
+	bEnabled					: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerDC	: BYTE;												//{#lynus.ag#()}
+	bySMinPowerECSDC			: BYTE;												//{#lynus.ag#()}
+	byErrorWarningDC			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotalDC1				: LREAL;											//{#lynus.ag#()}
+	lrPowerDC1_S1				: LREAL;											//{#lynus.ag#()}
+	lrPowerDC1_S2				: LREAL;											//{#lynus.ag#()}
+	lrPowerDC1_S3				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMinDC1_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMinDC1_S2	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMinDC1_S3	: REAL;												//{#lynus.ag#()}
+	rTargetPowerDC1				: REAL;												//{#lynus.ag#()}
+	dwSOCCarDC1_S1				: DWORD;											//{#lynus.ag#()}
+	dwSOCCarDC1_S2				: DWORD;											//{#lynus.ag#()}
+	wStateDC1_S1				: WORD;												//{#lynus.ag#()}
+	wStateDC1_S2				: WORD;												//{#lynus.ag#()}
+	wStateDC1_S3				: WORD;												//{#lynus.ag#()}
+	lrEnergySessionDC1_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySessionDC1_S2		: LREAL;											//{#lynus.ag#()}
+	lrEnergySessionDC1_S3		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyDC1			: LREAL;											//{#lynus.ag#()}
+	bCarConnected_DC1			: BOOL;												//{#lynus.ag#()}
+	
+END_VAR
+VAR PERSISTENT
+	bEnableDC1					: BOOL;												//{#lynus.ag#()}
+	bManualyOnDC				: BOOL;												//{#lynus.ag#()}
+	byMinPowerDC1				: BYTE;												//{#lynus.ag#()}
+	byManualyTargetPowerDC	: BYTE;												//{#lynus.ag#()}
+	byPrioDC1					: BYTE;												//{#lynus.ag#()}
+	bySOCEnableDC1				: BYTE;												//{#lynus.ag#()}
+	bySOCDisableDC1				: BYTE;												//{#lynus.ag#()}
+	rMaxPowerDC1				: REAL;												//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Manual Power
+fbApliT.stSetupECS.bManualyOn := bManualyOnDC;
+fbApliT.stSetupECS.byManualyTargetPower := byManualyTargetPowerDC;
+fbApliT.stSetupECS.byPriority := byPrioDC1;
+fbApliT.stSetupECS.byEnableSOC := bySOCEnableDC1;
+fbApliT.stSetupECS.byDisableSOC := bySOCDisableDC1;
+fbApliT.stSetupECS.rMaxPower := rMaxPowerDC1;
+fbApliT.stSetupECS.byCSMinPower := byMinPowerDC1;	
+	
+fbApliT(
+	bEnable:= bEnableDC1, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.24', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_DC := fbApliT.stDataECS.bSManualyOn;
+bySManualyTargetPowerDC := fbApliT.stDataECS.bySManualyTargetPower;
+byErrorWarningDC := fbApliT.stDataECS.byErrorWarning;
+lrPowerTotalDC1 := fbApliT.stDataECS.lrTotalPower;
+lrPowerDC1_S1 :=  fbApliT.stDataECS.arrSocketPower[1];
+lrPowerDC1_S2 :=  fbApliT.stDataECS.arrSocketPower[2];
+lrPowerDC1_S3 := fbApliT.stDataECS.arrSocketPower[3];	 	
+rChargingTimeInMinDC1_S1 := fbApliT.stDataECS.arrChargingTimeInMin[1];	
+rChargingTimeInMinDC1_S2 := fbApliT.stDataECS.arrChargingTimeInMin[2];
+rChargingTimeInMinDC1_S3 := fbApliT.stDataECS.arrChargingTimeInMin[3];
+dwSOCCarDC1_S1 := fbApliT.stDataECS.arrSocketSOCCar[1]; 
+dwSOCCarDC1_S2 := fbApliT.stDataECS.arrSocketSOCCar[2]; 	
+wStateDC1_S1 := fbApliT.stDataECS.arrSocketStateECS[1];
+wStateDC1_S2 := fbApliT.stDataECS.arrSocketStateECS[2];
+wStateDC1_S3 := fbApliT.stDataECS.arrSocketStateECS[3];
+lrEnergySessionDC1_S1 := fbApliT.stDataECS.arrSocketEnergySession[1];
+lrEnergySessionDC1_S2 := fbApliT.stDataECS.arrSocketEnergySession[2];
+lrEnergySessionDC1_S3 := fbApliT.stDataECS.arrSocketEnergySession[3];
+lrTotalEnergyDC1 := fbApliT.stDataECS.lrTotalCounterEnergy_Consumption;
+bySMinPowerECSDC := fbApliT.stDataECS.bySCSMinPower;
+rTargetPowerDC1 := fbApliT.stDataECS.rTargetPower;
+bEnabled := fbApliT.stDataECS.bEnabled;
+
+bCarConnected_DC1 := fbApliT.stDataECS.bCarConnected;			
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS4">
+      <LineId Id="29" Count="2" />
+      <LineId Id="75" Count="4" />
+      <LineId Id="32" Count="11" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="46" Count="4" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="53" Count="3" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="160" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

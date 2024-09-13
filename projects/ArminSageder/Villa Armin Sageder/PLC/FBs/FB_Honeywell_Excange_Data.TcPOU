@@ -1,0 +1,391 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Honeywell_Excange_Data" Id="{ced7920e-4b69-4b3c-a144-293f72a415c1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Honeywell_Excange_Data
+VAR_INPUT
+	bEnable							: BOOL;					//Enable the Function
+	byUnitID						: BYTE;					//Unit ID fromt the Honeywell controller (0 to 255)		
+	rTargetPowerEHEH01_1			: REAL;					//Target power for the EHE H01_1 to send to the Honeywell controller (Scalefactor is * 10) 										
+	rTargetPowerEHEH01_2			: REAL;					//Target power for the EHE H01_2 to send to the Honeywell controller (Scalefactor is * 10)
+	rTargetPowerEHEH01_3			: REAL;					//Target power for the EHE H01_3 to send to the Honeywell controller (Scalefactor is * 10)
+	rTargetPowerEHEH08_1			: REAL;					//Target power for the EHE H08_1 to send to the Honeywell controller (Only to show on the internal house visualization) (Scalefactor is * 10)
+	rTargetPowerEHEH08_2			: REAL;					//Target power for the EHE H08_2 to send to the Honeywell controller (Only to show on the internal house visualization) (Scalefactor is * 10)
+	rTargetPowerEHEH09_1			: REAL;					//Target power for the EHE H09_1 to send to the Honeywell controller (Only to show on the internal house visualization) (Scalefactor is * 10)
+	sIPAdress						: STRING(15);			//IP Adress from the Honeywell controller
+END_VAR
+VAR_OUTPUT
+	bErrorTemp_H01_Top				: BOOL;					//True, when this Temp. senor has a error 
+	bErrorTemp_H01_Below			: BOOL;					//True, when this Temp. senor has a error 
+	bErrorTemp_H08_Top				: BOOL;					//True, when this Temp. senor has a error 
+	bErrorTemp_H08_Below			: BOOL;					//True, when this Temp. senor has a error 
+	bErrorTemp_H09_WW				: BOOL;					//True, when this Temp. senor has a error 
+	bErrorFunction					: BOOL;					//Modbus TCP Error or Timout Error
+	dwHeatingMeterHouse				: DWORD;				//Heating Meter value House in kWh
+	dwHeatingMeterStable			: DWORD;				//Heating Meter value Stable in kWh
+	rBufferTemp_H01_Top				: REAL;					//Temp. Value from this sensor (Scalfactor is / 10)
+	rBufferTemp_H01_Below			: REAL;					//Temp. Value from this sensor (Scalfactor is / 10)
+	rBufferTemp_H08_Top				: REAL;					//Temp. Value from this sensor (Scalfactor is / 10)
+	rBufferTemp_H08_Below			: REAL;					//Temp. Value from this sensor (Scalfactor is / 10)
+	rBufferTemp_H09_WW				: REAL;					//Temp. Value from this sensor (Scalfactor is / 10)
+	dwWaterMeterMain1				: DWORD;				//Water Meter value Main in m3
+	dwWaterMeterService1			: DWORD;				//Water Meter value Service in m3
+	dwWaterMeterStable1				: DWORD;				//Water Meter value Service in m3
+	dwElectricMeterCounter			: DWORD;				//Electric Meter Counter value in kWh
+	dwElectricMeterPowerRaw			: DWORD;				//Electric Meter Power value in W
+	dwElectricMeterPower			: LREAL;				//Electric Meter Power value in kW
+END_VAR
+VAR
+	fbMBRead_FC4					: FB_MBReadInputRegs;	//Modbus Read Function (FC4)
+	fbMBWrite_FC16					: FB_MBWriteRegs;		//Modbus Write Function (FC16)
+	timDelay						: TON;					//Timer for Delay between Request
+	timTimeout						: TON;					//Timer for Timeout
+	timHB							: TON;					//Timer HB between Lynus and Honeywell
+	FPEnable						: R_TRIG;				//Internal positive Edge
+	FPError_FC_4					: R_TRIG;				//Internal positive Edge
+	FPError_FC_16					: R_TRIG;				//Internal positive Edge
+	fbConvert						: FB_CV_WORD_TO_DWORD;	//Convert 2 Word in Dword
+	arrBuffer_FC4					: ARRAY[1..14] OF WORD;	//Buffer with Data from FC4
+	arrBuffer_FC16					: ARRAY[1..7] OF WORD;	//Buffer with Data from FC16
+	byHBCounter						: BYTE;					//HB counter between Lynus and Honeywell.
+	iStateModbusRead				: INT;					//State variable for Statemachine
+	iStateModbusWrite				: INT;					//State variable for Statemachine
+	iStateModbusError				: INT;					//State variable for Statemachine
+	iStateModbus_CP					: INT;					//Compare State variable
+END_VAR
+	
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Updated : M.Schwarzmann
+//Date : 11.07.2022
+//Version : 1.0.0.5
+
+//With this Functionblock is possible to communicate with the Honeywell Controller via Modbus TCP
+//Lynus send the target power for the Electric heating Elements to the Honeywell controller that this can controll it. 
+//From the Honeywell Controller we receive the temperature values from each Buffer 
+//The Port is 12000 on this project, not modbus typically 502
+
+//changes
+//1.0.0.1 : added Water-Meters (Reg: 19, 21), Electric-Meter (Reg: 23, 25)
+//1.0.0.2 : added W to kW conversion for dwElectricMeterPower
+//1.0.0.3 : changed Variable dwElectricMeterPower from Type REAL to LREAL
+//1.0.0.4 : re-named Variables dwWaterMeterMain, dwWaterMeterService
+//1.0.0.5 : added Water-Meter (Reg: 27)
+
+
+(*------------------------------------------------------------------------------------------State Machine Read---------------------------------------------------------------------------------------------*)
+
+//Start the Statemachine
+FPEnable(CLK:= bEnable, Q=> );
+	IF (FPEnable.Q AND iStateModbusRead = 0 AND iStateModbusRead = 0 AND iStateModbusError = 0) THEN 
+		iStateModbusRead := 1; 
+	END_IF
+		IF NOT bEnable THEN iStateModbusRead := 0; iStateModbusWrite := 0; iStateModbusError := 0; END_IF
+
+//Timer for delay
+timDelay(IN:= , PT:= T#250MS, Q=> , ET=> );	
+
+//Timer for Timeout in Statemachine
+IF (iStateModbusRead > 0 AND iStateModbusRead <= 4 AND iStateModbusRead = iStateModbus_CP) OR
+		(iStateModbusWrite > 0 AND iStateModbusWrite <= 1 AND iStateModbusWrite = iStateModbus_CP) THEN
+			timTimeout.IN := TRUE;
+ELSE	
+			timTimeout.IN := FALSE;
+END_IF 
+	IF iStateModbusRead = 0 AND iStateModbusWrite = 0 THEN timTimeout.IN := FALSE; END_IF
+		timTimeout(IN:= , PT:= T#20S, Q=> , ET=> );
+
+//HB between Lynus and Honeywell
+//Switch every Second between 0 and 1
+timHB(IN:= NOT timHB.Q, PT:= T#1M, Q=> , ET=> );
+	IF timHB.Q THEN byHBCounter := byHBCounter + 1; END_IF
+		IF byHBCounter >= 2 THEN byHBCounter := 0; END_IF
+		
+CASE iStateModbusRead OF
+	
+	0://Init State
+		rBufferTemp_H01_Top := 0;
+			rBufferTemp_H01_Below := 0;
+				rBufferTemp_H08_Top := 0;
+					rBufferTemp_H08_Below := 0;
+						rBufferTemp_H09_WW := 0;	
+
+		fbMBRead_FC4.bExecute := FALSE;
+			fbMBWrite_FC16.bExecute := FALSE;	
+			
+	1://Read out all Temperature values
+		iStateModbus_CP := iStateModbusRead;
+	
+		//Reset Write
+		fbMBWrite_FC16.bExecute := FALSE;
+			arrBuffer_FC16[1] := 0; arrBuffer_FC16[2] := 0; arrBuffer_FC16[3] := 0; arrBuffer_FC16[4] := 0;
+					arrBuffer_FC16[5] := 0; arrBuffer_FC16[6] := 0; arrBuffer_FC16[7] := 0;
+					
+		//Start Read
+		fbMBRead_FC4.nQuantity := 5;
+			fbMBRead_FC4.nMBAddr := 0;
+				fbMBRead_FC4.bExecute := TRUE;	
+				
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//BufferTemp_H01_Top
+			rBufferTemp_H01_Top := WORD_TO_REAL(arrBuffer_FC4[1]) / 10; 	
+			//BufferTemp_H01_Below
+			rBufferTemp_H01_Below := WORD_TO_REAL(arrBuffer_FC4[2]) / 10; 
+			//BufferTemp_H08_Top
+			rBufferTemp_H08_Top := WORD_TO_REAL(arrBuffer_FC4[3]) / 10;  
+			//BufferTemp_H08_Below
+			rBufferTemp_H08_Below := WORD_TO_REAL(arrBuffer_FC4[4]) / 10;  
+			//BufferTemp_H09_WW
+			rBufferTemp_H09_WW := WORD_TO_REAL(arrBuffer_FC4[5]) / 10; 
+				//Go to the Next Step
+				fbMBRead_FC4.bExecute := FALSE;
+					timDelay.IN := FALSE;		
+						iStateModbusRead := 2;
+		END_IF
+			
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+	2://Read out all Temperature states
+		iStateModbus_CP := iStateModbusRead;
+	
+		//Start Read
+		fbMBRead_FC4.nQuantity := 5;
+			fbMBRead_FC4.nMBAddr := 100;
+				fbMBRead_FC4.bExecute := TRUE;	
+				
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//ErrorTemp_H01_Top
+			bErrorTemp_H01_Top := WORD_TO_BOOL(arrBuffer_FC4[1]); 	
+			//ErrorTemp_H01_Below
+			bErrorTemp_H01_Below := WORD_TO_BOOL(arrBuffer_FC4[2]); 
+			//ErrorTemp_H08_Top
+			bErrorTemp_H08_Top := WORD_TO_BOOL(arrBuffer_FC4[3]);  
+			//ErrorTemp_H08_Below
+			bErrorTemp_H08_Below := WORD_TO_BOOL(arrBuffer_FC4[4]);  
+			//ErrorTemp_H09_WW
+			bErrorTemp_H09_WW := WORD_TO_BOOL(arrBuffer_FC4[5]); 
+				//Go to the Next Step
+				fbMBRead_FC4.bExecute := FALSE;
+					timDelay.IN := FALSE;		
+						iStateModbusRead := 3;
+		END_IF
+			
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+	3://Heating Meter Infos House and Stable, Water Meter Infos Main, Service and Stable, Electric Meter with Power
+		iStateModbus_CP := iStateModbusRead;
+	
+		//Start Read
+		fbMBRead_FC4.nQuantity := 14;
+			fbMBRead_FC4.nMBAddr := 15;
+				fbMBRead_FC4.bExecute := TRUE;	
+				
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//Heating Meter Data House
+			fbConvert(wInputValue_1:= arrBuffer_FC4[1], wInputValue_2:= arrBuffer_FC4[2], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> dwHeatingMeterHouse);
+			//Heating Meter Data Stable
+			fbConvert(wInputValue_1:= arrBuffer_FC4[3], wInputValue_2:= arrBuffer_FC4[4], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> dwHeatingMeterStable);
+            //Water Meter Data Main-Water
+			fbConvert(wInputValue_1:= arrBuffer_FC4[5], wInputValue_2:= arrBuffer_FC4[6], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> dwWaterMeterMain1);
+            //Water Meter Data Service-Water
+			fbConvert(wInputValue_1:= arrBuffer_FC4[7], wInputValue_2:= arrBuffer_FC4[8], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> dwWaterMeterService1);
+            //Electric Meter Data Counter
+			fbConvert(wInputValue_1:= arrBuffer_FC4[9], wInputValue_2:= arrBuffer_FC4[10], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> dwElectricMeterCounter);
+            //Electric Meter Data Power
+			fbConvert(wInputValue_1:= arrBuffer_FC4[11], wInputValue_2:= arrBuffer_FC4[12], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> dwElectricMeterPowerRaw);
+			dwElectricMeterPower := DWORD_TO_REAL(dwElectricMeterPowerRaw) / 1000;
+			//Water Meter Data Stable-Water
+			fbConvert(wInputValue_1:= arrBuffer_FC4[13], wInputValue_2:= arrBuffer_FC4[14], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> dwWaterMeterStable1);	
+				//Go to the Next Step
+				fbMBRead_FC4.bExecute := FALSE;
+					timDelay.IN := FALSE;		
+						iStateModbusRead := 4;
+		END_IF
+			
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+			
+	4://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+		
+			iStateModbusWrite := 1;
+				iStateModbusRead := - 1;	
+				
+		//Timeout
+		IF timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF	
+
+END_CASE
+
+
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+	
+CASE iStateModbusWrite OF	
+	
+	1://Write target Power for EHE and HB to the Honeywell controller
+		iStateModbus_CP := iStateModbusWrite;	
+		
+		fbMBWrite_FC16.nQuantity := 7;
+			fbMBWrite_FC16.nMBAddr := 0;
+				fbMBWrite_FC16.bExecute := TRUE;
+		
+		//Write Data in the Sendbuffer
+		arrBuffer_FC16[1] := BYTE_TO_WORD(byHBCounter);
+			arrBuffer_FC16[2] := REAL_TO_WORD((rTargetPowerEHEH01_1 * 10));
+		arrBuffer_FC16[3] := REAL_TO_WORD((rTargetPowerEHEH01_2 * 10)); 	
+			arrBuffer_FC16[4] := REAL_TO_WORD((rTargetPowerEHEH01_3 * 10));
+		arrBuffer_FC16[5] := REAL_TO_WORD((rTargetPowerEHEH08_1 * 10)); 
+			arrBuffer_FC16[6] := REAL_TO_WORD((rTargetPowerEHEH08_2 * 10)); 	
+		arrBuffer_FC16[7] := REAL_TO_WORD((rTargetPowerEHEH09_1 * 10));
+	
+		IF fbMBWrite_FC16.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		//Wait for Delay and then next step
+		IF NOT fbMBWrite_FC16.bBusy AND NOT fbMBWrite_FC16.bError AND timDelay.Q THEN
+			fbMBWrite_FC16.bExecute := FALSE;
+				timDelay.IN := FALSE;
+					bErrorFunction := FALSE; 
+						//Restart from new with the Read out part
+						iStateModbusRead := 1;
+							iStateModbusWrite := 0;
+		END_IF
+				
+		//Error or Timout
+		IF FPError_FC_16.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+
+END_CASE
+
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+			timDelay.IN := FALSE;
+				fbMBRead_FC4.bExecute := FALSE;
+					fbMBWrite_FC16.bExecute := FALSE;
+						bErrorFunction := TRUE;	
+							//Restart from new with the Read out part after an Error
+							iStateModbusRead := 1;	
+								iStateModbusError := 0;
+									iStateModbusWrite := 0;
+END_CASE
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC4(sIPAddr:= sIPAdress, nUnitID := byUnitID, nTCPPort:= 12000, cbLength:= SIZEOF(arrBuffer_FC4), pDestAddr:= ADR(arrBuffer_FC4), tTimeout:= T#10S );
+	FPError_FC_4(CLK:= fbMBRead_FC4.bError, Q=> );
+
+fbMBWrite_FC16(sIPAddr:= sIPAdress, nTCPPort:= 12000, nUnitID := byUnitID, cbLength:= SIZEOF(arrBuffer_FC16), pSrcAddr:= ADR(arrBuffer_FC16), tTimeout:= T#10S );
+	FPError_FC_16(CLK:= fbMBWrite_FC16.bError, Q=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Honeywell_Excange_Data">
+      <LineId Id="414" Count="12" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="615" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="667" Count="0" />
+      <LineId Id="40" Count="3" />
+      <LineId Id="47" Count="2" />
+      <LineId Id="54" Count="14" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="127" Count="1" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="135" Count="1" />
+      <LineId Id="142" Count="1" />
+      <LineId Id="138" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="145" Count="2" />
+      <LineId Id="149" Count="1" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="153" Count="2" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="164" Count="1" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="168" Count="4" />
+      <LineId Id="174" Count="2" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="159" Count="2" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="179" Count="2" />
+      <LineId Id="187" Count="27" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="427" Count="16" />
+      <LineId Id="445" Count="6" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="670" Count="0" />
+      <LineId Id="669" Count="0" />
+      <LineId Id="453" Count="7" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="217" Count="8" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="228" Count="2" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="251" Count="3" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="276" Count="2" />
+      <LineId Id="280" Count="2" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="257" Count="6" />
+      <LineId Id="265" Count="7" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="235" Count="13" />
+      <LineId Id="110" Count="1" />
+      <LineId Id="116" Count="5" />
+      <LineId Id="107" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

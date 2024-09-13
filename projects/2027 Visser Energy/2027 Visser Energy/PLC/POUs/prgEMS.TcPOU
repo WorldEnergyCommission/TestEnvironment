@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEMS" Id="{937cf1fb-36d6-4b36-ae78-9c84459f0478}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR PERSISTENT
+	byMaxDepthOfDischrgEPO		: BYTE;							//{#lynus.ag#()}
+	byPrioMinChrgBattSOCInEPO	: BYTE;							//{#lynus.ag#()}
+	byResChrgfromGridToBatt		: BYTE;							//{#lynus.ag#()}
+	byReserveSOCEPO				: BYTE;							//{#lynus.ag#()}
+	uiUpdateTime				: UINT;							//{#lynus.ag#()}
+	bEnableEMS					: BOOL;							//{#lynus.ag#()}
+	bEnableMainFuse				: BOOL;							//{#lynus.ag#()}
+	bAllowChrgFromGrid			: BOOL;							//{#lynus.ag#()}
+	rMainFuseCSEMS				: REAL;							//{#lynus.ag#()}
+	iOperationModeEMS			: INT;							//{#lynus.ag#()}
+END_VAR
+VAR
+	fbEMS						: FB_EMS_V2;
+	bIsEnableEMS				: BOOL;							//{#lynus.ag#()}
+	bStateAllowChrgFromGrid		: BOOL;							//{#lynus.ag#()}
+	bHPActivate					: BOOL;							//{#lynus.ag#()}
+	bControllingState			: BOOL;							//{#lynus.ag#()}
+	bSEnableMainFuse			: BOOL;							//{#lynus.ag#()}
+	iMessageEMS					: INT;							//{#lynus.ag#()}
+	rHeartbeatEMS				: REAL;							//{#lynus.ag#()}
+	rErrorWarningEMS			: REAL;							//{#lynus.ag#()}
+	rReadyEMS					: REAL;							//{#lynus.ag#()}
+	rNewBatteryPowerEMS			: REAL;							//{#lynus.ag#()}
+	time_PWCorrection: TIME := t#5s;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbEMS.stSetupEMS.bAllowChrgFromGrid := bAllowChrgFromGrid;
+fbEMS.stSetupEMS.byMaxDepthOfDischrgEPO := byMaxDepthOfDischrgEPO;
+fbEMS.stSetupEMS.byPrioChrgBattSOCInEPO := byPrioMinChrgBattSOCInEPO;
+fbEMS.stSetupEMS.byResChrgGridToBatt := byResChrgfromGridToBatt;
+fbEMS.stSetupEMS.byReserveSOCEPO := byReserveSOCEPO;
+fbEMS.stSizeMainFuseCS.rElSizeLine1 := rMainFuseCSEMS;
+fbEMS.stSetupEMS.uiUpdateTime := uiUpdateTime;
+fbEMS.stSetupEMS.bEnableMainFuseFunc := bEnableMainFuse;
+
+IF iOperationModeEMS = 0 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eAllOff;
+ELSIF iOperationModeEMS = 1 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eSelfConsumption;	
+ELSIF iOperationModeEMS = 2 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.ePeakLoadCapping;
+ELSIF iOperationModeEMS = 3 THEN fbEMS.eOperationMode := E_OperatingMode_EMS.eLoadManagement;			
+END_IF
+
+fbEMS(
+	bEnable:= bEnableEMS, 
+	tDelayPwrCorrectionECS:= time_PWCorrection	, //T#200MS, 
+	stNrOfEM_IN_ECS:= , 
+	stSizeMainFuseCS:= , 
+	stSetupEMS:= , 
+	eOperationMode:= , 
+	eSpeedModeBackendController:= E_SpeedModeBackendController_EMS.efast, 
+	eSpeedModeLocalController:= E_SpeedModeLocalController_EMS.efast,
+	bActivateHP:= bHPActivate, 
+	bControllingState:= bControllingState, 
+	rHeartbeat:= rHeartbeatEMS, 
+	rErrorWarning:= rErrorWarningEMS, 
+	rEnergyOptReady:= rReadyEMS, 
+	rNewBattPower:= rNewBatteryPowerEMS, 
+	eMessageEMS=> iMessageEMS, 
+	bStateEnable=> bIsEnableEMS, 
+	bStateAllowChrgFromGrid=> bStateAllowChrgFromGrid, 
+	bMissingPowerData=> , 
+	bSurplusAvailable=> , 
+	bSEnableMainFuseFunc=> bSEnableMainFuse, 
+	byProgress=> , 
+	uiState_OUT=> , 
+	diNrOfEMS_OUT=> , 
+	arrMinPrioReached=> , 
+	arrMaxPrioReached=> );]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="61" Count="6" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="68" Count="4" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="7" Count="7" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="16" Count="15" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

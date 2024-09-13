@@ -1,0 +1,205 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgBattery" Id="{a742e2b4-8e0c-4f86-960b-eaa67f503c17}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgBattery
+VAR PERSISTENT
+	bEnableBattery				: BOOL;							//{#lynus.ag#()}
+	bMaxChargerPower_Changeover	: BOOL;							//{#lynus.ag#()}
+	byPrioBattery				: BYTE;							//{#lynus.ag#()}
+	lrMaxCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	lrCounterBattProd			: LREAL;						//{#lynus.ag#()}
+	lrCounterBattCons			: LREAL;						//{#lynus.ag#()}
+	str_IP						: STRING(15):='10.11.90.140';
+	m_manual_LoadLimiting: BOOL :=TRUE;
+	real_Max_ChargePower: REAL := 30000;
+	by_Min_BatterySOC			: BYTE;							//{#lynus.ag#()}
+	by_Max_BatterySOC			: BYTE;							//{#lynus.ag#()}
+END_VAR
+VAR
+	fbBattery					: FB_Xelectrix_Powerbox_v2_2;
+	fbBattCounter				: FB_EnergyCounter;
+	bIsEnabledBattery			: BOOL;							//{#lynus.ag#()}
+	bResetBattery				: BOOL;							//{#lynus.ag#()}
+	bSResetBattery				: BOOL;							//{#lynus.ag#()}
+	byErrorWarningBattery		: BYTE;							//{#lynus.ag#()}
+	dwSOCBattery				: DWORD;						//{#lynus.ag#()}
+	rTargetPowerBattery			: REAL;							//{#lynus.ag#()}
+	lrPowerBattery				: LREAL;						//{#lynus.ag#()}
+	lrActualCapacityBattery		: LREAL;						//{#lynus.ag#()}
+	mtest: BOOL;
+	x: REAL;
+	byBatteryModbusError: BOOL;									//{#lynus.ag#()}
+	lrBatteryCons				: LREAL;							//{#lynus.ag#()}
+	lrBatteryProd				: LREAL;							//{#lynus.ag#()}
+	FB_Linear_MaxChargePower	: FB_LinearEquation;
+	FB_Ramp_Max_Charging_Power	: FB_RAMP;
+	FB_Linear_MaxChargePowerSOC	: FB_LinearEquation;
+	
+	real_Limit_MaxChargePower_SOC: REAL;							//{#lynus.ag#()}
+	real_Limit_MaxChargePower_Grid: REAL;							//{#lynus.ag#()}
+	by_S_Min_BatterySOC			: BYTE;							//{#lynus.ag#()}
+	by_S_Max_BatterySOC			: BYTE;							//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF mtest THEN
+	Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[1,1].rTargetPowerEMS:=x;
+END_IF
+fbBattery(
+	bEnable:= bEnableBattery, 
+	bActivateControl:=TRUE , 
+	byUnitID:= 1, 
+	byPriority:= byPrioBattery, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	lrMaxCapacityBattery:= lrMaxCapacityBattery, 
+	sIPAdress:= str_IP, 						// modify IP Adress
+	by_minDischargeSOC:= by_Min_BatterySOC, 
+	by_maxChargeSOC:= by_Max_BatterySOC, 
+	bReset:= bResetBattery, 
+	m_ManualSetpointEnable:= , 
+	i_SetpointPower_Manual_kW:= , 
+	m_ManualChargeDischargeMax:= m_manual_LoadLimiting, 
+	r_MaxChargePower_W:= real_Max_ChargePower, 
+	r_MaxDischargePower_W:= 80000, 
+	m_go_to_online:= , 
+	m_go_to_bypass:= , 
+	stDataXelectrix=> , 
+	stDataBatt=> , 
+	stDataBattInverter=> , 
+	stDataEMPower_Grid=> , 
+	stDataEMCounter_Grid=> , 
+	diNrOfBatt_OUT=> , 
+	diNrOfBattInverter_OUT=> , 
+	diNrOfEM_OUT_Grid=> , 
+	lrMaxCapacityBattery_OUT=> , 
+	iSetpointPower_Info=> , 
+	dw_BatterySOC_notZero=> , 
+	by_SminDischargeSOC=> by_S_Min_BatterySOC, 
+	by_SmaxChargeSOC=> by_S_Max_BatterySOC);
+(*fbBattery(
+	bEnable:= bEnableBattery, 
+	bActivateControl:=TRUE , 
+	byUnitID:= 1, 
+	byPriority:= byPrioBattery, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	lrMaxCapacityBattery:= lrMaxCapacityBattery, 
+	sIPAdress:= str_IP, 						// modify IP Adress
+	bReset:= bResetBattery, 
+	m_ManualSetpointEnable:= , 
+	i_SetpointPower_Manual_kW:= , 
+	m_ManualChargeDischargeMax:= m_manual_LoadLimiting, 
+	r_MaxChargePower_W:= real_Max_ChargePower, 
+	r_MaxDischargePower_W:= 80000, 
+	stDataXelectrix=> , 
+	stDataBatt=> , 
+	stDataBattInverter=> , 
+	stDataEMPower_Grid=> , 
+	stDataEMCounter_Grid=> , 
+	diNrOfBatt_OUT=> , 
+	diNrOfBattInverter_OUT=> , 
+	diNrOfEM_OUT_Grid=> , 
+	lrMaxCapacityBattery_OUT=> , 
+	iSetpointPower_Info=> );*)
+
+//Out
+bIsEnabledBattery := fbBattery.stDataBatt.bEnabled;
+bSResetBattery := fbBattery.stDataBattInverter.bStateReset;
+dwSOCBattery := fbBattery.stDataBatt.dwSOC;
+rTargetPowerBattery := fbBattery.stDataBattInverter.rTargetPower;
+lrPowerBattery := fbBattery.stDataBatt.lrPower;
+lrActualCapacityBattery := fbBattery.lrMaxCapacityBattery_OUT;	
+byErrorWarningBattery := fbBattery.stDataBatt.byErrorWarning;
+byBatteryModbusError := fbBattery.stDataXelectrix.eErrorState = 1;
+lrBatteryCons := fbBattery.stDataBatt.lrPowerConsumption;
+lrBatteryProd := fbBattery.stDataBatt.lrPowerProduction;				
+						
+// EnergyCounter
+fbBattCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerBattery, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbBattCounter.lrTotalCounterEnergy_Production > lrCounterBattProd THEN  	
+	lrCounterBattProd := fbBattCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+IF fbBattCounter.lrTotalCounterEnergy_Consumption > lrCounterBattCons THEN  	
+	lrCounterBattCons := fbBattCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+
+
+FB_Linear_MaxChargePower(
+	x1:= -40, 
+	y1:= UDINT_TO_REAL(SEL(bMaxChargerPower_Changeover,30000,80000)), 
+	x2:= -70, 
+	y2:= 80000, 
+	x:= LREAL_TO_REAL(prgGrid.lrPowerGrid), 
+	y=>  );
+FB_Linear_MaxChargePowerSOC(
+	x1:= 80, 
+	y1:= 80000, 
+	x2:= 90, 
+	y2:= 15000, 
+	x:= DWORD_TO_REAL(dwSOCBattery), 
+	y=>  );
+real_Limit_MaxChargePower_Grid :=	LIMIT(30000,FB_Linear_MaxChargePower.y,80000);
+real_Limit_MaxChargePower_SOC  := 	LIMIT(15000,FB_Linear_MaxChargePowerSOC.y,80000);
+	
+// 	realRampInput:= LIMIT(15000,FB_Linear_MaxChargePower.y,LIMIT(15000,FB_Linear_MaxChargePowerSOC.y,80000)),
+
+FB_Ramp_Max_Charging_Power(
+	realRampInput:= MIN(real_Limit_MaxChargePower_SOC,real_Limit_MaxChargePower_Grid),
+	mEnableRamp:= TRUE, 
+	mZeroOutput:= FALSE, 
+	realRampSpeed:= 100, 
+	realRampSampleTime:= 0.02 , 
+	realEqualize:= 0.1, 
+	realRampOutput=> real_Max_ChargePower , 
+	mRampSaturised=> );
+
+real_Max_ChargePower := LIMIT(15000,real_Max_ChargePower,80000);
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgBattery">
+      <LineId Id="181" Count="1" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="528" Count="5" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="509" Count="1" />
+      <LineId Id="536" Count="2" />
+      <LineId Id="514" Count="13" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="237" Count="3" />
+      <LineId Id="260" Count="4" />
+      <LineId Id="246" Count="13" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="133" Count="8" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="142" Count="17" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="326" Count="7" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="407" Count="6" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="455" Count="1" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="370" Count="6" />
+      <LineId Id="367" Count="1" />
+      <LineId Id="334" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

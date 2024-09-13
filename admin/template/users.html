@@ -1,0 +1,130 @@
+{{define "users"}} {{template "header"}}
+<div class="row">
+  <div class="col-7"><h2>{{len .users}} Users</h2></div>
+  <div class="col-2">
+    <div class="form-check">
+      <label class="form-check-label" for="flexCheckDefault">
+        Only show disabled
+      </label>
+      <input
+        class="form-check-input"
+        id="flexCheckDefault"
+        oninput="disabledFilter(this)"
+        type="checkbox"
+        value=""
+      />
+    </div>
+  </div>
+  <div class="col-3">
+    <input
+      class="form-control"
+      id="search"
+      oninput="filter(this)"
+      placeholder="Filter..."
+      type="search"
+    />
+  </div>
+  <div class="col-12">
+    <div class="card">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Projects</th>
+            <th scope="col">Realm</th>
+            <th scope="col">Registered</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range $index, $user := .users}}
+          <tr>
+            {{if $user.Enabled}}
+            <td>
+              <a href="/users/{{$user.ID}}?realm={{$user.Realm}}"
+                >{{$user.FirstName}} {{$user.LastName}}</a
+              >
+            </td>
+            {{else}}
+            <td dis="true">
+              <a
+                href="/users/{{$user.ID}}?realm={{$user.Realm}}"
+                style="color: red !important"
+                >{{$user.FirstName}} {{$user.LastName}}</a
+              >
+            </td>
+            {{end}}
+            <td>{{$user.Email}}</td>
+            <td>{{$user.Projects}}</td>
+            <td>{{$user.Realm}}</td>
+            <td>{{$user.CreatedAt.Format "02/01/2006"}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-12 mt-3"><h2>Report</h2></div>
+  <div class="col-2">
+    <input
+      class="form-control"
+      id="month"
+      max='{{.now.Format "2006-01"}}'
+      type="month"
+      value='{{.now.Format "2006-01"}}'
+    />
+  </div>
+  <div class="col-2">
+    <a class="btn btn-primary" onclick="report()" target="_blank"
+      >Create Report</a
+    >
+  </div>
+</div>
+
+<script>
+  let disabled = false;
+
+  const disabledFilter = (event) => {
+    disabled = event.checked;
+
+    filter({ value: document.getElementById("search").value });
+  };
+
+  const filter = (event) => {
+    const query = event.value.toLowerCase();
+    let name, email, realm;
+
+    document.querySelectorAll("tbody>tr").forEach((el) => {
+      name = el.children[0].children[0].innerHTML.toLowerCase();
+      email = el.children[1].innerHTML.toLowerCase();
+      realm = el.children[3].innerHTML.toLowerCase();
+      isDisabled = el.children[0].hasAttribute("dis");
+
+      if (disabled) {
+        el.style.display =
+          isDisabled &&
+          (email.includes(query) ||
+            name.includes(query) ||
+            realm.includes(query))
+            ? "table-row"
+            : "none";
+      } else {
+        el.style.display =
+          email.includes(query) || name.includes(query) || realm.includes(query)
+            ? "table-row"
+            : "none";
+      }
+    });
+  };
+
+  const report = () => {
+    const month = document.querySelector("#month").value;
+    if (month === "") {
+      alert("invalid month");
+      return;
+    }
+
+    window.open("/report?month=" + month);
+  };
+</script>
+{{end}}

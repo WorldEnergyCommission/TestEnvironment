@@ -1,0 +1,31 @@
+@mixin scroll {
+  @supports not selector(::-webkit-scrollbar) {
+    // firefox
+    scrollbar-color: rgb(var(--v-theme-accent-base) var(--v-secondary));
+    scrollbar-width: thin;
+  }
+  // chrome
+  &::-webkit-scrollbar {
+    @media all and (min-width: 800px) {
+      width: 4px;
+    }
+
+    @media all and (max-width: 800px) {
+      width: 2px;
+    }
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgb(var(--v-theme-accent));
+    border-radius: 8px;
+  }
+  &::-webkit-scrollbar-track-piece {
+    background: rgb(var(--v-theme-secondary));
+  }
+}
+
+@mixin mediumText {
+  font-size: 20px;
+  @media all and (min-width: 1260px) and (max-width: 1300px) {
+    font-size: 15px;
+  }
+}

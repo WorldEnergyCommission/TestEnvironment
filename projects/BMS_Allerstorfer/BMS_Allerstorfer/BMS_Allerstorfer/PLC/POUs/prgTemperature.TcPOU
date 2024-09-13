@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgTemperature" Id="{23343f90-bbc1-4b2a-beec-32e126cd4db2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgTemperature
+VAR
+	
+	fb_Config			: FB_KL320xConfig;
+	stInData_1   AT%I*		: ST_KL320xInData;
+	stOutData_1  AT%Q*		: ST_KL320xOutData;
+	stInData_2   AT%I*		: ST_KL320xInData;
+	stOutData_2  AT%Q*		: ST_KL320xOutData;
+	stInData_3   AT%I*		: ST_KL320xInData;
+	stOutData_3  AT%Q*		: ST_KL320xOutData;
+	stInData_4   AT%I*		: ST_KL320xInData;
+	stOutData_4  AT%Q*		: ST_KL320xOutData;
+	stInData_temp	: ST_KL320xInData;
+	stOutData_temp	: ST_KL320xOutData;
+
+	x: INT;
+	real_Temp_BoilerOben	:REAL;				//{#lynus.ag#()}
+	real_Temp_BoilerMitte	:REAL;				//{#lynus.ag#()}
+	real_Temp_BoilerUnten	:REAL;				//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+
+real_Temp_BoilerOben  :=  INT_TO_REAL(stInData_1.iDataIn)/10;
+real_Temp_BoilerMitte :=  INT_TO_REAL(stInData_2.iDataIn)/10;
+real_Temp_BoilerUnten :=  INT_TO_REAL(stInData_3.iDataIn)/10;
+
+
+CASE x OF 
+	0:
+		fb_Config.bConfigurate := FALSE;
+	1:
+		stInData_temp  := stInData_1;
+		stOutData_1 	:=stOutData_temp ;
+	2:
+		stInData_temp  := stInData_2;
+		stOutData_2 	:=stOutData_temp ;
+	3:
+		stInData_temp  := stInData_3;
+		stOutData_3 	:=stOutData_temp ;
+	4:
+		stInData_temp  := stInData_4;
+		stOutData_4 	:=stOutData_temp ;
+	
+END_CASE
+// set iSetSensorType = 2 for PT1000
+fb_Config(
+	bConfigurate:= , 
+	bReadConfig:= , 
+	iSetSensorType:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	iErrorId=> , 
+	iState=> , 
+	iDataIn=> , 
+	iTerminalType=> , 
+	iSpecialType=> , 
+	iFirmwareVersion=> , 
+	sDescription=> , 
+	sSensorType=> , 
+	bTwoWiredConnection=> , 
+	stInData:= stInData_temp , 
+	stOutData:= stOutData_temp);]]></ST>
+    </Implementation>
+    <LineIds Name="prgTemperature">
+      <LineId Id="63" Count="4" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="15" Count="16" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

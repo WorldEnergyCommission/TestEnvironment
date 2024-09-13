@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="E_MBRTUMaster_ReadWriteMode" Id="{71b87018-0a69-411d-bb4b-ab3ea56de44e}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'conditionalshow'}
+TYPE E_MBRTUMaster_ReadWriteMode :
+(
+	{attribute 'hide'}
+	eModbusRTUMaster_NoMode := 0,
+	{attribute 'hide'}
+	eModbusRTUMaster_ReadCoils	:= 1,									//Read binary Outputs
+	{attribute 'hide'}
+	eModbusRTUMaster_ReadInputStatus	:= 2,							//Read binary Inputs
+	{attribute 'hide'}
+	eModbusRTUMaster_ReadRegs	:= 3,									//Read Output Registers
+	{attribute 'hide'}
+	eModbusRTUMaster_ReadInputRegs	:= 4,								//Read Input Registers
+	{attribute 'hide'}
+	eModbusRTUMaster_WriteSingleCoil	:= 5,							//Write 1 binary Outputs
+	{attribute 'hide'}
+	eModbusRTUMaster_WriteSingleRegister	:= 6,						//Write a single Register
+	{attribute 'hide'}
+	eModbusRTUMaster_Diagnostics	:= 8,								//Send a Diagnostic request
+	{attribute 'hide'}
+	eModbusRTUMaster_WriteMultipleCoils	:= 15,							//Write more binary Outputs 
+	{attribute 'hide'}
+	eModbusRTUMaster_WriteRegs	:= 16									//Write more then one Register
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComEffIO
+VAR
+	fbCom		: FB_MqttCommunicator_V2;
+	f_Trig_HB: f_trig;
+	stringArray_Last_HB: ARRAY[0..50] OF STRING(30);
+	intCount: INT;
+	time_Temp: TIME;
+	time_HB: TIME:= T#15S;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCom(
+	bConnect:= TRUE, 
+	sUserName:= 'b472a324-06e3-4d07-96cf-574b1847d8ff', 
+	sUserPassword:= '5b687dd8-7c3c-4e3c-8272-e8ed6dc08177', 
+	strAuthKey:= 'EIO08031879806', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk, 
+	time_HeartBeat_sec := time_HB,
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+	
+f_Trig_HB(CLK :=  fbCom.bHBSending);
+
+
+
+prg_SystemTime();
+
+IF f_Trig_HB.Q THEN
+	stringArray_Last_HB[intCount] := prg_SystemTime.stringSystemTime_ms;
+	intCount := intCount+1;
+	IF intCount>50 OR intCount<0 THEN
+		intCount:=0;
+	END_IF
+	stringArray_Last_HB[intCount] := '';
+END_IF
+
+time_Temp := fbCom.fbTimerHB.ET;
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgComEffIO">
+      <LineId Id="8" Count="4" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="14" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="6" />
+      <LineId Id="33" Count="1" />
+      <LineId Id="505" Count="2" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="143" Count="1" />
+      <LineId Id="500" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="100" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

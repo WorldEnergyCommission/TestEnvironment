@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgCS_H1" Id="{27130876-d1d0-462d-839b-f2190702b79e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS_H1
+VAR PERSISTENT
+	bEnabledCS				: BOOL;									//{#lynus.ag#()}
+	byPrioCS				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS				: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS				: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS				: REAL;									//{#lynus.ag#()}
+END_VAR
+VAR
+	fbCS					: FB_ECS_Alpitronic_Hypercharger;
+	bIsEnabledCS			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS			: REAL;									//{#lynus.ag#()}
+	bCarConnected			: BOOL;									//{#lynus.ag#()}
+	rChrgTime				: REAL;									//{#lynus.ag#()}
+	lrPowerCS				: LREAL;								//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCS.stSetupECS.byDisableSOC := bySOC_D_CS;
+	fbCS.stSetupECS.byEnableSOC := bySOC_E_CS;
+		fbCS.stSetupECS.byPriority := byPrioCS;
+			fbCS.stSetupECS.rMaxPower := rMaxPowerCS;
+				fbCS.stSetupECS.byCSMinPower := byMinPowerCS;
+
+fbCS(
+	bEnable:= bEnabledCS, 
+	bPowerDataInvers:= , 
+	byUnitID:= 1,									// Always 1 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.101', 						// modify IP Adress
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bIsEnabledCS := fbCS.stDataECS.bEnabled;
+	byStateMinPowerCS := fbCS.stDataECS.bySCSMinPower;
+		rTargetPowerCS := fbCS.stDataECS.rTargetPower;	
+			byErrorWarningCS := fbCS.stDataECS.byErrorWarning;
+				bCarConnected := fbCS.stDataECS.bCarConnected;
+					rChrgTime := fbCS.stDataECS.arrChargingTimeInMin[1];
+						lrPowerCS := fbCS.stDataECS.lrTotalPower;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS_H1">
+      <LineId Id="3" Count="22" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

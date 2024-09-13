@@ -1,0 +1,1101 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.22">
+	<DataTypes>
+		<DataType>
+			<Name GUID="{3EA490A1-C865-0BE4-748D-4EC0058E4941}" Namespace="Lynus_Energy_ModbusRTU.Tc2_ModbusRTU" AutoDeleteType="true">MB_KL6inData22B</Name>
+			<BitSize>192</BitSize>
+			<SubItem>
+				<Name>Status</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
+				<BitSize>16</BitSize>
+				<BitOffs>0</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>D</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
+				<ArrayInfo>
+					<LBound>0</LBound>
+					<Elements>22</Elements>
+				</ArrayInfo>
+				<BitSize>176</BitSize>
+				<BitOffs>16</BitOffs>
+			</SubItem>
+			<Properties>
+				<Property>
+					<Name>hide</Name>
+				</Property>
+			</Properties>
+		</DataType>
+		<DataType>
+			<Name GUID="{40CD2FAE-C029-488A-AA05-CB85B29BAE13}" Namespace="Lynus_Energy_ModbusRTU.Tc2_ModbusRTU" AutoDeleteType="true">MB_KL6outData22B</Name>
+			<BitSize>192</BitSize>
+			<SubItem>
+				<Name>Ctrl</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
+				<BitSize>16</BitSize>
+				<BitOffs>0</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>D</Name>
+				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
+				<ArrayInfo>
+					<LBound>0</LBound>
+					<Elements>22</Elements>
+				</ArrayInfo>
+				<BitSize>176</BitSize>
+				<BitOffs>16</BitOffs>
+			</SubItem>
+			<Properties>
+				<Property>
+					<Name>hide</Name>
+				</Property>
+			</Properties>
+		</DataType>
+		<DataType>
+			<Name GUID="{09028F86-A747-EA43-57E9-969912315B28}" IecBaseType="true" AutoDeleteType="true">ARRAY [1..24] OF BYTE</Name>
+			<BitSize>192</BitSize>
+			<BaseType GUID="{18071995-0000-0000-0000-000000000001}">BYTE</BaseType>
+			<ArrayInfo>
+				<LBound>1</LBound>
+				<Elements>24</Elements>
+			</ArrayInfo>
+		</DataType>
+	</DataTypes>
+	<Project ProjectGUID="{7BFBADDE-1478-4552-8FE1-32FEB17F89FE}" TargetNetId="5.94.123.206.1.1" AutoPrioManagement="true" ShowHideConfigurations="#x106">
+		<System>
+			<Settings RouterMemory="67108864">
+				<IoIdleTask Priority="4"/>
+			</Settings>
+			<Licenses>
+				<Target BkhfOrder="00635614">
+					<ManualSelect>{6952449D-F68C-49A2-ADE4-8639D85B33A4}</ManualSelect>
+				</Target>
+			</Licenses>
+			<Tasks>
+				<Task Id="4" Priority="6" CycleTime="50000" AmsPort="351" AdtTasks="true">
+					<Name>Fast Task</Name>
+				</Task>
+				<Task Id="5" Priority="8" CycleTime="100000" AmsPort="352" AdtTasks="true">
+					<Name>Middle Task</Name>
+				</Task>
+				<Task Id="6" Priority="10" CycleTime="200000" AmsPort="353" AdtTasks="true">
+					<Name>Slow Task</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project GUID="{D16777C5-A352-4339-BAD1-F0201ADD8547}" Name="PLC" PrjFilePath="PLC\PLC.plcproj" TmcFilePath="PLC\PLC.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" CopyTmcToTarget="true" CopyTpyToTarget="false" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC\PLC.tmc">
+					<Name>PLC Instance</Name>
+					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Vars VarGrpType="1">
+						<Name>Fast_Task Inputs</Name>
+						<Var>
+							<Name>prgCS.fbRTUMaster.fbmodbusmaster.InData</Name>
+							<Type GUID="{3EA490A1-C865-0BE4-748D-4EC0058E4941}" Namespace="Lynus_Energy_ModbusRTU.Tc2_ModbusRTU">MB_KL6inData22B</Type>
+						</Var>
+						<Var>
+							<Name>prgCS.fbCS1.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgCS.fbCS2.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgCS.fbCS3.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgKNX.fbKBusState.uiKBusState_OUT</Name>
+							<Comment><![CDATA[K-Bus State from the Basestation on wich the Terminal KL6301 is connected]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2" AreaNo="1">
+						<Name>Fast_Task Outputs</Name>
+						<Var>
+							<Name>prgCS.fbRTUMaster.fbmodbusmaster.OutData</Name>
+							<Type GUID="{40CD2FAE-C029-488A-AA05-CB85B29BAE13}" Namespace="Lynus_Energy_ModbusRTU.Tc2_ModbusRTU">MB_KL6outData22B</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="1" ContextId="1" AreaNo="16">
+						<Name>Middle_Task Inputs</Name>
+						<Var>
+							<Name>prgEHE.fbH08_1.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgEHE.fbH08_1.fbAOEHE.usiState</Name>
+							<Comment><![CDATA[State from the terminal]]></Comment>
+							<Type>USINT</Type>
+						</Var>
+						<Var>
+							<Name>prgEHE.fbH08_2.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgEHE.fbH08_2.fbAOEHE.usiState</Name>
+							<Comment><![CDATA[State from the terminal]]></Comment>
+							<Type>USINT</Type>
+						</Var>
+						<Var>
+							<Name>prgEHE.fbH09_1.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgEHE.fbH09_1.fbAOEHE.usiState</Name>
+							<Comment><![CDATA[State from the terminal]]></Comment>
+							<Type>USINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_1.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_1.fbAOEHE.usiState</Name>
+							<Comment><![CDATA[State from the terminal]]></Comment>
+							<Type>USINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_2.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_2.fbAOEHE.usiState</Name>
+							<Comment><![CDATA[State from the terminal]]></Comment>
+							<Type>USINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_3.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_3.fbAOEHE.usiState</Name>
+							<Comment><![CDATA[State from the terminal]]></Comment>
+							<Type>USINT</Type>
+						</Var>
+						<Var>
+							<Name>prgKNX.fbKNXMaster.arrKNXKL6301ComIn</Name>
+							<Type GUID="{09028F86-A747-EA43-57E9-969912315B28}">ARRAY [1..24] OF BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgKNX.fbRampHeating.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgKNX.fbTreeHeating.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgKNX.fbPumpFishSea.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgKNX.fbPumpSwimSea.fbDIExternalLock.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgPV.fbPV.fbDIErrorPv.bDataIn</Name>
+							<Type>BOOL</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2" ContextId="1" AreaNo="17">
+						<Name>Middle_Task Outputs</Name>
+						<Var>
+							<Name>prgEHE.fbH08_1.fbAOEHE.iDataOut</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgEHE.fbH08_2.fbAOEHE.iDataOut</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgEHE.fbH09_1.fbAOEHE.iDataOut</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_1.fbAOEHE.iDataOut</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_2.fbAOEHE.iDataOut</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgHoneywell.fbH01_3.fbAOEHE.iDataOut</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgKNX.fbKNXMaster.arrKNXKL6301ComOut</Name>
+							<Type GUID="{09028F86-A747-EA43-57E9-969912315B28}">ARRAY [1..24] OF BYTE</Type>
+						</Var>
+					</Vars>
+					<Contexts>
+						<Context>
+							<Id NeedCalleeCall="true">0</Id>
+							<Name>Fast_Task</Name>
+							<ManualConfig>
+								<OTCID>#x02010040</OTCID>
+							</ManualConfig>
+							<Priority>6</Priority>
+							<CycleTime>5000000</CycleTime>
+						</Context>
+						<Context>
+							<Id NeedCalleeCall="true">1</Id>
+							<Name>Middle_Task</Name>
+							<ManualConfig>
+								<OTCID>#x02010050</OTCID>
+							</ManualConfig>
+							<Priority>8</Priority>
+							<CycleTime>10000000</CycleTime>
+						</Context>
+						<Context>
+							<Id NeedCalleeCall="true">2</Id>
+							<Name>Slow_Task</Name>
+							<ManualConfig>
+								<OTCID>#x02010060</OTCID>
+							</ManualConfig>
+							<Priority>10</Priority>
+							<CycleTime>20000000</CycleTime>
+						</Context>
+					</Contexts>
+					<TaskPouOids>
+						<TaskPouOid Prio="6" OTCID="#x08502001"/>
+						<TaskPouOid Prio="8" OTCID="#x08502002"/>
+						<TaskPouOid Prio="10" OTCID="#x08502003"/>
+					</TaskPouOids>
+				</Instance>
+			</Project>
+		</Plc>
+		<Io>
+			<Device Id="2" DevType="120">
+				<Name>Gerät 2 (CX-BK)</Name>
+				<DevData>000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffff0000000000000100000007000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</DevData>
+				<Image Id="1" AddrType="1" ImageType="3" SizeIn="64" SizeOut="64">
+					<Name>Prozessabbild</Name>
+				</Image>
+				<Box Id="1" BoxType="9703" AmsPort="28928">
+					<Name>Box 1 (CX-BK)</Name>
+					<ImageId>5</ImageId>
+					<Vars VarGrpType="1">
+						<Name>Eingänge</Name>
+						<Var>
+							<Name>State</Name>
+							<Comment><![CDATA[Bit 0 = K-Bus Err
+Bit 1 = Terminal State Err
+Bit 2 = Process Data Length Err
+Bit 7 = K-Bus invalid
+Bit 8 = No valid Inputs
+Bit 9 = K-Bus Input Update busy
+Bit 10 = K-Bus Output Update busy
+Bit 11 = Watchdog Err
+Bit 15 = Acyc. Function atcive (e.g. K-Bus Reset)
+]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2">
+						<Name>Ausgänge</Name>
+						<Var>
+							<Name>Ctrl</Name>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<BusCoupler ComplexTermSupport="true" NewHardware="true">
+						<Term Id="2" TermType="#x1134" Fieldbus="6">
+							<Name>Klemme 2 (KL4404)</Name>
+							<ImageId>34</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>40</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>40</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>56</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>56</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>88</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>88</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 4</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>104</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>112</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>104</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var DisplayScale="#x1">
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>112</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="3" TermType="#x200189d" Fieldbus="6">
+							<Name>Klemme 3 (KL6301)</Name>
+							<ImageId>32</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Parameter Status</Name>
+									<Type>UINT</Type>
+									<BitOffs>128</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 1</Name>
+									<Type>USINT</Type>
+									<BitOffs>144</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 2</Name>
+									<Type>USINT</Type>
+									<BitOffs>152</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 3</Name>
+									<Type>USINT</Type>
+									<BitOffs>160</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 4</Name>
+									<Type>USINT</Type>
+									<BitOffs>168</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 5</Name>
+									<Type>USINT</Type>
+									<BitOffs>176</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 6</Name>
+									<Type>USINT</Type>
+									<BitOffs>184</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 7</Name>
+									<Type>USINT</Type>
+									<BitOffs>192</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 8</Name>
+									<Type>USINT</Type>
+									<BitOffs>200</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 9</Name>
+									<Type>USINT</Type>
+									<BitOffs>208</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 10</Name>
+									<Type>USINT</Type>
+									<BitOffs>216</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 11</Name>
+									<Type>USINT</Type>
+									<BitOffs>224</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 12</Name>
+									<Type>USINT</Type>
+									<BitOffs>232</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 13</Name>
+									<Type>USINT</Type>
+									<BitOffs>240</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 14</Name>
+									<Type>USINT</Type>
+									<BitOffs>248</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 15</Name>
+									<Type>USINT</Type>
+									<BitOffs>256</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 16</Name>
+									<Type>USINT</Type>
+									<BitOffs>264</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 17</Name>
+									<Type>USINT</Type>
+									<BitOffs>272</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 18</Name>
+									<Type>USINT</Type>
+									<BitOffs>280</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 19</Name>
+									<Type>USINT</Type>
+									<BitOffs>288</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 20</Name>
+									<Type>USINT</Type>
+									<BitOffs>296</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 21</Name>
+									<Type>USINT</Type>
+									<BitOffs>304</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Input Data 22</Name>
+									<Type>USINT</Type>
+									<BitOffs>312</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Parameter Control</Name>
+									<Type>UINT</Type>
+									<BitOffs>128</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 1</Name>
+									<Type>USINT</Type>
+									<BitOffs>144</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 2</Name>
+									<Type>USINT</Type>
+									<BitOffs>152</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 3</Name>
+									<Type>USINT</Type>
+									<BitOffs>160</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 4</Name>
+									<Type>USINT</Type>
+									<BitOffs>168</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 5</Name>
+									<Type>USINT</Type>
+									<BitOffs>176</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 6</Name>
+									<Type>USINT</Type>
+									<BitOffs>184</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 7</Name>
+									<Type>USINT</Type>
+									<BitOffs>192</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 8</Name>
+									<Type>USINT</Type>
+									<BitOffs>200</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 9</Name>
+									<Type>USINT</Type>
+									<BitOffs>208</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 10</Name>
+									<Type>USINT</Type>
+									<BitOffs>216</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 11</Name>
+									<Type>USINT</Type>
+									<BitOffs>224</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 12</Name>
+									<Type>USINT</Type>
+									<BitOffs>232</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 13</Name>
+									<Type>USINT</Type>
+									<BitOffs>240</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 14</Name>
+									<Type>USINT</Type>
+									<BitOffs>248</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 15</Name>
+									<Type>USINT</Type>
+									<BitOffs>256</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 16</Name>
+									<Type>USINT</Type>
+									<BitOffs>264</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 17</Name>
+									<Type>USINT</Type>
+									<BitOffs>272</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 18</Name>
+									<Type>USINT</Type>
+									<BitOffs>280</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 19</Name>
+									<Type>USINT</Type>
+									<BitOffs>288</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 20</Name>
+									<Type>USINT</Type>
+									<BitOffs>296</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 21</Name>
+									<Type>USINT</Type>
+									<BitOffs>304</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Output Data 22</Name>
+									<Type>USINT</Type>
+									<BitOffs>312</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="4" TermType="#x6001799" Fieldbus="6">
+							<Name>Klemme 4 (KL6041)</Name>
+							<ImageId>32</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>UINT</Type>
+									<BitOffs>320</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 0</Name>
+									<Type>USINT</Type>
+									<BitOffs>336</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 1</Name>
+									<Type>USINT</Type>
+									<BitOffs>344</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 2</Name>
+									<Type>USINT</Type>
+									<BitOffs>352</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 3</Name>
+									<Type>USINT</Type>
+									<BitOffs>360</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 4</Name>
+									<Type>USINT</Type>
+									<BitOffs>368</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 5</Name>
+									<Type>USINT</Type>
+									<BitOffs>376</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 6</Name>
+									<Type>USINT</Type>
+									<BitOffs>384</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 7</Name>
+									<Type>USINT</Type>
+									<BitOffs>392</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 8</Name>
+									<Type>USINT</Type>
+									<BitOffs>400</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 9</Name>
+									<Type>USINT</Type>
+									<BitOffs>408</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 10</Name>
+									<Type>USINT</Type>
+									<BitOffs>416</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 11</Name>
+									<Type>USINT</Type>
+									<BitOffs>424</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 12</Name>
+									<Type>USINT</Type>
+									<BitOffs>432</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 13</Name>
+									<Type>USINT</Type>
+									<BitOffs>440</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 14</Name>
+									<Type>USINT</Type>
+									<BitOffs>448</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 15</Name>
+									<Type>USINT</Type>
+									<BitOffs>456</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 16</Name>
+									<Type>USINT</Type>
+									<BitOffs>464</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 17</Name>
+									<Type>USINT</Type>
+									<BitOffs>472</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 18</Name>
+									<Type>USINT</Type>
+									<BitOffs>480</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 19</Name>
+									<Type>USINT</Type>
+									<BitOffs>488</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 20</Name>
+									<Type>USINT</Type>
+									<BitOffs>496</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Data In 21</Name>
+									<Type>USINT</Type>
+									<BitOffs>504</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Ctrl</Name>
+									<Type>UINT</Type>
+									<BitOffs>320</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 0</Name>
+									<Type>USINT</Type>
+									<BitOffs>336</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 1</Name>
+									<Type>USINT</Type>
+									<BitOffs>344</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 2</Name>
+									<Type>USINT</Type>
+									<BitOffs>352</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 3</Name>
+									<Type>USINT</Type>
+									<BitOffs>360</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 4</Name>
+									<Type>USINT</Type>
+									<BitOffs>368</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 5</Name>
+									<Type>USINT</Type>
+									<BitOffs>376</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 6</Name>
+									<Type>USINT</Type>
+									<BitOffs>384</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 7</Name>
+									<Type>USINT</Type>
+									<BitOffs>392</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 8</Name>
+									<Type>USINT</Type>
+									<BitOffs>400</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 9</Name>
+									<Type>USINT</Type>
+									<BitOffs>408</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 10</Name>
+									<Type>USINT</Type>
+									<BitOffs>416</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 11</Name>
+									<Type>USINT</Type>
+									<BitOffs>424</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 12</Name>
+									<Type>USINT</Type>
+									<BitOffs>432</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 13</Name>
+									<Type>USINT</Type>
+									<BitOffs>440</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 14</Name>
+									<Type>USINT</Type>
+									<BitOffs>448</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 15</Name>
+									<Type>USINT</Type>
+									<BitOffs>456</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 16</Name>
+									<Type>USINT</Type>
+									<BitOffs>464</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 17</Name>
+									<Type>USINT</Type>
+									<BitOffs>472</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 18</Name>
+									<Type>USINT</Type>
+									<BitOffs>480</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 19</Name>
+									<Type>USINT</Type>
+									<BitOffs>488</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 20</Name>
+									<Type>USINT</Type>
+									<BitOffs>496</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Data Out 21</Name>
+									<Type>USINT</Type>
+									<BitOffs>504</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
+						<Term Id="1" TermType="#x2332" Fieldbus="6">
+							<Name>End-Klemme (KL9010)</Name>
+							<ImageId>32</ImageId>
+						</Term>
+					</BusCoupler>
+					<CxBk/>
+				</Box>
+			</Device>
+		</Io>
+	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-2001-0850-0020-500810000403}" Id="#x02030010"/>
+		<MappingInfo Identifier="{08502002-0010-0304-0020-500810000403}" Id="#x02030020" Watchdog="00000000000000000000000000000000"/>
+		<OwnerA Name="TIPC^PLC^PLC Instance">
+			<OwnerB Name="TIID^Device 2 (CX-BK)^Box 1 (CX-BK)">
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[0]" VarB="Term 4 (KL6041)^Channel 1^Data In 0"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[10]" VarB="Term 4 (KL6041)^Channel 1^Data In 10"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[11]" VarB="Term 4 (KL6041)^Channel 1^Data In 11"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[12]" VarB="Term 4 (KL6041)^Channel 1^Data In 12"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[13]" VarB="Term 4 (KL6041)^Channel 1^Data In 13"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[14]" VarB="Term 4 (KL6041)^Channel 1^Data In 14"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[15]" VarB="Term 4 (KL6041)^Channel 1^Data In 15"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[16]" VarB="Term 4 (KL6041)^Channel 1^Data In 16"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[17]" VarB="Term 4 (KL6041)^Channel 1^Data In 17"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[18]" VarB="Term 4 (KL6041)^Channel 1^Data In 18"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[19]" VarB="Term 4 (KL6041)^Channel 1^Data In 19"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[1]" VarB="Term 4 (KL6041)^Channel 1^Data In 1"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[20]" VarB="Term 4 (KL6041)^Channel 1^Data In 20"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[21]" VarB="Term 4 (KL6041)^Channel 1^Data In 21"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[2]" VarB="Term 4 (KL6041)^Channel 1^Data In 2"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[3]" VarB="Term 4 (KL6041)^Channel 1^Data In 3"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[4]" VarB="Term 4 (KL6041)^Channel 1^Data In 4"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[5]" VarB="Term 4 (KL6041)^Channel 1^Data In 5"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[6]" VarB="Term 4 (KL6041)^Channel 1^Data In 6"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[7]" VarB="Term 4 (KL6041)^Channel 1^Data In 7"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[8]" VarB="Term 4 (KL6041)^Channel 1^Data In 8"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^D[9]" VarB="Term 4 (KL6041)^Channel 1^Data In 9"/>
+				<Link VarA="Fast_Task Inputs^prgCS.fbRTUMaster.fbmodbusmaster.InData^Status" VarB="Term 4 (KL6041)^Channel 1^Status"/>
+				<Link VarA="Fast_Task Inputs^prgKNX.fbKBusState.uiKBusState_OUT" VarB="Inputs^State"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^Ctrl" VarB="Term 4 (KL6041)^Channel 1^Ctrl"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[0]" VarB="Term 4 (KL6041)^Channel 1^Data Out 0"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[10]" VarB="Term 4 (KL6041)^Channel 1^Data Out 10"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[11]" VarB="Term 4 (KL6041)^Channel 1^Data Out 11"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[12]" VarB="Term 4 (KL6041)^Channel 1^Data Out 12"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[13]" VarB="Term 4 (KL6041)^Channel 1^Data Out 13"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[14]" VarB="Term 4 (KL6041)^Channel 1^Data Out 14"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[15]" VarB="Term 4 (KL6041)^Channel 1^Data Out 15"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[16]" VarB="Term 4 (KL6041)^Channel 1^Data Out 16"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[17]" VarB="Term 4 (KL6041)^Channel 1^Data Out 17"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[18]" VarB="Term 4 (KL6041)^Channel 1^Data Out 18"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[19]" VarB="Term 4 (KL6041)^Channel 1^Data Out 19"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[1]" VarB="Term 4 (KL6041)^Channel 1^Data Out 1"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[20]" VarB="Term 4 (KL6041)^Channel 1^Data Out 20"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[21]" VarB="Term 4 (KL6041)^Channel 1^Data Out 21"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[2]" VarB="Term 4 (KL6041)^Channel 1^Data Out 2"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[3]" VarB="Term 4 (KL6041)^Channel 1^Data Out 3"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[4]" VarB="Term 4 (KL6041)^Channel 1^Data Out 4"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[5]" VarB="Term 4 (KL6041)^Channel 1^Data Out 5"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[6]" VarB="Term 4 (KL6041)^Channel 1^Data Out 6"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[7]" VarB="Term 4 (KL6041)^Channel 1^Data Out 7"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[8]" VarB="Term 4 (KL6041)^Channel 1^Data Out 8"/>
+				<Link VarA="Fast_Task Outputs^prgCS.fbRTUMaster.fbmodbusmaster.OutData^D[9]" VarB="Term 4 (KL6041)^Channel 1^Data Out 9"/>
+				<Link VarA="Middle_Task Inputs^prgEHE.fbH08_1.fbAOEHE.usiState" VarB="Term 2 (KL4404)^Channel 1^Status"/>
+				<Link VarA="Middle_Task Inputs^prgEHE.fbH08_2.fbAOEHE.usiState" VarB="Term 2 (KL4404)^Channel 2^Status"/>
+				<Link VarA="Middle_Task Inputs^prgEHE.fbH09_1.fbAOEHE.usiState" VarB="Term 2 (KL4404)^Channel 3^Status"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 1" Size="8" OffsA="16"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 10" Size="8" OffsA="88"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 11" Size="8" OffsA="96"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 12" Size="8" OffsA="104"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 13" Size="8" OffsA="112"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 14" Size="8" OffsA="120"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 15" Size="8" OffsA="128"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 16" Size="8" OffsA="136"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 17" Size="8" OffsA="144"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 18" Size="8" OffsA="152"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 19" Size="8" OffsA="160"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 2" Size="8" OffsA="24"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 20" Size="8" OffsA="168"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 21" Size="8" OffsA="176"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 22" Size="8" OffsA="184"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 3" Size="8" OffsA="32"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 4" Size="8" OffsA="40"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 5" Size="8" OffsA="48"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 6" Size="8" OffsA="56"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 7" Size="8" OffsA="64"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 8" Size="8" OffsA="72"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Input Data 9" Size="8" OffsA="80"/>
+				<Link VarA="Middle_Task Inputs^prgKNX.fbKNXMaster.arrKNXKL6301ComIn" VarB="Term 3 (KL6301)^Channel 1^Parameter Status"/>
+				<Link VarA="Middle_Task Outputs^prgEHE.fbH08_1.fbAOEHE.iDataOut" VarB="Term 2 (KL4404)^Channel 1^Daten Aus"/>
+				<Link VarA="Middle_Task Outputs^prgEHE.fbH08_2.fbAOEHE.iDataOut" VarB="Term 2 (KL4404)^Channel 2^Daten Aus"/>
+				<Link VarA="Middle_Task Outputs^prgEHE.fbH09_1.fbAOEHE.iDataOut" VarB="Term 2 (KL4404)^Channel 3^Daten Aus"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 1" Size="8" OffsA="16"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 10" Size="8" OffsA="88"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 11" Size="8" OffsA="96"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 12" Size="8" OffsA="104"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 13" Size="8" OffsA="112"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 14" Size="8" OffsA="120"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 15" Size="8" OffsA="128"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 16" Size="8" OffsA="136"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 17" Size="8" OffsA="144"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 18" Size="8" OffsA="152"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 19" Size="8" OffsA="160"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 2" Size="8" OffsA="24"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 20" Size="8" OffsA="168"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 21" Size="8" OffsA="176"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 22" Size="8" OffsA="184"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 3" Size="8" OffsA="32"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 4" Size="8" OffsA="40"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 5" Size="8" OffsA="48"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 6" Size="8" OffsA="56"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 7" Size="8" OffsA="64"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 8" Size="8" OffsA="72"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Output Data 9" Size="8" OffsA="80"/>
+				<Link VarA="Middle_Task Outputs^prgKNX.fbKNXMaster.arrKNXKL6301ComOut" VarB="Term 3 (KL6301)^Channel 1^Parameter Control"/>
+			</OwnerB>
+		</OwnerA>
+	</Mappings>
+</TcSmProject>

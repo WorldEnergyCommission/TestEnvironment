@@ -1,0 +1,490 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEM" Id="{3dc4cc04-aac0-4135-8866-9b92abf24d27}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEM
+VAR
+	fbEL3443DPM 		: FB_EM_Beckhoff_EL3443;	//EL3443 | PDO Assignment "DPM" (DPM: Distributed Power Measurement) |3-phase power measurement terminal with extended functionality
+	fb_EL3446_1			: FB_EM_Beckhoff_EL3446;
+	fb_EL3446_2			: FB_EM_Beckhoff_EL3446;
+	fb_EL3446_3			: FB_EM_Beckhoff_EL3446;
+	fb_EL3446_4			: FB_EM_Beckhoff_EL3446;
+	lr_RealPower_Grid	: LREAL;						//{#lynus.ag#()}
+	lr_ApparentPower_Grid: LREAL;						//{#lynus.ag#()}
+	lr_ReactivePower_Grid: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_Grid	: LREAL;						//{#lynus.ag#()}
+
+	lr_Voltage_L1N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3N		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1L2		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2L3		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3L1		: LREAL;						//{#lynus.ag#()}
+ 	lr_Current_L1		: LREAL;						//{#lynus.ag#()}
+	lr_Current_L2		: LREAL;						//{#lynus.ag#()}
+	lr_Current_L3		: LREAL;						//{#lynus.ag#()}
+	lr_Power_House		: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_UVKeller		: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_UVEG			: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_UV1OG			: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_UV2OG			: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_Kaeltemaschine	: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_Spenglerei		: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_Werkstatt		: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_BueroGesamt	: LREAL;						//{#lynus.ag#()}
+	
+	FB_ReadMB_Zimmerei	 :FB_ModBus_100Registers_FC3_inclID;
+	real_Array_Modbus_Data_Zimmerei	: ARRAY[0..49] OF REAL;
+
+
+	lr_RealPower_Halle_Zimmerei		: LREAL;						//{#lynus.ag#()}
+	lr_ApparentPower_Halle_Zimmerei	: LREAL;						//{#lynus.ag#()}
+	lr_ReactivePower_Halle_Zimmerei	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_Halle_Zimmerei		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1N_Zimmerei			: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2N_Zimmerei			: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3N_Zimmerei			: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1L2_Zimmerei		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2L3_Zimmerei		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3L1_Zimmerei		: LREAL;						//{#lynus.ag#()}
+ 	lr_Current_L1_Zimmerei			: LREAL;						//{#lynus.ag#()}
+	lr_Current_L2_Zimmerei			: LREAL;						//{#lynus.ag#()}
+	lr_Current_L3_Zimmerei			: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_Hundegger_Zimmerei	: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_Spannex_Zimmerei	: LREAL;		      	     	//{#lynus.ag#()}
+	lr_RealPower_Kran_Zimmerei		: LREAL;	             	   	//{#lynus.ag#()}
+	lr_RealPower_Rest_Zimmerei		: LREAL;						//{#lynus.ag#()}
+
+	FB_ReadMB_Baustoffe	 :FB_ModBus_100Registers_FC3_inclID;
+	real_Array_Modbus_Data_Baustoffe	: ARRAY[0..49] OF REAL;
+
+	lr_RealPower_Halle_Baustoffe		: LREAL;						//{#lynus.ag#()}
+	lr_ApparentPower_Halle_Baustoffe	: LREAL;						//{#lynus.ag#()}
+	lr_ReactivePower_Halle_Baustoffe	: LREAL;						//{#lynus.ag#()}
+	lr_Frequency_Halle_Baustoffe		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1N_Baustoffe			: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2N_Baustoffe			: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3N_Baustoffe			: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L1L2_Baustoffe		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L2L3_Baustoffe		: LREAL;						//{#lynus.ag#()}
+	lr_Voltage_L3L1_Baustoffe		: LREAL;						//{#lynus.ag#()}
+ 	lr_Current_L1_Baustoffe			: LREAL;						//{#lynus.ag#()}
+	lr_Current_L2_Baustoffe			: LREAL;						//{#lynus.ag#()}
+	lr_Current_L3_Baustoffe			: LREAL;						//{#lynus.ag#()}
+	lr_RealPower_Kran_Baustoffe		: LREAL;	             	   	//{#lynus.ag#()}
+	lr_RealPower_Rest_Baustoffe		: LREAL;						//{#lynus.ag#()}
+END_VAR
+VAR_INPUT
+	stEL3443_IO 						: MDP5001_341_7CD731EE;
+	stEL3446_IO_1 						: MDP5001_342_066CA8C6; 
+	stEL3446_IO_2 						: MDP5001_342_066CA8C6; 
+	stEL3446_IO_3 						: MDP5001_342_066CA8C6; 
+	stEL3446_IO_4 						: MDP5001_342_066CA8C6; 
+END_VAR
+VAR PERSISTENT
+	lr_EnergyCounter_Grid	: LREAL;						//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// grid measurement
+fbEL3443DPM(
+	bEnable 	:= TRUE, 
+	bInvers_CH1 := FALSE, 
+	bInvers_CH2	:= FALSE, 
+	bInvers_CH3	:= FALSE, 
+	uiCurrentTransformerRatio:= 600,		// two cables,300:1 CTs only over one cable 
+	nSlaveAddr 	:= 1001,
+	b_SubIndex	:= 2,
+	stEL3443_IO := ,
+	pDpmData=> , 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> );
+fbEL3443DPM.stEL3443_IO.MDP5001_341_Input := stEL3443_IO.MDP5001_341_Input;
+stEL3443_IO.MDP5001_341_Output	:= fbEL3443DPM.stEL3443_IO.MDP5001_341_Output;
+ 	
+lr_RealPower_Grid 		:= fbEL3443DPM.stDataEMPower.lrPowerTotal; 	
+lr_ApparentPower_Grid 	:= fbEL3443DPM.stDataEMPower.lrApparentPowerTotal;
+lr_ReactivePower_Grid	:= fbEL3443DPM.stDataEMPower.lrReactivePowerTotal;
+lr_Frequency_Grid		:= fbEL3443DPM.stDataEMPower.lrFrequency;
+lr_Voltage_L1N			:= fbEL3443DPM.stDataEMPower.lrVoltageL1N;
+lr_Voltage_L2N			:= fbEL3443DPM.stDataEMPower.lrVoltageL2N;
+lr_Voltage_L3N			:= fbEL3443DPM.stDataEMPower.lrVoltageL3N;
+lr_Voltage_L1L2			:= fbEL3443DPM.stDataEMPower.lrVoltageL1L2;
+lr_Voltage_L2L3			:= fbEL3443DPM.stDataEMPower.lrVoltageL2L3;
+lr_Voltage_L3L1			:= fbEL3443DPM.stDataEMPower.lrVoltageL3L1;
+lr_EnergyCounter_Grid	:= fbEL3443DPM.stDataEMCounter.lrTotalCounterEnergy_Consumption;
+lr_Current_L1			:= fbEL3443DPM.stDataEMPower.lrCurrentL1;
+lr_Current_L2			:= fbEL3443DPM.stDataEMPower.lrCurrentL2;
+lr_Current_L3			:= fbEL3443DPM.stDataEMPower.lrCurrentL3;
+	 
+fb_EL3446_1(
+	bEnable:= TRUE , 
+	bEnableVariantValues:= TRUE, 
+	pDpmData:= fbEL3443DPM.pDpmData, 
+	nSlaveAddr:= 1002, 
+	b_SubIndex	:= 2,
+	bInvers_CH1:= TRUE, 
+	bInvers_CH2:= TRUE, 
+	bInvers_CH3:= TRUE, 
+	bInvers_CH4:= TRUE, 
+	bInvers_CH5:= TRUE, 
+	bInvers_CH6:= TRUE, 
+	uiCurrentTransformerRatio_CH1:= 300, 
+	uiCurrentTransformerRatio_CH2:= 300, 
+	uiCurrentTransformerRatio_CH3:= 300, 
+	uiCurrentTransformerRatio_CH4:= 300, 
+	uiCurrentTransformerRatio_CH5:= 300, 
+	uiCurrentTransformerRatio_CH6:= 300, 
+	uiVoltagePhaseSelector_CH1:= 2, 			// phase order not 1/2/3 because voltage channel missmatch 
+	uiVoltagePhaseSelector_CH2:= 3, 			// therefore signle phase channels got used
+	uiVoltagePhaseSelector_CH3:= 1, 
+	uiVoltagePhaseSelector_CH4:= 2, 
+	uiVoltagePhaseSelector_CH5:= 3, 
+	uiVoltagePhaseSelector_CH6:= 1, 
+	bEnable3PhaseCH13:= FALSE, 
+	bEnable3PhaseCH46:= FALSE, 
+	stDataEMPowerRealTime:= fbEL3443DPM.stDataEMPowerRealTime, 
+	stEL3446_IO := ,
+	stDataEMPower_CH1=> , 
+	stDataEMCounter_CH1=> , 
+	stDataEMPowerRealTime_CH1=> , 
+	stDataEMCounterRealTime_CH1=> , 
+	stDataEMPower_CH2=> , 
+	stDataEMCounter_CH2=> , 
+	stDataEMPowerRealTime_CH2=> , 
+	stDataEMCounterRealTime_CH2=> , 
+	stDataEMPower_CH3=> , 
+	stDataEMCounter_CH3=> , 
+	stDataEMPowerRealTime_CH3=> , 
+	stDataEMCounterRealTime_CH3=> , 
+	stDataEMPower_CH4=> , 
+	stDataEMCounter_CH4=> , 
+	stDataEMPowerRealTime_CH4=> , 
+	stDataEMCounterRealTime_CH4=> , 
+	stDataEMPower_CH5=> , 
+	stDataEMCounter_CH5=> , 
+	stDataEMPowerRealTime_CH5=> , 
+	stDataEMCounterRealTime_CH5=> , 
+	stDataEMPower_CH6=> , 
+	stDataEMCounter_CH6=> , 
+	stDataEMPowerRealTime_CH6=> , 
+	stDataEMCounterRealTime_CH6=> );
+fb_EL3446_1.stEL3446_IO.MDP5001_342_Input := stEL3446_IO_1.MDP5001_342_Input;
+stEL3446_IO_1.MDP5001_342_Output := 	fb_EL3446_1.stEL3446_IO.MDP5001_342_Output;
+lr_RealPower_UVKeller	:= 	fb_EL3446_1.stDataEMPower_CH1.lrPowerConsumption + 
+							fb_EL3446_1.stDataEMPower_CH2.lrPowerConsumption + 
+							fb_EL3446_1.stDataEMPower_CH3.lrPowerConsumption;
+lr_RealPower_UVEG		:= 	fb_EL3446_1.stDataEMPower_CH4.lrPowerConsumption + 
+							fb_EL3446_1.stDataEMPower_CH5.lrPowerConsumption + 
+							fb_EL3446_1.stDataEMPower_CH6.lrPowerConsumption;
+
+fb_EL3446_2(
+	bEnable:= TRUE , 
+	bEnableVariantValues:= TRUE, 
+	pDpmData:= fbEL3443DPM.pDpmData, 
+	nSlaveAddr:= 1003, 
+	b_SubIndex	:= 2,
+	bInvers_CH1:= TRUE, 
+	bInvers_CH2:= TRUE, 
+	bInvers_CH3:= TRUE, 
+	bInvers_CH4:= TRUE, 
+	bInvers_CH5:= TRUE, 
+	bInvers_CH6:= TRUE,	
+	uiCurrentTransformerRatio_CH1:= 300, 
+	uiCurrentTransformerRatio_CH2:= 300, 
+	uiCurrentTransformerRatio_CH3:= 300, 
+	uiCurrentTransformerRatio_CH4:= 300, 
+	uiCurrentTransformerRatio_CH5:= 300, 
+	uiCurrentTransformerRatio_CH6:= 300, 
+	uiVoltagePhaseSelector_CH1:= 2, 			// phase order not 1/2/3 because voltage channel missmatch 
+	uiVoltagePhaseSelector_CH2:= 3, 			// therefore signle phase channels got used
+	uiVoltagePhaseSelector_CH3:= 1, 
+	uiVoltagePhaseSelector_CH4:= 2, 
+	uiVoltagePhaseSelector_CH5:= 3, 
+	uiVoltagePhaseSelector_CH6:= 1, 
+	bEnable3PhaseCH13:= FALSE, 
+	bEnable3PhaseCH46:= FALSE, 
+	stDataEMPowerRealTime:= fbEL3443DPM.stDataEMPowerRealTime, 
+	stEL3446_IO := ,
+	stDataEMPower_CH1=> , 
+	stDataEMCounter_CH1=> , 
+	stDataEMPowerRealTime_CH1=> , 
+	stDataEMCounterRealTime_CH1=> , 
+	stDataEMPower_CH2=> , 
+	stDataEMCounter_CH2=> , 
+	stDataEMPowerRealTime_CH2=> , 
+	stDataEMCounterRealTime_CH2=> , 
+	stDataEMPower_CH3=> , 
+	stDataEMCounter_CH3=> , 
+	stDataEMPowerRealTime_CH3=> , 
+	stDataEMCounterRealTime_CH3=> , 
+	stDataEMPower_CH4=> , 
+	stDataEMCounter_CH4=> , 
+	stDataEMPowerRealTime_CH4=> , 
+	stDataEMCounterRealTime_CH4=> , 
+	stDataEMPower_CH5=> , 
+	stDataEMCounter_CH5=> , 
+	stDataEMPowerRealTime_CH5=> , 
+	stDataEMCounterRealTime_CH5=> , 
+	stDataEMPower_CH6=> , 
+	stDataEMCounter_CH6=> , 
+	stDataEMPowerRealTime_CH6=> , 
+	stDataEMCounterRealTime_CH6=> );
+fb_EL3446_2.stEL3446_IO.MDP5001_342_Input := stEL3446_IO_2.MDP5001_342_Input;
+stEL3446_IO_2.MDP5001_342_Output := 	fb_EL3446_2.stEL3446_IO.MDP5001_342_Output;
+lr_RealPower_UV1OG		:= 	fb_EL3446_2.stDataEMPower_CH1.lrPowerConsumption + 
+							fb_EL3446_2.stDataEMPower_CH2.lrPowerConsumption + 
+							fb_EL3446_2.stDataEMPower_CH3.lrPowerConsumption;
+lr_RealPower_UV2OG		:= 	fb_EL3446_2.stDataEMPower_CH4.lrPowerConsumption + 
+							fb_EL3446_2.stDataEMPower_CH5.lrPowerConsumption + 
+							fb_EL3446_2.stDataEMPower_CH6.lrPowerConsumption;
+
+fb_EL3446_3(
+	bEnable:= TRUE , 
+	bEnableVariantValues:= TRUE, 
+	pDpmData:= fbEL3443DPM.pDpmData, 
+	nSlaveAddr:= 1004, 
+	b_SubIndex	:= 2,
+	bInvers_CH1:= TRUE, 
+	bInvers_CH2:= TRUE, 
+	bInvers_CH3:= TRUE, 
+	bInvers_CH4:= TRUE, 
+	bInvers_CH5:= TRUE, 
+	bInvers_CH6:= TRUE,
+	uiCurrentTransformerRatio_CH1:= 300, 
+	uiCurrentTransformerRatio_CH2:= 300, 
+	uiCurrentTransformerRatio_CH3:= 300, 
+	uiCurrentTransformerRatio_CH4:= 300, 
+	uiCurrentTransformerRatio_CH5:= 300, 
+	uiCurrentTransformerRatio_CH6:= 300, 
+	uiVoltagePhaseSelector_CH1:= 2, 			// phase order not 1/2/3 because voltage channel missmatch 
+	uiVoltagePhaseSelector_CH2:= 3, 			// therefore signle phase channels got used
+	uiVoltagePhaseSelector_CH3:= 1, 
+	uiVoltagePhaseSelector_CH4:= 2, 
+	uiVoltagePhaseSelector_CH5:= 3, 
+	uiVoltagePhaseSelector_CH6:= 1, 
+	bEnable3PhaseCH13:= FALSE, 
+	bEnable3PhaseCH46:= FALSE, 
+	stDataEMPowerRealTime:= fbEL3443DPM.stDataEMPowerRealTime, 
+	stEL3446_IO := ,
+	stDataEMPower_CH1=> , 
+	stDataEMCounter_CH1=> , 
+	stDataEMPowerRealTime_CH1=> , 
+	stDataEMCounterRealTime_CH1=> , 
+	stDataEMPower_CH2=> , 
+	stDataEMCounter_CH2=> , 
+	stDataEMPowerRealTime_CH2=> , 
+	stDataEMCounterRealTime_CH2=> , 
+	stDataEMPower_CH3=> , 
+	stDataEMCounter_CH3=> , 
+	stDataEMPowerRealTime_CH3=> , 
+	stDataEMCounterRealTime_CH3=> , 
+	stDataEMPower_CH4=> , 
+	stDataEMCounter_CH4=> , 
+	stDataEMPowerRealTime_CH4=> , 
+	stDataEMCounterRealTime_CH4=> , 
+	stDataEMPower_CH5=> , 
+	stDataEMCounter_CH5=> , 
+	stDataEMPowerRealTime_CH5=> , 
+	stDataEMCounterRealTime_CH5=> , 
+	stDataEMPower_CH6=> , 
+	stDataEMCounter_CH6=> , 
+	stDataEMPowerRealTime_CH6=> , 
+	stDataEMCounterRealTime_CH6=> );
+fb_EL3446_3.stEL3446_IO.MDP5001_342_Input := stEL3446_IO_3.MDP5001_342_Input;
+stEL3446_IO_3.MDP5001_342_Output := 	fb_EL3446_3.stEL3446_IO.MDP5001_342_Output;
+lr_RealPower_Kaeltemaschine	:= 	fb_EL3446_3.stDataEMPower_CH1.lrPowerConsumption + 
+								fb_EL3446_3.stDataEMPower_CH2.lrPowerConsumption + 
+								fb_EL3446_3.stDataEMPower_CH3.lrPowerConsumption;
+lr_RealPower_Spenglerei		:= 	fb_EL3446_3.stDataEMPower_CH4.lrPowerConsumption + 
+								fb_EL3446_3.stDataEMPower_CH5.lrPowerConsumption + 
+								fb_EL3446_3.stDataEMPower_CH6.lrPowerConsumption;
+
+
+fb_EL3446_4(
+	bEnable:= TRUE , 
+	bEnableVariantValues:= TRUE, 
+	pDpmData:= fbEL3443DPM.pDpmData, 
+	nSlaveAddr:= 1005, 
+	b_SubIndex	:= 2,
+	bInvers_CH1:= TRUE, 
+	bInvers_CH2:= TRUE, 
+	bInvers_CH3:= TRUE, 
+	bInvers_CH4:= TRUE, 
+	bInvers_CH5:= TRUE, 
+	bInvers_CH6:= TRUE,
+	uiCurrentTransformerRatio_CH1:= 300, 
+	uiCurrentTransformerRatio_CH2:= 300, 
+	uiCurrentTransformerRatio_CH3:= 300, 
+	uiCurrentTransformerRatio_CH4:= 300, 
+	uiCurrentTransformerRatio_CH5:= 300, 
+	uiCurrentTransformerRatio_CH6:= 300, 
+	uiVoltagePhaseSelector_CH1:= 2, 			// phase order not 1/2/3 because voltage channel missmatch 
+	uiVoltagePhaseSelector_CH2:= 3, 			// therefore signle phase channels got used
+	uiVoltagePhaseSelector_CH3:= 1, 
+	uiVoltagePhaseSelector_CH4:= 2, 
+	uiVoltagePhaseSelector_CH5:= 3, 
+	uiVoltagePhaseSelector_CH6:= 1, 
+	bEnable3PhaseCH13:= FALSE, 
+	bEnable3PhaseCH46:= FALSE,  
+	stDataEMPowerRealTime:= fbEL3443DPM.stDataEMPowerRealTime, 
+	stEL3446_IO := ,
+	stDataEMPower_CH1=> , 
+	stDataEMCounter_CH1=> , 
+	stDataEMPowerRealTime_CH1=> , 
+	stDataEMCounterRealTime_CH1=> , 
+	stDataEMPower_CH2=> , 
+	stDataEMCounter_CH2=> , 
+	stDataEMPowerRealTime_CH2=> , 
+	stDataEMCounterRealTime_CH2=> , 
+	stDataEMPower_CH3=> , 
+	stDataEMCounter_CH3=> , 
+	stDataEMPowerRealTime_CH3=> , 
+	stDataEMCounterRealTime_CH3=> , 
+	stDataEMPower_CH4=> , 
+	stDataEMCounter_CH4=> , 
+	stDataEMPowerRealTime_CH4=> , 
+	stDataEMCounterRealTime_CH4=> , 
+	stDataEMPower_CH5=> , 
+	stDataEMCounter_CH5=> , 
+	stDataEMPowerRealTime_CH5=> , 
+	stDataEMCounterRealTime_CH5=> , 
+	stDataEMPower_CH6=> , 
+	stDataEMCounter_CH6=> , 
+	stDataEMPowerRealTime_CH6=> , 
+	stDataEMCounterRealTime_CH6=> );
+fb_EL3446_4.stEL3446_IO.MDP5001_342_Input := stEL3446_IO_4.MDP5001_342_Input;
+stEL3446_IO_4.MDP5001_342_Output := 	fb_EL3446_4.stEL3446_IO.MDP5001_342_Output;
+lr_RealPower_Werkstatt	:= 		fb_EL3446_4.stDataEMPower_CH1.lrPowerConsumption + 
+								fb_EL3446_4.stDataEMPower_CH2.lrPowerConsumption + 
+								fb_EL3446_4.stDataEMPower_CH3.lrPowerConsumption;
+
+lr_Power_House := lr_RealPower_Grid + prgPV.lrPowerPV - prgCS.lr_Power_CS_total;
+lr_RealPower_BueroGesamt := lr_RealPower_UVKeller + lr_RealPower_UVEG + lr_RealPower_UV1OG + lr_RealPower_UV2OG;
+
+FB_ReadMB_Zimmerei(
+	m_Enable:= TRUE, 
+	str_IPAdress:= '192.168.1.121', 
+	w_Adress:= 12288, 
+	usint_Quantity:= 100 , 
+	usint_ID:= 1, 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+
+memcpy(ADR(real_Array_Modbus_Data_Zimmerei),ADR(FB_ReadMB_Zimmerei.w_Array_Received),200);
+lr_RealPower_Halle_Zimmerei			:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[0]);
+lr_ApparentPower_Halle_Zimmerei		:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[1]);
+lr_ReactivePower_Halle_Zimmerei		:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[2]);
+lr_Frequency_Halle_Zimmerei			:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[3]);
+lr_Voltage_L1N_Zimmerei				:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[4]);
+lr_Voltage_L2N_Zimmerei				:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[5]);
+lr_Voltage_L3N_Zimmerei				:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[6]);
+lr_Voltage_L1L2_Zimmerei			:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[7]);
+lr_Voltage_L2L3_Zimmerei			:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[8]);
+lr_Voltage_L3L1_Zimmerei			:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[9]);
+lr_Current_L1_Zimmerei				:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[10]);
+lr_Current_L2_Zimmerei				:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[11]);
+lr_Current_L3_Zimmerei				:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[12]);
+lr_RealPower_Hundegger_Zimmerei		:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[13]);
+lr_RealPower_Spannex_Zimmerei		:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[14]);
+lr_RealPower_Kran_Zimmerei			:= REAL_TO_LREAL(real_Array_Modbus_Data_Zimmerei[15]);
+lr_RealPower_Rest_Zimmerei			:= LIMIT(0,lr_RealPower_Halle_Zimmerei-lr_RealPower_Hundegger_Zimmerei-lr_RealPower_Spannex_Zimmerei-lr_RealPower_Kran_Zimmerei,500);
+
+
+
+FB_ReadMB_Baustoffe(
+	m_Enable:= TRUE, 
+	str_IPAdress:= '192.168.1.122', 
+	w_Adress:= 12288, 
+	usint_Quantity:= 100 , 
+	usint_ID:= 1, 
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+
+memcpy(ADR(real_Array_Modbus_Data_Baustoffe),ADR(FB_ReadMB_Baustoffe.w_Array_Received),200);
+lr_RealPower_Halle_Baustoffe			:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[0]);
+lr_ApparentPower_Halle_Baustoffe		:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[1]);
+lr_ReactivePower_Halle_Baustoffe		:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[2]);
+lr_Frequency_Halle_Baustoffe			:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[3]);
+lr_Voltage_L1N_Baustoffe				:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[4]);
+lr_Voltage_L2N_Baustoffe				:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[5]);
+lr_Voltage_L3N_Baustoffe				:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[6]);
+lr_Voltage_L1L2_Baustoffe				:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[7]);
+lr_Voltage_L2L3_Baustoffe				:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[8]);
+lr_Voltage_L3L1_Baustoffe				:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[9]);
+lr_Current_L1_Baustoffe					:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[10]);
+lr_Current_L2_Baustoffe					:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[11]);
+lr_Current_L3_Baustoffe					:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[12]);
+lr_RealPower_Kran_Baustoffe				:= REAL_TO_LREAL(real_Array_Modbus_Data_Baustoffe[13]);
+lr_RealPower_Rest_Baustoffe				:= LIMIT(0,lr_RealPower_Halle_Baustoffe - lr_RealPower_Kran_Baustoffe,500);
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgEM">
+      <LineId Id="1378" Count="8" />
+      <LineId Id="1741" Count="0" />
+      <LineId Id="1387" Count="27" />
+      <LineId Id="1742" Count="0" />
+      <LineId Id="1415" Count="47" />
+      <LineId Id="1494" Count="1" />
+      <LineId Id="1780" Count="2" />
+      <LineId Id="1496" Count="0" />
+      <LineId Id="1784" Count="0" />
+      <LineId Id="1783" Count="0" />
+      <LineId Id="1497" Count="3" />
+      <LineId Id="1743" Count="0" />
+      <LineId Id="1688" Count="4" />
+      <LineId Id="1507" Count="0" />
+      <LineId Id="1693" Count="0" />
+      <LineId Id="1508" Count="4" />
+      <LineId Id="1746" Count="5" />
+      <LineId Id="1758" Count="0" />
+      <LineId Id="1521" Count="0" />
+      <LineId Id="1759" Count="0" />
+      <LineId Id="1522" Count="25" />
+      <LineId Id="1493" Count="0" />
+      <LineId Id="1785" Count="4" />
+      <LineId Id="1548" Count="1" />
+      <LineId Id="1551" Count="4" />
+      <LineId Id="1744" Count="0" />
+      <LineId Id="1694" Count="4" />
+      <LineId Id="1561" Count="6" />
+      <LineId Id="1752" Count="5" />
+      <LineId Id="1760" Count="0" />
+      <LineId Id="1576" Count="0" />
+      <LineId Id="1761" Count="0" />
+      <LineId Id="1577" Count="25" />
+      <LineId Id="1550" Count="0" />
+      <LineId Id="1790" Count="5" />
+      <LineId Id="1603" Count="6" />
+      <LineId Id="1745" Count="0" />
+      <LineId Id="1699" Count="4" />
+      <LineId Id="1616" Count="0" />
+      <LineId Id="1704" Count="0" />
+      <LineId Id="1617" Count="4" />
+      <LineId Id="1762" Count="6" />
+      <LineId Id="1627" Count="0" />
+      <LineId Id="1630" Count="26" />
+      <LineId Id="1283" Count="0" />
+      <LineId Id="1796" Count="1" />
+      <LineId Id="1707" Count="1" />
+      <LineId Id="1706" Count="0" />
+      <LineId Id="1800" Count="1" />
+      <LineId Id="1807" Count="7" />
+      <LineId Id="1802" Count="0" />
+      <LineId Id="1816" Count="0" />
+      <LineId Id="1803" Count="0" />
+      <LineId Id="1799" Count="0" />
+      <LineId Id="1798" Count="0" />
+      <LineId Id="1844" Count="13" />
+      <LineId Id="1878" Count="0" />
+      <LineId Id="2003" Count="0" />
+      <LineId Id="1879" Count="11" />
+      <LineId Id="1908" Count="13" />
+      <LineId Id="1862" Count="0" />
+      <LineId Id="1861" Count="0" />
+      <LineId Id="2002" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

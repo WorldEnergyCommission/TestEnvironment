@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <GVL Name="GVL_Energy" Id="{a7f23177-6ab0-4994-a87a-625ae86ee94a}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'conditionalshow'}
+VAR_GLOBAL
+	//Global Data for all Energy Devices (The Array[0] or Array[0,0] must filled always with default values)
+	{attribute 'hide'}
+	stDataOfBatterys					: ARRAY[0..Constants_Energy.diMaxNumberOfEMS,0..Constants_Energy.diMaxNumberOfBatterys]						OF ST_Battery_GVL;	
+	{attribute 'hide'}						
+	stDataOfBatteryInverters			: ARRAY[0..Constants_Energy.diMaxNumberOfEMS,0..Constants_Energy.diMaxNumberOfBatteryInverters]				OF ST_BatteryInverter_GVL;
+	{attribute 'hide'}		
+	stDataGridConnections				: ARRAY[0..Constants_Energy.diMaxNumberOfEMS,0..Constants_Energy.diMaxNumberOfGridConnections]				OF ST_GridConnection_GVL;
+	{attribute 'hide'}		
+	stDataElectricHeatingElements		: ARRAY[0..Constants_Energy.diMaxNumberOfEMS,0..Constants_Energy.diMaxNumberOfElectricHeatingElements]		OF ST_EHE_GVL;	
+	{attribute 'hide'}			
+	stDataElectricChargingStations		: ARRAY[0..Constants_Energy.diMaxNumberOfEMS,0..Constants_Energy.diMaxNumberOfElectricChargingStations]		OF ST_ECS_GVL;
+	{attribute 'hide'}					
+	stDataHeatingPumps					: ARRAY[0..Constants_Energy.diMaxNumberOfEMS,0..Constants_Energy.diMaxNumberOfHeatingPumps] 				OF ST_HP_GVL;	
+	{attribute 'hide'}				
+	stDataOtherBigConsumers				: ARRAY[0..Constants_Energy.diMaxNumberOfEMS,0..Constants_Energy.diMaxNumberOfOtherBigConsumers]			OF ST_OBC_GVL;
+	{attribute 'hide'}					
+	stDataOfPvSystems					: ARRAY[0..Constants_Energy.diMaxNumberOfPvSystems]															OF ST_PV_GVL;
+	{attribute 'hide'}
+	stDataOfGenerators					: ARRAY[0..Constants_Energy.diMaxNumberOfGenerators]			 											OF ST_Generator_GVL;
+	{attribute 'hide'}
+	stDataHouseConsumptions				: ARRAY[0..Constants_Energy.diMaxNumberOfHouseConsumptions]													OF ST_HouseConsumption_GVL;
+	{attribute 'hide'}
+	stDataElectricMeters				: ARRAY[0..Constants_Energy.diMaxNumberOfElectricMeters]													OF ST_ElectricMeter_GVL;		
+	{attribute 'hide'}
+	stDataValveControls					: ARRAY[0..Constants_Energy.diMaxNumberOfValveControls]														OF ST_Valve_Control_GVL;		
+	//Numbers from each Device on this plc
+	{attribute 'hide'}
+	stNumberOfDevices					: ST_NumberOfDevices_GVL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

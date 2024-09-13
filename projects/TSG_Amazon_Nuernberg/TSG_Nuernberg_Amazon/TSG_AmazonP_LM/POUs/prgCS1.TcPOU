@@ -1,0 +1,731 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgCS1" Id="{73274ddf-8b0e-46f2-b052-ab4c1bcb19dd}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS1
+VAR
+	fbAlfen1					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen2					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen3					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen4					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen5					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen6					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen7					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen8					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen9					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbAlfen10					: FB_ECS_Alfen_NG9xx_Platform;						//{#lynus.ag#()}
+	fbApliT_1					: FB_ECS_Alpitronic_Hypercharger;					//{#lynus.ag#()}
+	fbApliT_2					: FB_ECS_Alpitronic_Hypercharger;					//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_1			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_1	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_1			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_1		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_1				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_1					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_1		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_1			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_2			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_2	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_2			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_2		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_2				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_2					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_2			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_3			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_3	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_3			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_3		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_3				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_3					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_3		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_3			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_4			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_4	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_4			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_4		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_4				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_4					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_4		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_4			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_5			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_5	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_5			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_5		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_5				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_5					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_5		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_5			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_6			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_6	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_6			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_6		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_6				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_6					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_6		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_6			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_7			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_7	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_7			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_7		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_7				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_7					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_7		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_7			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_8			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_8	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_8			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_8		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_8				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_8					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_8		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_8			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_9			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_9	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_9			: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_9		: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_9				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_9					: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_9		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_9			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_UV1_10			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerUV1_10	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningUV1_10		: BYTE;												//{#lynus.ag#()}
+	rChargingTimeInMinUV1_10	: REAL;												//{#lynus.ag#()}
+	lrPowerUV1_10				: LREAL;											//{#lynus.ag#()}
+	wStateUV1_10				: WORD;												//{#lynus.ag#()}
+	lrEnergySessionUV1_10		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyUV1_10			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_DC_1			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerDC_1	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningDC_1			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotalDC1				: LREAL;											//{#lynus.ag#()}
+	lrPowerDC1_S1				: LREAL;											//{#lynus.ag#()}
+	lrPowerDC1_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMinDC1_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMinDC1_S2	: REAL;												//{#lynus.ag#()}
+	dwSOCCarDC1_S1				: DWORD;											//{#lynus.ag#()}
+	dwSOCCarDC1_S2				: DWORD;											//{#lynus.ag#()}
+	wStateDC1_S1				: WORD;												//{#lynus.ag#()}
+	wStateDC1_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySessionDC1_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySessionDC1_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyDC1			: LREAL;											//{#lynus.ag#()}
+	
+	bSManualyOn_DC_2			: BOOL;												//{#lynus.ag#()}
+	bySManualyTargetPowerDC_2	: BYTE;												//{#lynus.ag#()}
+	byErrorWarningDC_2			: BYTE;												//{#lynus.ag#()}
+	lrPowerTotalDC2				: LREAL;											//{#lynus.ag#()}
+	lrPowerDC2_S1				: LREAL;											//{#lynus.ag#()}
+	lrPowerDC2_S2				: LREAL;											//{#lynus.ag#()}
+	rChargingTimeInMinDC2_S1	: REAL;												//{#lynus.ag#()}
+	rChargingTimeInMinDC2_S2	: REAL;												//{#lynus.ag#()}
+	dwSOCCarDC2_S1				: DWORD;											//{#lynus.ag#()}
+	dwSOCCarDC2_S2				: DWORD;											//{#lynus.ag#()}
+	wStateDC2_S1				: WORD;												//{#lynus.ag#()}
+	wStateDC2_S2				: WORD;												//{#lynus.ag#()}
+	lrEnergySessionDC2_S1		: LREAL;											//{#lynus.ag#()}
+	lrEnergySessionDC2_S2		: LREAL;											//{#lynus.ag#()}
+	lrTotalEnergyDC2			: LREAL;											//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	bManualyOnUV1_1				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_1	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_2				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_2	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_3				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_3	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_4				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_4	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_5				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_5	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_6				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_6	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_7				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_7	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_8				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_8	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_9				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_9	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnUV1_10			: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerUV1_10	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnDC_1				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerDC_1	: BYTE;												//{#lynus.ag#()}
+	
+	bManualyOnDC_2				: BOOL;												//{#lynus.ag#()}
+	byManualyTargetPowerDC_2	: BYTE;												//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*---------------------------------------------CS1-----------------------------------------------------------*)
+
+//Manual Power
+fbAlfen1.stSetupECS.bManualyOn := bManualyOnUV1_1;
+	fbAlfen1.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_1;
+
+fbAlfen1(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.123', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_1 := fbAlfen1.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_1 := fbAlfen1.stDataECS.bySManualyTargetPower;
+		byErrorWarningUV1_1 := fbAlfen1.stDataECS.byErrorWarning;	
+			rChargingTimeInMinUV1_1 := fbAlfen1.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_1 := fbAlfen1.stDataECS.lrTotalPower;	
+					wStateUV1_1 := fbAlfen1.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_1 := fbAlfen1.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_1 := fbAlfen1.stDataECS.lrTotalCounterEnergy_Consumption;		
+	
+(*---------------------------------------------CS2-----------------------------------------------------------*)
+	
+//Manual Power
+fbAlfen2.stSetupECS.bManualyOn := bManualyOnUV1_2;
+	fbAlfen2.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_2;
+	
+fbAlfen2(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.111', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_2 := fbAlfen2.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_2 := fbAlfen2.stDataECS.bySManualyTargetPower;	
+		byErrorWarningUV1_2 := fbAlfen2.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_2 := fbAlfen2.stDataECS.arrChargingTimeInMin[1];;
+				lrPowerUV1_2 := fbAlfen2.stDataECS.lrTotalPower;	
+					wStateUV1_2 := fbAlfen2.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_2 := fbAlfen2.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_2 := fbAlfen2.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS3-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen3.stSetupECS.bManualyOn := bManualyOnUV1_3;
+	fbAlfen3.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_3;
+	
+fbAlfen3(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.213',  
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_3 := fbAlfen3.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_3 := fbAlfen3.stDataECS.bySManualyTargetPower;
+		byErrorWarningUV1_3 := fbAlfen3.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_3 := fbAlfen3.stDataECS.arrChargingTimeInMin[1];	
+				lrPowerUV1_3 := fbAlfen3.stDataECS.lrTotalPower;	
+					wStateUV1_3 := fbAlfen3.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_3 := fbAlfen3.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_3 := fbAlfen3.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS4-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen4.stSetupECS.bManualyOn := bManualyOnUV1_4;
+	fbAlfen4.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_4;
+	
+fbAlfen4(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.144',  
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_4 := fbAlfen4.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_4 := fbAlfen4.stDataECS.bySManualyTargetPower;	
+		byErrorWarningUV1_4 := fbAlfen4.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_4 := fbAlfen4.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_4 := fbAlfen4.stDataECS.lrTotalPower;	
+					wStateUV1_4 := fbAlfen4.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_4 := fbAlfen4.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_4 := fbAlfen4.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS5-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen5.stSetupECS.bManualyOn := bManualyOnUV1_5;
+	fbAlfen5.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_5;
+	
+fbAlfen5(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.178',  
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_5 := fbAlfen5.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_5 := fbAlfen5.stDataECS.bySManualyTargetPower;
+		byErrorWarningUV1_5 := fbAlfen5.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_5 := fbAlfen5.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_5 := fbAlfen5.stDataECS.lrTotalPower;	
+					wStateUV1_5 := fbAlfen5.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_5 := fbAlfen5.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_5 := fbAlfen5.stDataECS.lrTotalCounterEnergy_Consumption;	
+	
+(*---------------------------------------------CS6-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen6.stSetupECS.bManualyOn := bManualyOnUV1_6;
+	fbAlfen6.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_6;
+	
+fbAlfen6(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.161',  
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_6 := fbAlfen6.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_6 := fbAlfen6.stDataECS.bySManualyTargetPower;	
+		byErrorWarningUV1_6 := fbAlfen6.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_6 := fbAlfen6.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_6 := fbAlfen6.stDataECS.lrTotalPower;	
+					wStateUV1_6 := fbAlfen6.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_6 := fbAlfen6.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_6 := fbAlfen6.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS7-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen7.stSetupECS.bManualyOn := bManualyOnUV1_7;
+	fbAlfen7.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_7;
+	
+fbAlfen7(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.241',  
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_7 := fbAlfen7.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_7 := fbAlfen7.stDataECS.bySManualyTargetPower;	
+		byErrorWarningUV1_7 := fbAlfen7.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_7 := fbAlfen7.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_7 := fbAlfen7.stDataECS.lrTotalPower;	
+					wStateUV1_7 := fbAlfen7.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_7 := fbAlfen7.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_7 := fbAlfen7.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS8-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen8.stSetupECS.bManualyOn := bManualyOnUV1_8;
+	fbAlfen8.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_8;
+	
+fbAlfen8(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.124',  
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_8 := fbAlfen8.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_8 := fbAlfen8.stDataECS.bySManualyTargetPower;	
+		byErrorWarningUV1_8 := fbAlfen8.stDataECS.byErrorWarning;
+			rChargingTimeInMinUV1_8 := fbAlfen8.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_8 := fbAlfen8.stDataECS.lrTotalPower;	
+					wStateUV1_8 := fbAlfen8.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_8 := fbAlfen8.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_8 := fbAlfen8.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS9-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen9.stSetupECS.bManualyOn := bManualyOnUV1_9;
+	fbAlfen9.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_9;
+	
+fbAlfen9(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.165',  
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_9 := fbAlfen9.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_9 := fbAlfen9.stDataECS.bySManualyTargetPower;
+		byErrorWarningUV1_9 := fbAlfen9.stDataECS.byErrorWarning;	
+			rChargingTimeInMinUV1_9 := fbAlfen9.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_9 := fbAlfen9.stDataECS.lrTotalPower;	
+					wStateUV1_9 := fbAlfen9.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_9 := fbAlfen9.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_9 := fbAlfen9.stDataECS.lrTotalCounterEnergy_Consumption;
+	
+(*---------------------------------------------CS10-----------------------------------------------------------*)	
+	
+//Manual Power
+fbAlfen10.stSetupECS.bManualyOn := bManualyOnUV1_10;
+	fbAlfen10.stSetupECS.byManualyTargetPower := byManualyTargetPowerUV1_10;
+	
+fbAlfen10(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID_Socket1:= 1, 
+	byUnitID_Socket2:= , 
+	byNumberOfSockets:= 1, 
+	byNumberOfConnectionWire:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.176', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_UV1_10 := fbAlfen10.stDataECS.bSManualyOn;
+	bySManualyTargetPowerUV1_10 := fbAlfen10.stDataECS.bySManualyTargetPower;
+		byErrorWarningUV1_10 := fbAlfen10.stDataECS.byErrorWarning;	
+			rChargingTimeInMinUV1_10 := fbAlfen10.stDataECS.arrChargingTimeInMin[1];
+				lrPowerUV1_10 := fbAlfen10.stDataECS.lrTotalPower;	
+					wStateUV1_10 := fbAlfen10.stDataECS.arrSocketStateECS[1];
+						lrEnergySessionUV1_10 := fbAlfen10.stDataECS.arrSocketEnergySession[1];
+							lrTotalEnergyUV1_10 := fbAlfen10.stDataECS.lrTotalCounterEnergy_Consumption;
+
+(*---------------------------------------------DC1-----------------------------------------------------------*)	
+	
+//Manual Power
+fbApliT_1.stSetupECS.bManualyOn := bManualyOnDC_1;
+	fbApliT_1.stSetupECS.byManualyTargetPower := byManualyTargetPowerDC_1;
+	
+fbApliT_1(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.177', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bSManualyOn_DC_1 := fbApliT_1.stDataECS.bSManualyOn;
+	bySManualyTargetPowerDC_1 := fbApliT_1.stDataECS.bySManualyTargetPower;
+		byErrorWarningDC_1 := fbApliT_1.stDataECS.byErrorWarning;
+			lrPowerTotalDC1 := fbApliT_1.stDataECS.lrTotalPower;
+				lrPowerDC1_S1 :=  fbApliT_1.stDataECS.arrSocketPower[1];
+					lrPowerDC1_S2 :=  fbApliT_1.stDataECS.arrSocketPower[2];	 	
+						rChargingTimeInMinDC1_S1 := fbApliT_1.stDataECS.arrChargingTimeInMin[1];	
+							rChargingTimeInMinDC1_S2 := fbApliT_1.stDataECS.arrChargingTimeInMin[2];
+								dwSOCCarDC1_S1 := fbApliT_1.stDataECS.arrSocketSOCCar[1]; 
+									dwSOCCarDC1_S2 := fbApliT_1.stDataECS.arrSocketSOCCar[2]; 	
+										wStateDC1_S1 := fbApliT_1.stDataECS.arrSocketStateECS[1];
+											wStateDC1_S2 := fbApliT_1.stDataECS.arrSocketStateECS[2];
+												lrEnergySessionDC1_S1 := fbApliT_1.stDataECS.arrSocketEnergySession[1];
+													lrEnergySessionDC1_S2 := fbApliT_1.stDataECS.arrSocketEnergySession[2];
+														lrTotalEnergyDC1 := fbApliT_1.stDataECS.lrTotalCounterEnergy_Consumption;			
+		
+(*---------------------------------------------DC2-----------------------------------------------------------*)	
+	
+//Manual Power
+fbApliT_2.stSetupECS.bManualyOn := bManualyOnDC_2;
+	fbApliT_2.stSetupECS.byManualyTargetPower := byManualyTargetPowerDC_2;
+	
+fbApliT_2(
+	bEnable:= , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	byUnitID:= 1, 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '192.168.1.185', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+	
+bSManualyOn_DC_2 := fbApliT_2.stDataECS.bSManualyOn;
+	bySManualyTargetPowerDC_2 := fbApliT_2.stDataECS.bySManualyTargetPower;
+		byErrorWarningDC_2 := fbApliT_2.stDataECS.byErrorWarning;
+			lrPowerTotalDC2 := fbApliT_2.stDataECS.lrTotalPower;
+				lrPowerDC2_S1 :=  fbApliT_2.stDataECS.arrSocketPower[1];
+					lrPowerDC2_S2 :=  fbApliT_2.stDataECS.arrSocketPower[2];	 	
+						rChargingTimeInMinDC2_S1 := fbApliT_2.stDataECS.arrChargingTimeInMin[1];	
+							rChargingTimeInMinDC2_S2 := fbApliT_2.stDataECS.arrChargingTimeInMin[2];
+								dwSOCCarDC2_S1 := fbApliT_2.stDataECS.arrSocketSOCCar[1]; 
+									dwSOCCarDC2_S2 := fbApliT_2.stDataECS.arrSocketSOCCar[2]; 	
+										wStateDC2_S1 := fbApliT_2.stDataECS.arrSocketStateECS[1];
+											wStateDC2_S2 := fbApliT_2.stDataECS.arrSocketStateECS[2];
+												lrEnergySessionDC2_S1 := fbApliT_2.stDataECS.arrSocketEnergySession[1];
+													lrEnergySessionDC2_S2 := fbApliT_2.stDataECS.arrSocketEnergySession[2];
+														lrTotalEnergyDC2 := fbApliT_2.stDataECS.lrTotalCounterEnergy_Consumption;]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS1">
+      <LineId Id="348" Count="1" />
+      <LineId Id="237" Count="2" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="17" Count="12" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="780" Count="0" />
+      <LineId Id="957" Count="3" />
+      <LineId Id="764" Count="0" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="262" Count="1" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="46" Count="12" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="781" Count="0" />
+      <LineId Id="962" Count="2" />
+      <LineId Id="961" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="266" Count="1" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="61" Count="12" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="782" Count="0" />
+      <LineId Id="966" Count="2" />
+      <LineId Id="965" Count="0" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="76" Count="12" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="783" Count="0" />
+      <LineId Id="970" Count="2" />
+      <LineId Id="969" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="274" Count="1" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="91" Count="12" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="784" Count="0" />
+      <LineId Id="974" Count="2" />
+      <LineId Id="973" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="278" Count="1" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="106" Count="12" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="785" Count="0" />
+      <LineId Id="978" Count="2" />
+      <LineId Id="977" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="282" Count="1" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="121" Count="12" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="786" Count="0" />
+      <LineId Id="982" Count="2" />
+      <LineId Id="981" Count="0" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="286" Count="1" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="136" Count="12" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="787" Count="0" />
+      <LineId Id="986" Count="2" />
+      <LineId Id="985" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="290" Count="1" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="151" Count="12" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="788" Count="0" />
+      <LineId Id="990" Count="2" />
+      <LineId Id="989" Count="0" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="294" Count="1" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="166" Count="12" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="789" Count="0" />
+      <LineId Id="994" Count="2" />
+      <LineId Id="993" Count="0" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="301" Count="1" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="181" Count="9" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="444" Count="0" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="1195" Count="1" />
+      <LineId Id="790" Count="0" />
+      <LineId Id="1197" Count="0" />
+      <LineId Id="791" Count="0" />
+      <LineId Id="1198" Count="0" />
+      <LineId Id="997" Count="0" />
+      <LineId Id="1199" Count="0" />
+      <LineId Id="998" Count="0" />
+      <LineId Id="1200" Count="0" />
+      <LineId Id="999" Count="0" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="305" Count="1" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="225" Count="9" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="1201" Count="13" />
+      <LineId Id="1000" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,542 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_CoE_EL3443" Id="{6846c14a-c98d-4075-b06b-e3fdbbbfacb4}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CoE_EL3443
+VAR_INPUT
+	m_start: BOOL;
+	nSlaveAddr	:UINT;
+	b_SubIndex	:BYTE;
+	uiCurrentTransformerRatio		: UINT;											//CT Ratio
+END_VAR
+VAR_OUTPUT
+	m_Busy: BOOL;
+	m_CoE_Write_done: BOOL;
+	m_Error: bool;
+	udint_GetAMSNetID_Error: UDINT;
+	udint_WriteCoE_Error: UDINT;
+END_VAR
+VAR
+	i_State	:UINT:=1;
+	fb_GetAMSNetID	:FB_GetLocalAmsNetId;
+  	fb_coe_write          : FB_EcCoESdoWrite; // Function Block for writing in CoE
+
+
+	r_trig_Start: R_trig;
+	i_errorCount: INT;
+	i_AMSNetID_ReadOut_Succesfull: INT;
+	str_AMSNetID: STRING(30);
+ 	real_Value     : REAL ; (* variable to be written to the CoE Object *)
+ 	
+	i_CoE_Write_Succesfull: INT;
+
+	real_Current_Min_Warning 	: REAL	:=-100;
+	real_Current_Min_Error 		: REAL	:=-120;
+	real_Current_Max_Warning 	: REAL	:= 100;
+	real_Current_Max_Error 		: REAL	:= 120;
+	
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+r_trig_Start(Clk := m_start);
+b_SubIndex := LIMIT (1,b_SubIndex,8);
+CASE i_State OF
+	1: 		// wait for start
+	IF r_trig_Start.Q THEN
+		i_State := i_State+1;
+		m_CoE_Write_done := FALSE;
+		m_Busy := TRUE;
+		m_Error := FALSE;
+	END_IF
+
+	2:		// read out ams net ID	
+	fb_GetAMSNetID.bExecute := TRUE;
+	i_State := i_State+1;
+	
+	3: 		// wait for read out
+	IF fb_GetAMSNetID.bBusy = FALSE AND NOT fb_GetAMSNetID.bError = TRUE THEN
+		fb_GetAMSNetID.bExecute := FALSE;
+		i_AMSNetID_ReadOut_Succesfull := i_AMSNetID_ReadOut_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_GetAMSNetID.bError = TRUE THEN
+		fb_GetAMSNetID.bExecute := FALSE;
+		i_State := 100;
+	END_IF
+	
+	4: 		// read out AMS Net ID done, convert received data
+	str_AMSNetID := concat(BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[0]),'.');
+	str_AMSNetID := concat(str_AMSNetID,BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[1]));
+	str_AMSNetID := concat(str_AMSNetID,'.');	
+	str_AMSNetID := concat(str_AMSNetID,BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[2]));
+	str_AMSNetID := concat(str_AMSNetID,'.');
+	str_AMSNetID := concat(str_AMSNetID,BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[3]));
+	str_AMSNetID := concat(str_AMSNetID,'.');
+	str_AMSNetID := concat(str_AMSNetID,BYTE_TO_STRING(b_SubIndex));
+	str_AMSNetID := concat(str_AMSNetID,'.1');
+	
+	i_State := 10;
+
+	10: 	// write channel 1 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8000;
+	fb_coe_write.nSubIndex	:= 16#12; 
+	real_Value 			:= UINT_TO_REAL(uiCurrentTransformerRatio);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	11: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	12:		// wait 
+	i_State := 20;
+	
+	20: 	// write channel 2 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8010;
+	fb_coe_write.nSubIndex	:= 16#12; 
+	real_Value 			:= UINT_TO_REAL(uiCurrentTransformerRatio);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	21: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	22:		// wait 
+	i_State := 30;
+
+	30: 	// write channel 3 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8020;
+	fb_coe_write.nSubIndex	:= 16#12; 
+	real_Value 			:= UINT_TO_REAL(uiCurrentTransformerRatio);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	31: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	32:		// wait 
+	i_State := 40;		
+
+	40: 	// write Channel 1 current guard min error 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8001;
+	fb_coe_write.nSubIndex	:= 16#15; 
+	real_Value 			:= (real_Current_Min_Error);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	41: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+	
+	42:		// wait 
+	i_State := i_State+1;		
+
+	43: 	// write Channel 1 current guard min warning 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8001;
+	fb_coe_write.nSubIndex	:= 16#16; 
+	real_Value 			:= (real_Current_Min_Warning);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	44: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	45:		// wait 
+	i_State := i_State+1;		
+
+	46: 	// write Channel 1 current guard max warning 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8001;
+	fb_coe_write.nSubIndex	:= 16#17; 
+	real_Value 			:= (real_Current_Max_Warning);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	47: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+	
+	48:		// wait 
+	i_State := i_State+1;		
+
+	49: 	// write Channel 1 current guard max error 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8001;
+	fb_coe_write.nSubIndex	:= 16#18; 
+	real_Value 			:= (real_Current_Max_Error);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	50: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	51:		// wait 
+	i_State := i_State+1;	
+
+	52: 	// write Channel 2 current guard min error 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8011;
+	fb_coe_write.nSubIndex	:= 16#15; 
+	real_Value 			:= (real_Current_Min_Error);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	53: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+	
+	54:		// wait 
+	i_State := i_State+1;		
+
+	55: 	// write Channel 2 current guard min warning 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8011;
+	fb_coe_write.nSubIndex	:= 16#16; 
+	real_Value 			:= (real_Current_Min_Warning);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	56: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	57:		// wait 
+	i_State := i_State+1;		
+
+	58: 	// write Channel 2 current guard max warning 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8011;
+	fb_coe_write.nSubIndex	:= 16#17; 
+	real_Value 			:= (real_Current_Max_Warning);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	59: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+	
+	60:		// wait 
+	i_State := i_State+1;		
+
+	61: 	// write Channel 2 current guard max error 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8011;
+	fb_coe_write.nSubIndex	:= 16#18; 
+	real_Value 			:= (real_Current_Max_Error);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	62: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+	
+	63:		// wait 
+	i_State := i_State+1;	
+
+	64: 	// write Channel 3 current guard min error 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8021;
+	fb_coe_write.nSubIndex	:= 16#15; 
+	real_Value 			:= (real_Current_Min_Error);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	65: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+	
+	66:		// wait 
+	i_State := i_State+1;		
+
+	67: 	// write Channel 3 current guard min warning 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8021;
+	fb_coe_write.nSubIndex	:= 16#16; 
+	real_Value 			:= (real_Current_Min_Warning);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	68: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	69:		// wait 
+	i_State := i_State+1;		
+
+	70: 	// write Channel 3 current guard max warning 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8021;
+	fb_coe_write.nSubIndex	:= 16#17; 
+	real_Value 			:= (real_Current_Max_Warning);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	71: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+	
+	72:		// wait 
+	i_State := i_State+1;		
+
+	73: 	// write Channel 3 current guard max warning 
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8021;
+	fb_coe_write.nSubIndex	:= 16#18; 
+	real_Value 			:= (real_Current_Max_Error);
+	fb_coe_write.pSrcBuf	:= ADR(real_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(real_Value);
+	i_State := i_State+1;
+	
+	74: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF	
+	
+	75:		// wait *)
+	m_CoE_Write_done := TRUE;
+	m_Busy := FALSE;
+	i_State := 1;	
+	
+	100: 	//error state
+	i_errorCount := i_errorCount +1;
+	udint_GetAMSNetID_Error := fb_GetAMSNetID.nErrId;
+	udint_WriteCoE_Error := fb_coe_write.nErrId;
+	m_Busy := FALSE;
+	m_Error := true;
+	i_State := 1;
+
+END_CASE
+
+
+fb_GetAMSNetID(
+	bExecute:= , 
+	tTimeOut:= T#2S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> , 
+	AddrString=> , 
+	AddrBytes=> );
+	
+fb_coe_write(
+	sNetId:= str_AMSNetID, 
+	nSlaveAddr:= nSlaveAddr, 
+	nSubIndex:= , 
+	nIndex:= , 
+    pSrcBuf    := ,
+    cbBufLen   := ,
+	bExecute:= , 
+	tTimeout:= T#2S , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CoE_EL3443">
+      <LineId Id="125" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="64" Count="1" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="711" Count="2" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="355" Count="1" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="145" Count="3" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="88" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="192" Count="3" />
+      <LineId Id="352" Count="1" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="200" Count="11" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="215" Count="20" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="403" Count="17" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="427" Count="19" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="448" Count="19" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="468" Count="19" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="493" Count="85" />
+      <LineId Id="490" Count="0" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="586" Count="85" />
+      <LineId Id="491" Count="1" />
+      <LineId Id="400" Count="2" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="55" Count="8" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="106" Count="4" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="112" Count="4" />
+      <LineId Id="105" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

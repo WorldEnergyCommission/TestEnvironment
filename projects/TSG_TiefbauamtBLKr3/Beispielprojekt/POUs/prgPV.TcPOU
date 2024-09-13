@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgPV" Id="{cf0b2029-5ea8-4078-b99f-d8645e077968}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV
+VAR
+	fbPV1					: FB_Firmer_PV_Inverter_Sunspec;
+	fbPV2					: FB_Firmer_PV_Inverter_Sunspec;
+	fbPVInt1				: FB_PV_Power;
+	fbPVInt2				: FB_PV_Power;
+	fbPVCounter				: FB_EnergyCounter;
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV2				: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV1		: BYTE;					//{#lynus.ag#()}
+	byErrorWarningPV2		: BYTE;					//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrCounterPV				: LREAL;				//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbPV1(
+	bEnable:= TRUE, 
+	sIPAdress:= '172.16.1.161',
+	byUnitID_Inverter := 1,
+	stFirmerInverterData=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+fbPV2(
+	bEnable:= TRUE, 
+	sIPAdress:= '172.16.1.162',
+	byUnitID_Inverter := 1,
+	stFirmerInverterData=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+	
+fbPVInt1(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPV1.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+
+fbPVInt2(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPV2.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+
+lrPowerPV1 := fbPVInt1.stDataPv.lrPower;
+lrPowerPV2 := fbPVInt2.stDataPv.lrPower;
+	byErrorWarningPV1 := fbPVInt1.stDataPv.byErrorWarning;
+	byErrorWarningPV2 := fbPVInt2.stDataPv.byErrorWarning;
+
+// PV Power Total
+lrPowerPV := fbPVInt1.stDataPv.lrPower + fbPVInt2.stDataPv.lrPower;
+
+
+// EnergyCounter (Total)
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV">
+      <LineId Id="13" Count="2" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="48" Count="7" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="5" />
+      <LineId Id="58" Count="5" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="32" Count="13" />
+      <LineId Id="22" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,658 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_ECS_Alpitronic_Hypercharger" Id="{c5866281-34f5-4cfa-994d-241a817c423d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ECS_Alpitronic_Hypercharger
+VAR_INPUT PERSISTENT
+	bEnable										: BOOL;																			//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	bPowerDataInvers							: BOOL;																			//With True its possible to invert all received power data from the electric meter
+	byElectricFuseLine							: BYTE; 																		//Electric Fuse Line on wich the ECS is connected => 1 2 3 (If 0 then this charging station is not connected to a Electric Fuse Line)
+	byUnitID									: BYTE;																			//Unit ID 
+	diNrOfEMS_IN								: DINT;																			//Number of EMS what control this Device.
+	diNrOfEM_IN_CS								: DINT;																			//Number of the electric meter for incoming power data. (Power Data for this Device)
+	sIPAdress									: STRING(15);																	//IP Adress from the Alfen charging station
+	stSetupECS									: ST_Setup_ECS;																	//{#lynus.ag#()} //Setup charging station
+END_VAR
+VAR_OUTPUT
+	stDataECS									: ST_ECS_Output;																//{#lynus.ag#()} //Electric charging station output data
+	diNrOfECS_OUT								: DINT;																			//Active Number from the Electric charging Function for using on other functions
+	lrTotalPowerECSRealTime						: LREAL;																		//Total Electric Power in kW read out directly from the Charging station. (Real time)
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbCS										: FB_ElectricChargingStation;													//Function block for electric charging station
+	{attribute 'hide'}
+	fbNumberDevice								: FB_NumberOfDevice;															//Function block to calcualte the number of the Device
+	fbDIExternalLock							: FB_XL1XXX_DI;																	//Digital Input from external loock signal
+	{attribute 'hide'}
+	fbMBRead_FC4								: FB_MBReadInputRegs ;															//Modbus Read Function (FC4)
+	{attribute 'hide'}
+	fbMBWrite_FC16								: FB_MBWriteRegs;																//Modbus Write Function (FC16)
+	{attribute 'hide'}
+	fbConvertDwordToWord						: FB_CV_DWORD_TO_WORD;															//Convert Dword to Word
+	{attribute 'hide'}
+	fbConvertWordToDord							: FB_CV_WORD_TO_DWORD;															//Convert Word to Dword
+	{attribute 'hide'}
+	timDelay									: TON;																			//Timer for Delay between Requests
+	{attribute 'hide'}
+	timTimeout									: TON;																			//Timer for Timeout
+	{attribute 'hide'}
+	timDissableFunctions						: TON;																			//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL						: TON;																			//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	timDelayStart								: TON;																			//Timer to start the state machine with Daley after enabling or after the system ist restartet
+	{attribute 'hide'}
+	FPError_FC_4								: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPError_FC_16								: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPEnable									: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	arrPD										: ARRAY[1..15] OF FB_PersistentData_Number;										//Function to save persistent data
+	{attribute 'conditionalshow'}
+	arrEnergyCounterSocket						: ARRAY[1..4] OF FB_EnergyCounter;												//FB energy Counter, because the charging station not deliver the total energy Counter in kWh
+	{attribute 'hide'}
+	fbPDString									: FB_PersistentData_String;														//Function to save persistent string data
+	{attribute 'hide'}
+	arrBuffer_FC4								: ARRAY[1..9] OF WORD;															//Buffer with Data from FC3
+	{attribute 'hide'}
+	arrBuffer_FC16								: ARRAY[1..2] OF WORD;															//Buffer with Data from FC16
+	{attribute 'hide'}
+	arrConnectorState							: ARRAY[1..4] OF WORD;															//Connector State
+	{attribute 'hide'}
+	arrChargingTime								: ARRAY[1..4] OF WORD;															//Charging Time in seconds
+	{attribute 'hide'}
+	arrSOCCar									: ARRAY[1..4] OF WORD;															//SOC from the Car
+	{attribute 'hide'}
+	arrPowerConnector							: ARRAY[1..4] OF DWORD;															//Power in W from each Connector
+	{attribute 'hide'}
+	arrEnergySession							: ARRAY[1..4] OF REAL;															//Energy Session in kWh
+	{attribute 'hide'}
+	bErrorCS									: BOOL;																			//Error State from the charging station
+	{attribute 'hide'}
+	bMBTCPError									: BOOL;																			//Modbus TCP Function Error																	
+	{attribute 'hide'}
+	byWaitInStep								: BYTE;																			//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData								: INT;																			//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	iStateModbusRead							: INT;																			//State machine for read out Data over Modbus RTU
+	{attribute 'hide'}
+	iStateModbusWrite							: INT;																			//State machine for write Data over Modbus RTU
+	{attribute 'hide'}
+	iStateModbusError							: INT;																			//State machine for error out Data over Modbus RTU	
+	{attribute 'hide'}
+	iStateModbus_CP								: INT;																			//Variable to compare the state machine variable to set or reset the timeout timer
+	{attribute 'hide'}
+	wNumberOfConnectors							: WORD;																			//Number of real connecotrs on the charging station
+	{attribute 'hide'}
+	wStationState								: WORD;																			//Charging Station State
+	{attribute 'hide'}
+	wConnectorInProgress						: WORD;																			//Shows the Connector in Progress when we have more then 1 Connector	
+	{attribute 'hide'}
+	diNumberOfActiveBatterys					: DINT;																			//Number of active batterys
+	{attribute 'hide'}
+	diNumberOfBatteryInverterInEPO				: DINT;																			//Number of battery inverters that work in Emergency Power operation 
+	{attribute 'hide'}
+	diLPForGVL									: DINT;																			//Loop to clean old data on GVL
+	{attribute 'hide'}
+	diCounterForGVL								: DINT;																			//Counter to clean old data on GVL
+	{attribute 'hide'}
+	dwSumSOC									: DWORD;																		//Sum of the SOC from all batterys
+	{attribute 'hide'}
+	dwTargetPower								: DWORD;																		//Target Power in Watt to send to the charging station
+	{attribute 'hide'}
+	liLPBatteryData								: LINT;																			//Loop to check some data from batterys
+	{attribute 'hide'}
+	liLPInEPO									: LINT;																			//Loop to check if 1 or more battery inverters build a island grid
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	diNrOfEMS_IN_CP								: DINT;																			//Number of EMS what control this Device to compare with the original
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 07.10.2021
+//Version : 1.0.0.0
+
+//With this Funcition its possible to communicate with a Alpitronic Hypercharger charging station over Modbus TCP.
+//Its possible to controll the charging station over the charge power with the unit W
+//This Charging station is a DC Hypercharger System.
+//This API deliver the real Number of Connectors on the charging station
+//To switch off the charging station send 0 Power to the charging station
+//The minimal Curretn is set to 7.5 Ampere on AC site, bacause with al values that are < 5kW its not possible to charge the Car on DC site
+//This Function Block support maximal 4 Connectors
+
+//Versions that are supported : 1.3A Date : October 2020
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+
+diNrOfEMS_IN := LIMIT(0,diNrOfEMS_IN,Constants_Energy.diMaxNumberOfEMS);
+	diNrOfEM_IN_CS := LIMIT(0,diNrOfEM_IN_CS,Constants_Energy.diMaxNumberOfElectricMeters);	
+
+(*------------------------------------------------------------------Power Data----------------------------------------------------------------------------*)
+
+//Energy Counter Functions
+arrEnergyCounterSocket[1](
+	byActiveTariff:= 1, 
+	lrPowerInput:= DWORD_TO_REAL(arrPowerConnector[1]) / 1000, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+arrEnergyCounterSocket[2](
+	byActiveTariff:= 1, 
+	lrPowerInput:= DWORD_TO_REAL(arrPowerConnector[2]) / 1000, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+
+arrEnergyCounterSocket[3](
+	byActiveTariff:= 1, 
+	lrPowerInput:= DWORD_TO_REAL(arrPowerConnector[3]) / 1000, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );	
+	
+arrEnergyCounterSocket[4](
+	byActiveTariff:= 1, 
+	lrPowerInput:= DWORD_TO_REAL(arrPowerConnector[4]) / 1000, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+
+IF diNrOfEM_IN_CS <> 0 THEN
+	//Energy Session Input data
+	fbCS.bCalculateEnergySession := FALSE;
+	fbCS.arrSocketPowerECS[1] := 0;
+	fbCS.arrSocketPowerECS[2] := 0;
+	fbCS.arrSocketPowerECS[3] := 0;
+	fbCS.arrSocketPowerECS[4] := 0;
+	fbCS.arrSocketEnergySession[1] := 0;
+	fbCS.arrSocketEnergySession[2] := 0;
+	fbCS.arrSocketEnergySession[3] := 0;
+	fbCS.arrSocketEnergySession[4] := 0;
+		IF NOT bPowerDataInvers THEN
+			//Energy meter input data for cs Function block
+			fbCS.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Production * 1000;
+			fbCS.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Production * 1000;
+			fbCS.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+			fbCS.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+			fbCS.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Production * 1000;
+			fbCS.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Consumption * 1000;
+				fbCS.lrTotalPowerECS := (Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrPower * 1000) * - 1;
+		ELSE
+			//Energy meter input data for cs Function block
+			fbCS.lrCounterEnergyT1_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Consumption * 1000;
+			fbCS.lrCounterEnergyT2_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Consumption * 1000;
+			fbCS.lrCounterEnergyT1_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT1_Production * 1000;
+			fbCS.lrCounterEnergyT2_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrCounterEnergyT2_Production * 1000;
+			fbCS.lrTotalCounterEnergy_Consumption := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Consumption * 1000;
+			fbCS.lrTotalCounterEnergy_Production := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrTotalCounterEnergy_Production * 1000;
+				fbCS.lrTotalPowerECS := Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_IN_CS].lrPower * 1000;
+		END_IF
+ELSE
+	//Energy meter input data for cs Function block
+	fbCS.lrCounterEnergyT1_Consumption := arrEnergyCounterSocket[1].lrCounterEnergyT1_Consumption + arrEnergyCounterSocket[2].lrCounterEnergyT1_Consumption + arrEnergyCounterSocket[3].lrCounterEnergyT1_Consumption + arrEnergyCounterSocket[4].lrCounterEnergyT1_Consumption;
+	fbCS.lrCounterEnergyT1_Consumption := fbCS.lrCounterEnergyT1_Consumption * 1000;
+	fbCS.lrCounterEnergyT2_Consumption := arrEnergyCounterSocket[1].lrCounterEnergyT2_Consumption + arrEnergyCounterSocket[2].lrCounterEnergyT2_Consumption + arrEnergyCounterSocket[3].lrCounterEnergyT2_Consumption + arrEnergyCounterSocket[4].lrCounterEnergyT2_Consumption;
+	fbCS.lrCounterEnergyT2_Consumption := fbCS.lrCounterEnergyT2_Consumption * 1000;
+	fbCS.lrCounterEnergyT1_Production := arrEnergyCounterSocket[1].lrCounterEnergyT1_Production + arrEnergyCounterSocket[2].lrCounterEnergyT1_Production + arrEnergyCounterSocket[3].lrCounterEnergyT1_Production + arrEnergyCounterSocket[4].lrCounterEnergyT1_Production;
+	fbCS.lrCounterEnergyT1_Production := fbCS.lrCounterEnergyT1_Production * 1000;
+	fbCS.lrCounterEnergyT2_Production := arrEnergyCounterSocket[1].lrCounterEnergyT2_Production + arrEnergyCounterSocket[2].lrCounterEnergyT2_Production + arrEnergyCounterSocket[3].lrCounterEnergyT2_Production + arrEnergyCounterSocket[4].lrCounterEnergyT2_Production;
+	fbCS.lrCounterEnergyT2_Production := fbCS.lrCounterEnergyT2_Production * 1000;
+	fbCS.lrTotalCounterEnergy_Consumption := fbCS.lrCounterEnergyT1_Consumption + fbCS.lrCounterEnergyT2_Consumption;
+	fbCS.lrTotalCounterEnergy_Production := fbCS.lrCounterEnergyT1_Production + fbCS.lrCounterEnergyT2_Production;
+		fbCS.lrTotalPowerECS := arrPowerConnector[1] + arrPowerConnector[2] + arrPowerConnector[3] + arrPowerConnector[4];
+	//Energy Session Input data
+	fbCS.bCalculateEnergySession := FALSE;
+	fbCS.arrSocketPowerECS[1] := arrPowerConnector[1];
+	fbCS.arrSocketPowerECS[2] := arrPowerConnector[2];
+	fbCS.arrSocketPowerECS[3] := arrPowerConnector[3];
+	fbCS.arrSocketPowerECS[4] := arrPowerConnector[4];
+	fbCS.arrSocketEnergySession[1] := arrEnergySession[1] * 1000;
+	fbCS.arrSocketEnergySession[2] := arrEnergySession[2] * 1000;
+	fbCS.arrSocketEnergySession[3] := arrEnergySession[3] * 1000;
+	fbCS.arrSocketEnergySession[4] := arrEnergySession[4] * 1000;
+END_IF			
+
+(*-------------------------------------------------------------Calcualte the number of ECS---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricChargingStations, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfECS_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS := diNrOfECS_OUT;	
+		iStateGVLData := 1;
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+			
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timDelay(IN:= , PT:= T#350MS, Q=> , ET=> );
+
+//Timer for Timeout in Statemachine
+IF (iStateModbusRead > 0 AND iStateModbusRead <= 3 AND iStateModbusRead = iStateModbus_CP) OR
+		(iStateModbusWrite > 0 AND iStateModbusWrite <= 1 AND iStateModbusWrite = iStateModbus_CP) THEN
+			timTimeout.IN := TRUE;
+ELSE	
+			timTimeout.IN := FALSE;
+END_IF 
+	//Timeout Timer is dissabled when the Init Step is aktiv or the function is not enabled
+	IF (iStateModbusRead = 0 AND iStateModbusWrite = 0) OR NOT bEnable THEN timTimeout.IN := FALSE; END_IF
+		timTimeout(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Enable with Delay that not all sockets have to be created at the same time
+timDelayStart(IN:= bEnable, PT:= T#20MS * diNrOfECS_OUT, Q=> , ET=> );
+	FPEnable(CLK:= timDelayStart.Q, Q=> );
+
+IF FPEnable.Q AND iStateModbusRead = 0 AND iStateModbusWrite = 0 THEN iStateModbusRead := 1; wConnectorInProgress := 1; END_IF		
+		
+//Not Enabled
+IF NOT bEnable THEN iStateModbusRead := 0; iStateModbusError := 0; iStateModbusWrite := 0; END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step 
+		iStateModbus_CP := 0;
+			timDelay.IN := FALSE;
+				fbMBRead_FC4.bExecute := FALSE;
+					fbMBWrite_FC16.bExecute := FALSE;
+						wConnectorInProgress := 0;
+		arrConnectorState[1] := 0; arrConnectorState[2] := 0; arrConnectorState[3] := 0; arrConnectorState[4] := 0;
+	
+	1://Read Out the Number of connectors and the Charging station State (Register 2 and 3)
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Reset Write
+		fbMBWrite_FC16.bExecute := FALSE;
+			
+		//Start Read
+		fbMBRead_FC4.nQuantity := 2;
+			fbMBRead_FC4.nMBAddr := 2;
+				fbMBRead_FC4.bExecute := TRUE;
+					fbMBRead_FC4.nUnitID := byUnitID;
+			
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//Number of real Connectors
+			wNumberOfConnectors := arrBuffer_FC4[1];
+			//Charging station State
+			wStationState := arrBuffer_FC4[2];	 
+			//Connector in Progress
+			wConnectorInProgress := LIMIT(1,wConnectorInProgress,4);
+			//Go to Next Step
+			fbMBRead_FC4.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 2;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+	2://Read Out the Information of the real connecotrs (Register "1"00 to "1"08)
+		iStateModbus_CP := iStateModbusRead;
+		
+		//Start Read
+		fbMBRead_FC4.nQuantity := 9;
+			fbMBRead_FC4.nMBAddr := 100 * wConnectorInProgress;
+				fbMBRead_FC4.bExecute := TRUE;
+					fbMBRead_FC4.nUnitID := byUnitID;
+			
+		IF fbMBRead_FC4.bBusy THEN timDelay.IN := TRUE; END_IF
+		
+		//Wait for Delay, copy Data and then next step
+		IF NOT fbMBRead_FC4.bBusy AND NOT fbMBRead_FC4.bError AND timDelay.Q THEN
+			//Connecotor State
+			arrConnectorState[wConnectorInProgress] := arrBuffer_FC4[1];
+			//Connector Power
+			fbConvertWordToDord(wInputValue_1:= arrBuffer_FC4[5], wInputValue_2:= arrBuffer_FC4[6], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+				arrPowerConnector[wConnectorInProgress] := fbConvertWordToDord.dwOutputValue;
+			//Charging Time in Seconds
+			arrChargingTime[wConnectorInProgress] := arrBuffer_FC4[7];
+			//Energy Session
+			arrEnergySession[wConnectorInProgress] := WORD_TO_REAL(arrBuffer_FC4[8]) / 100;
+			//SOC from the Car
+			arrSOCCar[wConnectorInProgress] := arrBuffer_FC4[9] / 100;
+			//Go to Next Step
+			fbMBRead_FC4.bExecute := FALSE;
+				timDelay.IN := FALSE;		
+					iStateModbusRead := 3;
+		END_IF	
+
+		//Error or Timeout
+		IF FPError_FC_4.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+	3://Wait 1 Step to reset the delay counter befor start to write
+		iStateModbus_CP := iStateModbusRead;
+		
+			iStateModbusWrite := 1;
+				//-1 because 0 is the Init Step for Read
+				iStateModbusRead := - 1;
+				
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q THEN 
+				iStateModbusError := 300; 
+					 
+			END_IF
+	
+END_CASE
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+ 
+IF wStationState = 10 OR arrConnectorState[1] = 10 OR arrConnectorState[2] = 10 OR arrConnectorState[3] = 10 OR arrConnectorState[4] = 10 THEN bErrorCS := TRUE; ELSE bErrorCS := FALSE; END_IF  
+
+IF timDissableFunctions.Q THEN fbCS.bWarning := TRUE; fbCS.iWarningCode := 0; ELSE fbCS.bWarning := FALSE; END_IF   
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS > Constants_Energy.diMaxNumberOfElectricChargingStations OR bErrorCS OR bMBTCPError THEN 
+		fbCS.bError := TRUE;
+	ELSE 
+		fbCS.bError := FALSE;
+			fbCS.iErrorCode := 0;
+	END_IF
+
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfECS > Constants_Energy.diMaxNumberOfElectricChargingStations THEN fbCS.iErrorCode := 1;
+ELSIF bErrorCS OR bMBTCPError THEN fbCS.iErrorCode := 0; END_IF
+
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+
+//Calcualte the total SOC if we have more then 1 battery in our system
+diNumberOfActiveBatterys := 0;
+	dwSumSOC := 0;
+		FOR liLPBatteryData := 1 TO Constants_Energy.diMaxNumberOfBatterys BY 1 DO
+			IF Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].bEnabled THEN diNumberOfActiveBatterys := diNumberOfActiveBatterys + 1; END_IF
+				dwSumSOC := dwSumSOC + Lynus_Standards.GVL_Energy.stDataOfBatterys[diNrOfEMS_IN,liLPBatteryData].dwSOC;
+		END_FOR
+	
+IF diNumberOfActiveBatterys > 0 THEN
+	fbCS.dwBatterySOC := DINT_TO_DWORD(DWORD_TO_DINT(dwSumSOC) / diNumberOfActiveBatterys);
+ELSE
+	fbCS.dwBatterySOC := 100;	//When we have no battery in the ems system
+END_IF
+
+//Check if one or more Batterysystems or batteryinverter make island mode
+diNumberOfBatteryInverterInEPO := 0;
+	FOR liLPInEPO := 1 TO Constants_Energy.diMaxNumberOfBatteryInverters BY 1 DO
+		IF Lynus_Standards.GVL_Energy.stDataOfBatteryInverters[diNrOfEMS_IN,liLPInEPO].bWorkOnIslandMode THEN fbCS.bEPOIsActive := TRUE; diNumberOfBatteryInverterInEPO := diNumberOfBatteryInverterInEPO + 1; END_IF
+	END_FOR 
+		IF diNumberOfBatteryInverterInEPO <= 0 THEN fbCS.bEPOIsActive := FALSE; END_IF
+
+//Digital input for external lock signal
+fbDIExternalLock(bInvers:= FALSE, bSignal=> );
+
+//Car connected to the ECS  
+IF arrConnectorState[1] = 2 OR arrConnectorState[2] = 2 OR arrConnectorState[3] = 2 OR arrConnectorState[4] = 2 OR
+	 arrConnectorState[1] = 3 OR arrConnectorState[2] = 3 OR arrConnectorState[3] = 3 OR arrConnectorState[4] = 3 OR 
+		arrConnectorState[1] = 6 OR arrConnectorState[2] = 6 OR arrConnectorState[3] = 6 OR arrConnectorState[4] = 6 THEN 
+		fbCS.bCarConnected := TRUE; 
+ELSE 
+		fbCS.bCarConnected := FALSE; 
+END_IF 
+
+//Charging time and SOC from the Car
+fbCS.arrSocketChargingTimeInput[1] :=  arrChargingTime[1] / 60;
+fbCS.arrSocketChargingTimeInput[2] :=  arrChargingTime[2] / 60;
+fbCS.arrSocketChargingTimeInput[3] :=  arrChargingTime[3] / 60;
+fbCS.arrSocketChargingTimeInput[4] :=  arrChargingTime[4] / 60;
+
+fbCS.arrSOCCar[1] := arrSOCCar[1];
+fbCS.arrSOCCar[2] := arrSOCCar[2];
+fbCS.arrSOCCar[3] := arrSOCCar[3];
+fbCS.arrSOCCar[4] := arrSOCCar[4];
+
+//Mode 3 State
+fbCS.arrSocketMode3StateECS[1] := '';
+fbCS.arrSocketMode3StateECS[2] := '';
+fbCS.arrSocketMode3StateECS[3] := '';
+fbCS.arrSocketMode3StateECS[4] := '';
+//ECS is Free
+IF arrConnectorState[1] = 0 THEN fbCS.arrSocketMode3StateECS[1] := 'A'; END_IF
+IF arrConnectorState[2] = 0 THEN fbCS.arrSocketMode3StateECS[2] := 'A'; END_IF
+IF arrConnectorState[3] = 0 THEN fbCS.arrSocketMode3StateECS[3] := 'A'; END_IF
+IF arrConnectorState[4] = 0 THEN fbCS.arrSocketMode3StateECS[4] := 'A'; END_IF
+//ECS Car Connected
+IF arrConnectorState[1] = 2 OR arrConnectorState[1] = 6 THEN fbCS.arrSocketMode3StateECS[1] := 'B1'; END_IF
+IF arrConnectorState[2] = 2 OR arrConnectorState[2] = 6 THEN fbCS.arrSocketMode3StateECS[2] := 'B1'; END_IF
+IF arrConnectorState[3] = 2 OR arrConnectorState[3] = 6 THEN fbCS.arrSocketMode3StateECS[3] := 'B1'; END_IF
+IF arrConnectorState[4] = 2 OR arrConnectorState[4] = 6 THEN fbCS.arrSocketMode3StateECS[4] := 'B1'; END_IF
+//ECS Car is Charging
+IF arrConnectorState[1] = 3 THEN fbCS.arrSocketMode3StateECS[1] := 'C2'; END_IF
+IF arrConnectorState[2] = 3 THEN fbCS.arrSocketMode3StateECS[2] := 'C2'; END_IF
+IF arrConnectorState[3] = 3 THEN fbCS.arrSocketMode3StateECS[3] := 'C2'; END_IF
+IF arrConnectorState[4] = 3 THEN fbCS.arrSocketMode3StateECS[4] := 'C2'; END_IF
+
+//Functionblock ECS
+fbCS(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= ,
+	bWarning := ,
+	bEPOIsActive:= , 
+	bExternalLock:= fbDIExternalLock.bSignal, 
+	bCarConnected:= , 
+	bWriteWithDelay:= TRUE, 
+	bCalculateEnergySession:= ,
+	iErrorCode:= , 
+	iWarningCode:= , 
+	arrSocketChargingTimeInput:= ,
+	arrSOCCar:= , 
+	dwBatterySOC:= , 
+	lrTotalCounterEnergy_Consumption:= , 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= , 
+	lrCounterEnergyT2_Consumption:= , 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= , 
+	lrTotalPowerECS:= , 
+	arrSocketEnergySession:= ,
+	rTargetPower:= Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].rTargetPowerEMS, 
+	rSupplyVoltage:= 692, 
+	rMinCurrent:= 7.5, 
+	tTimDelayOutput:= T#5S, 
+	tDelayError:= T#5S,
+	arrSocketMode3StateECS:= ,
+	arrSocketPowerECS:= ,
+	stSetupECS:= stSetupECS, 
+	stDataECSOut=> , 
+	stDataECSOutDelay=> stDataECS);
+
+dwTargetPower := REAL_TO_DWORD((stSetupECS.rMaxPower * fbCS.stDataECSOut.rTargetPower) / 100);
+	dwTargetPower := dwTargetPower * 1000;
+
+//Real time Power for Output
+lrTotalPowerECSRealTime := fbCS.stDataECSOut.lrTotalPower;
+	
+(*------------------------------------------------------------------------------------------State Machine Write---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusWrite OF	
+
+	1://Set the charging power (Reg 0)
+		iStateModbus_CP := iStateModbusWrite;
+		
+			fbMBWrite_FC16.nQuantity := 2;
+				fbMBWrite_FC16.nMBAddr := 0;
+					fbMBWrite_FC16.bExecute := TRUE;
+						fbMBWrite_FC16.nUnitID := byUnitID;
+		
+		//Prepear the sending Data. Charging Power for the charging station. 
+		//Charging power
+		fbConvertDwordToWord(dwInputValue:= dwTargetPower, eByteOrderForConvert:= eByteOrder.eBigEndian, wOutputValue_1=> arrBuffer_FC16[1], wOutputValue_2=> arrBuffer_FC16[2]);
+		
+		IF fbMBWrite_FC16.bBusy THEN timDelay.IN := TRUE; END_IF
+
+		//Wait for Delay and then next step
+		IF NOT fbMBWrite_FC16.bBusy AND NOT fbMBWrite_FC16.bError AND timDelay.Q THEN
+			fbMBWrite_FC16.bExecute := FALSE;
+				timDelay.IN := FALSE;
+					bMBTCPError := FALSE; 
+						//Restart from new with the Read out part
+						iStateModbusRead := 1;
+							iStateModbusWrite := 0;
+								wConnectorInProgress := wConnectorInProgress + 1;
+									IF wConnectorInProgress > 4 OR wConnectorInProgress > wNumberOfConnectors THEN wConnectorInProgress := 1; END_IF
+		END_IF
+				
+		//Error or Timout
+		IF FPError_FC_16.Q OR timTimeout.Q THEN
+			iStateModbusError := 300;
+		END_IF
+		
+END_CASE	
+	
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+			timDelay.IN := FALSE;
+				fbMBRead_FC4.bExecute := FALSE;
+					fbMBWrite_FC16.bExecute := FALSE;
+						bMBTCPError := TRUE; 		
+							//Restart from new with the Read out part after an Error
+							iStateModbusRead := 1;	
+								iStateModbusError := 0;
+									iStateModbusWrite := 0;
+						
+END_CASE
+
+(*------------------------------------------------------------------------------------------Modbus TCP Functions---------------------------------------------------------------------------------------------*)
+
+fbMBRead_FC4(sIPAddr:= sIPAdress, nTCPPort:= 502,cbLength:= SIZEOF(arrBuffer_FC4), pDestAddr:= ADR(arrBuffer_FC4), tTimeout:= T#10S );
+	FPError_FC_4(CLK:= fbMBRead_FC4.bError, Q=> );		
+
+fbMBWrite_FC16(sIPAddr:= sIPAdress, nTCPPort:= 502, cbLength:= SIZEOF(arrBuffer_FC16), pSrcAddr:= ADR(arrBuffer_FC16), tTimeout:= T#10S);	
+	FPError_FC_16(CLK:= fbMBWrite_FC16.bError, Q=> );
+
+(*-----------------------------------------------------------Handle data to Global structure for electric charging stations-----------------------------------------------------------------*)
+
+//Delte al old Data on GVL after a online change or change on the variable diNrOfEMS_IDOD
+IF diNrOfEMS_IN <> diNrOfEMS_IN_CP AND iStateGVLData = 0 THEN iStateGVLData := 10; END_IF 
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		FOR diLPForGVL := 1 TO Constants_Energy.diMaxNumberOfEMS BY 1 DO 
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].bEnabled := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].bIsControllable := FALSE;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].byErrorWarning := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].byPriority := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].lrPower := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].lrPowerConsumption := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].lrPowerProduction := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].rMaxPower := 0;
+											//Set also the target value from ems back here to 0 and not in EMS function because EMS is in Standy when we have a online change (Problem when we delete a ems function and make a online change)
+											Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diLPForGVL,diCounterForGVL].rTargetPowerEMS := 0;	
+		END_FOR
+		
+			//Counter for ECS
+			diCounterForGVL := diCounterForGVL + 1;
+				diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricChargingStations);
+					//Back to the init step
+					IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricChargingStations THEN iStateGVLData := 0; END_IF
+
+	10://Clear old Data on GVL 		
+		Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].bEnabled := FALSE;
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].bIsControllable := FALSE;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byErrorWarning := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].byPriority := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPower := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPowerConsumption := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].lrPowerProduction := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN_CP,diNrOfECS_OUT].rMaxPower := 0;
+									
+		diNrOfEMS_IN_CP := diNrOfEMS_IN;
+			//Back to the init step
+			iStateGVLData := 0;
+
+END_CASE 	 
+
+IF diNrOfECS_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet AND diNrOfEMS_IN > 0 THEN
+	Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].bEnabled := fbCS.stDataECSOut.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].bIsControllable := TRUE;
+			Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byErrorWarning := fbCS.stDataECSOut.byErrorWarning;
+				Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].byPriority := fbCS.stDataECSOut.byPriority;
+					Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPower := fbCS.stDataECSOut.lrTotalPower;
+						Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPowerConsumption := fbCS.stDataECSOut.lrTotalPowerConsumption;
+							Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].lrPowerProduction := fbCS.stDataECSOut.lrTotalPowerProduction;
+								Lynus_Standards.GVL_Energy.stDataElectricChargingStations[diNrOfEMS_IN,diNrOfECS_OUT].rMaxPower := fbCS.stDataECSOut.rMaxPower;	
+END_IF 
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BOOL_TO_LREAL(bPowerDataInvers), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN), bEventBasedActive=> );
+arrPD[4](lrValue:= DINT_TO_LREAL(diNrOfEM_IN_CS), bEventBasedActive=> );
+arrPD[5](lrValue:= BOOL_TO_LREAL(stSetupECS.bManualyOn), bEventBasedActive=> );
+arrPD[6](lrValue:= BOOL_TO_LREAL(stSetupECS.bOnEmergPowerOff), bEventBasedActive=> );
+arrPD[7](lrValue:= BYTE_TO_LREAL(stSetupECS.byCSMinPower), bEventBasedActive=> );
+arrPD[8](lrValue:= BYTE_TO_LREAL(stSetupECS.byDisableSOC), bEventBasedActive=> );
+arrPD[9](lrValue:= BYTE_TO_LREAL(stSetupECS.byEnableSOC), bEventBasedActive=> );
+arrPD[10](lrValue:= BYTE_TO_LREAL(stSetupECS.byManualyTargetPower), bEventBasedActive=> );
+arrPD[11](lrValue:= BYTE_TO_LREAL(stSetupECS.byPriority), bEventBasedActive=> );
+arrPD[12](lrValue:= REAL_TO_LREAL(stSetupECS.rMaxPower), bEventBasedActive=> );
+arrPD[13](lrValue:= DINT_TO_LREAL(diNrOfEMS_IN_CP), bEventBasedActive=> );
+arrPD[14](lrValue:= BYTE_TO_LREAL(byUnitID), bEventBasedActive=> );
+fbPDString(sText:= sIPAdress, bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ECS_Alpitronic_Hypercharger">
+      <LineId Id="4969" Count="536" />
+      <LineId Id="1079" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

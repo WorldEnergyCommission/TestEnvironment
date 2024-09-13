@@ -1,0 +1,5042 @@
+basePath: /v1
+definitions:
+  AlertListResponse:
+    properties:
+      data:
+        description: List of alerts for the requested page
+        items:
+          $ref: '#/definitions/alert.Alert'
+        type: array
+      pages:
+        description: Number of pages for the alerts
+        type: number
+    type: object
+  DocumentCreateMultipartResponse:
+    description: Repsonse object after creating a document, with the id for the multipart
+      upload
+    properties:
+      asset:
+        allOf:
+        - $ref: '#/definitions/document.Document'
+        description: Meta data about the document
+      upload_id:
+        description: UploaID for the multipart upload, used for refenrece when getting
+          presigned part URLs
+        type: string
+    type: object
+  DocumentCreateResponse:
+    description: Repsonse object after creating a document, with the presigned URL
+    properties:
+      asset:
+        allOf:
+        - $ref: '#/definitions/document.Document'
+        description: Meta data about the document
+      form:
+        additionalProperties:
+          type: string
+        description: Form data to be used in the post request
+        type: object
+      upload_url:
+        description: Presigned url to allow for post operations to storage
+        example: s3.efficientio.io/341234-asdf-14asdf-1243asdf
+        type: string
+    type: object
+  PresignedPartResponse:
+    properties:
+      url:
+        description: Presigned url to allow for post operations to storage
+        example: s3.efficientio.io/341234-asdf-14asdf-1243asdf
+        type: string
+    type: object
+  alert.Alert:
+    properties:
+      accepted_at:
+        type: string
+      accepted_by:
+        type: string
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      project_id:
+        type: string
+      type:
+        type: integer
+    type: object
+  alert.CreateOptions:
+    properties:
+      body:
+        type: string
+      project_id:
+        type: string
+      type:
+        type: integer
+    type: object
+  collection.Collection:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+    type: object
+  collection.CreateOptions:
+    properties:
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      project_id:
+        type: string
+    type: object
+  collection.UpdateOptions:
+    properties:
+      id:
+        type: string
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      project_id:
+        type: string
+    type: object
+  data_mapping.CreateOptions:
+    properties:
+      ProjectID:
+        type: string
+      mappings:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      type_id:
+        type: string
+    type: object
+  data_mapping.DataMapping:
+    properties:
+      complete_mappings:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      id:
+        type: string
+      mappings:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      project_id:
+        type: string
+      type:
+        type: string
+      type_id:
+        type: string
+    type: object
+  data_mapping.DataMappingType:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  data_mapping.DataMappingTypeProperty:
+    properties:
+      group:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      optional:
+        type: boolean
+      unit:
+        type: string
+    type: object
+  data_mapping.UpdateOptions:
+    properties:
+      id:
+        type: string
+      mappings:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+    type: object
+  device.CreateOptions:
+    properties:
+      collection_id:
+        type: string
+      data:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      project_id:
+        type: string
+    type: object
+  device.Device:
+    properties:
+      collection_id:
+        type: string
+      created_at:
+        type: string
+      data:
+        additionalProperties: {}
+        type: object
+      favorite:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  device.UpdateChartOptions:
+    properties:
+      interval:
+        type: string
+      period_name:
+        type: string
+      selected_stacking_options:
+        type: string
+    type: object
+  device.UpdateOptions:
+    properties:
+      collection_id:
+        type: string
+      data:
+        additionalProperties: {}
+        type: object
+      id:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  document.CreateOptions:
+    properties:
+      content_type:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      size:
+        type: integer
+    type: object
+  document.Document:
+    properties:
+      content_type:
+        type: string
+      created_at:
+        type: string
+      href:
+        description: the href will be computed, not saved in the db
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
+  document.SignedPartOptions:
+    properties:
+      id:
+        type: string
+      partNumber:
+        type: string
+      projectID:
+        type: string
+      upload_id:
+        type: string
+    type: object
+  icon.Icon:
+    properties:
+      id:
+        type: string
+      term:
+        type: string
+    type: object
+  invoice.Invoice:
+    properties:
+      amount:
+        description: amount will be in cents so that we can deal in integers instead
+          of floating point
+        type: number
+      created_at:
+        type: string
+      description:
+        type: string
+      due_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      paid_at:
+        type: string
+    type: object
+  main.CreateAdditonalPermissionsForMemberRequest:
+    properties:
+      permissions:
+        items:
+          type: string
+        type: array
+      scopes:
+        items:
+          type: string
+        type: array
+      wildcard:
+        type: boolean
+    type: object
+  main.DeleteAdditonalPermissionsForMemberRequest:
+    properties:
+      permission:
+        type: string
+      scope_id:
+        type: string
+    type: object
+  main.projectMachineReadableRequestBody:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  measurement.CreateOptions:
+    properties:
+      measurements:
+        items:
+          $ref: '#/definitions/measurement.Measurement'
+        type: array
+      project_id:
+        type: string
+    type: object
+  measurement.Measurement:
+    properties:
+      "n":
+        type: string
+      t:
+        type: number
+      u:
+        type: string
+      v:
+        type: number
+    type: object
+  member.CreateOptions:
+    properties:
+      id:
+        type: string
+      project_id:
+        type: string
+      realm:
+        type: string
+      role:
+        type: string
+    type: object
+  member.InviteOptions:
+    properties:
+      createdBy:
+        type: string
+      email:
+        type: string
+      project_id:
+        type: string
+      realm:
+        type: string
+    type: object
+  member.Member:
+    properties:
+      admin:
+        type: boolean
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      owner:
+        type: boolean
+      permissions:
+        items:
+          $ref: '#/definitions/permission.Permission'
+        type: array
+      role:
+        type: string
+    type: object
+  member.UpdateOptions:
+    properties:
+      id:
+        type: string
+      owner:
+        type: boolean
+      project_id:
+        type: string
+      realm:
+        type: string
+      role:
+        type: string
+    type: object
+  modules.CollectionUpdateOptions:
+    properties:
+      collection_id:
+        type: string
+      id:
+        type: string
+      project_id:
+        type: string
+    type: object
+  modules.CreateOptions:
+    properties:
+      name:
+        type: string
+      project_id:
+        type: string
+      properties:
+        items:
+          $ref: '#/definitions/modules.ModuleProperty'
+        type: array
+      type_id:
+        type: string
+    type: object
+  modules.EfficientIOModule:
+    properties:
+      collection_id:
+        type: string
+      created_at:
+        type: string
+      data:
+        additionalProperties: {}
+        description: properties for gui
+        type: object
+      id:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      properties:
+        items:
+          $ref: '#/definitions/modules.ModuleProperty'
+        type: array
+      type:
+        type: string
+      type_id:
+        type: string
+    type: object
+  modules.ModuleProperty:
+    properties:
+      data_mapping_id:
+        type: string
+      data_mapping_name:
+        type: string
+      data_mapping_type_id:
+        type: string
+      id:
+        type: string
+      mappings:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+    type: object
+  modules.ModuleTypeProperty:
+    properties:
+      data_mapping_type_id:
+        type: string
+      id:
+        type: string
+      max_count:
+        type: integer
+      min_count:
+        type: integer
+      name:
+        type: string
+      required_groups:
+        items:
+          type: string
+        type: array
+    type: object
+  modules.UpdateOptions:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      properties:
+        items:
+          $ref: '#/definitions/modules.ModuleProperty'
+        type: array
+    type: object
+  permission.Permission:
+    properties:
+      dependent_on:
+        items:
+          type: string
+        type: array
+      group:
+        type: string
+      id:
+        type: string
+      scope:
+        type: string
+      scope_id:
+        type: string
+      scope_reference:
+        type: string
+      without_scope:
+        type: boolean
+    type: object
+  project.Connectivity:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/rule.Action'
+        type: array
+      enabled:
+        type: boolean
+      last:
+        type: string
+    type: object
+  project.CreateOptions:
+    properties:
+      connectivity:
+        $ref: '#/definitions/project.Connectivity'
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      realm:
+        type: string
+      user_id:
+        type: string
+    type: object
+  project.Holidays:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      data:
+        additionalProperties: {}
+        type: object
+      project_id:
+        type: string
+    type: object
+  project.Limits:
+    properties:
+      collections:
+        description: "10"
+        type: integer
+      devices:
+        description: "100"
+        type: integer
+      members:
+        description: "25"
+        type: integer
+    type: object
+  project.OperatingHours:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      data:
+        additionalProperties: {}
+        type: object
+      project_id:
+        type: string
+    type: object
+  project.Project:
+    properties:
+      connectivity:
+        $ref: '#/definitions/project.Connectivity'
+      created_at:
+        type: string
+      id:
+        type: string
+      limits:
+        $ref: '#/definitions/project.Limits'
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      owner_id:
+        type: string
+      secret:
+        type: string
+      stats:
+        $ref: '#/definitions/project.Stats'
+    type: object
+  project.Stats:
+    properties:
+      collections:
+        type: integer
+      devices:
+        type: integer
+      errors:
+        type: integer
+      members:
+        type: integer
+      warnings:
+        type: integer
+    type: object
+  project.UpdateOptions:
+    properties:
+      connectivity:
+        $ref: '#/definitions/project.Connectivity'
+      id:
+        type: string
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+    type: object
+  report.Action:
+    properties:
+      format:
+        type: string
+      params:
+        properties:
+          body:
+            type: string
+          headers:
+            additionalProperties:
+              type: string
+            type: object
+          method:
+            type: string
+          recipients:
+            items:
+              type: string
+            type: array
+          subject:
+            type: string
+          url:
+            type: string
+        type: object
+      type:
+        type: string
+    type: object
+  report.Address:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      street:
+        type: string
+    type: object
+  report.CreateOptions:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/report.Action'
+        type: array
+      active:
+        type: boolean
+      address:
+        $ref: '#/definitions/report.Address'
+      currency:
+        type: string
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      project_id:
+        type: string
+      timezone:
+        type: string
+      type:
+        type: string
+      variables:
+        items:
+          $ref: '#/definitions/report.Variable'
+        type: array
+    type: object
+  report.Report:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/report.Action'
+        type: array
+      active:
+        type: boolean
+      address:
+        $ref: '#/definitions/report.Address'
+      created_at:
+        type: string
+      currency:
+        type: string
+      id:
+        type: string
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      timezone:
+        type: string
+      type:
+        type: string
+      variables:
+        items:
+          $ref: '#/definitions/report.Variable'
+        type: array
+    type: object
+  report.UpdateOptions:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/report.Action'
+        type: array
+      active:
+        type: boolean
+      address:
+        $ref: '#/definitions/report.Address'
+      currency:
+        type: string
+      id:
+        type: string
+      meta:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      project_id:
+        type: string
+      timezone:
+        type: string
+      variables:
+        items:
+          $ref: '#/definitions/report.Variable'
+        type: array
+    type: object
+  report.Variable:
+    properties:
+      end_value:
+        type: number
+      name:
+        type: string
+      start_value:
+        description: |-
+          these values will be applied programmatically
+          when getting a report (GET), because they are
+          needed for the report application
+          I don't think I will need them again anyways
+          since all the stuff is handeled by the report
+          service
+        type: number
+      title:
+        type: string
+      unit:
+        type: string
+      unit_cost:
+        type: number
+    type: object
+  rule.Action:
+    properties:
+      params:
+        $ref: '#/definitions/rule.Params'
+      type:
+        type: string
+    type: object
+  rule.Condition:
+    properties:
+      and_or:
+        type: boolean
+      condition:
+        type: string
+      target:
+        type: number
+      variable:
+        type: string
+    type: object
+  rule.CreateOptions:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/rule.Action'
+        type: array
+      active:
+        type: boolean
+      conditions:
+        items:
+          $ref: '#/definitions/rule.Condition'
+        type: array
+      created_manually:
+        type: boolean
+      name:
+        type: string
+      schedule:
+        items:
+          $ref: '#/definitions/rule.ScheduleItem'
+        type: array
+      timeout:
+        type: integer
+    type: object
+  rule.ITime:
+    properties:
+      hours:
+        type: integer
+      minutes:
+        type: integer
+    type: object
+  rule.Params:
+    properties:
+      body:
+        type: string
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      method:
+        type: string
+      project:
+        type: string
+      recipient:
+        description: sms specific
+        type: string
+      recipients:
+        description: email specific
+        items:
+          type: string
+        type: array
+      subject:
+        type: string
+      type:
+        description: event specific
+        type: integer
+      url:
+        description: webhook specific
+        type: string
+    type: object
+  rule.Rule:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/rule.Action'
+        type: array
+      active:
+        type: boolean
+      conditions:
+        items:
+          $ref: '#/definitions/rule.Condition'
+        type: array
+      created_at:
+        type: string
+      created_manually:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      schedule:
+        items:
+          $ref: '#/definitions/rule.ScheduleItem'
+        type: array
+      timeout:
+        type: integer
+    type: object
+  rule.ScheduleItem:
+    properties:
+      activeDays:
+        items:
+          type: boolean
+        type: array
+      timeFrom:
+        $ref: '#/definitions/rule.ITime'
+      timeTo:
+        $ref: '#/definitions/rule.ITime'
+      timezone:
+        type: string
+    type: object
+  rule.UpdateOptions:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/rule.Action'
+        type: array
+      active:
+        type: boolean
+      conditions:
+        items:
+          $ref: '#/definitions/rule.Condition'
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+      schedule:
+        items:
+          $ref: '#/definitions/rule.ScheduleItem'
+        type: array
+      timeout:
+        type: integer
+    type: object
+  user.Address:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      street:
+        type: string
+      zip_code:
+        type: string
+    type: object
+  user.CreateMFAOptions:
+    properties:
+      deviceName:
+        type: string
+      initialCode:
+        type: string
+      secret:
+        type: string
+    type: object
+  user.Limits:
+    properties:
+      projects:
+        type: integer
+    type: object
+  user.OTPCredentials:
+    properties:
+      created_date:
+        type: integer
+      device_name:
+        type: string
+      id:
+        type: string
+    type: object
+  user.OTPQr:
+    properties:
+      QR:
+        type: string
+      Secret:
+        type: string
+    required:
+    - QR
+    - Secret
+    type: object
+  user.Organization:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  user.UpdatePasswordOptions:
+    properties:
+      client_id:
+        type: string
+      confirm_password:
+        type: string
+      new_password:
+        type: string
+      otp:
+        type: string
+      password:
+        type: string
+      user_id:
+        type: string
+    type: object
+  user.User:
+    properties:
+      address:
+        $ref: '#/definitions/user.Address'
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      limits:
+        $ref: '#/definitions/user.Limits'
+      mobile:
+        type: string
+      organization:
+        $ref: '#/definitions/user.Organization'
+    type: object
+  weather.Location:
+    properties:
+      display_name:
+        type: string
+      lat:
+        type: string
+      lon:
+        type: string
+    type: object
+  weather.Weather:
+    properties:
+      clouds:
+        properties:
+          all:
+            type: integer
+        type: object
+      coord:
+        properties:
+          lat:
+            type: number
+          lon:
+            type: number
+        type: object
+      dt:
+        type: integer
+      main:
+        properties:
+          feels_like:
+            type: number
+          humidity:
+            type: number
+          pressure:
+            type: number
+          temp:
+            type: number
+          temp_max:
+            type: number
+          temp_min:
+            type: number
+        type: object
+      timezone:
+        type: integer
+      weather:
+        items:
+          properties:
+            description:
+              type: string
+            icon:
+              type: string
+            id:
+              type: integer
+            main:
+              type: string
+          type: object
+        type: array
+      wind:
+        properties:
+          deg:
+            type: number
+          speed:
+            type: number
+        type: object
+    type: object
+  weather.WeatherForecast:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/weather.Weather'
+        type: array
+    type: object
+info:
+  contact:
+    email: development@efficientio.com
+    name: API Support
+  description: EfficientIO API documentation for developers.
+  title: EfficientIO API
+  version: "1.0"
+paths:
+  /alerts/summary:
+    post:
+      consumes:
+      - application/json
+      description: Retrieves a summary of alerts for the specified projects.
+      parameters:
+      - description: The IDs of the projects to retrieve alerts for
+        in: body
+        name: project_ids
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: 'The maximum number of alerts to retrieve (default: 5)'
+        in: query
+        name: count
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Summary of alerts
+          schema:
+            items:
+              $ref: '#/definitions/alert.Alert'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Retrieve alerts summary
+      tags:
+      - Alerts
+  /assets/{name}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an asset by name and writes it to the response writer.
+      parameters:
+      - description: Name of the asset
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Asset content
+          schema:
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            type: object
+      summary: Retrieve an asset
+      tags:
+      - Assets
+  /data-mapping/types/{type_id}/properties:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of properties for a given type.
+      parameters:
+      - description: Type ID
+        in: path
+        name: type_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of properties
+          schema:
+            items:
+              $ref: '#/definitions/data_mapping.DataMappingTypeProperty'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listDataMappingTypes
+      summary: List properties for a type
+      tags:
+      - Data Mappings
+  /data-mapping/types/list:
+    get:
+      consumes:
+      - application/json
+      description: Lists all available data mapping types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of data mapping types
+          schema:
+            items:
+              $ref: '#/definitions/data_mapping.DataMappingType'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listDataMappingTypes
+      summary: List data mapping types
+      tags:
+      - Data Mappings
+  /icons:
+    get:
+      consumes:
+      - application/json
+      description: List icons based on a query parameter
+      parameters:
+      - description: The query parameter
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of icons
+          schema:
+            items:
+              $ref: '#/definitions/icon.Icon'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readIcon
+      summary: List icons
+      tags:
+      - Icons
+  /invoices:
+    get:
+      consumes:
+      - application/json
+      description: List all invoices for a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of invoices
+          schema:
+            items:
+              $ref: '#/definitions/invoice.Invoice'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List invoices
+      tags:
+      - Invoices
+  /invoices/{invoice_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve an invoice by ID
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice details
+          schema:
+            $ref: '#/definitions/invoice.Invoice'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Retrieve an invoice
+      tags:
+      - Invoices
+  /measurements/subscribe/multiple:
+    post:
+      consumes:
+      - application/json
+      description: Subscribe to the measurements of multiple projects
+      parameters:
+      - description: List of project IDs
+        in: body
+        name: project_ids
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Connection established event, or measurement event
+          schema:
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Subscribe to multiple projects' measurements
+      tags:
+      - Measurements
+  /modules/{module_id}/projects/{project_id}/collection:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a collection of modules based on the provided
+        module ID and project ID.
+      parameters:
+      - description: Module ID
+        in: path
+        name: module_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted device
+          schema:
+            $ref: '#/definitions/modules.EfficientIOModule'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - updateModule
+      summary: Delete a collection of modules
+      tags:
+      - Modules
+  /modules/types/{type_id}/properties:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of data mappings for a specific module type.
+      parameters:
+      - description: Module type ID
+        in: path
+        name: type_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of data mappings
+          schema:
+            items:
+              $ref: '#/definitions/modules.ModuleTypeProperty'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listModuleTypes
+      summary: List data mappings for module type
+      tags:
+      - Modules
+  /modules/types/list:
+    get:
+      description: Lists all types of modules.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of module types
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listModuleTypes
+      summary: List module types
+      tags:
+      - Modules
+  /permissions:
+    get:
+      consumes:
+      - application/json
+      description: List all possible permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of permissions
+          schema:
+            items:
+              $ref: '#/definitions/permission.Permission'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readPermission
+      summary: List permissions
+      tags:
+      - Permissions
+  /permissions/groups:
+    get:
+      consumes:
+      - application/json
+      description: List all possible permission  groups
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of groups
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readPermission
+      summary: List groups
+      tags:
+      - Permissions
+  /projects:
+    get:
+      description: List all projects for a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of projects
+          schema:
+            items:
+              $ref: '#/definitions/project.Project'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listProject
+      summary: List projects
+      tags:
+      - Projects
+    post:
+      consumes:
+      - application/json
+      description: Create a new project for the authenticated user
+      parameters:
+      - description: Project creation options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/project.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created project
+          schema:
+            $ref: '#/definitions/project.Project'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createProject
+      summary: Create project
+      tags:
+      - Projects
+  /projects/{project_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a project and its associated assets from the system
+      parameters:
+      - description: ID of the project to delete
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - deleteProject
+      summary: Delete a project and its assets
+      tags:
+      - Projects
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a project by its ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project details
+          schema:
+            $ref: '#/definitions/project.Project'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readProject
+      summary: Get project by ID
+      tags:
+      - Projects
+    put:
+      consumes:
+      - application/json
+      description: Update a project with the provided options
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Update options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/project.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated project
+          schema:
+            $ref: '#/definitions/project.Project'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - writeProject
+      summary: Update a project
+      tags:
+      - Projects
+  /projects/{project_id}/alerts:
+    get:
+      consumes:
+      - application/json
+      description: List alerts for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Accepted option
+        in: query
+        name: accepted
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Alerts list
+          schema:
+            $ref: '#/definitions/AlertListResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listAlert
+      summary: List alerts
+      tags:
+      - Alerts
+    post:
+      consumes:
+      - application/json
+      description: Accepts all alerts for a specific project and user.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All alerts accepted for the project
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - writeProject
+      summary: Accept all alerts
+      tags:
+      - Alerts
+  /projects/{project_id}/alerts/{alert_id}/accept:
+    post:
+      consumes:
+      - application/json
+      description: Accepts an alert for a specific project and alert ID.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Alert ID
+        in: path
+        name: alert_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Accepted alert
+          schema:
+            $ref: '#/definitions/alert.Alert'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - writeAlerts
+      summary: Accept alert
+      tags:
+      - Alerts
+  /projects/{project_id}/assets:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create an asset for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Asset file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created asset
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createProjectAsset
+      summary: Create asset
+      tags:
+      - Assets
+  /projects/{project_id}/collections:
+    get:
+      consumes:
+      - application/json
+      description: List collections for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of collections
+          schema:
+            items:
+              $ref: '#/definitions/collection.Collection'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+      summary: List collections
+      tags:
+      - Collections
+    post:
+      consumes:
+      - application/json
+      description: Create a new collection for a project
+      parameters:
+      - description: ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Options for creating the collection
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/collection.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created collection
+          schema:
+            $ref: '#/definitions/collection.Collection'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+      summary: Create collection
+      tags:
+      - Collections
+  /projects/{project_id}/collections/{collection_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a collection based on the collection ID
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collection_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Collection deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a collection
+      tags:
+      - Collections
+    get:
+      consumes:
+      - application/json
+      description: Get a collection by collection ID and project ID
+      parameters:
+      - description: Collection ID
+        in: path
+        name: collection_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The retrieved collection
+          schema:
+            $ref: '#/definitions/collection.Collection'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+      summary: Get a collection
+      tags:
+      - Collections
+    put:
+      consumes:
+      - application/json
+      description: Update a collection based on the provided options
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The ID of the collection
+        in: path
+        name: collection_id
+        required: true
+        type: string
+      - description: The options for updating the collection
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/collection.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated collection
+          schema:
+            $ref: '#/definitions/collection.Collection'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a collection
+      tags:
+      - Collections
+  /projects/{project_id}/data-mapping/{data-mapping}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a data mapping for a project and device
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Data Mapping ID
+        in: path
+        name: data-mapping
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No content
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - deleteDataMapping
+      summary: Delete data mapping
+      tags:
+      - Data Mappings
+    put:
+      consumes:
+      - application/json
+      description: Update the data mapping for a device
+      parameters:
+      - description: Data Mapping ID
+        in: path
+        name: data-mapping
+        required: true
+        type: string
+      - description: Data mapping update options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/data_mapping.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated Data Mapping
+          schema:
+            $ref: '#/definitions/data_mapping.DataMapping'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - deleteDataMapping
+      summary: Update data mapping
+      tags:
+      - Data Mappings
+  /projects/{project_id}/data-mapping/list:
+    get:
+      consumes:
+      - application/json
+      description: List data mappings for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of devices
+          schema:
+            items:
+              $ref: '#/definitions/data_mapping.DataMapping'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listDataMapping
+      summary: List data mappings
+      tags:
+      - Data Mappings
+  /projects/{project_id}/data-mapping/properties:
+    post:
+      consumes:
+      - application/json
+      description: Create a new data mapping property for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Data mapping property options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/data_mapping.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created data mapping property
+          schema:
+            items:
+              $ref: '#/definitions/data_mapping.DataMapping'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createDataMapping
+      summary: Create data mapping property
+      tags:
+      - Data Mappings
+  /projects/{project_id}/devices:
+    get:
+      consumes:
+      - application/json
+      description: List devices for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of devices
+          schema:
+            items:
+              $ref: '#/definitions/device.Device'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+      summary: List devices
+      tags:
+      - Devices
+    post:
+      consumes:
+      - application/json
+      description: Create a new device for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Device creation options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/device.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created device
+          schema:
+            $ref: '#/definitions/device.Device'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create device
+      tags:
+      - Devices
+  /projects/{project_id}/devices/{device_id}:
+    delete:
+      description: Delete a device with the specified project ID and device ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Device ID
+        in: path
+        name: device_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Device deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+      summary: Delete a device
+      tags:
+      - Devices
+    put:
+      consumes:
+      - application/json
+      description: Update a device with the provided options
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Device ID
+        in: path
+        name: device_id
+        required: true
+        type: string
+      - description: Update options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/device.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated device
+          schema:
+            $ref: '#/definitions/device.Device'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a device
+      tags:
+      - Devices
+  /projects/{project_id}/devices/chart-options/{device_id}:
+    put:
+      consumes:
+      - application/json
+      description: Update the chart options for a device in the database
+      parameters:
+      - description: Device ID
+        in: path
+        name: device_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Chart options to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/device.UpdateChartOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated device
+          schema:
+            $ref: '#/definitions/device.Device'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update chart options
+      tags:
+      - Devices
+  /projects/{project_id}/documents:
+    get:
+      consumes:
+      - application/json
+      description: List documents for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of documents
+          schema:
+            items:
+              $ref: '#/definitions/document.Document'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listDocument
+      summary: List documents
+      tags:
+      - Documents
+    post:
+      consumes:
+      - application/json
+      description: Create a new document with the specified options
+      parameters:
+      - description: The options for creating the document
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/document.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The upload URL, form data, and asset information
+          schema:
+            $ref: '#/definitions/DocumentCreateResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createDocument
+      summary: Create document
+      tags:
+      - Documents
+  /projects/{project_id}/documents/{document_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a document by ID and project ID
+      parameters:
+      - description: Document ID
+        in: path
+        name: document_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Document deleted successfully
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - deleteDocument
+      summary: Delete a document
+      tags:
+      - Documents
+  /projects/{project_id}/documents/{document_id}/multipart/complete:
+    put:
+      consumes:
+      - application/json
+      description: Completes a multipart upload for a document in the API.
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The ID of the document
+        in: path
+        name: document_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful completion of multipart upload
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createDocument
+      summary: Complete multipart upload for a document
+      tags:
+      - Documents
+  /projects/{project_id}/documents/{document_id}/multipart/part/{part_number}:
+    put:
+      consumes:
+      - application/json
+      description: Retrieves the signed part URL for a specific part of a document.
+      parameters:
+      - description: The options for creating the part
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/document.SignedPartOptions'
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Part number
+        in: path
+        name: part_number
+        required: true
+        type: string
+      - description: Document ID
+        in: path
+        name: document_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: URL of the signed part
+          schema:
+            $ref: '#/definitions/PresignedPartResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createDocument
+      summary: Get signed part URL for a document
+      tags:
+      - Documents
+  /projects/{project_id}/documents/multipart:
+    post:
+      consumes:
+      - application/json
+      description: Create a new multipart document with the specified options.
+      parameters:
+      - description: The options for creating the document
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/document.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upload ID and new asset
+          schema:
+            $ref: '#/definitions/DocumentCreateMultipartResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createDocument
+      summary: Create multipart document
+      tags:
+      - Documents
+  /projects/{project_id}/favorites/{device_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a device from the user's favorites list.
+      parameters:
+      - description: The ID of the device to remove from favorites
+        in: path
+        name: device_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated favorites list
+          schema:
+            additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+      summary: Remove device from favorites
+      tags:
+      - Devices
+    put:
+      consumes:
+      - application/json
+      description: Create a favorite device for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Device ID
+        in: path
+        name: device_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Favorite device created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create favorite device
+      tags:
+      - Devices
+  /projects/{project_id}/holidays:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the current holidays for the specified project.
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current holidays for the project
+          schema:
+            items:
+              $ref: '#/definitions/project.Holidays'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readProject
+      summary: Get current holidays for a project
+      tags:
+      - Projects
+    post:
+      consumes:
+      - application/json
+      description: This endpoint adds holidays to a project identified by the project
+        ID.
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The holidays data
+        in: body
+        name: data
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated operating hours
+          schema:
+            $ref: '#/definitions/project.Holidays'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - writeProject
+      summary: Add holidays to a project
+      tags:
+      - Projects
+  /projects/{project_id}/holidays/machine-readable:
+    post:
+      consumes:
+      - application/json
+      description: Retrieves the current holidays in machine-readable format for a
+        specific project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.projectMachineReadableRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Array of current holidays
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Retrieve current holidays (machine-readable)
+      tags:
+      - Projects
+  /projects/{project_id}/measurements/:
+    get:
+      consumes:
+      - application/json
+      description: List all measurements
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: User ID
+        in: header
+        name: x-user
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of measurements
+          schema:
+            additionalProperties:
+              type: number
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List measurements
+      tags:
+      - Measurements
+  /projects/{project_id}/measurements/{measurement_id}/chart:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the history of measurements for a specific project and
+        variable within a given time range.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Measurement ID
+        in: path
+        name: measurement_id
+        required: true
+        type: string
+      - description: Start time (Unix timestamp)
+        in: query
+        name: start
+        required: true
+        type: integer
+      - description: End time (Unix timestamp)
+        in: query
+        name: end
+        required: true
+        type: integer
+      - description: Interval for aggregation
+        in: query
+        name: int
+        type: string
+      - description: Aggregation method, methods like average, last value, min value,
+          ...
+        in: query
+        name: agg
+        type: string
+      - description: Missing value strategy
+        in: query
+        name: miss
+        type: string
+      - description: Timezone
+        in: query
+        name: tz
+        type: string
+      - description: Output format (highcharts)
+        in: query
+        name: format
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Measurement history in the form of [[ts1, val1], [ts2, val2]]
+          schema:
+            items:
+              items:
+                type: object
+              type: array
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get measurements history
+      tags:
+      - Measurements
+  /projects/{project_id}/measurements/{measurement_id}/publish:
+    post:
+      consumes:
+      - application/json
+      description: Publish a measurement for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Measurement value
+        in: body
+        name: value
+        required: true
+        schema:
+          $ref: '#/definitions/measurement.Measurement'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Published measurements
+          schema:
+            items:
+              $ref: '#/definitions/measurement.Measurement'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Publish measurement
+      tags:
+      - Measurements
+  /projects/{project_id}/measurements/{measurement}:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Retrieve a measurement for a specific project and variable either
+        - the last measurement of a variable if no time "at" is supplied
+        - the last measurement before time "at"
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The name of the measurement variable
+        in: path
+        name: measurement
+        required: true
+        type: string
+      - description: The timestamp of the measurement in Unix format
+        in: query
+        name: at
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The measurement data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Retrieve a measurement
+      tags:
+      - Measurements
+  /projects/{project_id}/measurements/all/subscribe:
+    get:
+      consumes:
+      - application/json
+      description: Subscribe to measurements for a project using Server Side Events
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Connection established event, or measurement event
+          schema:
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Subscribe to measurements
+      tags:
+      - Measurements
+    post:
+      consumes:
+      - application/json
+      description: Subscribe to measurements for a project using Server Side Events
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Connection established event, or measurement event
+          schema:
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Subscribe to measurements
+      tags:
+      - Measurements
+  /projects/{project_id}/members:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of members for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of members
+          schema:
+            items:
+              $ref: '#/definitions/member.Member'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List members
+      tags:
+      - Members
+    post:
+      consumes:
+      - application/json
+      description: Create a new member for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Member creation options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/member.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created member
+          schema:
+            $ref: '#/definitions/member.Member'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create member
+      tags:
+      - Members
+  /projects/{project_id}/members/{member_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a member from a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Member deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a member
+      tags:
+      - Members
+    get:
+      consumes:
+      - application/json
+      description: Retrieves information about a specific member in a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Member information
+          schema:
+            $ref: '#/definitions/member.Member'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get member information
+      tags:
+      - Members
+    put:
+      consumes:
+      - application/json
+      description: Update a member's information in a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      - description: Member update options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/member.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated member
+          schema:
+            $ref: '#/definitions/member.Member'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update member
+      tags:
+      - Members
+  /projects/{project_id}/members/{member_id}/permissions:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes additional permissions for a specific member
+        in a project.
+      parameters:
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Request data
+        in: body
+        name: requestData
+        required: true
+        schema:
+          $ref: '#/definitions/main.DeleteAdditonalPermissionsForMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Empty response
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete additional permissions for member
+      tags:
+      - Members
+    get:
+      consumes:
+      - application/json
+      description: Retrieves additional permissions for a member in a project.
+      parameters:
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Additional permissions
+          schema:
+            items:
+              $ref: '#/definitions/permission.Permission'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get additional permissions for a member
+      tags:
+      - Members
+    post:
+      consumes:
+      - application/json
+      description: Create additional permissions for a member in a project
+      parameters:
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreateAdditonalPermissionsForMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of additional permissions
+          schema:
+            items:
+              $ref: '#/definitions/permission.Permission'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create additional permissions for member
+      tags:
+      - Members
+  /projects/{project_id}/members/invite:
+    post:
+      consumes:
+      - application/json
+      description: Invites a user to a project and creates a member if the user does
+        not exist
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Invite options
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/member.InviteOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Invite member to project
+      tags:
+      - Members
+  /projects/{project_id}/modules:
+    post:
+      consumes:
+      - application/json
+      description: Create a module for a project
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The options for creating the module
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/modules.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The properties of the created module
+          schema:
+            $ref: '#/definitions/modules.EfficientIOModule'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createModule
+      summary: Create a module
+      tags:
+      - Modules
+  /projects/{project_id}/modules/{module_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a module by its ID for a specific project
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The ID of the module
+        in: path
+        name: module_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful deletion
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - deleteModule
+      summary: Delete a module
+      tags:
+      - Modules
+    put:
+      consumes:
+      - application/json
+      description: Update a module with the specified module ID
+      parameters:
+      - description: Module ID
+        in: path
+        name: module_id
+        required: true
+        type: string
+      - description: Update options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/modules.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated module
+          schema:
+            $ref: '#/definitions/modules.EfficientIOModule'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - updateModule
+      summary: Update a module
+      tags:
+      - Modules
+  /projects/{project_id}/modules/{module_id}/collection:
+    put:
+      consumes:
+      - application/json
+      description: Update a collection of modules for a project
+      parameters:
+      - description: Module ID
+        in: path
+        name: module_id
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Update options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/modules.CollectionUpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated device
+          schema:
+            $ref: '#/definitions/modules.EfficientIOModule'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - updateModule
+      summary: Update collection of modules
+      tags:
+      - Modules
+  /projects/{project_id}/modules/list:
+    get:
+      consumes:
+      - application/json
+      description: List modules for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Include variable mappings
+        in: query
+        name: includeMappings
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of modules
+          schema:
+            items:
+              $ref: '#/definitions/modules.EfficientIOModule'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listModules
+      summary: List modules
+      tags:
+      - Modules
+  /projects/{project_id}/mqtt-secret:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the MQTT secret for a specific project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: MQTT secret
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readMQTTSecret
+      summary: Retrieve MQTT secret
+      tags:
+      - Projects
+  /projects/{project_id}/operating-hours:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the current operating hours for a project.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current operating hours
+          schema:
+            items:
+              $ref: '#/definitions/project.OperatingHours'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readProject
+      summary: Get current operating hours
+      tags:
+      - Projects
+    post:
+      consumes:
+      - application/json
+      description: Add operating hours to a project
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The operating hours data
+        in: body
+        name: data
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Operating hours added successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - writeProject
+      summary: Add operating hours
+      tags:
+      - Projects
+  /projects/{project_id}/operating-hours/machine-readable:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the current operating hours for a project in a machine-readable
+        format.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.projectMachineReadableRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Machine-readable operating hours
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get current operating hours (machine-readable)
+      tags:
+      - Projects
+  /projects/{project_id}/permissions/{permission_id}/scopes:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint lists the possible scopes for a permission in a project.
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The ID of the permission
+        in: path
+        name: permission_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of possible scopes
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readPermission
+      summary: List possible scopes for a permission
+      tags:
+      - Permissions
+  /projects/{project_id}/reports:
+    get:
+      consumes:
+      - application/json
+      description: List reports for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of reports
+          schema:
+            items:
+              $ref: '#/definitions/report.Report'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listReport
+      summary: List reports
+      tags:
+      - Reports
+    post:
+      consumes:
+      - application/json
+      description: Create a report for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Report creation options
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/report.CreateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created report
+          schema:
+            $ref: '#/definitions/report.Report'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createReport
+      summary: Create a report
+      tags:
+      - Reports
+  /projects/{project_id}/reports/{report_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a report by its ID for a specific project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Report ID
+        in: path
+        name: report_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Report deleted
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - deleteReport
+      summary: Delete a report
+      tags:
+      - Reports
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a report based on the provided report ID, start time,
+        end time, and format.
+      parameters:
+      - description: Report ID
+        in: path
+        name: report_id
+        required: true
+        type: string
+      - description: Start time in Unix timestamp format
+        in: query
+        name: start
+        required: true
+        type: integer
+      - description: End time in Unix timestamp format
+        in: query
+        name: end
+        required: true
+        type: integer
+      - description: Report format
+        in: query
+        name: format
+        required: true
+        type: string
+      - description: Action flag
+        in: query
+        name: action
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Report data, either csv, json or pdf
+          schema:
+            items:
+              type: integer
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readReport
+      summary: Retrieve a report
+      tags:
+      - Reports
+    put:
+      consumes:
+      - application/json
+      description: Update a report with the specified options
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The ID of the report
+        in: path
+        name: report_id
+        required: true
+        type: string
+      - description: The options for updating the report
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/report.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated report
+          schema:
+            $ref: '#/definitions/report.Report'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - writeReport
+      summary: Update a report
+      tags:
+      - Reports
+  /projects/{project_id}/rules:
+    get:
+      consumes:
+      - application/json
+      description: List rules for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of rules
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/rule.Rule'
+              type: array
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - listRule
+      summary: List rules
+      tags:
+      - Rules
+    post:
+      consumes:
+      - application/json
+      description: Create rules for a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The rules to create
+        in: body
+        name: data
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/rule.CreateOptions'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created rules
+          schema:
+            items:
+              $ref: '#/definitions/rule.Rule'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - createRule
+      summary: Create rules
+      tags:
+      - Rules
+  /projects/{project_id}/rules/{rule_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a rule for a project
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The ID of the rule
+        in: path
+        name: rule_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - deleteRule
+        - deleteAI
+      summary: Delete a rule
+      tags:
+      - Rules
+    put:
+      consumes:
+      - application/json
+      description: Update a rule in a project
+      parameters:
+      - description: The ID of the project
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: The ID of the rule
+        in: path
+        name: rule_id
+        required: true
+        type: string
+      - description: The options for updating the rule
+        in: body
+        name: opts
+        required: true
+        schema:
+          $ref: '#/definitions/rule.UpdateOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated rule
+          schema:
+            $ref: '#/definitions/rule.Rule'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - writeRule
+        - writeAI
+      summary: Update a rule
+      tags:
+      - Rules
+  /projects/measurements:
+    post:
+      consumes:
+      - application/json
+      description: Create measurements for a project
+      parameters:
+      - description: The measurments in SenML format to create
+        in: body
+        name: data
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/measurement.CreateOptions'
+          type: array
+      - description: Ignore duplicates option
+        in: query
+        name: ignore_duplicates
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated projects
+          schema:
+            additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create measurements
+      tags:
+      - Measurements
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: List users based on the provided email and realm
+      parameters:
+      - description: Email of the user
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readUser
+      summary: List users
+      tags:
+      - Users
+  /users/{user}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves user information based on the provided user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User information
+          schema:
+            $ref: '#/definitions/user.User'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: object
+            type: object
+      security:
+      - OAuth2Application:
+        - readUser
+      summary: Get user information
+      tags:
+      - Users
+  /users/me:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the authenticated user and all associated projects and
+        assets.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Delete a user
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update a user's information
+      parameters:
+      - description: The user object with updated information
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Update user
+      tags:
+      - Users
+  /users/me/otp:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the configured OTP devices for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Configured OTP devices
+          schema:
+            items:
+              $ref: '#/definitions/user.OTPCredentials'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Get OTP devices
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Sets the OTP device for the authenticated user.
+      parameters:
+      - description: The options for creating MFA
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.CreateMFAOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Set OTP device
+      tags:
+      - Users
+  /users/me/otp/{otp_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the specified OTP device for the authenticated user.
+      parameters:
+      - description: OTP device ID
+        in: path
+        name: otp_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Delete OTP device
+      tags:
+      - Users
+  /users/me/otp/qr:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint generates a QR code for the user''s OTP (One-Time
+        Password).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: QR code image
+          schema:
+            $ref: '#/definitions/user.OTPQr'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Generate OTP QR code
+      tags:
+      - Users
+  /users/me/password:
+    put:
+      consumes:
+      - application/json
+      description: Update the password for the authenticated user
+      parameters:
+      - description: The options for updating the password
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdatePasswordOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response
+          schema:
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: Update password
+      tags:
+      - Users
+  /users/me/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the platform permissions for a user based on the authentication.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Platform permissions
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get platform permissions for a user
+      tags:
+      - Users
+  /weather:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves weather information based on latitude and longitude.
+      parameters:
+      - description: Latitude
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Longitude
+        in: query
+        name: lon
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Weather information
+          schema:
+            $ref: '#/definitions/weather.Weather'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readWeather
+      summary: Get weather information
+      tags:
+      - Weather
+  /weather/forecast:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the hour forecast for a given latitude and longitude.
+      parameters:
+      - description: Latitude of the location
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Longitude of the location
+        in: query
+        name: lon
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Hourly forecast
+          schema:
+            $ref: '#/definitions/weather.WeatherForecast'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readWeather
+      summary: Get weather forecast
+      tags:
+      - Weather
+  /weather/place:
+    get:
+      consumes:
+      - application/json
+      description: Get weather place based on the query parameter
+      parameters:
+      - description: The query parameter for weather place
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of weather locations
+          schema:
+            items:
+              $ref: '#/definitions/weather.Location'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - OAuth2Application:
+        - readWeather
+      summary: Get weather place
+      tags:
+      - Weather
+securityDefinitions:
+  OAuth2Application:
+    flow: password
+    tokenUrl: https://api.efficientio.io/v1/auth/dev/token
+    type: oauth2
+swagger: "2.0"
+tags:
+- description: Project management endpoints.
+  name: Projects
+- description: Collection management endpoints. Collections are for grouping devices.
+    The might get referred to as "Areas" in the console.
+  name: Collections
+- description: Devices are used to map between measurements stored in the database
+    and visualizations in the console.
+  name: Devices
+- description: Measurement endpoints, to list, create, and get measurements. Also
+    subscribe endpoints for live updates using SSE.
+  name: Measurements
+- description: Member management endpoints, to manage members of projects and their
+    roles in projects.
+  name: Members
+- description: User management endpoints, mostly for the currently authenticated user.
+  name: Users
+- description: Document management endpoints, to manage documents in projects.
+  name: Documents
+- description: Asset management endpoints, to manage assets in projects (such as Pojrect
+    Image & Report image).
+  name: Assets
+- description: Weather endpoints, to get weather data for a specific location or a
+    list of locations
+  name: Weather
+- description: Alert endpoints, to list or accept alerts for project. Also a summary
+    endpoint for multiple projects.
+  name: Alerts
+- description: Icon list endpoint.
+  name: Icons
+- description: Rule management endpoints. Rules are evaluated by Core1''s Rule service.
+  name: Rules
+- description: Invoice list endpoint, currently not in use.
+  name: Invoices
+- description: Report endpoints, to list, create, update, get, and delete reports
+    for a project.
+  name: Reports
+- description: Permission endpoints, to list possible permissions (and groups), list
+    possible scopes for a project.
+  name: Permissions
+- description: Data Mapping endpoints. Data Mappings map measurment to predefined
+    type, to allow for automatic reporting
+  name: Data Mappings
+- description: Module endpoints, CRUD operations on modules for a project. Modules
+    combine DataMappings to interactive Devices in Console.
+  name: Modules

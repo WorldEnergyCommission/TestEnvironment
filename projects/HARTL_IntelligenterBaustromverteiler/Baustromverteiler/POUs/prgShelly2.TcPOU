@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="prgShelly2" Id="{bff73797-95e5-4d25-b231-28a518a73c5e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgShelly2
+VAR
+	fbShelly2					: FB_Shelly_Pro4PM;
+	// Circle3, 230V
+	lrPowerC3					: LREAL;	//{#lynus.ag#()}
+	lrVoltageC3					: LREAL;	//{#lynus.ag#()}
+	lrEnergyC3					: LREAL;	//{#lynus.ag#()}
+	lrPowerC3_W					: LREAL;
+	lrEnergyC3_Wh				: LREAL;
+	bCircle3On					: BOOL;		//{#lynus.ag#()}
+	bCircle3Off					: BOOL;		//{#lynus.ag#()}
+	bCircle3Switch				: BOOL;		//{#lynus.ag#()}
+
+	// Circle4, 230V
+	lrPowerC4					: LREAL;	//{#lynus.ag#()}
+	lrVoltageC4					: LREAL;	//{#lynus.ag#()}
+	lrEnergyC4					: LREAL;	//{#lynus.ag#()}
+	lrPowerC4_W					: LREAL;
+	lrEnergyC4_Wh				: LREAL;
+	bCircle4On					: BOOL;		//{#lynus.ag#()}
+	bCircle4Off					: BOOL;		//{#lynus.ag#()}
+	bCircle4Switch				: BOOL;		//{#lynus.ag#()}
+	
+	fbTimerC4					: FB_WeeklyTimeSwitch;
+	fbCalcSunriseSunset   		: FB_CalcSunriseSunset;
+	todSunrise            		: TOD;
+	todSunset             		: TOD;
+END_VAR
+VAR PERSISTENT
+// trigger command execution
+	bEnableShelly2				: BOOL;		//{#lynus.ag#()}
+	bEnableTimerC4				: BOOL;		//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbShelly2(
+	bStart:= bEnableShelly2, 
+	tDelayRequest:= T#3S, 
+	sHostname:= '192.168.1.21', 
+	bValidResult=> , 
+	bBusy=> , 
+	bError=> , 
+	bDone=> , 
+	hrErrorCode=> ,
+	lrpowerP3=> lrPowerC3_W, 
+	lrvoltageP3=> lrVoltageC3, 
+	lrenergyP3=> lrEnergyC3,
+	lrpowerP4=> lrPowerC4_W, 
+	lrvoltageP4=> lrVoltageC4, 
+	lrenergyP4=> lrEnergyC4,
+	bOnP3:= bCircle3On,
+	bOffP3:= bCircle3Off,
+	bStateP3=> bCircle3Switch,
+	bOnP4:= bCircle4On,
+	bOffP4:= bCircle4Off,
+	bStateP4=> bCircle4Switch );
+
+// re-calc Power to kW
+lrPowerC3 := lrPowerC3_W / 1000;
+lrPowerC4 := lrPowerC4_W / 1000;
+lrEnergyC3 := lrEnergyC3_Wh / 1000;
+lrEnergyC4 := lrEnergyC4_Wh / 1000;
+
+
+IF prgSystemTime.bSystemTimeValid THEN
+
+	fbCalcSunriseSunset(
+		fDegreeOfLongitude := 11.5820,   (* Longitude of Munich, Lochhausen *)
+        fDegreeOfLatitude := 48.1351,   (* Latitude of Munich, Lochhausen *)
+    	fReferenceMeridian := 15.0,  (* Central European Time *)
+        dCurrentDate := DT_TO_DATE(prgSystemTime.dtSystemTime),
+        todSunrise => todSunrise,
+        todSunset => todSunset);
+END_IF
+
+
+
+IF prgSystemTime.bSystemTimeValid THEN
+
+	fbTimerC4(
+		bEnable:=bEnableTimerC4, 
+		tCurrentDateTime:=prgSystemTime.dtSystemTime, 
+		tSwitchOnTime:=todSunrise, 
+		tSwitchOffTime:=todSunset, 
+		bSunday:=TRUE, 
+		bMonday:=TRUE, 
+		bTuesday:=TRUE, 
+		bWednesday:=TRUE, 
+		bThursday:=TRUE, 
+		bFriday:=TRUE, 
+		bSaturday:=TRUE,
+		bEdgeOn=> bCircle4On,
+		bEdgeOff=> bCircle4Off);
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgShelly2">
+      <LineId Id="25" Count="14" />
+      <LineId Id="76" Count="4" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="109" Count="30" />
+      <LineId Id="108" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

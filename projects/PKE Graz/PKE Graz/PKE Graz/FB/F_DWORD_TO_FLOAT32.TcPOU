@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="F_DWORD_TO_FLOAT32" Id="{cd4c8095-f46f-4d71-9af9-12b71b6e055d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_DWORD_TO_FLOAT32 : REAL
+VAR_INPUT
+	dwInput: DWORD;
+END_VAR
+VAR
+	realSign: REAL;
+	realExponent: REAL;
+	realMantisse: REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Sign *)
+realSign:=BOOL_TO_REAL(dwInput.31);
+
+(* Exponent *)
+realExponent:=SHR(dwInput,23) AND 16#FF;
+
+(* Mantisse *)
+realMantisse:=dwInput AND 16#7FFFFF;
+
+(* Result *)
+F_DWORD_TO_FLOAT32:=EXPT((-1),realSign)*(1+realMantisse/8388608)*EXPT(2,realExponent-127);
+
+(*if both register are 0*)
+IF dwInput=0 THEN
+	F_DWORD_TO_FLOAT32 :=0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="F_DWORD_TO_FLOAT32">
+      <LineId Id="29" Count="9" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="49" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

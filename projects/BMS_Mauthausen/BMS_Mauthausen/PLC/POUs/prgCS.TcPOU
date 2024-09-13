@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgCS" Id="{27130876-d1d0-462d-839b-f2190702b79e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgCS
+VAR PERSISTENT
+	bEnabledCS				: BOOL;									//{#lynus.ag#()}
+	byPrioCS				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS				: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS				: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS				: REAL;									//{#lynus.ag#()}
+	lrCounterCS				: LREAL;								//{#lynus.ag#()}
+	bManualyOn				: BOOL;									//{#lynus.ag#()}
+	byMinPower				: BYTE;									//{#lynus.ag#()}
+	byManualyTargetPower	: BYTE;									//{#lynus.ag#()}
+	m_ChargingLimit			: BOOL;									//{#lynus.ag#()}
+	bOnEmergPowerOff		: BOOL;									//{#lynus.ag#()}
+END_VAR
+VAR
+	fbCS					: FB_ECS_Alpitronic_Hypercharger;
+	fbCSCounter				: FB_EnergyCounter;
+	bIsEnabledCS			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS			: REAL;									//{#lynus.ag#()}
+	bCarConnected			: BOOL;									//{#lynus.ag#()}
+	rChrgTime				: REAL;									//{#lynus.ag#()}
+	lrPowerCS				: LREAL;								//{#lynus.ag#()}
+	bSManualyOn				: BOOL;									//{#lynus.ag#()}
+	bySManualyTargetPower	: BYTE;									//{#lynus.ag#()}
+	str_IP: STRING(15):='172.16.127.151';
+	rSOC_1					: REAL;									//{#lynus.ag#()}
+	rSOC_2					: REAL;									//{#lynus.ag#()}
+	bSOnEmergPowerOff		: BOOL;									//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbCS.stSetupECS.byDisableSOC := bySOC_D_CS;
+fbCS.stSetupECS.byEnableSOC := bySOC_E_CS;
+fbCS.stSetupECS.byPriority := byPrioCS;
+fbCS.stSetupECS.rMaxPower := rMaxPowerCS;
+fbCS.stSetupECS.byCSMinPower := byMinPowerCS;
+fbCS.stSetupECS.bManualyOn := bManualyOn;
+fbCS.stSetupECS.byManualyTargetPower := byManualyTargetPower;
+fbCS.stSetupECS.byCSMinPower := byMinPower;
+fbCS.stSetupECS.bOnEmergPowerOff := bOnEmergPowerOff;
+
+fbCS(
+	bEnable:= bEnabledCS, 
+	bPowerDataInvers:= ,  
+	byUnitID:= 1,				//Allways 1 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT, 
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= str_IP, 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> );
+
+bIsEnabledCS := fbCS.stDataECS.bEnabled;
+byStateMinPowerCS := fbCS.stDataECS.bySCSMinPower;
+rTargetPowerCS := fbCS.stDataECS.rTargetPower;	
+byErrorWarningCS := fbCS.stDataECS.byErrorWarning;
+bCarConnected := fbCS.stDataECS.bCarConnected;
+rChrgTime := MAX(fbCS.stDataECS.arrChargingTimeInMin[1],fbCS.stDataECS.arrChargingTimeInMin[2]);
+lrPowerCS := fbCS.stDataECS.lrTotalPower;
+bSManualyOn := fbCS.stDataECS.bSManualyOn;
+bSOnEmergPowerOff := fbCS.stDataECS.bSOnEmergPowerOff;
+
+bySManualyTargetPower := fbCS.stDataECS.bySManualyTargetPower;
+rSOC_1	:= DWORD_TO_REAL(fbCS.stDataECS.arrSocketSOCCar[1]);
+rSOC_2	:= DWORD_TO_REAL(fbCS.stDataECS.arrSocketSOCCar[2]);						
+
+// EnergyCounter
+fbCSCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= lrPowerCS, 
+	lrTotalCounterEnergy_Consumption=> );
+	
+IF fbCSCounter.lrTotalCounterEnergy_Consumption > lrCounterCS THEN  	
+	lrCounterCS := fbCSCounter.lrTotalCounterEnergy_Consumption;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgCS">
+      <LineId Id="30" Count="0" />
+      <LineId Id="32" Count="3" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="7" Count="8" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="37" Count="2" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="257" Count="1" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="131" Count="4" />
+      <LineId Id="141" Count="3" />
+      <LineId Id="130" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_Enphase" Id="{bd5366ef-3c69-4a6a-b3bc-58ae165193dd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Enphase
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME := T#3S;		//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+END_VAR
+
+VAR_IN_OUT
+END_VAR
+
+VAR_OUTPUT
+	bValidResult				: BOOL;															//Valid Result received from Server
+    bBusy						: BOOL;															//Function is Busy
+    bError						: BOOL;															//Error sucess
+	bDone						: BOOL;															//True after the decoding from the received Json File
+	bConnected					: BOOL;															//Connection to the Server
+	lrpowerprod					: LREAL;														//Received Value
+	lrpowercons					: LREAL;														//Received Value
+	hrErrorCode       			: HRESULT;														//Error Result from Http Client
+END_VAR
+
+VAR
+	fbClient					: FB_IotHttpClient;
+	fbHttpGet					: FB_Enphase_Helper;
+	timStartRequest				: TON;															//Timer to Start the Request
+	FPStartRequest				: R_TRIG;														//Internal positive Edge
+	FPDone						: R_TRIG;														//Internal positive Edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := tDelayRequest;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := TRUE;
+	fbClient.tConnectionTimeout := T#2S;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+	timStartRequest(IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, PT:= tDelayRequest, Q=> , ET=> );
+		IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured)) THEN fbHttpGet.bSend := TRUE; END_IF
+
+				
+//Http Get Function
+fbHttpGet(
+	lrpowerprod => lrpowerprod, 
+	lrpowercons => lrpowercons,
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> ,
+	sContent=> );
+
+lrpowerprod := LIMIT( 0, lrpowerprod, lrpowerprod);
+//lrpowercons := LIMIT (0, lrpowercons, lrpowercons);	
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+(*
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q THEN fbClient.Disconnect(); END_IF
+*)
+
+fbClient.Execute();
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF	
+	hrErrorCode := fbClient.hrErrorCode;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Enphase">
+      <LineId Id="68" Count="21" />
+      <LineId Id="100" Count="3" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="113" Count="3" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="117" Count="4" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="122" Count="5" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

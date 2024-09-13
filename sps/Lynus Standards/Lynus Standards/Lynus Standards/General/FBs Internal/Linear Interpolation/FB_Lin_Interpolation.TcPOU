@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Lin_Interpolation" Id="{9ae28ea7-8966-4e90-b0fc-29244a487ae5}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Lin_Interpolation
+VAR_INPUT
+	{attribute 'hide'}
+	rXInputValue				: REAL;													//X Input Value from which the Y value is to be determined 
+	{attribute 'hide'}
+	arrXIntermediateValues		: ARRAY[1..10] OF REAL;									//X Intermediate Values
+	{attribute 'hide'}
+	arrYIntermediateValues		: ARRAY[1..10] OF REAL;									//Y Intermediate Values
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	rYOutputValue				: REAL;													//Y Output Value
+END_VAR
+VAR
+	rY1							: REAL;													//Internal value for calculation
+	rY2							: REAL;													//Internal value for calculation
+	rX1							: REAL;													//Internal value for calculation
+	rX2							: REAL;													//Internal value for calculation
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 04.10.2021
+//Version : 1.0.0.0
+
+//With this function it is possible to change a linear value to a non-linear output value using linear interpolation.
+//The X value and the X Array are the are know
+//The Y array refers to the value you want to have as output value and always refers in position to the X array. So XArray[1] = YArray[1] etc...
+//All values in between are calculated
+
+IF rXInputValue >= 0 AND rXInputValue <= arrXIntermediateValues[1] THEN
+	rX1 := 0; rX2 :=  arrXIntermediateValues[1];
+		rY1 := 0; rY2 := arrYIntermediateValues[1];
+ELSIF rXInputValue > arrXIntermediateValues[1] AND rXInputValue <= arrXIntermediateValues[2] THEN
+	rX1 :=  arrXIntermediateValues[1]; rX2 := arrXIntermediateValues[2];
+		rY1 := arrYIntermediateValues[1]; rY2 := arrYIntermediateValues[2];
+ELSIF rXInputValue > arrXIntermediateValues[2] AND rXInputValue <= arrXIntermediateValues[3] THEN
+	rX1 :=  arrXIntermediateValues[2]; rX2 := arrXIntermediateValues[3];
+		rY1 := arrYIntermediateValues[2]; rY2 := arrYIntermediateValues[3];
+ELSIF rXInputValue > arrXIntermediateValues[3] AND rXInputValue <= arrXIntermediateValues[4] THEN
+	rX1 :=  arrXIntermediateValues[3]; rX2 := arrXIntermediateValues[4];
+		rY1 := arrYIntermediateValues[3]; rY2 := arrYIntermediateValues[4];
+ELSIF rXInputValue > arrXIntermediateValues[4] AND rXInputValue <= arrXIntermediateValues[5] THEN
+	rX1 :=  arrXIntermediateValues[4]; rX2 := arrXIntermediateValues[5];
+		rY1 := arrYIntermediateValues[4]; rY2 := arrYIntermediateValues[5];
+ELSIF rXInputValue > arrXIntermediateValues[5] AND rXInputValue <= arrXIntermediateValues[6] THEN
+	rX1 :=  arrXIntermediateValues[5]; rX2 := arrXIntermediateValues[6];
+		rY1 := arrYIntermediateValues[5]; rY2 := arrYIntermediateValues[6];
+ELSIF rXInputValue > arrXIntermediateValues[6] AND rXInputValue <= arrXIntermediateValues[7] THEN
+	rX1 :=  arrXIntermediateValues[6]; rX2 := arrXIntermediateValues[7];
+		rY1 := arrYIntermediateValues[6]; rY2 := arrYIntermediateValues[7];
+ELSIF rXInputValue > arrXIntermediateValues[7] AND rXInputValue <= arrXIntermediateValues[8] THEN
+	rX1 :=  arrXIntermediateValues[7]; rX2 := arrXIntermediateValues[8];
+		rY1 := arrYIntermediateValues[7]; rY2 := arrYIntermediateValues[8];
+ELSIF rXInputValue > arrXIntermediateValues[8] AND rXInputValue <= arrXIntermediateValues[9] THEN
+	rX1 :=  arrXIntermediateValues[8]; rX2 := arrXIntermediateValues[9];
+		rY1 := arrYIntermediateValues[8]; rY2 := arrYIntermediateValues[9];
+ELSIF rXInputValue > arrXIntermediateValues[9] AND rXInputValue <= arrXIntermediateValues[10] THEN
+	rX1 :=  arrXIntermediateValues[9]; rX2 := arrXIntermediateValues[10];
+		rY1 := arrYIntermediateValues[9]; rY2 := arrYIntermediateValues[10];
+END_IF
+
+rYOutputValue := F_Scalvalue(x:= rXInputValue, x1:= rX1, y1:= rY1, x2:= rX2, y2:= rY2);
+	rYOutputValue := LIMIT(rY1,rYOutputValue,rY2);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Lin_Interpolation">
+      <LineId Id="18" Count="4" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="27" Count="34" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

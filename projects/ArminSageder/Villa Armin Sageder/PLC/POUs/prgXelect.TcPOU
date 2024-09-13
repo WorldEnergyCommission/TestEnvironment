@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="prgXelect" Id="{e6392345-d666-48ad-876d-cb434a512f75}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgXelect
+VAR
+	fbBatt					: FB_Xelectrix_Powerbox;			//{#lynus.ag#()}
+	fbCounter				: FB_EnergyCounter;
+	byErrorWarningBattery	: BYTE;								//{#lynus.ag#()}
+	lrBattGridPower			: LREAL;							//{#lynus.ag#()}
+END_VAR
+VAR PERSISTENT
+	lrkWh_Charge			: LREAL;							//{#lynus.ag#()}
+	lrkWh_Discharge			: LREAL;							//{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbBatt(
+	bEnable:= , 
+	bActivateControl:= TRUE, 
+	byUnitID:= 1, 
+	byPriority:= , 
+	diNrOfEMS_IN:= prgEMS.EMS.diNrOfEMS_OUT, 
+	lrMaxCapacityBattery:= 240, 
+	sIPAdress:= '10.68.11.30', 
+	bReset:= , 
+	stDataXelectrix=> , 
+	stDataBatt=> , 
+	stDataBattInverter=> , 
+	stDataEMPower_Grid=> , 
+	stDataEMCounter_Grid=> , 
+	diNrOfBatt_OUT=> , 
+	diNrOfBattInverter_OUT=> , 
+	diNrOfEM_OUT_Grid=> , 
+	lrMaxCapacityBattery_OUT=> );
+	
+byErrorWarningBattery := fbBatt.stDataBatt.byErrorWarning;	
+
+fbCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= fbBatt.stDataBatt.lrPower, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+
+IF fbCounter.lrTotalCounterEnergy_Consumption > lrkWh_Discharge THEN
+	lrkWh_Discharge := fbCounter.lrTotalCounterEnergy_Consumption;
+END_IF
+	IF fbCounter.lrTotalCounterEnergy_Production > lrkWh_Charge THEN
+		lrkWh_Charge := fbCounter.lrTotalCounterEnergy_Production;
+	END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgXelect">
+      <LineId Id="7" Count="16" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="164" Count="7" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="174" Count="4" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="192" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

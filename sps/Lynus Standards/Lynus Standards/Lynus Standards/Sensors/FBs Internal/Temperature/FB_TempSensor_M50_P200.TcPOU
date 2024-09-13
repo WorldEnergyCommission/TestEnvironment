@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_TempSensor_M50_P200" Id="{74a7ee30-57f3-4640-9bd3-cde90365855a}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_TempSensor_M50_P200
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable							: BOOL;							//Enable or dissable the function
+	{attribute 'hide'}
+	bUseFilter						: BOOL;							//True = Output Value is filtered, False = Output Value = Raw Input value
+	{attribute 'hide'}
+	bErrorConfig					: BOOL;							//Error from the config function
+	{attribute 'hide'}
+	bErrorGeneral					: BOOL;							//Extern general Error
+	{attribute 'hide'}
+	bWarning						: BOOL;							//Extern general Warning
+	{attribute 'hide'}
+	bWriteWithDelay					: BOOL;							//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	usiState						: USINT;						//State from the terminal
+	{attribute 'hide'}
+	iDelayFilter					: INT := 100;					//Messurement delay in ms
+	{attribute 'hide'}
+	iMaxValuesFilter				: INT := 10;					//Maximal count of values, max 1000
+	{attribute 'hide'}
+	iErrorCode						: INT;							//Error Code from external Temperature
+	{attribute 'hide'}
+	iWarningCode					: INT;							//Warning Code from external Temperature
+	{attribute 'hide'}
+	rTemperatureOffset				: REAL;							//Temperatur Offset (-10 to +10)
+	{attribute 'hide'}
+	rRawTempIn						: REAL;							//Temperature raw input value
+	{attribute 'hide'}
+	tTimDelayOutput					: TIME := T#5S;					//Delay Time to write some Data to the Output
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataTempOut					: ST_Temperature_Output;		//Temperature output data
+	{attribute 'hide'}
+	stDataTempOutDelay				: ST_Temperature_Output;		//Temperature output data with delay
+END_VAR
+VAR
+	Filter							: FB_Filter;					//FB Filter for filtering the input value
+	timDelayOutputs					: TON;							//Timer to send Data with Delay to the outputs
+	FPEnable						: R_TRIG;						//Internal positive Edge
+	FNEnable						: F_TRIG;						//Internal negative Edge
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.06.2021
+//Version : 1.0.0.0
+
+//With this function block is possible to realize a temperature senor on the plc
+//Work on temperature range from -50°C to 200°C
+
+(*---------------------------------------------------------------Check the limits of the inputs-------------------------------------------------------------------------------*)
+
+iDelayFilter := LIMIT(10,iDelayFilter,10000);
+	iMaxValuesFilter := LIMIT(10,iMaxValuesFilter,1000);
+		rTemperatureOffset := LIMIT(-10,rTemperatureOffset,10);
+			rRawTempIn := LIMIT(-50,rRawTempIn,200);
+
+(*---------------------------------------------------------------Filter the input value-------------------------------------------------------------------------------*)			
+
+Filter(x:= rRawTempIn, tm:= iDelayFilter, k:= iMaxValuesFilter, tbase:= T#1MS, y=> );
+
+IF bUseFilter THEN
+	stDataTempOut.rTemperature := Filter.y;	
+ELSE
+	stDataTempOut.rTemperature := rRawTempIn;
+END_IF
+
+(*---------------------------------------------------------------Adjust the sensor value with the offset-------------------------------------------------------------------------------*)
+
+IF rTemperatureOffset <> 0 THEN
+	stDataTempOut.rTemperature := stDataTempOut.rTemperature + rTemperatureOffset;
+END_IF
+	IF rTemperatureOffset = 0 THEN
+		stDataTempOut.rTemperature := stDataTempOut.rTemperature;
+	END_IF
+		
+(*---------------------------------------------------------------Error and Warning-------------------------------------------------------------------------------*)
+
+stDataTempOut.byErrorWarning := 0;
+	IF bWarning THEN stDataTempOut.byErrorWarning := 1; END_IF  
+	IF usiState.0 OR usiState.1 OR usiState.6 OR bErrorConfig OR bErrorGeneral THEN stDataTempOut.byErrorWarning := 2; END_IF	
+
+//Messages and Error Codes
+IF stDataTempOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataTempOut.eMessage := E_Message_Temperature.eNoConnectionToBackend; 
+ELSIF stDataTempOut.byErrorWarning = 2 AND usiState.6 THEN stDataTempOut.eMessage := E_Message_Temperature.eTemperatureGeneralError;
+ELSIF stDataTempOut.byErrorWarning = 2 AND usiState.0 THEN stDataTempOut.eMessage := E_Message_Temperature.eTemperatureUnderrangeError;
+ELSIF stDataTempOut.byErrorWarning = 2 AND usiState.1 THEN stDataTempOut.eMessage := E_Message_Temperature.eTemperatureOverrangeError;
+ELSIF stDataTempOut.byErrorWarning = 2 AND bErrorConfig THEN stDataTempOut.eMessage := E_Message_Temperature.eTemperatureConfigError;	
+ELSIF stDataTempOut.byErrorWarning = 2 AND iErrorCode = 0 AND bErrorGeneral THEN stDataTempOut.eMessage := E_Message_Temperature.eTooMuchTemperature;	
+ELSE stDataTempOut.eMessage := E_Message_Temperature.eNoMessage; 
+END_IF
+
+(*---------------------------------------------------------------Enable-------------------------------------------------------------------------------*)
+
+stDataTempOut.bEnabled := bEnable;
+	IF NOT bEnable THEN stDataTempOut.rTemperature := 0; END_IF
+	
+(*---------------------------------------------------------------Output-------------------------------------------------------------------------------*)
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+
+stDataTempOut.rTemperature := DINT_TO_REAL(REAL_TO_DINT(stDataTempOut.rTemperature * 100)) / 100;
+
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataTempOutDelay := stDataTempOut;
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TempSensor_M50_P200">
+      <LineId Id="183" Count="2" />
+      <LineId Id="181" Count="1" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="210" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="226" Count="2" />
+      <LineId Id="30" Count="1" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="255" Count="1" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="252" Count="2" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="285" Count="2" />
+      <LineId Id="281" Count="1" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="247" Count="1" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="304" Count="1" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="315" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

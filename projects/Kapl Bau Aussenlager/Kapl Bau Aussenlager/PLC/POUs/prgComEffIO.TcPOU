@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgComEffIO
+VAR
+	fbCom		: FB_MqttCommunicator_V2;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+fbCom(
+	bConnect:= TRUE, 
+	strAuthKey:= 'EIO08031879806', 
+	sUserName:= 'c0c17b06-0bdb-4698-a461-74f056a13e0b', 
+	sUserPassword:= '80a8f7a1-49f9-455c-8c7e-584508cad010', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk,  
+	time_HeartBeat_sec:= T#15S, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgComEffIO">
+      <LineId Id="111" Count="0" />
+      <LineId Id="114" Count="10" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="142" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

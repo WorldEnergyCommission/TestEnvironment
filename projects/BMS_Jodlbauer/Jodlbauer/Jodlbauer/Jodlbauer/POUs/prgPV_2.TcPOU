@@ -1,0 +1,1054 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgPV_2" Id="{f132495e-aceb-4059-802d-6e96f2e49e39}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgPV_2
+VAR
+	fbPVFronius1			: FB_Symo_PV_Inverter_FLOAT_1_DM_InclDisable;
+	fbPVFronius2			: FB_Symo_PV_Inverter_FLOAT_1_DM_InclDisable;
+	fbPVFronius3			: FB_Symo_PV_Inverter_FLOAT_1_DM_30_InclDisable;
+	fbPVFronius4			: FB_Symo_PV_Inverter_FLOAT_1_DM_30_InclDisable;
+
+	fbPVInt					: FB_PV_Power;
+	fbPVCounter				: FB_EnergyCounter;
+	
+	lrPowerPV				: LREAL;				//{#lynus.ag#()}
+	byErrorWarningPV		: BYTE;					//{#lynus.ag#()}
+	
+	// extend or reduce amount of PV Inverters
+	lrPowerPV_1				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_2				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_3				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_4				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_5				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_6				: LREAL;				//{#lynus.ag#()}
+	lrPowerPV_7				: LREAL;				//{#lynus.ag#()}
+	m_EnableWrite1: BOOL;
+	m_EnableWrite2: BOOL;
+	m_EnableWrite3: BOOL;
+	m_EnableWrite4: BOOL;
+	m_EnableWrite5: BOOL;
+	m_EnableWrite6: BOOL;
+	m_EnableWrite7: BOOL;
+	ton_FeedbackDelay1: Ton;
+	ton_FeedbackDelay2: Ton;
+	ton_FeedbackDelay3: Ton;
+	ton_FeedbackDelay4: Ton;
+	ton_FeedbackDelay5: Ton;
+	ton_FeedbackDelay6: Ton;
+	ton_FeedbackDelay7: Ton;
+	tof_FeedbackDelay1: Tof;
+	tof_FeedbackDelay2: Tof;
+	tof_FeedbackDelay3: Tof;
+	tof_FeedbackDelay4: Tof;
+	tof_FeedbackDelay5: Tof;
+	tof_FeedbackDelay6: Tof;	
+	tof_FeedbackDelay7: Tof;	
+
+	m_Disable_Inverter1: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter2: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter3: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter4: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter5: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter6: BOOL;						//{#lynus.ag#()}
+	m_Disable_Inverter7: BOOL;						//{#lynus.ag#()}
+	int_SetPointInverter	:INT;					//{#lynus.ag#()}
+	m_Enable_ChargingBattery: BOOL;					//{#lynus.ag#()}
+	FB_PID_Inverter :FB_PID;
+	FB_PID_InverterIsland :FB_PID_T;
+	FB_Ramp :fb_ramp;
+	lrErrorPIDCorrection :LREAL;
+	RS_DisableInverte1: Rs;
+	RS_DisableInverte2: Rs;
+	RS_DisableInverte3: Rs;
+	RS_DisableInverte4: Rs;
+	RS_DisableInverte5: Rs;
+	RS_DisableInverte6: Rs;
+	RS_DisableInverte7: Rs;
+	m_DisableInverter: BOOL:=FALSE;
+	
+	lrPV1_Frequency				: LREAL;				//{#lynus.ag#()}
+	lrPV1_Frequency10			: LREAL;				//{#lynus.ag#()}
+	lrPV1_VoltageL1N			: LREAL;				//{#lynus.ag#()}
+	lrPV1_VoltageL2N			: LREAL;				//{#lynus.ag#()}
+	lrPV1_VoltageL3N			: LREAL;				//{#lynus.ag#()}
+	lrPV1_VoltageL12			: LREAL;				//{#lynus.ag#()}
+	lrPV1_VoltageL23			: LREAL;				//{#lynus.ag#()}
+	lrPV1_VoltageL31			: LREAL;				//{#lynus.ag#()}
+	
+	m_PVLoadRegluationactive: BOOL;						//{#lynus.ag#()}
+	dword_SOC_RegluateStart: DWORD:=85;
+	dword_SOC_RegluateStop: DWORD:=90;
+
+	real_Setpoint_PID_In: REAL;					//{#lynus.ag#()}
+	int_State_PV1: INT;							//{#lynus.ag#()}
+	int_State_PV2: INT;							//{#lynus.ag#()}
+	int_State_PV3: INT;							//{#lynus.ag#()}
+	int_State_PV4: INT;							//{#lynus.ag#()}
+	int_State_PV5: INT;							//{#lynus.ag#()}
+	int_State_PV6: INT;							//{#lynus.ag#()}
+	int_State_PV7: INT;							//{#lynus.ag#()}
+	
+	lrPV2_Frequency: INT;
+	mDisableStartup: BOOL;
+	FB_Linear_Frequency: FB_LinearEquation;
+	lr_ValidFrequency: LREAL;
+
+	real_FrequencyLimit: REAL;						//{#lynus.ag#()}
+	
+
+	FB_Linear_SOC: FB_LinearEquation;
+	real_SOCLimit: REAL;
+	
+	real_MainsSetpointRegulate: REAL:=-20;
+	lrApparentPowerPV_7				: LREAL;				//{#lynus.ag#()}
+	lrReactivePowerPV_7			: LREAL;				//{#lynus.ag#()}
+	lrReactivePowerPV_1			: LREAL;				//{#lynus.ag#()}
+	lrReactivePowerPV_2			: LREAL;				//{#lynus.ag#()}
+	lrReactivePowerPV_3			: LREAL;				//{#lynus.ag#()}
+	lrReactivePowerPV_4			: LREAL;				//{#lynus.ag#()}
+	lrReactivePowerPV_5			: LREAL;				//{#lynus.ag#()}
+	lrReactivePowerPV_6			: LREAL;				//{#lynus.ag#()}
+	
+	fb_readOut : FB_ModBus_100Registers_FC3_inclID;	
+
+	Str_Ip: STRING(20);
+	w_Adress:WORD;
+	usint_Quantity:USINT;
+	arrBuffer_FC3				: ARRAY[1..7,1..26] OF WORD;							
+
+	ton_wait_read_out: Ton;
+	y: INT;
+	z: INT;
+	int_Data_Received_old: INT;
+	int_readOut:INT;
+	int_VArMaxPct_PV1	:INT;				//{#lynus.ag#()}
+	int_VArMaxPct_PV2	:INT;				//{#lynus.ag#()}
+	int_VArMaxPct_PV3	:INT;				//{#lynus.ag#()}
+	int_VArMaxPct_PV4	:INT;				//{#lynus.ag#()}
+	int_VArMaxPct_PV5	:INT;				//{#lynus.ag#()}
+	int_VArMaxPct_PV6	:INT;				//{#lynus.ag#()}
+	int_VArMaxPct_PV7	:INT;				//{#lynus.ag#()}
+
+	usint_ID: USINT;
+
+	real_ActualLoadPercent_PV1: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV2: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV3: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV4: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV5: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV6: REAL;				//{#lynus.ag#()}
+	real_ActualLoadPercent_PV7: REAL;				//{#lynus.ag#()}
+	real_RegulatroMaxValue_Calc: REAL;				//{#lynus.ag#()}
+	real_RegulatroMaxValue_Limit: REAL;				//{#lynus.ag#()}
+	real_Factor_Calc: REAL:=110;
+	rPValue: REAL := 2;
+	udint_IValue: UDINT:=250;
+	uditn_DValue: UDINT:=30;
+	fb_readOut_Aski : FB_ModBus_100Registers_FC3_inclID;	
+	str_IP_Aski: STRING(15):='192.168.100.211';
+	m_ModbusError_Aski					: BOOL;				//{#lynus.ag#()}
+	m_Disable_InverterWrite_fromAski	: BOOL;				//{#lynus.ag#()}
+	ton_Aski_Modbus_Error: Ton;
+	int_PV_SetPoint_P_ReadOut_PV1	:INT;				//{#lynus.ag#()}
+	int_PV_SetPoint_P_ReadOut_PV2	:INT;				//{#lynus.ag#()}
+	int_PV_SetPoint_P_ReadOut_PV3	:INT;				//{#lynus.ag#()}
+	int_PV_SetPoint_P_ReadOut_PV4	:INT;				//{#lynus.ag#()}
+	int_PV_SetPoint_P_ReadOut_PV5	:INT;				//{#lynus.ag#()}
+	int_PV_SetPoint_P_ReadOut_PV6	:INT;				//{#lynus.ag#()}
+	int_PV_SetPoint_P_ReadOut_PV7	:INT;				//{#lynus.ag#()}
+	fb_readOut_Aski2 : FB_ModBus_100Registers_FC3_inclID;	
+	fbMBWrite_FC6				: FB_MBWriteSingleReg;									//Modbus Write Function (FC16)
+	word_write_FC6				: WORD;								//Buffer with Data from FC6
+
+	mReadOutAski: BOOL:= TRUE;
+END_VAR
+VAR PERSISTENT
+	lrCounterPV				: LREAL;				//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// temporär deaktiviert
+// mDisableStartup := TRUE;
+// nicht WR 7
+// int_SetPointInverter := 10000;
+// m_Disable_Inverter7 := FALSE;
+
+//1           Tauro1 50  	192.168.100.201  
+fbPVFronius1(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.100.201', 
+	byUnitID_Inverter:= 1, 
+	b_EnableWrite:= m_EnableWrite1, 
+	m_DisableInverter:= m_Disable_Inverter1, 
+	int_InverterSetpoint:= LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV1*110)), 
+	stDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+//2           	Tauro2 50	192.168.100.202
+fbPVFronius2(
+	bEnable:= TRUE, 
+	sIPAdress:= '192.168.100.202', 
+	byUnitID_Inverter:= 1, 
+	b_EnableWrite:= m_EnableWrite2, 
+	m_DisableInverter:= m_Disable_Inverter2, 
+	int_InverterSetpoint:=  LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV2*110)), 
+	stDataSymo10=> , 
+	stDataEMPower_PV=> , 
+	stDataEMCounter_PV=> , 
+	diNrOfEM_OUT_PV=> );
+
+// 				ECO27 ID 1 	192.168.100.203
+// ID 2 /3 / 4 			Symo15 & Symo 15 & Symo 20
+fbPVFronius3(
+	bEnable				:= TRUE, 
+	sIPAdress			:= '192.168.100.203', 			// modify IP Adress
+	arrUnitID_Inverter	:= ,
+	arr_b_EnableWrite	:= ,
+	arr_m_DisableInverter := ,
+	arrDataSymo10		=> ,
+	stDataEMPower_PV	=> , 
+	stDataEMCounter_PV	=> , 
+	diNrOfEM_OUT_PV		=> );
+	
+fbPVFronius3.arrUnitID_Inverter[1]:=1;
+fbPVFronius3.arrUnitID_Inverter[2]:=2;
+fbPVFronius3.arrUnitID_Inverter[3]:=3;
+fbPVFronius3.arrUnitID_Inverter[4]:=4;
+fbPVFronius3.arr_b_EnableWrite[1] := m_EnableWrite3;
+fbPVFronius3.arr_b_EnableWrite[2] := m_EnableWrite4;
+fbPVFronius3.arr_b_EnableWrite[3] := m_EnableWrite5;
+fbPVFronius3.arr_b_EnableWrite[4] := m_EnableWrite6;
+fbPVFronius3.arr_m_DisableInverter[1] := m_Disable_Inverter3;
+fbPVFronius3.arr_m_DisableInverter[2] := m_Disable_Inverter4;	
+fbPVFronius3.arr_m_DisableInverter[3] := m_Disable_Inverter5;	
+fbPVFronius3.arr_m_DisableInverter[4] := m_Disable_Inverter6;	
+fbPVFronius3.arr_int_InverterSetpoint[1] :=  LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV3*110));
+fbPVFronius3.arr_int_InverterSetpoint[2] :=  LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV4*110));	
+fbPVFronius3.arr_int_InverterSetpoint[3] :=  LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV5*110));	
+fbPVFronius3.arr_int_InverterSetpoint[4] :=  LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV6*110));	
+
+// 				Symo 27 ID 1 	192.168.100.204
+fbPVFronius4(
+	bEnable				:= TRUE, 
+	sIPAdress			:= '192.168.100.204', 			// modify IP Adress
+	arrUnitID_Inverter	:= ,
+	arr_b_EnableWrite	:= ,
+	arr_m_DisableInverter := ,
+	arrDataSymo10		=> ,
+	stDataEMPower_PV	=> , 
+	stDataEMCounter_PV	=> , 
+	diNrOfEM_OUT_PV		=> );
+fbPVFronius4.arrUnitID_Inverter[1]:=7;
+fbPVFronius4.arr_b_EnableWrite[1] := m_EnableWrite7;
+fbPVFronius4.arr_m_DisableInverter[1] := m_Disable_Inverter7;
+fbPVFronius4.arr_int_InverterSetpoint[1] :=  LIMIT(100,int_SetPointInverter,REAL_TO_INT(real_ActualLoadPercent_PV7*110));
+
+// extend or reduce amount of PV Inverters
+lrPowerPV_1 := fbPVFronius1.stDataEMPower_PV.lrPowerTotal;
+lrPowerPV_2 := fbPVFronius2.stDataEMPower_PV.lrPowerTotal;
+lrPowerPV_3 := fbPVFronius3.arrDataSymo10[1].lrPowerAcInverter;
+lrPowerPV_4 := fbPVFronius3.arrDataSymo10[2].lrPowerAcInverter;
+lrPowerPV_5 := fbPVFronius3.arrDataSymo10[3].lrPowerAcInverter;
+lrPowerPV_6 := fbPVFronius3.arrDataSymo10[4].lrPowerAcInverter;
+lrPowerPV_7 := fbPVFronius4.arrDataSymo10[1].lrPowerAcInverter;
+
+	
+fbPVInt(
+	bEnable:= TRUE, 
+	bPowerDataInvers:= , 
+	diNrOfEM_IN_PV:= fbPVFronius1.diNrOfEM_OUT_PV, 
+	stDataPv=> , 
+	diNrOfPv_OUT=> );
+	
+//lrPowerPV := fbPVInt.stDataPv.lrPower;
+	
+lrPowerPV := lrPowerPV_1 + lrPowerPV_2 + lrPowerPV_3 + lrPowerPV_4 + lrPowerPV_5 + lrPowerPV_6 + lrPowerPV_7 ;
+	byErrorWarningPV := fbPVInt.stDataPv.byErrorWarning;
+
+// EnergyCounter
+fbPVCounter(
+	byActiveTariff:= 1, 
+	lrPowerInput:= 0 - lrPowerPV, 
+	lrTotalCounterEnergy_Consumption=> , 
+	lrTotalCounterEnergy_Production=> , 
+	lrCounterEnergyT1_Consumption=> , 
+	lrCounterEnergyT2_Consumption=> , 
+	lrCounterEnergyT1_Production=> , 
+	lrCounterEnergyT2_Production=> );
+	
+IF fbPVCounter.lrTotalCounterEnergy_Production > lrCounterPV THEN  	
+	lrCounterPV := fbPVCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+// calculate maximum regulator value by looking at the nomal inverter power 
+// nominal inverter Values	PV1: 50kW / PV2: 50kW / PV3: 27kW / PV4: 15kW / PV5: 15 kW / PV6: 20kW / PV7: 27kW
+real_ActualLoadPercent_PV1 := LREAL_TO_REAL(lrPowerPV_1) / 50*100;
+real_ActualLoadPercent_PV2 := LREAL_TO_REAL(lrPowerPV_2) / 50*100;
+real_ActualLoadPercent_PV3 := LREAL_TO_REAL(lrPowerPV_3) / 27*100;
+real_ActualLoadPercent_PV4 := LREAL_TO_REAL(lrPowerPV_4) / 15*100;
+real_ActualLoadPercent_PV5 := LREAL_TO_REAL(lrPowerPV_5) / 15*100;
+real_ActualLoadPercent_PV6 := LREAL_TO_REAL(lrPowerPV_6) / 20*100;
+real_ActualLoadPercent_PV7 := LREAL_TO_REAL(lrPowerPV_7) / 20*100;  		// inverter is a symo 27 but configered as 20 kW (setpoint 10000 = 20 kW)
+
+
+
+real_RegulatroMaxValue_Calc := MAX(real_ActualLoadPercent_PV1,MAX(real_ActualLoadPercent_PV2,MAX(real_ActualLoadPercent_PV3,MAX(real_ActualLoadPercent_PV4,MAX(real_ActualLoadPercent_PV5,MAX(real_ActualLoadPercent_PV6,real_ActualLoadPercent_PV7))))));
+real_RegulatroMaxValue_Calc := LIMIT(1,real_RegulatroMaxValue_Calc,100);
+	
+real_MainsSetpointRegulate := - prgGrid.rSizeGridConn *0.95;
+
+// only done for disabling the solar inverter in case negative mains power / back feeding
+
+IF prgGrid.lrPowerGrid < - prgGrid.rSizeGridConn*1.5 THEN
+	ton_FeedbackDelay1.In := TRUE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay2.In := TRUE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay3.In := TRUE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay4.In := TRUE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay5.In := TRUE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay6.In := TRUE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay7.In := TRUE;		// start timer for feeding back delay. 
+
+	tof_FeedbackDelay1.IN :=TRUE;
+	tof_FeedbackDelay2.IN :=TRUE;
+	tof_FeedbackDelay3.IN :=TRUE;
+	tof_FeedbackDelay4.IN :=TRUE;
+	tof_FeedbackDelay5.IN :=TRUE;
+	tof_FeedbackDelay6.IN :=TRUE;
+	tof_FeedbackDelay7.IN :=TRUE;
+ELSIF prgGrid.lrPowerGrid > real_MainsSetpointRegulate*1.7 OR prgGrid.lrPowerGrid > - prgGrid.rSizeGridConn*1.5  THEN
+	ton_FeedbackDelay1.In := FALSE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay2.In := FALSE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay3.In := FALSE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay4.In := FALSE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay5.In := FALSE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay6.In := FALSE;		// start timer for feeding back delay. 
+	ton_FeedbackDelay7.In := FALSE;		// start timer for feeding back delay. 
+
+	tof_FeedbackDelay1.IN :=FALSE;
+	tof_FeedbackDelay2.IN :=FALSE;
+	tof_FeedbackDelay3.IN :=FALSE;
+	tof_FeedbackDelay4.IN :=FALSE;
+	tof_FeedbackDelay5.IN :=FALSE;
+	tof_FeedbackDelay6.IN :=FALSE;
+	tof_FeedbackDelay7.IN :=FALSE;	
+END_IF
+ton_FeedbackDelay1 ( PT:= T#10S,Q => );		// switch of  inverters1 if feeding back
+ton_FeedbackDelay2 ( PT:= T#5S,Q => );		// switch of  inverters2 if feeding back
+ton_FeedbackDelay3 ( PT:= T#20S,Q => );		// switch of  inverters3 if feeding back
+ton_FeedbackDelay4 ( PT:= T#25S,Q => );		// switch of  inverters4 if feeding back
+ton_FeedbackDelay5 ( PT:= T#30S,Q => );		// switch of  inverters5 if feeding back
+ton_FeedbackDelay6 ( PT:= T#35S,Q => );		// switch of  inverters6 if feeding back
+ton_FeedbackDelay7 ( PT:= T#40S,Q => );		// switch of  inverters7 if feeding back
+
+tof_FeedbackDelay1 ( PT:= T#30S,Q => );		// switch on delay inverters1 
+tof_FeedbackDelay2 ( PT:= T#60S,Q => );		// switch on delay inverters2 
+tof_FeedbackDelay3 ( PT:= T#90S,Q => );		// switch on delay inverters3 
+tof_FeedbackDelay4 ( PT:= T#120S,Q => );		// switch on delay inverters4 
+tof_FeedbackDelay5 ( PT:= T#150S,Q => );		// switch on delay inverters5 
+tof_FeedbackDelay6 ( PT:= T#170S,Q => );		// switch on delay inverters6 
+tof_FeedbackDelay7 ( PT:= T#190S,Q => );		// switch on delay inverters7
+
+
+RS_DisableInverte1 (Set := ton_FeedbackDelay1.Q OR prgGrid.lrPowerGrid < real_MainsSetpointRegulate *2 OR m_DisableInverter, Reset1 := NOT tof_FeedbackDelay1.Q AND NOT m_DisableInverter, Q1 => m_Disable_Inverter1);
+RS_DisableInverte2 (Set := ton_FeedbackDelay2.Q OR prgGrid.lrPowerGrid < real_MainsSetpointRegulate *2 OR m_DisableInverter, Reset1 := NOT tof_FeedbackDelay2.Q AND NOT m_DisableInverter, Q1 => m_Disable_Inverter2);
+RS_DisableInverte3 (Set := ton_FeedbackDelay3.Q OR prgGrid.lrPowerGrid < real_MainsSetpointRegulate *2 OR m_DisableInverter, Reset1 := NOT tof_FeedbackDelay3.Q AND NOT m_DisableInverter, Q1 => m_Disable_Inverter3);
+RS_DisableInverte4 (Set := ton_FeedbackDelay4.Q OR prgGrid.lrPowerGrid < real_MainsSetpointRegulate *2 OR m_DisableInverter, Reset1 := NOT tof_FeedbackDelay4.Q AND NOT m_DisableInverter, Q1 => m_Disable_Inverter4);
+RS_DisableInverte5 (Set := ton_FeedbackDelay5.Q OR prgGrid.lrPowerGrid < real_MainsSetpointRegulate *2 OR m_DisableInverter, Reset1 := NOT tof_FeedbackDelay5.Q AND NOT m_DisableInverter, Q1 => m_Disable_Inverter5);
+RS_DisableInverte6 (Set := ton_FeedbackDelay6.Q OR prgGrid.lrPowerGrid < real_MainsSetpointRegulate *2 OR m_DisableInverter, Reset1 := NOT tof_FeedbackDelay6.Q AND NOT m_DisableInverter, Q1 => m_Disable_Inverter6);
+RS_DisableInverte7 (Set := ton_FeedbackDelay7.Q OR prgGrid.lrPowerGrid < real_MainsSetpointRegulate *2 OR m_DisableInverter, Reset1 := NOT tof_FeedbackDelay7.Q AND NOT m_DisableInverter, Q1 => m_Disable_Inverter7);
+
+IF m_DisableInverter OR mDisableStartup THEN
+	m_Disable_Inverter1:=TRUE;
+	m_Disable_Inverter2:=TRUE;
+	m_Disable_Inverter3:=TRUE;
+	m_Disable_Inverter4:=TRUE;
+	m_Disable_Inverter5:=TRUE;
+	m_Disable_Inverter6:=TRUE;
+	m_Disable_Inverter7:=TRUE;
+END_IF
+	
+
+// enable write function to all inverters
+IF NOT m_Disable_InverterWrite_fromAski THEN 
+	m_EnableWrite1:=TRUE;
+	m_EnableWrite2:=TRUE;
+	m_EnableWrite3:=TRUE;
+	m_EnableWrite4:=TRUE;
+	m_EnableWrite5:=TRUE;
+	m_EnableWrite6:=TRUE;
+	m_EnableWrite7:=TRUE;
+ELSE
+	m_EnableWrite1:=FALSE;
+	m_EnableWrite2:=false;
+	m_EnableWrite3:=false;
+	m_EnableWrite4:=false;
+	m_EnableWrite5:=false;
+	m_EnableWrite6:=false;
+	m_EnableWrite7:=false;
+END_IF
+
+lrErrorPIDCorrection := ABS(0 - prgGrid.fbGrid.fbGrid.stDataGridOut.lrPower);	
+	
+// calculate setpoint for PV Island operation
+IF prgBattery.fbBattery.stDataXelectrix.eGridState = 2 THEN
+	FB_PID_InverterIsland.bEnable := TRUE;
+//	FB_PID_InverterIsland.rSetpoint := (LREAL_TO_REAL((80 *real_SOCLimit)/100+ (prgHouse.lrPowerHouse)));
+	FB_PID_InverterIsland.rSetpoint := LIMIT(0,(30 *real_SOCLimit/100)+  prgHouse.lrPowerHouseUndelayed,50);
+	int_SetPointInverter := REAL_TO_INT(FB_PID_InverterIsland.rQController);
+	FB_PID_InverterIsland.rActualValue:= LREAL_TO_REAL(lrPowerPV);
+	m_PVLoadRegluationactive := TRUE;
+//	m_Disable_Inverter1:=TRUE;
+//	m_Disable_Inverter2:=TRUE;
+// 	m_Disable_Inverter3:=TRUE;
+//	m_Disable_Inverter4:=TRUE;
+//	m_Disable_Inverter5:=TRUE;
+//	m_Disable_Inverter6:=TRUE;
+//	m_Disable_Inverter7:=TRUE;	
+ELSe 	// not in island
+
+	FB_PID_InverterIsland.bEnable := TRUE;
+//	FB_PID_InverterIsland.rSetpoint := 20;
+	FB_PID_InverterIsland.rSetpoint := - prgBattery.lrPowerBattery - real_MainsSetpointRegulate + prgHouse.lrPowerHouseUndelayed ;
+	int_SetPointInverter := REAL_TO_INT(FB_PID_InverterIsland.rQController);
+	FB_PID_InverterIsland.rActualValue:= LREAL_TO_REAL(lrPowerPV);
+//	FB_PID_InverterIsland.rActualValue:= LREAL_TO_REAL(prgGrid.lrPowerGrid)*(-1);
+	m_PVLoadRegluationactive := TRUE;
+END_IF
+
+// limit setpoint if frequency is high
+// linear Equation Frequency
+//find out which invreter PV1 or PV1 has a valid frequency
+IF lrPV1_Frequency<> 0 THEN 
+	lr_ValidFrequency := lrPV1_Frequency;
+ELSIF lrPV2_Frequency<> 0 THEN 
+	lr_ValidFrequency := lrPV2_Frequency;
+ELSIF fbPVFronius3.stDataEMPower_PV.lrFrequency <> 0 THEN
+	lr_ValidFrequency := fbPVFronius3.stDataEMPower_PV.lrFrequency;
+ELSE
+	lr_ValidFrequency := 0;
+END_IF
+
+FB_Linear_Frequency(
+	x1:= 50.2, 
+	y1:= 10000, 
+	x2:= 50.8, 
+	y2:= 0, 
+	x:= LREAL_TO_REAL(lr_ValidFrequency), 
+	y=> real_FrequencyLimit );
+real_FrequencyLimit := LIMIT(0,real_FrequencyLimit,10000);
+real_RegulatroMaxValue_Limit := LIMIT(0,real_RegulatroMaxValue_Calc*real_Factor_Calc,10000);	// add 20% regualtion margin
+FB_PID_InverterIsland.rMaxValue := MIN(real_FrequencyLimit,real_RegulatroMaxValue_Limit);
+
+
+// linea Equation SOC
+
+FB_Linear_SOC(
+	x1:= DWORD_TO_REAL(dword_SOC_RegluateStart), 
+	y1:= 100, 
+	x2:= DWORD_TO_REAL(dword_SOC_RegluateStop), 
+	y2:= 0, 
+	x:= DWORD_TO_REAL(prgBattery.dwSOCBattery), 
+	y=> real_SOCLimit);
+real_SOCLimit := LIMIT(0,real_SOCLimit,100);
+
+
+FB_PID_InverterIsland(
+	bEnable:= , 
+	rSetpoint:= , 
+	udiIValue:= , 
+	udiDValue:= uditn_DValue, 
+	udiDamping:= 0, 
+	rPValue:= , 
+	rMaxValue:= , 
+	rMinValue:= 100, 
+	rNeutralZone:= 1, 
+	bDirection:= FALSE, 
+	rActualValue:= ,
+	rQController=> );
+	
+
+real_Setpoint_PID_In := FB_PID_InverterIsland.rSetpoint;
+
+
+
+//Controller weighting
+	FB_PID_InverterIsland.rPValue := rPValue; 
+	FB_PID_InverterIsland.udiIValue := udint_IValue;
+	
+
+
+
+// record additinal values
+lrPV1_Frequency 	:= fbPVfronius1.stDataEMPower_PV.lrFrequency;
+lrPV1_Frequency10	:= fbPVfronius1.stDataEMPower_PV.lrFrequency*10;
+lrPV1_VoltageL1N	:= fbPVfronius1.stDataEMPower_PV.lrVoltageL1N;
+lrPV1_VoltageL2N	:= fbPVfronius1.stDataEMPower_PV.lrVoltageL2N;
+lrPV1_VoltageL3N	:= fbPVfronius1.stDataEMPower_PV.lrVoltageL3N;
+lrPV1_VoltageL12	:= fbPVfronius1.stDataEMPower_PV.lrVoltageL1L2;
+lrPV1_VoltageL23	:= fbPVfronius1.stDataEMPower_PV.lrVoltageL2L3;
+lrPV1_VoltageL31	:= fbPVfronius1.stDataEMPower_PV.lrVoltageL3L1;
+
+
+	
+int_State_PV1 := prgPV.fbPVFronius1.stDataSymo10.eOperatingStateInverter;
+int_State_PV2 := prgPV.fbPVFronius2.stDataSymo10.eOperatingStateInverter;
+int_State_PV3 := prgPV.fbPVFronius3.arrDataSymo10[1].eOperatingStateInverter;
+int_State_PV4 := prgPV.fbPVFronius3.arrDataSymo10[2].eOperatingStateInverter;
+int_State_PV5 := prgPV.fbPVFronius3.arrDataSymo10[3].eOperatingStateInverter;
+int_State_PV6 := prgPV.fbPVFronius3.arrDataSymo10[4].eOperatingStateInverter;
+int_State_PV7 := prgPV.fbPVFronius4.arrDataSymo10[1].eOperatingStateInverter;
+
+// for testing purpose only
+lrApparentPowerPV_7 :=  fbPVFronius4.stDataEMPower_PV.lrApparentPowerTotal;
+lrReactivePowerPV_7	:=  fbPVFronius4.arrReactivePower[1];
+lrReactivePowerPV_1 :=  fbPVFronius1.stDataEMPower_PV.lrReactivePowerTotal;
+lrReactivePowerPV_2 :=  fbPVFronius2.stDataEMPower_PV.lrReactivePowerTotal;
+lrReactivePowerPV_3 :=	fbPVFronius3.arrReactivePower[1];
+lrReactivePowerPV_4 :=	fbPVFronius3.arrReactivePower[2];
+lrReactivePowerPV_5 :=	fbPVFronius3.arrReactivePower[3];
+lrReactivePowerPV_6 :=	fbPVFronius3.arrReactivePower[4];
+// additional modbus request for checking the VAR setpoint
+
+CASE int_readOut OF
+	0: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	1: // read out IP 192.168.100.201  PV1 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.100.201';
+		usint_Quantity := 26;
+		w_Adress := 40237;
+		usint_ID := 1;
+		int_readOut := int_readOut +1;
+	2: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=1;
+			FOR z:=1 TO 26 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	3: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	4: // read out IP 192.168.100.202 PV2 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.100.202';
+//		usint_Quantity := 6;
+//		w_Adress := 40123;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	5: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=2;
+			FOR z:=1 TO 26 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	6: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	7: // read out IP 192.168.100.203 PV3 
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.100.203';
+//		usint_Quantity := 6;
+//		w_Adress := 40123;
+		usint_ID := 1;
+		int_readOut := int_readOut +1;
+	8: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=3;
+			FOR z:=1 TO 26 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	9: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	10: // read out IP 192.168.100.203  PV4 ID 2
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.100.203';
+//		usint_Quantity := 6;
+//		w_Adress := 40123;
+		usint_ID := 2;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	11: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=4;
+			FOR z:=1 TO 26 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	12: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF
+	13: // read out IP 192.168.100.203 ID 3  PV5
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.100.203';
+		usint_ID := 3;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	14: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=5;
+			FOR z:=1 TO 26 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF
+	15: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF	
+	16: // read out IP 192.168.100.203 PV6  id 4
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.100.203';
+		usint_ID := 4;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	17: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=6;
+			FOR z:=1 TO 26 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF	
+	18: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF		
+	19: // read out IP 192.168.100.204 PV7  id 7
+		fb_readOut.m_Enable := TRUE;
+		Str_Ip := '192.168.100.204';
+		usint_ID := 7;
+		int_Data_Received_old := fb_readout.int_Data_Received;
+		int_readOut := int_readOut +1;
+	20: // wait for received values	
+		ton_wait_read_out.IN := TRUE;
+		IF NOT fb_readOut.fbMBRead_FC3.bBusy AND int_Data_Received_old <> fb_readout.int_Data_Received  THEN
+			y:=7;
+			FOR z:=1 TO 26 BY 1 DO
+				arrBuffer_FC3[y,z] := fb_readOut.w_Array_Received[z];
+			END_FOR
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;	
+		ELSIF fb_readOut.fbMBRead_FC3.bError THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		ELSIF ton_wait_read_out.Q THEN
+			fb_readOut.m_Enable := FALSE;
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;		
+		END_IF			
+	21: // wait state
+		fb_readOut.m_Enable := FALSE;
+		ton_wait_read_out.IN := TRUE;
+		IF ton_wait_read_out.Q THEN
+			ton_wait_read_out.IN := FALSE;
+			int_readOut := int_readOut +1;
+		END_IF			
+		
+		
+	22:
+//		int_Nominal_ReadOut_PV1 := WORD_TO_INT(arrBuffer_FC3[1,2])/100;
+		int_VArMaxPct_PV1	 := WORD_TO_INT(arrBuffer_FC3[1,17]);
+		int_VArMaxPct_PV2	 := WORD_TO_INT(arrBuffer_FC3[2,17]);
+		int_VArMaxPct_PV3	 := WORD_TO_INT(arrBuffer_FC3[3,17]);
+		int_VArMaxPct_PV4	 := WORD_TO_INT(arrBuffer_FC3[4,17]);
+		int_VArMaxPct_PV5	 := WORD_TO_INT(arrBuffer_FC3[5,17]);
+		int_VArMaxPct_PV6	 := WORD_TO_INT(arrBuffer_FC3[6,17]);
+		int_VArMaxPct_PV7	 := WORD_TO_INT(arrBuffer_FC3[7,17]);
+		
+			
+		int_PV_SetPoint_P_ReadOut_PV1	:= WORD_TO_INT(arrBuffer_FC3[1,6]);
+		int_PV_SetPoint_P_ReadOut_PV2	:= WORD_TO_INT(arrBuffer_FC3[2,6]);
+		int_PV_SetPoint_P_ReadOut_PV3	:= WORD_TO_INT(arrBuffer_FC3[3,6]);
+		int_PV_SetPoint_P_ReadOut_PV4	:= WORD_TO_INT(arrBuffer_FC3[4,6]);
+		int_PV_SetPoint_P_ReadOut_PV5	:= WORD_TO_INT(arrBuffer_FC3[5,6]);
+		int_PV_SetPoint_P_ReadOut_PV6	:= WORD_TO_INT(arrBuffer_FC3[6,6]);
+		int_PV_SetPoint_P_ReadOut_PV7	:= WORD_TO_INT(arrBuffer_FC3[7,6]);
+	
+		int_readOut := 0;		
+END_CASE
+
+ton_wait_read_out( 	In :=,
+					PT := T#1S);
+	
+fb_readOut(
+	m_Enable:= , 
+	str_IPAdress:=Str_Ip , 
+	w_Adress:=w_Adress , 
+	usint_Quantity:= usint_Quantity, 
+	usint_ID:= usint_ID,
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+
+
+// read out ASKI. If Aski is sending setpoint, disable our regulation	
+fb_readOut_Aski(
+	m_Enable:= TRUE, 
+	str_IPAdress:= str_IP_Aski, 
+	w_Adress:= 0, 
+	usint_Quantity:= 39, 
+	usint_ID:= 1,
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );
+
+ton_Aski_Modbus_Error( 	In:= NOT fb_readOut_Aski.m_PollSuccessful,
+						PT:= T#5M,
+						Q => m_ModbusError_Aski);
+	
+m_Disable_InverterWrite_fromAski := fb_readOut_Aski.w_Array_Received[1].0;
+
+fb_readOut_Aski2(
+	m_Enable:= mReadOutAski, 
+	str_IPAdress:= str_IP_Aski, 
+	w_Adress:= , 
+	usint_Quantity:= , 
+	usint_ID:= 1,
+	m_PollSuccessful=> , 
+	w_Array_Received=> , 
+	udint_Error_ID=> );			
+	
+fbMBWrite_FC6(
+	sIPAddr:= str_IP_Aski, 
+	nTCPPort:= 502, 
+	nUnitID:= 1, 
+	nMBAddr:= , 
+	nValue:= , 
+	bExecute:= , 
+	tTimeout:= , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );
+
+	
+fbMBWrite_FC6.bExecute := FALSE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgPV_2">
+      <LineId Id="2500" Count="0" />
+      <LineId Id="2502" Count="1" />
+      <LineId Id="2501" Count="0" />
+      <LineId Id="2505" Count="0" />
+      <LineId Id="2504" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="2203" Count="9" />
+      <LineId Id="2201" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="2213" Count="8" />
+      <LineId Id="242" Count="1" />
+      <LineId Id="2188" Count="0" />
+      <LineId Id="2190" Count="0" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="171" Count="1" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="173" Count="1" />
+      <LineId Id="17" Count="1" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="2191" Count="1" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="2193" Count="1" />
+      <LineId Id="400" Count="1" />
+      <LineId Id="2196" Count="1" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="811" Count="0" />
+      <LineId Id="2198" Count="0" />
+      <LineId Id="2340" Count="0" />
+      <LineId Id="2329" Count="0" />
+      <LineId Id="2331" Count="8" />
+      <LineId Id="2199" Count="0" />
+      <LineId Id="2345" Count="1" />
+      <LineId Id="2349" Count="0" />
+      <LineId Id="2348" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="180" Count="1" />
+      <LineId Id="809" Count="0" />
+      <LineId Id="842" Count="0" />
+      <LineId Id="2341" Count="0" />
+      <LineId Id="810" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="28" Count="7" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="57" Count="13" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="3175" Count="8" />
+      <LineId Id="3643" Count="0" />
+      <LineId Id="3645" Count="0" />
+      <LineId Id="3647" Count="0" />
+      <LineId Id="3185" Count="1" />
+      <LineId Id="520" Count="10" />
+      <LineId Id="843" Count="0" />
+      <LineId Id="2479" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="633" Count="3" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="845" Count="0" />
+      <LineId Id="2483" Count="0" />
+      <LineId Id="637" Count="0" />
+      <LineId Id="532" Count="4" />
+      <LineId Id="847" Count="0" />
+      <LineId Id="2484" Count="0" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="626" Count="0" />
+      <LineId Id="734" Count="1" />
+      <LineId Id="630" Count="1" />
+      <LineId Id="849" Count="1" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="538" Count="4" />
+      <LineId Id="851" Count="0" />
+      <LineId Id="2485" Count="0" />
+      <LineId Id="625" Count="0" />
+      <LineId Id="620" Count="4" />
+      <LineId Id="853" Count="0" />
+      <LineId Id="2486" Count="1" />
+      <LineId Id="639" Count="1" />
+      <LineId Id="647" Count="3" />
+      <LineId Id="855" Count="0" />
+      <LineId Id="2488" Count="0" />
+      <LineId Id="737" Count="0" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="739" Count="0" />
+      <LineId Id="742" Count="3" />
+      <LineId Id="859" Count="0" />
+      <LineId Id="2499" Count="0" />
+      <LineId Id="740" Count="0" />
+      <LineId Id="738" Count="0" />
+      <LineId Id="736" Count="0" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="3642" Count="0" />
+      <LineId Id="3670" Count="0" />
+      <LineId Id="546" Count="3" />
+      <LineId Id="861" Count="1" />
+      <LineId Id="578" Count="0" />
+      <LineId Id="3673" Count="6" />
+      <LineId Id="3672" Count="0" />
+      <LineId Id="3680" Count="0" />
+      <LineId Id="920" Count="0" />
+      <LineId Id="906" Count="0" />
+      <LineId Id="2236" Count="1" />
+      <LineId Id="2240" Count="1" />
+      <LineId Id="3347" Count="0" />
+      <LineId Id="2243" Count="0" />
+      <LineId Id="2490" Count="0" />
+      <LineId Id="2244" Count="0" />
+      <LineId Id="3167" Count="4" />
+      <LineId Id="3173" Count="1" />
+      <LineId Id="2322" Count="0" />
+      <LineId Id="2615" Count="0" />
+      <LineId Id="2324" Count="0" />
+      <LineId Id="2326" Count="0" />
+      <LineId Id="3494" Count="0" />
+      <LineId Id="2327" Count="0" />
+      <LineId Id="2491" Count="0" />
+      <LineId Id="3495" Count="0" />
+      <LineId Id="2323" Count="0" />
+      <LineId Id="2245" Count="10" />
+      <LineId Id="2260" Count="11" />
+      <LineId Id="3199" Count="1" />
+      <LineId Id="2273" Count="0" />
+      <LineId Id="2275" Count="35" />
+      <LineId Id="656" Count="0" />
+      <LineId Id="658" Count="1" />
+      <LineId Id="655" Count="0" />
+      <LineId Id="865" Count="0" />
+      <LineId Id="879" Count="0" />
+      <LineId Id="1263" Count="0" />
+      <LineId Id="880" Count="1" />
+      <LineId Id="883" Count="0" />
+      <LineId Id="885" Count="1" />
+      <LineId Id="1050" Count="0" />
+      <LineId Id="1052" Count="0" />
+      <LineId Id="1686" Count="0" />
+      <LineId Id="1688" Count="0" />
+      <LineId Id="1692" Count="0" />
+      <LineId Id="1699" Count="0" />
+      <LineId Id="1701" Count="1" />
+      <LineId Id="1689" Count="0" />
+      <LineId Id="2492" Count="0" />
+      <LineId Id="1687" Count="0" />
+      <LineId Id="1811" Count="0" />
+      <LineId Id="2723" Count="0" />
+      <LineId Id="2726" Count="0" />
+      <LineId Id="2833" Count="0" />
+      <LineId Id="3165" Count="0" />
+      <LineId Id="3162" Count="0" />
+      <LineId Id="2834" Count="0" />
+      <LineId Id="3163" Count="1" />
+      <LineId Id="2722" Count="0" />
+      <LineId Id="2839" Count="13" />
+      <LineId Id="3085" Count="0" />
+      <LineId Id="2853" Count="62" />
+      <LineId Id="3080" Count="0" />
+      <LineId Id="2917" Count="1" />
+      <LineId Id="3086" Count="0" />
+      <LineId Id="2919" Count="26" />
+      <LineId Id="3088" Count="0" />
+      <LineId Id="2947" Count="0" />
+      <LineId Id="3081" Count="0" />
+      <LineId Id="2949" Count="0" />
+      <LineId Id="3087" Count="0" />
+      <LineId Id="2950" Count="26" />
+      <LineId Id="3078" Count="0" />
+      <LineId Id="3070" Count="2" />
+      <LineId Id="3089" Count="0" />
+      <LineId Id="3075" Count="2" />
+      <LineId Id="2986" Count="17" />
+      <LineId Id="3101" Count="5" />
+      <LineId Id="3004" Count="0" />
+      <LineId Id="3107" Count="0" />
+      <LineId Id="3005" Count="1" />
+      <LineId Id="3008" Count="21" />
+      <LineId Id="3095" Count="5" />
+      <LineId Id="3090" Count="0" />
+      <LineId Id="3108" Count="23" />
+      <LineId Id="3091" Count="0" />
+      <LineId Id="3132" Count="5" />
+      <LineId Id="3092" Count="2" />
+      <LineId Id="3030" Count="1" />
+      <LineId Id="3082" Count="0" />
+      <LineId Id="3044" Count="0" />
+      <LineId Id="3149" Count="0" />
+      <LineId Id="3140" Count="0" />
+      <LineId Id="3151" Count="0" />
+      <LineId Id="3150" Count="0" />
+      <LineId Id="3153" Count="0" />
+      <LineId Id="3841" Count="1" />
+      <LineId Id="3850" Count="6" />
+      <LineId Id="3843" Count="0" />
+      <LineId Id="3154" Count="0" />
+      <LineId Id="3045" Count="9" />
+      <LineId Id="3083" Count="0" />
+      <LineId Id="3055" Count="2" />
+      <LineId Id="3681" Count="1" />
+      <LineId Id="2835" Count="0" />
+      <LineId Id="3648" Count="8" />
+      <LineId Id="3661" Count="0" />
+      <LineId Id="1443" Count="0" />
+      <LineId Id="3662" Count="0" />
+      <LineId Id="3664" Count="0" />
+      <LineId Id="3666" Count="0" />
+      <LineId Id="3668" Count="0" />
+      <LineId Id="3857" Count="8" />
+      <LineId Id="3669" Count="0" />
+      <LineId Id="3902" Count="0" />
+      <LineId Id="3892" Count="9" />
+      <LineId Id="3889" Count="1" />
+      <LineId Id="3665" Count="0" />
+      <LineId Id="3886" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_OBC_Output" Id="{b130cb51-fb5e-4a28-972c-1cbc55fe29ed}">
+    <Declaration><![CDATA[TYPE ST_OBC_Output :
+STRUCT
+	bOutput										: BOOL;										//Output big consumer = Target power > 0
+	bOutputOnOff								: BOOL;										//Output big consumer = Target power >= 100
+	bEnabled									: BOOL;										//{#lynus.ag#()} //Big consumer is enabled
+	bSOnEmergPowerOff							: BOOL;										//Shows the state of the bOnEmergPowerOff input from the setups
+	bSManualyOn									: BOOL;										//Shows the state of the bManualyOn input from the setups
+	byPriority									: BYTE; 									//Priority of the device if controlled via the EMS block = 1 2 3 (If 0 then this device does not exist for the EMS block)
+	byErrorWarning								: BYTE;										//Show if the function has a Error or a Warning
+	bySManualyTargetPower						: BYTE;										//Shows the state of the byManualyTargetPower input from the setups
+	rMaxPower									: REAL; 									//Max. power from the big consumer with unit kW
+	rTargetPower								: REAL;										//{#lynus.ag#()} //Target power from 0% to +100%
+	lrTotalCounterEnergy_Consumption			: LREAL;									//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production				: LREAL;									//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption				: LREAL;									//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption				: LREAL;									//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production				: LREAL;									//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production				: LREAL;									//Total counter for energy Tariff 2 production with unit kWh
+	lrPower										: LREAL;									//Actual power big consumer with unit kW
+	lrPowerConsumption							: LREAL;									//Consumption big consumer with unit kW
+	lrPowerProduction							: LREAL;									//Production big consumer with unit kW
+	eMessage									: E_Message_OBC;							//Message from the OBC
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

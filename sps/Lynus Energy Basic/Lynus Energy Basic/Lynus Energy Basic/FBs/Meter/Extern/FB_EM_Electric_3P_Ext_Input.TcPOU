@@ -1,0 +1,289 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_EM_Electric_3P_Ext_Input" Id="{08ab1174-fab3-487c-baa9-66743efe3b6f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_EM_Electric_3P_Ext_Input
+VAR_INPUT PERSISTENT
+	bEnable									: BOOL;											//Enable the function
+	bPowerDataInvers						: BOOL;											//power Data Invers
+END_VAR
+VAR_INPUT
+	bErrorExt								: BOOL;											//Error from external Function
+	bWarningExt								: BOOL;											//Warning from external Function
+	lrTotalCounterEnergy_Consumption		: LREAL;										//Total Counter for Energy consumption with unit kWh
+	lrTotalCounterEnergy_Production			: LREAL;										//Total Counter for Energy production with unit kWh
+	lrCounterEnergyT1_Consumption			: LREAL;										//Total counter for energy Tariff 1 consumption with unit kWh
+	lrCounterEnergyT2_Consumption			: LREAL;										//Total counter for energy Tariff 2 consumption with unit kWh
+	lrCounterEnergyT1_Production			: LREAL;										//Total counter for energy Tariff 1 production with unit kWh
+	lrCounterEnergyT2_Production			: LREAL;										//Total counter for energy Tariff 2 production with unit kWh
+	lrCurrentL1								: LREAL;										//Current from L1 with unit A
+	lrVoltageL1N							: LREAL;										//Voltage L1-N with unit V
+	lrVoltageL1L2							: LREAL;										//Voltage L1-L2 with unit V
+	lrPowerL1								: LREAL;										//Power L1 with unit W
+	lrCurrentL2								: LREAL;										//Current from L2 with unit A
+	lrVoltageL2N							: LREAL;										//Voltage L2-N with unit V
+	lrVoltageL2L3							: LREAL;										//Voltage L2-L3 with unit V
+	lrPowerL2								: LREAL;										//Power L2 with unit W
+	lrCurrentL3								: LREAL;										//Current from L3 with unit A
+	lrVoltageL3N							: LREAL;										//Voltage L3-N with unit V
+	lrVoltageL3L1							: LREAL;										//Voltage L3-L1 with unit V
+	lrPowerL3								: LREAL;										//Power L3 with unit W
+	lrPowerTotal							: LREAL;										//Total power with unit W	
+	lrFrequency								: LREAL;										//Frequency with unit HZ
+	lrReactivePowerTotal					: LREAL;										//Reactive power with unit var
+	lrApparentPowerTotal					: LREAL;										//Apparent Power with unit VA
+END_VAR
+VAR_OUTPUT
+	stDataEMPower							: ST_ElectricMeter_Output_Power;				//Output structure with Data from Electric Meter (Power Data)
+	stDataEMCounter							: ST_ElectricMeter_Output_Counter;				//Output structure with Data from Electric Meter (Counter Data)
+	diNrOfEM_OUT							: DINT;											//Active Number from the Electric Meter for using on other functions
+END_VAR
+VAR
+	{attribute 'conditionalshow'}
+	fbEM									: FB_ElectricMeter;								//Electric Meter Function
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;							//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	timDissableFunctions					: TON;											//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;											//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	fbPD									: FB_PersistentData_Number;						//Function to save persistent data
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;											//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	iStateGVLData							: INT;											//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	diCounterForGVL							: DINT;											//Counter to clean old data on GVL
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Consumption_CP		: LREAL;										//Total Counter for Energy consumption with unit kWh
+	{attribute 'hide'}
+	lrTotalCounterEnergy_Production_CP		: LREAL;										//Total Counter for Energy production with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Consumption_CP		: LREAL;										//Total counter for energy Tariff 1 consumption with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Consumption_CP		: LREAL;										//Total counter for energy Tariff 2 consumption with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT1_Production_CP			: LREAL;										//Total counter for energy Tariff 1 production with unit kWh
+	{attribute 'hide'}
+	lrCounterEnergyT2_Production_CP			: LREAL;										//Total counter for energy Tariff 2 production with unit kWh
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 05.11.2021
+//Version : 1.0.0.0
+
+//With this function block its possible to read in external data from a Electric meter
+//This Function is Helpfull when we receive Energy Data from a External Function and we want to write on th GVL from the Electric meter.
+//So we can deliver the Energy data on all other Functions in Lynus (Heating Pumps, Electric heating Elemt, ECS, Big consumer....)
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*-------------------------------------------------------------Calcualte the number of EM---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := diNrOfEM_OUT;	
+		iStateGVLData := 1; 
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*----------------------------------------------------------------------------------------Electric Meter Function for Pv----------------------------------------------------------------------------------------------*)
+
+
+//Error and Warning
+IF timDissableFunctions.Q OR bWarningExt THEN fbEM.bWarning := TRUE;
+ELSE fbEM.bWarning := FALSE; END_IF 
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters OR bErrorExt THEN fbEM.bError := TRUE; ELSE fbEM.bError := FALSE; END_IF
+		IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN fbEM.iErrorCode := 1;
+		ELSIF bErrorExt THEN fbEM.iErrorCode := 0;
+		END_IF
+
+IF timDissableFunctions.Q THEN fbEM.iWarningCode := 0;
+ELSIF bWarningExt THEN fbEM.iWarningCode := 1;
+END_IF  		
+	
+//Write the counter values after a change on the inputs
+fbEM.bReadOutDataDone := FALSE;
+	IF lrTotalCounterEnergy_Consumption <> lrTotalCounterEnergy_Consumption_CP OR lrTotalCounterEnergy_Production <> lrTotalCounterEnergy_Production_CP OR lrCounterEnergyT1_Consumption <> lrCounterEnergyT1_Consumption_CP OR
+		lrCounterEnergyT2_Consumption <> lrCounterEnergyT2_Consumption_CP OR lrCounterEnergyT1_Production <> lrCounterEnergyT1_Production_CP OR lrCounterEnergyT2_Production <> lrCounterEnergyT2_Production_CP THEN
+			fbEM.bReadOutDataDone := TRUE;
+				lrTotalCounterEnergy_Consumption_CP := lrTotalCounterEnergy_Consumption;
+					lrTotalCounterEnergy_Production_CP := lrTotalCounterEnergy_Production;
+						lrCounterEnergyT1_Consumption_CP := lrCounterEnergyT1_Consumption;
+							lrCounterEnergyT2_Consumption_CP := lrCounterEnergyT2_Consumption;
+								lrCounterEnergyT1_Production_CP := lrCounterEnergyT1_Production;
+									lrCounterEnergyT2_Production_CP := lrCounterEnergyT2_Production;
+	END_IF		
+		
+//Function
+fbEM(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= FALSE, 
+	bWriteWithDelay:= TRUE, 
+	bPowerDataInvers:= bPowerDataInvers,
+	bReadOutDataDone:= ,
+	iTimeReadOutInterval:= 0, 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= lrTotalCounterEnergy_Consumption, 
+	lrTotalCounterEnergy_Production:= lrTotalCounterEnergy_Production, 
+	lrCounterEnergyT1_Consumption:= lrCounterEnergyT1_Consumption, 
+	lrCounterEnergyT2_Consumption:= lrCounterEnergyT2_Consumption, 
+	lrCounterEnergyT1_Production:= lrCounterEnergyT1_Production, 
+	lrCounterEnergyT2_Production:= lrCounterEnergyT2_Production, 
+	lrCurrentL1:= lrCurrentL1, 
+	lrVoltageL1N:= lrVoltageL1N, 
+	lrVoltageL1L2:= lrVoltageL1L2, 
+	lrPowerL1:= lrPowerL1, 
+	lrCurrentL2:= lrCurrentL2, 
+	lrVoltageL2N:= lrVoltageL2N, 
+	lrVoltageL2L3:= lrVoltageL2L3, 
+	lrPowerL2:= lrPowerL2, 
+	lrCurrentL3:= lrCurrentL3, 
+	lrVoltageL3N:= lrVoltageL3N, 
+	lrVoltageL3L1:= lrVoltageL3L1, 
+	lrPowerL3:= lrPowerL3, 
+	lrPowerTotal:= lrPowerTotal, 
+	lrFrequency:= lrFrequency, 
+	lrReactivePowerTotal:= lrReactivePowerTotal, 
+	lrApparentPowerTotal:= lrApparentPowerTotal, 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> , 
+	stDataEMOutPowerDelay=> stDataEMPower, 
+	stDataEMOutCounter=> ,
+	stDataEMOutCounterDelay=> stDataEMCounter,
+	bReadOutMeter=> );
+	
+(*-----------------------------------------------------------Handle data to Global structure for Electric Meter-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].bEnabled := FALSE;	
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Consumption := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT1_Production := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Consumption := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrCounterEnergyT2_Production := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPower := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerConsumption := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrPowerProduction := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Consumption := 0;
+												Lynus_Standards.GVL_Energy.stDataElectricMeters[diCounterForGVL].lrTotalCounterEnergy_Production := 0;
+		
+		//Electric Meters
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Energy.diMaxNumberOfElectricMeters);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Energy.diMaxNumberOfElectricMeters THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+//Write Data on GVL for Electric Meter
+IF diNrOfEM_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].bEnabled := fbEM.stDataEMOutPower.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].byErrorWarning := fbEM.stDataEMOutPower.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT1_Consumption := fbEM.stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT1_Production := fbEM.stDataEMOutCounter.lrCounterEnergyT1_Production;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT2_Consumption := fbEM.stDataEMOutCounter.lrCounterEnergyT2_Consumption;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrCounterEnergyT2_Production := fbEM.stDataEMOutCounter.lrCounterEnergyT2_Production;		
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrPower := fbEM.stDataEMOutPower.lrPowerTotal;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrPowerConsumption := fbEM.stDataEMOutPower.lrPowerConsumption;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrPowerProduction := fbEM.stDataEMOutPower.lrPowerProduction;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrTotalCounterEnergy_Consumption := fbEM.stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT].lrTotalCounterEnergy_Production := fbEM.stDataEMOutCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+fbPD(lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_EM_Electric_3P_Ext_Input">
+      <LineId Id="276" Count="4" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="544" Count="1" />
+      <LineId Id="285" Count="4" />
+      <LineId Id="17" Count="14" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="297" Count="3" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="428" Count="4" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="367" Count="1" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="50" Count="3" />
+      <LineId Id="547" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="549" Count="1" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="607" Count="5" />
+      <LineId Id="615" Count="3" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="55" Count="6" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="62" Count="27" />
+      <LineId Id="397" Count="1" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="95" Count="1" />
+      <LineId Id="100" Count="12" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="152" Count="6" />
+      <LineId Id="160" Count="3" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="172" Count="3" />
+      <LineId Id="211" Count="1" />
+      <LineId Id="243" Count="14" />
+      <LineId Id="308" Count="1" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="338" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

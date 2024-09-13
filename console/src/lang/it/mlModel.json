@@ -1,0 +1,1825 @@
+{
+  "HeatingCircuitOptimization": {
+    "previewName": "Ottimizzazione del circuito di riscaldamento",
+    "mainView": {
+      "heating": "Scaldare",
+      "mpcReady": "MPC Pronto",
+      "service": {
+        "on": "Regolatore Acceso",
+        "off": "Regolatore Spento"
+      },
+      "handleMinusMessage": "Il risparmio energetico è del 3%."
+    },
+    "settingsView": {
+      "title": "Settings for lowering mode",
+      "loweringModeTabs": [
+        "Impostazioni Ora",
+        "Impostazioni Temperatura",
+        "Impostazioni Modo"
+      ],
+      "activateLoweringMode": "Attivare Temperatura di Abbassamento",
+      "loweringTemperature": "Temperatura di Abbassamento/°C",
+      "serviceOffTemperature": "Regolatore Spento/°C",
+      "chartTabs": ["Diagramma", "Previsione"],
+      "forecastTabs": ["Temp/Valvola", "Meteo"],
+      "onM": "Accendere/min",
+      "onH": "Accendere/h",
+      "offM": "Spegnere/min",
+      "offH": "Spegnere/h",
+      "chartLabels": {
+        "chart": {
+          "roomTemp": "Temperatura Ambiente",
+          "valvePosition": "Posizione Valvola"
+        },
+        "tempValve": {
+          "roomTemp": "Temperatura Ambiente",
+          "valvePosition": "Posizione Valvola"
+        },
+        "weather": {
+          "air": "Temperatura dell'Aria",
+          "globalRadiation": "Radiazione Globale Orizzontale"
+        }
+      },
+      "energySavingModesList": {
+        "comfort": "Modo Comfort",
+        "balanced": "Modo Bilanciato",
+        "energySaving": "Modo Risparmio Energetico"
+      }
+    },
+    "controllerMappings": {
+      "valveReturnType": {
+        "label": "Tipo di valvola",
+        "description": "0-1 Digital"
+      },
+      "flowTemperature": {
+        "label": "Temperatura di flusso",
+        "description": "Valore di 32 bit"
+      },
+      "newSetTemperature": {
+        "label": "Nuova temperatura di riferimento",
+        "description": "Valore di 32 bit"
+      },
+      "returnTemperature": {
+        "label": "Temperatura di ritorno",
+        "description": "Valore di 32 bit"
+      },
+      "areaTemperature": {
+        "label": "Temperatura ambiente",
+        "description": "Valore di 32 bit"
+      },
+      "valvePosition": {
+        "label": "Posizione della valvola",
+        "description": "0-1 or 0-100"
+      },
+      "newValvePosition": {
+        "label": "Nuova posizione della valvola",
+        "description": "0-1 or 0-100"
+      },
+      "newAreaTemperature": {
+        "label": "Nuova temperatura ambiente",
+        "description": "Valore di 32 bit"
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "Valore di 32 bit"
+      },
+      "errorWarning": {
+        "label": "Errore/avvertimento",
+        "description": "0 = OK 1 = Attenzione 2 = Errore"
+      },
+      "mpcReady": {
+        "label": "MPC pronto",
+        "description": "0-1"
+      }
+    }
+  },
+  "PVProductionService": {
+    "previewName": "Servizio di produzione fotovoltaica",
+    "mainView": {
+      "actualPower": "Potenza effettiva:",
+      "calculatedPower": "Previsione di potenza media 24 ore:",
+      "calculatedEnergy": "Previsione di energia totale 24 ore:",
+      "service": "Servizio pronto"
+    },
+    "settingsView": {
+      "chartTabs": ["Diagramma", "Previsione"],
+      "chartMQTTTabs": ["Potenza", "Energia"],
+      "chartLabels": {
+        "power": {
+          "actualPower": "Potenza effettiva",
+          "calculatedPower": "Potenza Calcolata"
+        },
+        "energy": {
+          "calculatedEnergy": "Energia Calcolata",
+          "producedEnergy": "Energia Prodotta"
+        },
+        "forecast": {
+          "predictedEnergy": "Energia Prevista",
+          "predictedPower": "Potenza Prevista"
+        }
+      }
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start Date",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "Valore di 32 bit"
+      },
+      "errorWarning": {
+        "label": "Errore/avvertimento",
+        "description": "0 = OK 1 = Attenzione 2 = Errore"
+      },
+      "power": {
+        "label": "Potenza effettiva PV",
+        "description": "Valore di 32 bit"
+      },
+      "predictedPower": {
+        "label": "Potenza calcolata",
+        "description": "Valore di 32 bit"
+      },
+      "predictedEnergy": {
+        "label": "Energia calcolata",
+        "description": "Valore di 32 bit"
+      },
+      "mpcReady": {
+        "label": "Servizio di generazione fotovoltaica pronto",
+        "description": "0-1"
+      }
+    },
+    "scaling": "Impianto fotovoltaico da kWp"
+  },
+  "ConsumptionService": {
+    "previewName": "Servizio di consumazione",
+    "mainView": {
+      "actualPower": "Potenza effettiva:",
+      "calculatedPower": "Previsione di potenza media 24 ore:",
+      "calculatedEnergy": "Previsione di energia totale 24 ore:",
+      "service": "Servizio pronto"
+    },
+    "settingsView": {
+      "chartTabs": ["Diagramma", "Previsione"],
+      "chartMQTTTabs": ["Potenza", "Energia"],
+      "chartLabels": {
+        "power": {
+          "actualPower": "Potenza effettiva",
+          "calculatedPower": "Potenza Calcolata"
+        },
+        "energy": {
+          "calculatedEnergy": "Energia Calcolata",
+          "consumedEnergy": "Energia Consumata"
+        },
+        "forecast": {
+          "predictedEnergy": "Energia Prevista",
+          "predictedPower": "Potenza Prevista"
+        }
+      }
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start Date",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "Valore di 32 bit"
+      },
+      "errorWarning": {
+        "label": "Errore/avvertimento",
+        "description": "0 = OK 1 = Attenzione 2 = Errore"
+      },
+      "power": {
+        "label": "Consumo attuale",
+        "description": "Valore di 32 bit"
+      },
+      "predictedPower": {
+        "label": "Potenza calcolata",
+        "description": "Valore di 32 bit"
+      },
+      "predictedEnergy": {
+        "label": "Energia calcolata",
+        "description": "Valore di 32 bit"
+      },
+      "mpcReady": {
+        "label": "Servizio di consumo pronto",
+        "description": "0-1"
+      }
+    },
+    "scaling": "Consumo massimo in kW"
+  },
+  "EMS": {
+    "previewName": "Ottimizzazione dell'energia",
+    "ems": "Generale",
+    "deleteLoader": "Questo processo serve un pó di tempo",
+    "mainView": {
+      "actualView": "Vista attuale",
+      "forecastView": "Visualizza previsione",
+      "centralEndpoint": "Punto centrale di energia",
+      "serviceReady": "Servizio pronto"
+    },
+    "bypassActive": "Bypass attivo!",
+    "islandActive": "Modalità isola attiva!",
+    "settingsView": {
+      "fields": {
+        "sizeMainFuseChargingStation": "Dimensioni del fusibile principale delle stazioni di ricarica",
+        "sizeMainFuse": "Dimensioni del fusibile principale",
+        "maxDephOfDischargeInEmergencyPowerMode": "Profondità massima di scarico in modalità di alimentazione di emergenza",
+        "reserveInBatteryForEmergencyPowerMode": "Carica di riserva nella batteria per il funzionamento di emergenza",
+        "minimalSOCForAdaptiveSelfConsumption": "SOC minimo per l'ottimizzazione dell'autoconsumo adattivo",
+        "priorityMinChargeBatterySOCInEmergencyPowerMode": "Carica prioritaria delle batterie in modalità di alimentazione di emergenza",
+        "reserveChargingFromGrid": "Carica massima dalla rete",
+        "updatingTimeEMS": "Tempo di aggiornamento EMS",
+        "operationModeEMS": "Modalità di funzionamento EMS",
+        "messageEMSFunction": "Messaggio della funzione EMS",
+        "enableEMS": "Abilitazione EMS",
+        "allowedChargingFromGrid": "Consentire la ricarica dalla rete",
+        "mainFuseMonitoring": "Monitoraggio del Fusibile Principale delle Stazioni di Ricarica",
+        "algorithm_model_ems": "Modello EMS"
+      },
+      "mappingModel": {
+        "standard": "Standard",
+        "hypermodelOne": "Hypermodell 1"
+      },
+      "mappingOperation": {
+        "allOff": "Tutto spento",
+        "selfConsumption": "Ottimizzazione dell'autoconsumo",
+        "peakLoadCapping": "Limitazione del carico di picco",
+        "loadManagement": "Gestione del carico",
+        "adaptiveSelfConsumption": "Autoconsumo adattivo"
+      },
+      "mappingMessage": {
+        "disabled": "Disattivato",
+        "enabled": "Attivato",
+        "allPrioritiesAtMinimum": "Tutte le priorità sono al minimo",
+        "allPrioritiesAtMaximum": "Tutte le priorità sono al massimo",
+        "missingPowerValuesOnDeviceSetup": "Informazioni mancanti sulla potenza nelle impostazioni del consumatore",
+        "tooManyFunctionsInThisProject": "Troppe funzioni/dispositivi in questo progetto"
+      },
+      "tabs": {
+        "emsSettings": "Impostazioni EMS",
+        "modeSettings": "Impostazioni Modo"
+      },
+      "tariffModes": {
+        "energyOptimized": "Energia Ottimizzata",
+        "balancedOptimization": "Ottimizzazione Bilanciata",
+        "tariffOptimized": "Tariffa Ottimizzata",
+        "disabledMode": "Disattivato"
+      },
+      "workMode": "Modalità di Lavoro"
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Start Date",
+        "description": ""
+      },
+      "activate_heating_pump": {
+        "label": "Attivare le pompe di calore",
+        "description": "0-1"
+      },
+      "calculated_battery_power": {
+        "label": "Nuova potenza della batteria",
+        "description": "Valore di 32 bit"
+      },
+      "state_enable_ems": {
+        "label": "Rilascio di stato EMS (@:basicControls.Switch)",
+        "description": "0-1"
+      },
+      "enable_ems": {
+        "label": "Abilita EMS (@:basicControls.Switch)",
+        "description": "0-1"
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "Valore di 32 bit"
+      },
+      "errorWarning": {
+        "label": "Errore/Attenzione (@:basicControls.ShowEvent)",
+        "description": "0= OK\n1 = Attenzione\n2= Errore"
+      },
+      "mpcReady": {
+        "label": "Ottimizzazione dell'energia pronta (@:basicControls.ShowEvent)",
+        "description": "0-1"
+      },
+      "size_main_fuse": {
+        "label": "Dimensione della stazione di carica del fusibile principale (@:basicControls.InputField)",
+        "description": "0-500"
+      },
+      "operation_mode": {
+        "label": "Modalità di funzionamento EMS (@:basicControls.DropDown)",
+        "description": "0 = Tutto spento; 1 = Consumo proprio; 2 = Limitazione del carico; 3 = Gestione del carico; 4 = Autoconsumo adattivo"
+      },
+      "model_ems": {
+        "label": "Modello EMS (@:basicControls.DropDown)",
+        "description": "0 = Standard; 1 = Ipermodello 1;"
+      },
+      "max_depth": {
+        "label": "Profondità massima di scarica nel funzionamento in emergenza (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "reserve_battery": {
+        "label": "SOC della batteria di riserva per il funzionamento in emergenza (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "adaptive_self_consumption": {
+        "label": "SOC minimo per l'ottimizzazione dell'autoconsumo adattivo (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "min_charge_battery": {
+        "label": "Priorità minimo SOC della batteria in funzionamento di emergenza (@:basicControls.InputField)",
+        "description": "25-75"
+      },
+      "reserve_charge": {
+        "label": "Carica di riserva dalla rete (@:basicControls.InputField)",
+        "description": "0-100"
+      },
+      "update_time": {
+        "label": "Tempo di aggiornamento EMS (@:basicControls.InputField)",
+        "description": "1-600"
+      },
+      "message": {
+        "label": "Messaggio EMS (@:basicControls.DropDown)",
+        "description": "0 = Disabilitato; 1 = Abilitato; 2 = Tutte le priorità al minimo; 3 = Tutte le priorità al massimo; 4 = Valori di potenza mancanti all'impostazione del dispositivo"
+      },
+      "allow_charging_button": {
+        "label": "Pulsante per consentire la ricarica dalla rete (@:basicControls.Switch2V)",
+        "description": "0-1"
+      },
+      "allow_charging_state": {
+        "label": "Stato Consentire la ricarica dalla rete (@:basicControls.Switch2V)",
+        "description": "0-1"
+      },
+      "enable_controlling": {
+        "label": "Stato di controllo",
+        "description": "0-1"
+      },
+      "state_main_fuse": {
+        "label": "Stato Fusibile Principale (@:basicControls.Switch)",
+        "description": "0-1"
+      },
+      "activate_main_fuse": {
+        "label": "Attivare Fusibile Principale (@:basicControls.Switch)",
+        "description": "0-1"
+      }
+    },
+    "groups": {
+      "producer": {
+        "title": "Produttore"
+      },
+      "producerConsumer": {
+        "title": "Produttore Consumatore"
+      },
+      "consumer": {
+        "title": "Consumatore"
+      }
+    },
+    "systems": {
+      "pv": {
+        "title": "Sistemi PV",
+        "mappings": {
+          "power": {
+            "label": "Potenza PV (@:basicControls.OutputField)",
+            "description": "Min/Max -1000+1000"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata 24h sistema PV ",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata 24h sistema PV",
+            "description": "Valore di 32 bit"
+          },
+          "error": {
+            "label": "Errore/Attenzione Sistema fotovoltaico (@:basicControls.ShowEvent)",
+            "description": "0= OK\n1 = Attenzione\n2= Errore"
+          },
+          "title": {
+            "label": "Title",
+            "description": ""
+          }
+        },
+        "settings": {
+          "actualPower": "Potenza attuale Sistema fotovoltaico"
+        }
+      },
+      "generator": {
+        "title": "Generatori",
+        "mappings": {
+          "power": {
+            "label": "Campo di uscita (potenza del generatore di corrente) (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata generatore 24h",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Generatore di energia calcolata 24h",
+            "description": "Valore di 32 bit"
+          },
+          "error": {
+            "label": "Errore/Attenzione Generatore (@:basicControls.ShowEvent)",
+            "description": "0= OK\n1 = Attenzione\n2= Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "state_reset": {
+            "label": "Stato di reset del generatore (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "state_generator": {
+            "label": "Stato del generatore (@:basicControls.ShowEventDot)",
+            "description": "1 = Luce verde. Tutti gli altri valori senza luce"
+          },
+          "enable_soc": {
+            "label": "SOC per attivare il generatore (@:basicControls.ShowEventDot)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC per disattivare il generatore (@:basicControls.ShowEventDot)",
+            "description": "0-100%"
+          },
+          "switch_enable": {
+            "label": "Abilitazione del generatore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_reset": {
+            "label": "Pulsante di reset del generatore (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "state_enable": {
+            "label": "Stato di abilitazione del generatore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "enableGenerator": "Abilitazione generatore",
+          "reset": "Reset",
+          "enableSOC": "SOC per l'attivazione",
+          "disableSOC": "SOC per la disattivazione",
+          "actualGeneratorPower": "Potenza Attuale Generatore",
+          "stateGenerator": "Stato del generatore"
+        }
+      },
+      "grid": {
+        "title": "Rete",
+        "mappings": {
+          "power": {
+            "label": "Potenza di rete effettiva (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata 24h Rete",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata 24h Rete",
+            "description": "Valore di 32 bit"
+          },
+          "error": {
+            "label": "Errore/Attenzione Rete (@:basicControls.ShowEvent)",
+            "description": "0= OK 1 = Attenzione 2= Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "size": {
+            "label": "Dimensione della Rete (@:basicControls.InputField)",
+            "description": "0-2000 KW"
+          },
+          "status_island": {
+            "label": "di stato modalità isola",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "sizeGridConnection": "Dimensione della Connessione di Rete",
+          "actualGridPower": "Potenza attuale Rete"
+        }
+      },
+      "battery": {
+        "title": "Batterie",
+        "mappings": {
+          "power": {
+            "label": "Potenza effettiva della batteria (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata batteria 24h",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata batteria 24h",
+            "description": "Valore di 32 bit"
+          },
+          "target_power": {
+            "label": "Potenza obietivo batteria (@:basicControls.OutputField)",
+            "description": "-100 +100"
+          },
+          "state_enable": {
+            "label": "Stato Abilitazione Batteria (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_reset": {
+            "label": "Stato del Pulsante di Reset (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "error": {
+            "label": "Errore/Attenzione Battery (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Attenzione 2 = Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "soc": {
+            "label": "SOC corrente della batteria (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "size_capacity": {
+            "label": "Capacità della batteria (@:basicControls.InputField)",
+            "description": "0-1000 kWh"
+          },
+          "capacity": {
+            "label": "Capacità effettiva della batteria (@:basicControls.OutputField)",
+            "description": "Valore di 32 bit"
+          },
+          "soc_range_max": {
+            "label": "Intervallo dello stato di carica: max (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "soc_range_min": {
+            "label": "Intervallo dello stato di carica: min (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "state_soc_range_max": {
+            "label": "Stato della gamma di carica: max (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_soc_range_min": {
+            "label": "Stato della gamma di carica: min (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "priority": {
+            "label": "Priorità della batteria (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "switch_enable": {
+            "label": "Batteria di abilitazione (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_reset": {
+            "label": "Pulsante di Reset per la batteria (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "status_bypass": {
+            "label": "di stato bypass",
+            "description": "0-1"
+          },
+          "battery_standby_optimization_state": {
+            "label": "Ottimizzazione dello standby della batteria dello stato",
+            "description": "0 o 2"
+          },
+          "battery_standby_optimization_mode": {
+            "label": "Modalità di ottimizzazione dello standby della batteria",
+            "description": "0 o 2"
+          },
+          "battery_standby_optimization_time_on": {
+            "label": "Soglia di tempo attiva (minuti)",
+            "description": "Da 1 a x minuti"
+          },
+          "battery_standby_optimization_time_off": {
+            "label": "Soglia temporale disattivata (Minuti)",
+            "description": "Da 1 a x minuti"
+          },
+          "battery_standby_optimization_power_on": {
+            "label": "Potenza soglia In (kWh)",
+            "description": "Da 1 a x kilowattora"
+          },
+          "battery_standby_optimization_power_off": {
+            "label": "Soglia di spegnimento (kWh)",
+            "description": "Da 1 a x kilowattora"
+          }
+        },
+        "settings": {
+          "enableBattery": "Abilitazione batteria",
+          "reset": "Reset",
+          "priorityEMS": "Priorità per l'EMS",
+          "maxSizeOfBatteryCapacity": "Dimensione massima della capacità della batteria",
+          "socRangeMax": "Stato di carica autonomia massima",
+          "socRangeMin": "Stato di carica gamma minima",
+          "actualBatterySOC": "Attuale SOC della batteria",
+          "actualBatteryPower": "Potenza attuale Batteria",
+          "actualBatteryCapacity": "Capacità attuale della batteria",
+          "targetBatteryPower": "Specifiche di Potenza Batteria",
+          "socOperationRange": "Stato di carica della gamma"
+        }
+      },
+      "house": {
+        "title": "Consumo di Casa",
+        "mappings": {
+          "power": {
+            "label": "Potenza corrente della casa (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "state_enable": {
+            "label": "Stato di abilitazione dell' corrente di casa (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata 24h della corrente casa",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata 24h della corrente casa",
+            "description": "Valore di 32 bit"
+          },
+          "switch_enable": {
+            "label": "Abilitazione della corrente di casa (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "error": {
+            "label": "Errore/Attenzione House (@:basicControls.ShowEvent)",
+            "description": "0= OK\n1 = Attenzione\n2= Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          }
+        },
+        "settings": {
+          "enableHouseConsumption": "Abilitazione del consumo di casa",
+          "actualHouseConsumption": "Potenza attuale Casa"
+        }
+      },
+      "charge_station": {
+        "title": "Stazioni di Ricarica Elettriche",
+        "mappings": {
+          "power": {
+            "label": "Potenza attuale della stazione di ricarica (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata 24h della stazione di ricarica",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata 24h della stazione di ricarica",
+            "description": "Valore di 32 bit"
+          },
+          "error": {
+            "label": "Errore/Attenzione Stazione di ricarica elettric (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Attenzione 2 = Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "car_connected": {
+            "label": "Stazione di ricarica collegata sulla machina (@:basicControls.ShowEventDot)",
+            "description": "1 = Luce verde. Tutti gli altri valori senza luce"
+          },
+          "charging_time": {
+            "label": "Durata della ricarica della stazione di ricarica (@:basicControls.OutputField)",
+            "description": "Valore di 32 bit"
+          },
+          "state_charging_station": {
+            "label": "Stato della stazione di ricarica (@:basicControls.ShowEventDot)",
+            "description": "1 = Luce verde. Tutti gli altri valori senza luce"
+          },
+          "state_emergency": {
+            "label": "Stato di abilitazione della stazione di ricarica (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_manual": {
+            "label": "Stato della stazione di ricarica per Funzionamento spento in funzinamento di emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "min_power": {
+            "label": "Stato della potenza minima della stazione di carica (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "switch_emergency": {
+            "label": "Stazione di ricarica spenta in funzionamento di emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Prioritaria della statzione di carica (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC per attivare la stazione di ricarica (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC per disattivare la stazione di ricarica (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "max_power": {
+            "label": "Massima potenza della stazione di carica (@:basicControls.InputField)",
+            "description": "0-500"
+          },
+          "slider_manual": {
+            "label": "Stazione di ricaraivca potenza manuale (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "slider_target_power": {
+            "label": "Stato attuale della potenza manuale (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "slider_min_power": {
+            "label": "Potenza minimo della statzione di carica (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "target_power": {
+            "label": "Potenza obietivo della stazione di carica (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_enable": {
+            "label": "Stato di abilitazione della stazione di ricarica (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_enable": {
+            "label": "Abilita la stazione di ricarica (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_manual": {
+            "label": "Stazione di ricarica accendere Manuale (@:basicControls.Switch2V)",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "manualON": "Accendere manualmente",
+          "atEmergencyPowerOff": "In modalità di alimentazione di emergenza Off",
+          "enableChargingStation": "Abilitazione delle statzione di ricarica elettrica",
+          "manualPower": "Potenza manuale",
+          "minimalPower": "Potenza minima continua",
+          "priorityEMS": "Priorità per l'EMS",
+          "enableSOC": "SOC per l'attivazione",
+          "disableSOC": "SOC per la disattivazione",
+          "maxPower": "Potenza massima",
+          "actualPowerChargingStation": "Potenza attuale Statzione di ricarica elettrica",
+          "chargingTime": "Tempo di carico",
+          "targetPowerChargingStation": "Specifiche di Potenza statzione di ricarica elettrica",
+          "carConnected": "Veicolo collegato",
+          "stateChargingStation": "Stato della statzione di ricarica elettrica"
+        }
+      },
+      "electric_heating": {
+        "title": "Riscaldamenti Elettrici",
+        "mappings": {
+          "power": {
+            "label": "Potenza elettrica corrente del riscaldatore (@:basicControls.OutputField)",
+            "description": "Min/Max -1000+1000"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata 24h del elemento di riscaldamento elettrico",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata 24h del elemento di riscaldamento elettrico",
+            "description": "Valore di 32 bit"
+          },
+          "error": {
+            "label": "Errore/Attenzione del elemento di riscaldamento elettrico (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Attenzione 2 = Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "temperature": {
+            "label": "Temperatura della caldaia del riscaldatore elettrico (@:basicControls.OutputField)",
+            "description": "-30 +120"
+          },
+          "state_electric_heating": {
+            "label": "Stato del riscaldatore elettrico (@:basicControls.ShowEventDot)",
+            "description": "1 = Luce verde. Tutti gli altri valori senza luce"
+          },
+          "state_emergency": {
+            "label": "Stato dell riscaldamento eletrico per Funzionamento spento in funzinamento di emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_manual": {
+            "label": "Stato di accendere manuale del riscaldatore elettrico (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_time": {
+            "label": "Stato dell funzionamento del tempo per il riscaldamento eletrico (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_disable_protection": {
+            "label": "Stato per la dissativazione della protezione legionella al riscaldante elettrico (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_emergency": {
+            "label": "Riscaldatore elettrico spento in funzione d'emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Priorità elemento riscaldante elettrico (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC per attivare il riscaldatore elettrico (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC per disattivare il riscaldatore elettrico (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "switch_disable_protection": {
+            "label": "Disattivare la protezione antilegionella dell'elemento riscaldante elettrico (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_manual": {
+            "label": "Riscaldatore elettrico accendere manuale (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_target_power": {
+            "label": "Stato della potenza manuale del riscaldamento eletrico (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "switch_time": {
+            "label": "Attiva il funzionamento del tempo per il riscaldatore elettrico (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "hour_on": {
+            "label": "Ora per attivazione il funzionamento di tempo per il riscaldatore eletrico (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_on": {
+            "label": "Minuti per attivazione il funzionamento di tempo per il riscaldatore eletrico (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "hour_off": {
+            "label": "Ora per disattivare il funzionamento di tempo per il riscaldatore eletrico (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_off": {
+            "label": "Minuti per disattivare il funzionamento di tempo per il riscaldatore eletrico (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "target_temp_on": {
+            "label": "Temperatura per accendere l' elemento di riscaldamento elettrico (@:basicControls.InputField)",
+            "description": "0-120"
+          },
+          "target_temp_off": {
+            "label": "Temperatura per spegnere l'elemento di riscaldamento elettrico (@:basicControls.InputField)",
+            "description": "0-120"
+          },
+          "target_temp_max": {
+            "label": "Temperatura nominale max. elemento riscaldante elettrico (@:basicControls.InputField)",
+            "description": "0-120"
+          },
+          "max_power": {
+            "label": "Potenza massima",
+            "instanceLabel": "Potenza massima {count}",
+            "description": "0-500"
+          },
+          "target_power": {
+            "label": "Potenza obietivo dell riscaldamento elettrico (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_enable": {
+            "label": "Stato di abilitazione dell'elemento di riscaldamento elettrico (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_enable": {
+            "label": "Abilitazione elemento riscaldante elettrico (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_manual": {
+            "label": "Potenza manuale del riscaldatore elettrico",
+            "description": "0-100%"
+          }
+        },
+        "settings": {
+          "on": "Accendere",
+          "off": "Spegnere",
+          "temperatureOn": "Temperatura On",
+          "temperatureOff": "Temperatura Off",
+          "temperatureMax": "Temperatura Max",
+          "actualPowerHeatingElement": "Potenza attuale elemento riscaldante elettrico",
+          "temperatureBoiler": "Temperatura Boiler",
+          "targetPowerHeatingElement": "Specifiche di Potenza elemento riscaldante elettrico",
+          "stateHeatingElement": "Stato del elemento riscaldante elettrico",
+          "manualON": "Accendere manualmente",
+          "atEmergencyPowerOff": "In modalità di alimentazione di emergenza Off",
+          "activateTimeControl": "Attivare il controllo del tempo",
+          "disableLegionellaProtection": "Disattivare la protezione dalla legionella",
+          "enableHeatingElement": "Abilitazione del elemento riscaldante elettrico",
+          "manualPower": "Potenza manuale",
+          "priorityEMS": "Priorità per l'EMS",
+          "enableSOC": "SOC per l'attivazione",
+          "disableSOC": "SOC per la disattivazione",
+          "maxPower": "Potenza massima"
+        }
+      },
+      "heating_pump": {
+        "title": "Pompe di Calore",
+        "mappings": {
+          "power": {
+            "label": "Potenza attuale della pompa di calore (@:basicControls.OutputField)",
+            "description": "Min/Max -1000+1000"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata 24h della pompa di calore",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata 24h della pompa di calore",
+            "description": "Valore di 32 bit"
+          },
+          "error": {
+            "label": "Errore/Attenzione pompa di calore (@:basicControls.ShowEvent)",
+            "description": "0= OK 1 = Attenzione 2= Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "state_reset": {
+            "label": "Pulsante di ripristino dello stato della pompa di calore (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "state_heating_pump": {
+            "label": "Stato della pompa di calore (@:basicControls.ShowEventDot)",
+            "description": "1 = Luce verde. Tutti gli altri valori senza luce"
+          },
+          "state_emergency": {
+            "label": "Stato della pompa di calore per Funzionamento spento in funzinamento di emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_manual": {
+            "label": "Stato accendere manuale la pompa di calore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "manual_power": {
+            "label": "Stato della potenza manuale della pompa di calore (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_time": {
+            "label": "Stato del funzionamento di tempo per la pompa di calore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_time_power": {
+            "label": "Stato dell'ingresso di potenza quando la regolazione a tempo della pompa di calore è attivata (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "flow_temperature": {
+            "label": "Valore reale della temperatura di mandata della pompa di calore (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "return_temperature": {
+            "label": "Valore reale della temperatura di ritorno della pompa di calore (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "inlet_temperature": {
+            "label": "Temperatura di mandata della sorgente pompa di calore (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "outlet_temperature": {
+            "label": "Pompa di calore con temperatura di ritorno della sorgente (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "boiler_temperature": {
+            "label": "Temperature del sistema di riscaldamento (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "boiler_water_temperature": {
+            "label": "Temperatua del acqua calda sanitaria (@:basicControls.OutputField)",
+            "description": "-30 + 120"
+          },
+          "switch_emergency": {
+            "label": "Pompa di calore spento in funzionamento d' emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Prioritaria della pompa di calore (@:basicControls.Switch2V)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC per attivare la pompa di calore (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC per disattivare la pompa di calore (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "switch_reset": {
+            "label": "Pulsante di reset della pompa di calore (@:basicControls.PushButton)",
+            "description": "0-1"
+          },
+          "switch_manual": {
+            "label": "Pompa di calore accendere manuale (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_power": {
+            "label": "Impostazione della potenza quando il funzionamneto del tempo è attico sulla pompa di calore (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "switch_time": {
+            "label": "Attiva il funzionamento del tempo per la pompa di calore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "hour_on": {
+            "label": "Ora per attiviare il funzionamento di tempo sulla pompa di calore (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_on": {
+            "label": "Minuti per attiviare il funzionamento di tempo sulla pompa di calore (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "hour_off": {
+            "label": "Ora per disattivare il funzionamento di tempo sulla pompa di calore (@:basicControls.InputField)",
+            "description": "0-23"
+          },
+          "minute_off": {
+            "label": "Minuti per disattivare il funzionamento di tempo sulla pompa di calore (@:basicControls.InputField)",
+            "description": "0-59"
+          },
+          "max_power": {
+            "label": "Potenza massima",
+            "instanceLabel": "Potenza massima {count}",
+            "description": "0-500"
+          },
+          "switch_enable": {
+            "label": "Abilita la pompa di calore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "slider_manual": {
+            "label": "Potenza manuale della pompa di calore (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "target_power": {
+            "label": "Potenza objetiva della pompa di calore (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "state_enable": {
+            "label": "Stato di abilitazione della pompa di calore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          }
+        },
+        "settings": {
+          "on": "Accendere",
+          "off": "Spegnere",
+          "actualPowerHeatingPump": "Potenza attuale pompa di calore",
+          "flowTemperature": "Temperatura di mandata",
+          "returnTemperature": "Temperatura di ritorno",
+          "sourceInletTemperature": "Sorgente di temperatura in ingresso",
+          "sourceOutletTemperature": "Sorgente di temperatura in uscita",
+          "boilerTempHeatingSystem": "Temperatua del Boiler di riscaldamento",
+          "boilerTempServiceWater": "Temperatua del Boiler dell aqua di uso",
+          "targetPowerHeatingPump": "Specifiche di Potenza pompa di calore",
+          "stateHeatingPump": "Stato della pompa di calore",
+          "manualON": "Accendere manualmente",
+          "atEmergencyPowerOff": "In modalità di alimentazione di emergenza Off",
+          "activateTimeControl": "Attivare il controllo del tempo",
+          "enableHeatingPump": "Abilitazione della pompa di calore",
+          "reset": "Reset",
+          "manualPower": "Potenza manuale",
+          "powerWhenTimeControlActive": "Potenza quando il controllo del tempo è attivato",
+          "priorityEMS": "Priorità per l'EMS",
+          "enableSOC": "SOC per l'attivazione",
+          "disableSOC": "SOC per la disattivazione",
+          "maxPower": "Potenza massima"
+        }
+      },
+      "big_consumer": {
+        "title": "Grandi Consumatori",
+        "mappings": {
+          "power": {
+            "label": "Potenza attuale di altri grandi consumatori (@:basicControls.OutputField)",
+            "description": "-1000 +1000 KW"
+          },
+          "calculated_power": {
+            "label": "Potenza calcolata 24h del grande consumatore",
+            "description": "Valore di 32 bit"
+          },
+          "calculated_energy": {
+            "label": "Energia calcolata 24h del grande consumatore",
+            "description": "Valore di 32 bit"
+          },
+          "error": {
+            "label": "Errore/Attenzione altri grandi consumatori (@:basicControls.ShowEvent)",
+            "description": "0 = OK 1 = Attenzione 2 = Errore"
+          },
+          "title": {
+            "label": "",
+            "description": ""
+          },
+          "state_consumer": {
+            "label": "Stato di altri grandi consumatori (@:basicControls.ShowEventDot)",
+            "description": "1 = Luce verde. Tutti gli altri valori senza luce"
+          },
+          "state_emergency": {
+            "label": "Stato dell grande consumatore per Funzionamento spento in funzinamento di emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_manual": {
+            "label": "Stato accendere manuale grande consumatore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_emergency": {
+            "label": "Grande consumatore spento in funzionamento di emergenza (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "priority": {
+            "label": "Priorità del grande consumatore (@:basicControls.InputField)",
+            "description": "0-255"
+          },
+          "enable_soc": {
+            "label": "SOC per attivare il grande consumatore (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "disable_soc": {
+            "label": "SOC per disattivare il grande consumatore (@:basicControls.InputField)",
+            "description": "0-100%"
+          },
+          "switch_manual": {
+            "label": "Grande consumatore accendere manuale (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "state_enable": {
+            "label": "Stato abilitazione grande consumatore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "switch_enable": {
+            "label": "Abilitazione del grande consumatore (@:basicControls.Switch2V)",
+            "description": "0-1"
+          },
+          "target_power": {
+            "label": "Potenza nominale del grande consumatore (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "slider_manual": {
+            "label": "Potenza manuale dell grande consumatore (@:basicControls.Slider)",
+            "description": "0-100%"
+          },
+          "slider_target_power": {
+            "label": "Stato della potenza manuale dell grande consumatore (@:basicControls.OutputField)",
+            "description": "0-100%"
+          },
+          "max_power": {
+            "label": "Potenza massima dei grandi consumatori (@:basicControls.InputField)",
+            "description": "0-500"
+          }
+        },
+        "settings": {
+          "manualON": "Accendere manualmente",
+          "atEmergencyPowerOff": "In modalità di alimentazione di emergenza Off",
+          "enableBigConsumer": "Abilitazione del grande consumatore",
+          "manualPower": "Potenza manuale",
+          "priorityEMS": "Priorità per l'EMS",
+          "enableSOC": "SOC per l'attivazione",
+          "disableSOC": "SOC per la disattivazione",
+          "maxPower": "Potenza massima",
+          "actualPowerBigConsumer": "Potenza attuale grande consumatore",
+          "targetPowerBigConsumer": "Specifiche di potenza grande consumatore",
+          "stateBigConsumer": "Stato del grande consumatore"
+        }
+      },
+      "heat_meter": {
+        "title": "Contatore di calore",
+        "mappings": {
+          "power": {
+            "label": "Calore accumulato",
+            "description": "-1000 +1000 KW"
+          }
+        }
+      },
+      "heat_producer": {
+        "title": "Produttore di calore"
+      }
+    },
+    "scalingPV": "Impianto fotovoltaico da kWp",
+    "scalingConsumption": "Consumo massimo in kW",
+    "scalingBatteryPower": "Battery Power",
+    "electricTariff": {
+      "title": "Impostazioni tariffa elettrica",
+      "enableTariff": "Attivare la tariffa per l'uso dell'elettricità",
+      "startLowTariff": "Inizio Tariffa Bassa",
+      "endLowTariff": "Fine Tariffa Bassa",
+      "startHighTariff": "Inizio Tariffa Alta",
+      "endHighTariff": "Fine Tariffa Alta",
+      "priceLowTariff": "Prezzo Tariffa Bassa (€/CHF per kWh)",
+      "priceHighTariff": "Prezzo Tariffa Aassa (€/CHF per kWh)"
+    },
+    "batteryStandbyOptimization": {
+      "title": "Impostazioni ottimizzazione standby batteria",
+      "workingMode": "modalità di lavoro",
+      "workingModeButton": "Aggiornare la modalità di lavoro",
+      "workingModeDeactivated": "Disattivato",
+      "workingModeLoadBased": "Basato sul carico",
+      "powerThresholdOn": "Potenza soglia In",
+      "powerThresholdOff": "Soglia di spegnimento",
+      "timeThresholdOn": "Soglia di tempo attiva",
+      "timeThresholdOff": "Soglia temporale disattivata"
+    },
+    "charts": {
+      "tooltip": "Aprire la finestra del diagramma",
+      "autarchy": "Grado di autosufficienza",
+      "noDevicesConfigured": "Nessun dispositivo configurato per questo grafico",
+      "chartProdConst": {
+        "title": "Diagramma produzione/consumo",
+        "powerPV": {
+          "title": "Potenza PV",
+          "actualPVPower": "Potenza Effetiva PV",
+          "calculatedPVPower": "Potenza Calcolata PV"
+        },
+        "energyPV": {
+          "title": "Energia PV",
+          "calculatedEnergy": "Energia Calcolata",
+          "producedEnergy": "Energia prodotta"
+        },
+        "powerConsumption": {
+          "title": "Potenza Consumo",
+          "actualPower": "Potenza Effettiva Consumo",
+          "calculatedPower": "Potenza Calcolata Consumo"
+        },
+        "energyConsumption": {
+          "title": "Energia Consumo",
+          "calculatedEnergy": "Energia Calcolata",
+          "consumedEnergy": "Energia consumata"
+        }
+      },
+      "chartDifference": {
+        "title": "Diagramma Consumo Proprio",
+        "pvProduction": "Produzione PV",
+        "consumption": "Consumo",
+        "grid": "Rete"
+      },
+      "chartTimeTableConsumer": {
+        "title": "Diagramma con potenza obiettivo dei consumatori",
+        "target_power": "Specifiche di Potenza Batteria",
+        "soc": "SOC",
+        "power": "Potenza attuale Batteria"
+      },
+      "forecast": {
+        "title": "Previsione",
+        "pv": {
+          "title": "PV"
+        },
+        "consumption": {
+          "title": "Consumo"
+        },
+        "difference": {
+          "title": "Consumo Proprio",
+          "predictedPVPower": "Potenza pv calcolata",
+          "predictedConsumption": "Consumo calcolato",
+          "predictedGrid": "Potenza di rete calcolata"
+        },
+        "timeTableConsumer": {
+          "title": "Controllo dei consumatori"
+        }
+      }
+    }
+  },
+  "PVMonitoringService": {
+    "previewName": "Monitoraggio PV",
+    "mainView": {
+      "pvPower": "Potenza PV",
+      "efficiency": "Efficienza",
+      "service": "Servizio pronto"
+    },
+    "settingsView": {
+      "pvEfficiencyDecay": "Decadimento Efficienza PV"
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Data d'inizio",
+        "description": ""
+      },
+      "endDate": {
+        "label": "Data di fine",
+        "description": ""
+      },
+      "efficiency": {
+        "label": "Efficienza",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "Valore di 32 bit"
+      },
+      "errorWarning": {
+        "label": "Errore/Attenzione",
+        "description": "0 = OK 1 = Attenzione 2 = Errore"
+      },
+      "power": {
+        "label": "Potenza Effettiva",
+        "description": "Valore di 32 bit"
+      },
+      "mpcReady": {
+        "label": "Servizio pronto",
+        "description": "0-1"
+      }
+    }
+  },
+  "SetpointOptimizer": {
+    "previewName": "Ottimizzatore di setpoint",
+    "ems": "Generale",
+    "mainView": {
+      "serviceReady": "Servizio pronto",
+      "actualView": "Vista attuale",
+      "forecastView": "Visualizza previsione"
+    },
+    "settingsView": {
+      "title": "Impostazioni dell'ottimizzatore del setpoint",
+      "algorithm_model": {
+        "standard": "Standard",
+        "hypermodel": "Ipermodello 1"
+      },
+      "algorithm_additional_processors": {
+        "standard": "Standard",
+        "topTemperatureValue": "Valore di temperatura superiore"
+      },
+      "dialog": {
+        "save": "Le modifiche devono essere salvate?",
+        "description": "Attenzione! Questa modifica fa sì che il modello si alleni per una settimana. Durante questo periodo il modello non ha prestazioni massime e possono verificarsi imprecisioni.",
+        "topTemperatureValue": "Vengono utilizzate solo le temperature ambiente più alte per evitare che ambienti molto freddi (ad esempio con una finestra aperta) abbiano un effetto negativo sull'intero sistema."
+      }
+    },
+    "controllerMappings": {
+      "startDate": {
+        "label": "Data d’inizio",
+        "description": ""
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "description": "Valore di 32 bit"
+      },
+      "errorWarning": {
+        "label": "Errore/avvertimento (@:basicControls.ShowEvent)",
+        "description": "0= OK\n1 = Avvertimento\n2= Errore"
+      },
+      "mpcReady": {
+        "label": "Ottimizzazione Pronto (@:basicControls.ShowEvent)",
+        "description": "0-1"
+      }
+    },
+    "groups": {
+      "heating": {
+        "title": "Riscaldamento"
+      },
+      "cooling": {
+        "title": "Raffreddamento"
+      },
+      "hybrid": {
+        "title": "Ibrido"
+      }
+    },
+    "heating_curve_settings": {
+      "mapping": {
+        "y1y_upper": {
+          "title": "Intervallo del punto finale massimo",
+          "description": "y1y upper"
+        },
+        "y1y_lower": {
+          "title": "Intervallo del punto final minimo",
+          "description": "y1y lower"
+        },
+        "y2y_upper": {
+          "title": "Area del punto base massima",
+          "description": "y2y upper"
+        },
+        "y2y_lower": {
+          "title": "Area del punto base minimo",
+          "description": "y2y lower"
+        },
+        "y1x": {
+          "title": "Temperatura esterna (punto finale)",
+          "description": "y1x"
+        },
+        "y2x": {
+          "title": "Temperatura esterna (punto base)",
+          "description": "y2x"
+        },
+        "y1_y2_difference": {
+          "title": "Differnza minima",
+          "description": "Y2-Y1"
+        },
+        "advanced_curve_settings": {
+          "title": "Impostazioni avanzate della curva di riscaldamento",
+          "description": "Attivare o disattivare le impostazioni avanzate della curva di riscaldamento."
+        },
+        "algorithm_model": {
+          "title": "Modello",
+          "description": "Scegliere tra i modelli di algoritmo"
+        },
+        "algorithm_additional_processors": {
+          "title": "Processori aggiuntivi",
+          "description": "Scegliere un processo aggiuntivo per il modello di algoritmo"
+        }
+      }
+    },
+    "systems": {
+      "heating_air_systems": {
+        "title": "Sistemi di riscaldamento ad aria",
+        "single": "Sistema di riscaldamento ad aria",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Temperatura dell'aria di alimentazione",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Temperatura dell'aria di scarico",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Temperature ambiente",
+            "instanceLabel": "Temperature ambiente {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Stato On/Off",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Temperatura di mandata ottimizzata",
+            "description": ""
+          },
+          "name": {
+            "label": "Titolo",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Temperatura massima dell'aria alimentazione",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Temperatura minima dell'aria alimentazione",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Temperature ambiente impostata",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Temperatura dell'aria di uscita",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Temperatura dell'aria esterna",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Temperatura di alimentazione nuova/ottimizzata",
+            "description": ""
+          }
+        }
+      },
+      "heating_water_systems": {
+        "title": "Sistemi di riscaldamento dell'acqua",
+        "single": "Sistema di riscaldamento dell'acqua",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Temperatura del campo d'ingresso",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Temperatura di ritorno del campo in ingresso",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Temperature ambiente",
+            "instanceLabel": "Temperature ambiente {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Stato On/Off",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Temperatura di mandata ottimizzata",
+            "description": ""
+          },
+          "name": {
+            "label": "Titolo",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Temperatura massima del flusso",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Temperatura minima del flusso",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Temperature ambiente impostata",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Temperatura dell'aria di alimentazione",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Temperatura dell'aria di scarico",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Temperatura di alimentazione nuova/ottimizzata",
+            "description": ""
+          }
+        }
+      },
+      "cooling_air_systems": {
+        "title": "Sistemi di raffreddamento ad aria",
+        "single": "Sistema di raffreddamento ad aria",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Temperatura dell'aria di alimentazione",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Temperatura dell'aria di scarico",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Temperature ambiente",
+            "instanceLabel": "Temperature ambiente {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Stato On/Off",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Temperatura di mandata ottimizzata",
+            "description": ""
+          },
+          "name": {
+            "label": "Titolo",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Temperatura massima dell'aria alimentazione",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Temperatura minima dell'aria alimentazione",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Temperature ambiente impostata",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Temperatura dell'aria di uscita",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Temperatura dell'aria esterna",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Temperatura di alimentazione nuova/ottimizzata",
+            "description": ""
+          }
+        }
+      },
+      "cooling_water_systems": {
+        "title": "Sistemi di raffreddamento ad acqua",
+        "single": "Sistema di raffreddamento ad acqua",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Temperatura del campo d'ingresso",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Temperatura di ritorno del campo in ingresso",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Temperature ambiente",
+            "instanceLabel": "Temperature ambiente {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Stato On/Off",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Temperatura di mandata ottimizzata",
+            "description": ""
+          },
+          "name": {
+            "label": "Title",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Temperatura massima del flusso",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Temperatura minima del flusso",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Temperature ambiente impostata",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Temperatura dell'aria di alimentazione",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Temperatura dell'aria di scarico",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Temperatura di alimentazione nuova/ottimizzata",
+            "description": ""
+          }
+        }
+      },
+      "hybrid_water_systems": {
+        "title": "Sistemi ibridi ad acqua",
+        "single": "Sistema ibrido ad acqua",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Temperatura del campo d'ingresso",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Temperatura di ritorno del campo in ingresso",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Temperature ambiente",
+            "instanceLabel": "Temperature ambiente {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Stato On/Off",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Temperatura di mandata ottimizzata",
+            "description": ""
+          },
+          "name": {
+            "label": "Title",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Temperatura massima del flusso",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Temperatura minima del flusso",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Temperature ambiente impostata",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Temperatura dell'aria di alimentazione",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Temperatura dell'aria di scarico",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Temperatura di alimentazione nuova/ottimizzata",
+            "description": ""
+          }
+        }
+      },
+      "hybrid_air_systems": {
+        "title": "Sistemi ibridi ad aria",
+        "single": "Sistema ibrido ad aria",
+        "mappings": {
+          "flow_temperature": {
+            "label": "Temperatura dell'aria di alimentazione",
+            "description": ""
+          },
+          "return_temperature": {
+            "label": "Temperatura dell'aria di scarico",
+            "description": ""
+          },
+          "room_temperatures": {
+            "label": "Temperature ambiente",
+            "instanceLabel": "Temperature ambiente {count}",
+            "description": ""
+          },
+          "status": {
+            "label": "Stato On/Off",
+            "description": ""
+          },
+          "optimized_flow_temperature": {
+            "label": "Temperatura di mandata ottimizzata",
+            "description": ""
+          },
+          "name": {
+            "label": "Titolo",
+            "description": ""
+          },
+          "max_flow_temperature": {
+            "label": "Temperatura massima dell'aria alimentazione",
+            "description": ""
+          },
+          "min_flow_temperature": {
+            "label": "Temperatura minima dell'aria alimentazione",
+            "description": ""
+          },
+          "set_point_temperature": {
+            "label": "Temperature ambiente impostata",
+            "description": ""
+          },
+          "in_out_flow_temperature": {
+            "label": "Temperatura dell'aria di uscita",
+            "description": ""
+          },
+          "out_in_flow_temperature": {
+            "label": "Temperatura dell'aria esterna",
+            "description": ""
+          },
+          "optimized_supply_temperature": {
+            "label": "Temperatura di alimentazione nuova/ottimizzata",
+            "description": ""
+          }
+        }
+      }
+    },
+    "centralEndpoint": "Distribuzione Centrale Energia",
+    "systemsSettings": {
+      "heating": "Scaldare",
+      "cooling": "Raffreddare"
+    },
+    "charts": {
+      "variables": {
+        "flow_temperature": "Temperatura del campo d'ingresso",
+        "return_temperature": "Temperatura di ritorno del campo in ingresso",
+        "supply_air_temperature": "Temperatura Aria di Alimentazione",
+        "exhaust_air_temperature": "Temperatura Aria di Scarico",
+        "forecast": "Previsione",
+        "predicted_setpoint": "Previsione Temperatura Impostata"
+      },
+      "navigation": {
+        "chartsRoomTemperatures": "Temperature ambiente",
+        "chartControlVariables": "Temperature Sistemi",
+        "forecast": "Previsione",
+        "temperatures": "Temperatures"
+      }
+    }
+  },
+  "LoadMonitor": {
+    "previewName": "Monitor di cottura",
+    "settingsView": {
+      "title": "Monitor di cottura Impostazioni",
+      "bakingWindowDuration": "Durata della finestra di cottura"
+    },
+    "tableView": {
+      "title": "Storia",
+      "date": "Data",
+      "bakingStart": "Nel periodo di cottura",
+      "firstBakingStart": "Inizio della prima cottura",
+      "beforeOpening": "Inizio cottura <1h prima dell'apertura",
+      "beforeClosing": "Inizio cottura <1h prima della chiusura"
+    },
+    "controllerMappings": {
+      "power": {
+        "label": "Potenza effettiva",
+        "description": "Integer"
+      },
+      "powerOverThreshold": {
+        "label": "La potenza è superiore alla soglia calcolata",
+        "description": "0-1"
+      }
+    },
+    "systems": {
+      "baking_monitor": {
+        "title": "Monitor di cottura",
+        "name_line": "Consumo di energia",
+        "name_area": "Tempo di cottura"
+      }
+    }
+  },
+  "BakingMonitor": {
+    "previewName": "Monitor di cottura",
+    "controllerMappings": {
+      "power": {
+        "label": "Potenza effettiva",
+        "description": "Integer"
+      },
+      "powerOverThreshold": {
+        "label": "La potenza è superiore alla soglia calcolata",
+        "description": "0-1"
+      }
+    },
+    "additionalMappings": {
+      "name_line": "Consumo di energia",
+      "name_area": "Tempo di cottura",
+      "calendar": "Calendario"
+    }
+  }
+}

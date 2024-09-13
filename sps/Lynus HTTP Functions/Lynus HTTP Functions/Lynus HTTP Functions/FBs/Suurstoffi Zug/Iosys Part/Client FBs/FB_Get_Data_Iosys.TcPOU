@@ -1,0 +1,313 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Get_Data_Iosys" Id="{2f631f5d-e2c7-4a29-a18e-39f2800360ce}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_Get_Data_Iosys
+VAR_INPUT
+	bStart						: BOOL;															//Start the connection to the Aprol Server
+	byQuantity					: BYTE;															//Quantity of Datapoints
+	sHostname					: STRING(255);													//Hostname or IP Adress from the Aprol Server
+	sProjectname				: STRING(30);													//Projectname
+	sRuntimeSystem				: STRING(30);													//Name from the Runtime System
+	tWaitTimeTokenMode			: TIME := T#5S;													//Time to wait after new request if Token mode is active
+	arrListDatapoints			: ARRAY[0..249] OF STRING(38);									//List with all the Datapoints
+END_VAR
+VAR_OUTPUT
+	bValidResult				: BOOL;															//Valid Result received from Server
+    bBusy						: BOOL;															//Function is Busy
+    bError						: BOOL;															//Error sucess
+	hrErrorCode       			: HRESULT;														//Error Result from Http Client
+	sToken		      			: STRING(255);													//Last Token from the content
+	arrValuesIosys				: ARRAY[0..249] OF ST_Values_Checked_Iosys;						//Datapoints with Value in a array
+END_VAR
+VAR
+	fbHttpClientIosysHttp		: FB_IotHttpClient :=(tConnectionTimeout:=T#15S);				//Http Client Function
+	fbHttpGet					: FB_HTTP_Get_Iosys;											//Http Get Request to the Aprol Server
+	fbJson						: FB_Decode_Json_Iosys;											//Deconde received Json
+	fbCheckList					: FB_Check_List_Iosys;											//Function to Update the Values
+	FPStart						: R_TRIG;														//Intern positive edge
+	FPError						: R_TRIG;														//Intern positive edge
+	FPResult					: R_TRIG;														//Intern positive edge
+	FNStart						: F_TRIG;														//Internal negative Edge
+	timValidResult				: TON;															//Timer to wait for valid result
+	timRestart					: TON;															//Timer to restart the function after error
+	timWaitStep3				: TON;															//Timer to wait in Step 3 before make new Request
+	timDissableFunctions		: TON;															//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	timResetConnectionOnGVL		: TON;															//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	bErrorValidResult			: BOOL;															//No valid Data received
+	byWaitInStep				: BYTE;															//Cycles to wait in Step
+	uiState						: UINT;															//Statemaschine
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 02.02.2021
+//Version : 1.0.0.0
+
+//With this Function Block its possible to read out Data from a Aprol Server over the Iosys Interface
+//The first Request is a Request with all Datapoints from the Input Array. 
+//After sucess, we receive a Token from the Server. After that, the PLC Function switch in the Token Mode.
+//The request to the Server work then with the reveiced Token and not wiht the list of eacht Datapoint. 
+//If we stop the Communication or a Error Sucess, the Function start with first Request with all datapoints and switch then again in the Token mode. 
+//The Token has a validity from 10 seconds.
+
+//Examples for the 2 Modes for Request
+//REQUEST 1
+//10.1.31.8/iosys/Suurstoffi/ASRO02/json/get?id=SU_16xx_U01_TC02_L002_B800_M01.ha; OR =>
+//For more Variablen use id=SU_16xx_U01_TC02_L002_B800_M01.ha,SU_16xx_U01_TC02_L002_B850_M01.ha;
+//REQUEST 2
+//Token
+//10.1.31.8/iosys/Suurstoffi/ASRO02/json/get?token=wlEtAw0fKrK&req=2;
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+IF NOT fbHttpClientIosysHttp.bConfigured THEN 
+	fbHttpClientIosysHttp.sHostName := sHostname;
+    fbHttpClientIosysHttp.nHostPort:= 80;
+	fbHttpClientIosysHttp.stTLS.bNoServerCertCheck:= FALSE;
+END_IF
+
+//Min and Max Value
+tWaitTimeTokenMode := LIMIT(T#0S,tWaitTimeTokenMode,T#10S);
+
+//Start
+FPStart(CLK:= bStart, Q=> );
+	IF FPStart.Q AND fbHttpClientIosysHttp.bConfigured AND NOT bBusy THEN uiState := 1; END_IF
+		
+//Stop	
+IF NOT bStart OR timDissableFunctions.Q THEN uiState := 0; END_IF	
+
+CASE uiState OF
+	
+	0://Init
+		fbHttpGet.bSend := FALSE;
+			fbHttpGet.bTokenMode := FALSE;
+				fbHttpGet.sToken := '';
+					fbJson.bExecute := FALSE;
+						timValidResult.IN := FALSE;
+							timRestart.IN := FALSE;
+								byWaitInStep := 0;
+									timWaitStep3.IN := FALSE;
+					
+	1://Start
+		fbHttpGet.bSend := TRUE;
+			timValidResult.IN := TRUE;
+			
+		//Next Step	
+		IF FPResult.Q AND NOT FPError.Q THEN uiState := 2; timValidResult.IN := FALSE; fbHttpGet.bSend := FALSE; END_IF 
+		
+		//Error
+		IF FPError.Q OR timValidResult.Q THEN uiState := 300; END_IF
+
+	2://Check Json and the Content
+		fbJson.bExecute := TRUE;
+		
+		byWaitInStep := byWaitInStep + 1;
+		
+		//Next Step
+		IF fbJson.bDone THEN fbJson.bExecute := FALSE; uiState := 3; byWaitInStep := 0; END_IF
+		
+		//No Data encodet
+		IF NOT fbJson.bDone AND byWaitInStep >= 2 THEN uiState := 300; END_IF
+		
+	3://Switch to Token Mode and make Request
+		timWaitStep3.IN := TRUE;
+	
+		IF timWaitStep3.Q THEN
+			fbHttpGet.bTokenMode := TRUE;
+				fbHttpGet.sToken := sToken;
+					fbHttpGet.bSend := TRUE;
+						timValidResult.IN := TRUE;
+		END_IF
+					
+		//Next Step	
+		IF FPResult.Q AND NOT FPError.Q THEN uiState := 2; timValidResult.IN := FALSE; fbHttpGet.bSend := FALSE; bErrorValidResult := FALSE; timWaitStep3.IN := FALSE; END_IF 
+		
+		//Error
+		IF FPError.Q OR timValidResult.Q THEN uiState := 300; END_IF			
+		
+	300://Error
+	 	bErrorValidResult := TRUE;
+			timRestart.IN := TRUE;
+				fbHttpGet.bSend := FALSE;
+					fbHttpGet.bTokenMode := FALSE;
+						fbHttpGet.sToken := '';
+							fbJson.bExecute := FALSE;
+								timValidResult.IN := FALSE;
+									byWaitInStep := 0;
+										timWaitStep3.IN := FALSE;
+							
+		//After Error Wait for new Request
+		IF timRestart.Q THEN uiState := 1; timRestart.IN := FALSE; END_IF
+
+END_CASE
+
+//Http Get Request
+fbHttpGet(
+	bSend:= , 
+	bTokenMode:= , 
+	byQuantity:= byQuantity, 
+	sToken:= , 
+	sProjectname:= sProjectname, 
+	sRuntimeSystem:= sRuntimeSystem, 
+	tTimeOut:= T#20S,
+	arrListDatapoints:= arrListDatapoints, 
+	fbClient:= fbHttpClientIosysHttp, 
+	bValidResult=> bValidResult, 
+	bBusy=> bBusy, 
+	bError=> , 
+	sContent=> );
+
+FPResult(CLK:= bValidResult, Q=> );	
+	
+FPError(CLK:= fbHttpGet.bError, Q=> );	
+
+//Json Decode Function
+fbJson(bExecute:= , sContent:= fbHttpGet.sContent, sToken=> sToken, arrValuesIosys=> , bDone=> );	
+
+//Check the Datapoints
+fbCheckList(
+	bStart:= bStart AND NOT timDissableFunctions.Q, 
+	bValidResult:= bValidResult, 
+	bDone:= fbJson.bDone, 
+	arrValuesIosys:= fbJson.arrValuesIosys, 
+	arrCheckedValues=> arrValuesIosys);
+
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q THEN fbHttpClientIosysHttp.Disconnect(); END_IF
+
+fbHttpClientIosysHttp.Execute();
+
+//Set/reset Error bit
+IF fbHttpGet.bError OR bErrorValidResult OR fbHttpClientIosysHttp.bError THEN bError := TRUE; ELSE bError := FALSE; END_IF
+	hrErrorCode := fbHttpClientIosysHttp.hrErrorCode;	
+
+//Timer to check valid result
+timValidResult(IN:= , PT:= T#11S, Q=> , ET=> );
+
+//Timer to resart the Function after Error
+timRestart(IN:= , PT:= T#10S, Q=> , ET=> );
+
+//Timer Step 3
+timWaitStep3(IN:= , PT:= tWaitTimeTokenMode, Q=> , ET=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Get_Data_Iosys">
+      <LineId Id="21" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="26" Count="4" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="37" Count="3" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="343" Count="6" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="50" Count="2" />
+      <LineId Id="265" Count="2" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="96" Count="2" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="3" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="163" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="107" Count="1" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="123" Count="1" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="160" Count="1" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="219" Count="2" />
+      <LineId Id="167" Count="3" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="173" Count="3" />
+      <LineId Id="171" Count="1" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="135" Count="3" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="139" Count="1" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="72" Count="6" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="79" Count="4" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="259" Count="4" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="462" Count="1" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="216" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

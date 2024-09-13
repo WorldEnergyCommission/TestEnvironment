@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_Decode_Json_Auhofcenter" Id="{a529ff23-3a72-49b8-9763-76eb68f92014}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Decode_Json_Auhofcenter
+VAR_INPUT
+	{attribute 'hide'}
+	bExecute						: BOOL;																			//Start the decoding from the Json File
+	{attribute 'hide'}
+	sContent         				: STRING(7500);																	//Received Content
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	arrListOfVariabels				: ARRAY[1..100] OF ST_ListOfVariables_Auhofcenter;								//List with all received Values from the Server
+	{attribute 'hide'}
+	bDone							: BOOL;																			//True when the decoding is done
+	{attribute 'hide'}
+	bError							: BOOL;																			//Error Bit
+END_VAR
+VAR
+	fbJsonRead					    : FB_JsonDomParser;																//FB Json Dom reader
+ 	jsonDocInit  					: SJsonValue;																	//Json value
+	jsonDoc		  					: SJsonValue;																	//Json value
+	jsonPropID   					: SJsonValue;																	//Json value
+	jsonIteratorArrayStart			: SJsonAIterator;																//Json AIterator
+	jsonIteratorArrayEnd			: SJsonAIterator;																//Json AIterator
+	FPExecute						: R_TRIG;																		//Internal positive edge
+	byCounterForArray				: BYTE;																			//Counter to fill the output array with conntent
+	byLoopInit						: BYTE;																			//Loop to clear the output array before fill the new content inside
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 15.07.2021
+//Version : 1.0.0.0
+
+//With this Function we can decode the received Json form the System in the Auhofcenter in Vienna
+
+bDone := FALSE;
+
+FPExecute(CLK:= bExecute, Q=> );
+
+//Start with the Json Doc
+jsonDocInit := fbJsonRead.ParseDocument(sContent);
+
+IF FPExecute.Q THEN
+	byCounterForArray := 0;	
+		bError := FALSE;
+
+	//Clear the Output for new Values
+	FOR byLoopInit := 1 TO 100 BY 1 DO
+		arrListOfVariabels[byLoopInit].bIsString := FALSE;
+			arrListOfVariabels[byLoopInit].sVariableName := '';
+				arrListOfVariabels[byLoopInit].sVariableValue := '';
+	END_FOR
+	
+	//Check if the values are inside of a Array 		
+	IF jsonDocInit <> 0 THEN
+		IF fbJsonRead.IsArray(jsonDocInit) THEN
+			jsonIteratorArrayStart := fbJsonRead.ArrayBegin(jsonDocInit);	
+				jsonIteratorArrayEnd := fbJsonRead.ArrayEnd(jsonDocInit);
+		ELSE
+			bError := TRUE;
+		END_IF
+	ELSE
+		bError := TRUE;
+	END_IF
+		//Start to Decode the Json File
+		IF jsonDocInit <> 0 AND jsonIteratorArrayStart <> 0 AND jsonIteratorArrayEnd <> 0 AND NOT bError THEN
+		
+			WHILE jsonIteratorArrayStart <> jsonIteratorArrayEnd DO  
+				jsonDoc := fbJsonRead.GetArrayValue(jsonIteratorArrayStart);
+					//Find the Member ID
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'ID');	
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsString(jsonPropID) THEN
+								byCounterForArray := byCounterForArray + 1;
+									byCounterForArray := LIMIT(1,byCounterForArray,100);	
+										arrListOfVariabels[byCounterForArray].sVariableName := fbJsonRead.GetString(jsonPropID);
+							ELSE
+								bError := TRUE;	
+							END_IF	
+						END_IF 
+					//Find the Member v
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'v');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsNumber(jsonPropID) THEN
+								arrListOfVariabels[byCounterForArray].sVariableValue := LREAL_TO_STRING(fbJsonRead.GetDouble(jsonPropID));
+							ELSE
+								bError := TRUE;		
+							END_IF
+						END_IF
+					//Find the Member vs
+					jsonPropID := fbJsonRead.FindMember(jsonDoc, 'vs');
+						IF jsonPropID <> 0 THEN
+							IF fbJsonRead.IsString(jsonPropID) THEN
+								arrListOfVariabels[byCounterForArray].sVariableValue := fbJsonRead.GetString(jsonPropID);
+									arrListOfVariabels[byCounterForArray].bIsString := TRUE;
+							ELSE
+								bError := TRUE;	
+							END_IF
+						END_IF
+					jsonIteratorArrayStart := fbJsonRead.NextArray(jsonIteratorArrayStart);
+			END_WHILE
+				bDone := TRUE;
+		END_IF
+END_IF ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Decode_Json_Auhofcenter">
+      <LineId Id="15" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="263" Count="1" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="27" Count="2" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="226" Count="1" />
+      <LineId Id="224" Count="1" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="125" Count="1" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="136" Count="4" />
+      <LineId Id="156" Count="1" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="147" Count="4" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="158" Count="1" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="47" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

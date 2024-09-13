@@ -1,0 +1,218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <POU Name="FB_Valve_Control" Id="{f998be17-b824-48e3-8a5a-4a796eb033e2}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_Valve_Control
+VAR_INPUT
+	{attribute 'hide'}
+	bEnable								: BOOL;							//Enable or dissable the function
+	{attribute 'hide'}
+	bWriteWithDelay						: BOOL;							//Write with Delay the Data to the output (Not al Output Data is writen with Delay)
+	{attribute 'hide'}
+	bWorkOnlyLocal						: BOOL;							//When this flag is true then the valve control work only local without the Backend commands
+	{attribute 'hide'}
+	rActualRoomTemperature				: REAL;							//Actual Room Temperature
+	{attribute 'hide'}
+	bError								: BOOL;							//Error from the Valve Control
+	{attribute 'hide'}
+	bWarning							: BOOL;							//Warning from the Valve Control
+	{attribute 'hide'}
+	iErrorCode							: INT;							//Error Code
+	{attribute 'hide'}
+	iWarningCode						: INT;							//Warning Code
+	{attribute 'hide'}
+	tTimDelayOutput						: TIME := T#5S;					//Delay Time to write some Data to the Output						
+	//Data from the Lynus optimization to control the valve with the backend commands
+	{attribute 'hide'}
+	byMPCReady							: BYTE;							//Shows if the MPC service is ready or not.
+	{attribute 'hide'}
+	byNewValvePosition					: BYTE;							//The new valve positon from the Lynus Backend Service
+	{attribute 'hide'}
+	rNewSetTemperature					: REAL;							//Here we can set the new Set Temperatur on witch the Valve is switching on and off
+	{attribute 'hide'}
+	rHeartbeat							: REAL;							//Heartberat from the Service
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	stDataValveControlOut				: ST_Valve_Control_Output;		//Valve Control output data
+	{attribute 'hide'}
+	stDataValveControlOutDelay			: ST_Valve_Control_Output;		//Valve Control output data with delay
+END_VAR
+VAR
+	timHB								: TON;							//Timer to check the hearbeat signal from MPC
+	timDelayOutputs						: TON;							//Timer to send Data with Delay to the outputs
+	timError							: TON;							//Timer for the Erro flag to set the Error with Delay
+	FPEnable							: R_TRIG;						//Internal positive Edge
+	FNEnable							: F_TRIG;						//Internal negative Edge
+	bControllLocal						: BOOL;							//True when the Backend Service has a Error or a Warning and the Valve is controled localy
+	bMPCActive							: BOOL;							//Indicates whether the new valve position is controlled by the MPC controller or whether it is controlled locally.	
+	rLocalSetTemperature				: REAL := 20;					//Local Set Temperture
+	rHeartbeatCP						: REAL;							//Heartbeat value to compare ols with new value
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 17.03.2021
+//Version : 1.0.0.0
+
+//With this Function is possible to control a digital valve with a output from a plc
+//At the moment this function controlls only digital valves
+//This function can be used mainly to control floor heating valves or radiator valves.
+//This Function is optimizied to work also with the Lynus Backen Service and can handle the commands from this Service
+//If we have no connection to the Backend Service, then the Set temperature is set automatically to 20 °C and works locally
+//Otherwise the Backend Service controll directly the valve output
+//This function has also the possibility to control only local with the target setpoint and the actual room temperature.
+
+(*---------------------------------------------------------------Limits-------------------------------------------------------------------------------*)
+
+rActualRoomTemperature := LIMIT(-10,rActualRoomTemperature,50);
+	byMPCReady := LIMIT(0,byMPCReady,1);
+		byNewValvePosition := LIMIT(0,byNewValvePosition,1);
+			rNewSetTemperature := LIMIT(5,rNewSetTemperature,30);
+				rHeartbeat := LIMIT(0,rHeartbeat,1);			
+
+(*---------------------------------------------------------------Enable-------------------------------------------------------------------------------*)
+
+stDataValveControlOut.bEnabled := bEnable;				
+
+(*---------------------------------------------------------------Error and Waring-------------------------------------------------------------------------------*)
+	
+timError(IN:= bError, PT:= T#5S, Q=> , ET=> );
+			
+stDataValveControlOut.byErrorWarning := 0;
+	IF bWarning THEN stDataValveControlOut.byErrorWarning := 1; END_IF 
+	IF timError.Q THEN stDataValveControlOut.byErrorWarning := 2; END_IF
+
+//Messages and Error Codes
+IF stDataValveControlOut.byErrorWarning = 1 AND iWarningCode = 0 THEN stDataValveControlOut.eMessage := E_Message_ValveControl.eNoConnectionToBackend;
+ELSIF stDataValveControlOut.byErrorWarning = 1 AND iWarningCode = 1 THEN stDataValveControlOut.eMessage := E_Message_ValveControl.eValvePositionIsControlledLocal;
+ELSIF stDataValveControlOut.byErrorWarning = 2 AND iErrorCode = 0 THEN stDataValveControlOut.eMessage := E_Message_ValveControl.eValvePositionError;
+ELSIF stDataValveControlOut.byErrorWarning = 2 AND iErrorCode = 1 THEN stDataValveControlOut.eMessage := E_Message_ValveControl.eTooMuchValvePositions;
+ELSIF stDataValveControlOut.byErrorWarning = 2 AND iErrorCode = 2 THEN stDataValveControlOut.eMessage := E_Message_ValveControl.eValvePositionIsControlledLocal;
+ELSIF stDataValveControlOut.byErrorWarning = 2 AND iErrorCode = 3 THEN stDataValveControlOut.eMessage := E_Message_ValveControl.eTempSensorError;	
+ELSE stDataValveControlOut.eMessage := E_Message_ValveControl.eNoMessage; 
+END_IF
+
+(*-----------------------------------------------------------------------------------------Logic-------------------------------------------------------------------------------------------------*)
+
+//Check if MPC function in backend is activ and work
+IF rHeartbeatCP = rHeartbeat THEN timHB.IN := TRUE; ELSE timHB.IN := FALSE; rHeartbeatCP := rHeartbeat; END_IF  
+	timHB(IN:= , PT:= T#130S, Q=> , ET=> );	 	 
+
+//Warning, when the Backend Service is not available
+IF stDataValveControlOut.byErrorWarning = 1 AND stDataValveControlOut.eMessage = E_Message_ValveControl.eValvePositionIsControlledLocal OR 
+	stDataValveControlOut.byErrorWarning = 2 AND stDataValveControlOut.eMessage = E_Message_ValveControl.eValvePositionIsControlledLocal THEN
+		bControllLocal := TRUE; 
+ELSE 
+		bControllLocal := FALSE; 
+END_IF 
+	
+IF NOT timHB.Q AND NOT bControllLocal AND byMPCReady = 1 AND NOT bWorkOnlyLocal THEN bMPCActive := TRUE; ELSE bMPCActive := FALSE; END_IF   
+
+//Target Temperature from MPC
+IF NOT bWorkOnlyLocal THEN
+	IF NOT timHB.Q THEN
+		rLocalSetTemperature := rNewSetTemperature; 
+	END_IF
+		//Set Temperatur to 20°C when the connection is lost to the backend system
+		IF timHB.Q THEN rLocalSetTemperature := 20; END_IF 
+END_IF
+	
+//Outputs from MPC to PLC
+IF bMPCActive THEN
+	//Too the Outputs from the PLC when the MPC is ok
+	IF byNewValvePosition = 1 THEN 
+		stDataValveControlOut.bValvePos := TRUE;
+	ELSE
+		stDataValveControlOut.bValvePos := FALSE;
+	END_IF
+END_IF
+
+//Work only local
+IF bWorkOnlyLocal THEN
+	rLocalSetTemperature := rNewSetTemperature;	
+END_IF
+
+//Control the valve local with the plc if the mpc is not working
+IF NOT bMPCActive THEN
+	//On
+	IF rActualRoomTemperature <= (rLocalSetTemperature - 0.5) THEN stDataValveControlOut.bValvePos := TRUE; END_IF  
+	//Off 
+	IF rActualRoomTemperature >= (rLocalSetTemperature + 0.5) THEN stDataValveControlOut.bValvePos := FALSE; END_IF	
+END_IF  
+
+//Dissable the Valve controling
+IF stDataValveControlOut.byErrorWarning = 2 AND iErrorCode <> 2 OR NOT stDataValveControlOut.bEnabled THEN stDataValveControlOut.bValvePos := FALSE; END_IF  
+
+(*---------------------------------------------------------------Outputs-------------------------------------------------------------------------------*)
+
+timDelayOutputs(IN:= bWriteWithDelay AND bEnable AND NOT timDelayOutputs.Q, PT:= tTimDelayOutput, Q=> , ET=> );
+	FPEnable(CLK:= bEnable, Q=> );
+		FNEnable(CLK:= bEnable, Q=> );
+		
+//Write with Delay or without
+IF (bWriteWithDelay AND (timDelayOutputs.Q OR FPEnable.Q OR FNEnable.Q)) OR NOT bWriteWithDelay THEN
+	stDataValveControlOutDelay := stDataValveControlOut;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Valve_Control">
+      <LineId Id="17" Count="3" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="117" Count="1" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="121" Count="4" />
+      <LineId Id="127" Count="1" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="140" Count="4" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="60" Count="4" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="66" Count="1" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="74" Count="4" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="79" Count="3" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="109" Count="2" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="207" Count="4" />
+      <LineId Id="88" Count="1" />
+      <LineId Id="91" Count="5" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="163" Count="7" />
+      <LineId Id="162" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

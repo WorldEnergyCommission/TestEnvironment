@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_CV_WORD_TO_DINT" Id="{0e5b73b3-1277-4dec-997f-34828b221cd4}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+FUNCTION_BLOCK FB_CV_WORD_TO_DINT
+VAR_INPUT
+	{attribute 'hide'}
+	wInputValue_1				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	wInputValue_2				: WORD;								//Input value that is converted into the output value
+	{attribute 'hide'}
+	eByteOrderForConvert		: eByteOrder;						//Byte Format
+END_VAR
+VAR_OUTPUT
+	{attribute 'hide'}
+	diOutputValue				: DINT;								//Converted output value							
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 28.04.2021
+//Version : 1.0.0.0
+
+//With this functionblock its possible to convert a certain Datatyp in a other Datatype
+//The byte order can be selected between BigEndian and LittleEndian
+//WORD TO DINT
+//Created for the Edge Device Lib over Modbus TCP
+//Modbus TCP is WORD oriented
+
+IF eByteOrderForConvert = eByteOrder.eBigEndian THEN
+	diOutputValue := DWORD_TO_DINT(SHL(WORD_TO_DWORD(wInputValue_1),16) + WORD_TO_DWORD(wInputValue_2));
+ELSE
+	diOutputValue := DWORD_TO_DINT(SHL(WORD_TO_DWORD(wInputValue_2),16) + WORD_TO_DWORD(wInputValue_1));
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CV_WORD_TO_DINT">
+      <LineId Id="84" Count="2" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="3" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

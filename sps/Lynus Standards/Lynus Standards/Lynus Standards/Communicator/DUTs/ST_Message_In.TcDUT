@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+  <DUT Name="ST_Message_In" Id="{2a8befdb-4139-4500-b344-029f9850fa5c}">
+    <Declaration><![CDATA[{attribute 'conditionalshow'}
+TYPE ST_Message_In :
+STRUCT
+	{attribute 'hide'}
+	sFullSymbolName				: STRING(48);															//Full Symbol name of plc variable uncoded
+	{attribute 'hide'}
+	sSymbolUnit					: STRING(255);															//Symbol unit of plc variable uncoded
+	{attribute 'hide'}
+	sSymbolType					: STRING(255);															//Symbol type of plc variable uncoded	
+	{attribute 'hide'}
+	arrValue					: ARRAY[1..Constants_Communicator.bySizeOfValueArray] OF STRING(30);	//Value from the Variable	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
