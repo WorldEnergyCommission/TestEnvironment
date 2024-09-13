@@ -3,7 +3,7 @@
 
 ### Deploy Notes
 
-All below listed services were deployd to the following clusters:
+All below listed services were deployed to the following clusters:
 (If deployed to other clusters please change accordingly) 
 
 - [X] DEV

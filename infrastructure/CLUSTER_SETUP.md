@@ -33,7 +33,7 @@
      otherwise you can copy it)
    - EXOSCALE_EFFICIENTIO_LINUX_SERVER_PRIVATE_KEY (if you want to have an own key per cluster, please change it,
      otherwise you can copy it)
-   - EXOSCALE_HUGE_SKS_NODEPOOL_INSTANCE_TYPE (for new clusters take the configuration from one non-dev cluster)
+   - EXOSCALE_HUGE_SKS_NODEPOOL_INSTANCE_TYPE (for new clusters take the configuration from one other cluster)
    - EXOSCALE_HUGE_SKS_NODEPOOL (for new clusters take the configuration from one non-efficientio cluster)
    - MINIMUM_RAM_BIG_SERVICES (for new clusters take the configuration from one non-efficientio cluster)
    - MINIMUM_CPU_BIG_SERVICES (for new clusters take the configuration from one non-efficientio cluster)
