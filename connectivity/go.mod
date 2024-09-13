@@ -1,9 +1,9 @@
-module github.com/efficientIO/efficientIO/connectivity
+module github.com/eneries/eneries/connectivity
 
 go 1.21
 
 require (
-	github.com/efficientIO/efficientIO/api v0.0.0
+	github.com/eneries/eneries/api v0.0.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/lib/pq v1.10.9
 	github.com/procyon-projects/chrono v1.1.2
@@ -73,4 +73,4 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace github.com/efficientIO/efficientIO/api v0.0.0 => ../api
+replace github.com/eneries/eneries/api v0.0.0 => ../api

@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/ai"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/ai"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gorilla/mux"

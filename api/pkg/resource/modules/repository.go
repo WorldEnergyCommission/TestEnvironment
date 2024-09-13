@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"time"
 
-	data_mapping "github.com/efficientIO/efficientIO/api/pkg/resource/data_mapping"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	data_mapping "github.com/eneries/eneries/api/pkg/resource/data_mapping"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/google/uuid"
 )
 

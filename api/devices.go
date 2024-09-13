@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/device"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/device"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/gorilla/mux"
 )

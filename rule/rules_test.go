@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/rule"
+	"github.com/eneries/eneries/api/pkg/resource/rule"
 )
 
 const (

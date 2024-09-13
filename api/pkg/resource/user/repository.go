@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/Nerzal/gocloak/v13"
 )

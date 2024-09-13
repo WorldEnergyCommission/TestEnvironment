@@ -22,9 +22,9 @@ import (
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/rule"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/resource/rule"
+	"github.com/eneries/eneries/api/pkg/utils"
 )
 
 const refreshActiveRulesPerProjectInterval = 10 * time.Second

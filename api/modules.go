@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/modules"
+	"github.com/eneries/eneries/api/pkg/resource/modules"
 	"github.com/gorilla/mux"
 )
 

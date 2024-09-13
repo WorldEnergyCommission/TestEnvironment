@@ -8,7 +8,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/golang-jwt/jwt/v5"

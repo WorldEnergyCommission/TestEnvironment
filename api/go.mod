@@ -1,4 +1,4 @@
-module github.com/efficientIO/efficientIO/api
+module github.com/eneries/eneries/api
 
 go 1.21
 

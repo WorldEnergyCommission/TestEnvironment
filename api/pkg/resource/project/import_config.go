@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
@@ -23,7 +23,7 @@ const (
 	// Easee PIN verification not supported yet
 	//easeeImportAllMappingsQuery = "SELECT project_id, data->'meta'->>'chargerId' as chargerId, data->'meta'->>'chargerHash' as chargerHash, data->'meta'->>'chargerSalt' as chargerSalt from public.project_device WHERE data->>'type' = 'EaseeWallbox'"
 	easeeImportAllMappingsQuery = "SELECT project_id, data->'meta'->>'chargerId' as chargerId from public.project_device WHERE data->>'type' = 'EaseeWallbox'"
-	
+
 	CachingPeriod = 12 * time.Hour
 )
 
@@ -34,7 +34,7 @@ type (
 	}
 
 	EaseeMapping struct {
-		ProjectId  	string `json:"projectId"`
+		ProjectId string `json:"projectId"`
 		//ChargerHash 	string `json:"chargerHash"`
 		//ChargerSalt 	string `json:"chargerSalt"`
 	}
@@ -176,8 +176,6 @@ func (r Repository) GetImportMappingsFromDatabase(query string, argument string)
 	return importMappings, nil
 }
 
-
-
 // GetAllEaseeDeviceIdsProjectMappings returns the device-id <-> project-id / pin / salt mapping for easee devices as
 func (r Repository) GetAllEaseeDeviceIdsProjectMappings(query string) (map[string]EaseeMapping, error) {
 
@@ -226,6 +224,7 @@ func (r Repository) GetAllEaseeDeviceIdsProjectMappings(query string) (map[strin
 
 	return importMappings, err
 }
+
 // GetAllImportMappings returns the import mappings from an import mapping query
 // values ImportMapping
 func (r Repository) GetAllImportMappings(query string) (map[string]ImportMapping, error) {

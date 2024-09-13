@@ -24,20 +24,20 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	amqp091 "github.com/rabbitmq/amqp091-go"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/easeeapi"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/resource/easeeapi"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 )
 
 var (
-	projectRepo     project.Repository
+	projectRepo project.Repository
 
 	importMappings     map[string]project.EaseeMapping
 	importMappingsLock = sync.RWMutex{}
 
-	easeeClient *easeeapi.EaseeAPIClient
+	easeeClient     *easeeapi.EaseeAPIClient
 	easeeClientLock = sync.RWMutex{}
 
 	//observationIds = []int{109,120,121,124} // implement getObservationAsFloat for each observation
@@ -50,13 +50,12 @@ var (
 )
 
 type (
-
 	EaseeChargerMessage struct {
-		ChargerId 		string 		`json:"chargerId"`
-		ObservationId 	int 		`json:"observationId"`
-		Value 			float64 	`json:"value"`
-		ProjectId 		string 		`json:"projectId"`
-		ArrivalTime 	time.Time 	`json:"arrivalTime"`
+		ChargerId     string    `json:"chargerId"`
+		ObservationId int       `json:"observationId"`
+		Value         float64   `json:"value"`
+		ProjectId     string    `json:"projectId"`
+		ArrivalTime   time.Time `json:"arrivalTime"`
 	}
 	EaseeBody struct {
 		Timestamp string          `json:"Timestamp"`
@@ -66,7 +65,7 @@ type (
 
 // InitializeEventHandler sets the global variables from the main package that are accesses by the individual event handler
 // and handles the import mappings
-func InitializeEventHandler(projectRepoArg project.Repository) error{
+func InitializeEventHandler(projectRepoArg project.Repository) error {
 	projectRepo = projectRepoArg
 
 	var err error
@@ -81,7 +80,7 @@ func InitializeEventHandler(projectRepoArg project.Repository) error{
 
 	// update the import mappings in the background
 	go updateImportMappings()
-	
+
 	return nil
 }
 
@@ -121,7 +120,7 @@ func InitializeApi(amqpConnectionString string) error {
 
 	// update the import mappings in the background
 	go updateApiToken()
-	
+
 	return nil
 }
 
@@ -151,19 +150,18 @@ func updateApiToken() {
 		<-refreshTicker.C
 		refreshTicker.Stop() // Stop the current ticker
 
-        duration = getRefreshTokenDuration()
+		duration = getRefreshTokenDuration()
 	}
 }
 
 func getRefreshTokenDuration() time.Duration {
-	duration := time.Second * time.Duration(easeeClient.Tokens.ExpiresIn) - time.Minute * 10
+	duration := time.Second*time.Duration(easeeClient.Tokens.ExpiresIn) - time.Minute*10
 	if duration < 1 {
 		duration = time.Minute * 1
 	}
 
 	return duration
 }
-
 
 func ConnectAMQP(mqttClient *mqtt.Client) (conn *amqp091.Connection, ch *amqp091.Channel) {
 	l := utils.GetLogger()
@@ -191,53 +189,52 @@ func StartReceivingAmqpEvents(cred *easeeapi.AmqpCredentials, mqttclient *mqtt.C
 	if cred.UseSsl {
 		sslOption = "amqps"
 	}
-	
-	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s%s", 
-		sslOption, 
-		url.QueryEscape(cred.Username), 
-		url.QueryEscape(cred.Password), 
-		url.QueryEscape(cred.Server), 
-		strconv.Itoa(cred.Port), 
+
+	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s%s",
+		sslOption,
+		url.QueryEscape(cred.Username),
+		url.QueryEscape(cred.Password),
+		url.QueryEscape(cred.Server),
+		strconv.Itoa(cred.Port),
 		cred.VirtualHost)
-	
+
 	conn, err = amqp091.Dial(connectionString)
 	if err != nil {
 		utils.LogError(err, "Failed to connect to RabbitMQ")
 	}
 	//defer conn.Close() handled in main.go
-	
+
 	ch, err = conn.Channel()
 	if err != nil {
 		utils.LogError(err, "Failed to open a channel")
 	}
 	//defer ch.Close() //defer conn.Close() handled in main.go
-	
+
 	_, err = ch.QueueDeclarePassive(
 		cred.QueueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+		true,           // durable
+		false,          // delete when unused
+		false,          // exclusive
+		false,          // no-wait
+		nil,            // arguments
 	)
 	if err != nil {
 		utils.LogError(err, "Failed to declare a queue")
 	}
-	
+
 	msgs, err := ch.Consume(
 		cred.QueueName, // queue
-		"",        // consumer
-		true,      // auto-ack
-		false,     // exclusive
-		false,     // no-local
-		false,     // no-wait
-		nil,       // args
+		"",             // consumer
+		true,           // auto-ack
+		false,          // exclusive
+		false,          // no-local
+		false,          // no-wait
+		nil,            // args
 	)
 	if err != nil {
 		utils.LogError(err, "Failed to register a consumer")
 	}
-	
-	
+
 	go func() {
 
 		for d := range msgs {
@@ -245,19 +242,19 @@ func StartReceivingAmqpEvents(cred *easeeapi.AmqpCredentials, mqttclient *mqtt.C
 		}
 	}()
 
-	return conn, ch, nil	
+	return conn, ch, nil
 }
 
 // ValueReceived is the method called by easee AMQP service when a message was received
 func valueReceived(msg amqp091.Delivery, mqttClient *mqtt.Client) {
-	l := utils.GetLogger()	
+	l := utils.GetLogger()
 
 	chargerMsg, err := prepareAMQPMessage(msg)
 	if err != nil {
 		l.Error().Err(err).Msg("Error extracting Easee AMQP message")
 		return
-	}	
-	
+	}
+
 	// Debug log for checking each received message
 	// l.Debug().Str("charger", chargerMsg.ChargerId).Str("observation", strconv.Itoa(chargerMsg.ObservationId)).Str("val", strconv.FormatFloat(chargerMsg.Value, 'f', -1, 64)).Msg("Got Easee message")
 
@@ -337,27 +334,27 @@ func prepareAMQPMessage(msg amqp091.Delivery) (EaseeChargerMessage, error) {
 		return chargerMsg, errors.New("ArrivalTime not found in message")
 	}
 
-    layout := "2006-01-02T15:04:05.0000000Z"
-    
-    // Convert string to time.Time
-    chargerMsg.ArrivalTime, err = time.Parse(layout, msg.Headers["ArrivalTime"].(string))
-    if err != nil {
+	layout := "2006-01-02T15:04:05.0000000Z"
+
+	// Convert string to time.Time
+	chargerMsg.ArrivalTime, err = time.Parse(layout, msg.Headers["ArrivalTime"].(string))
+	if err != nil {
 		err = fmt.Errorf("error converting string to time: %w", err)
-        return chargerMsg, err
-    }
+		return chargerMsg, err
+	}
 
 	timeNow := time.Now()
 
 	// Check if currentTime is at least 10 minutes after t
-    if timeNow.After(chargerMsg.ArrivalTime.Add(10 * time.Minute)) {
+	if timeNow.After(chargerMsg.ArrivalTime.Add(10 * time.Minute)) {
 		l := utils.GetLogger()
 		l.Warn().Msg("Easee AMQP Message is older than 10 minutes.")
-    }
+	}
 
 	if msg.RoutingKey == "" {
-        return chargerMsg, errors.New("RoutingKey not found in message")
-	} 
-	
+		return chargerMsg, errors.New("RoutingKey not found in message")
+	}
+
 	// extract chargerId and observationId from routing key
 	routingKey := strings.Split(msg.RoutingKey, ".")
 	chargerMsg.ChargerId = routingKey[0]
@@ -365,7 +362,7 @@ func prepareAMQPMessage(msg amqp091.Delivery) (EaseeChargerMessage, error) {
 	chargerMsg.ObservationId, err = strconv.Atoi(oid)
 	if err != nil {
 		err = fmt.Errorf("error converting observation-id to int: %w", err)
-        return chargerMsg, err
+		return chargerMsg, err
 	}
 
 	return chargerMsg, nil
@@ -385,18 +382,18 @@ func prepareAMQPMessage(msg amqp091.Delivery) (EaseeChargerMessage, error) {
 	return false, nil
 } */
 
-func HasWithSaltSha256(raw string, salt string) (string) {
+func HasWithSaltSha256(raw string, salt string) string {
 	s := raw + salt
 	h := sha256.New()
 	h.Write([]byte(s))
 	sha1_hash := hex.EncodeToString(h.Sum(nil))
-	
+
 	return sha1_hash
-  }
+}
 
 func EaseeChargerMessageToMeasurement(chargerMsg EaseeChargerMessage, mqttClient *mqtt.Client, flag string) {
-	
-	var msmt measurement.Measurement	
+
+	var msmt measurement.Measurement
 
 	msmt.Name = fmt.Sprintf("easee.%s.%d", chargerMsg.ChargerId, chargerMsg.ObservationId)
 	msmt.Unit = ""
@@ -406,37 +403,37 @@ func EaseeChargerMessageToMeasurement(chargerMsg EaseeChargerMessage, mqttClient
 	l := utils.GetLogger()
 
 	newMeasurement := []measurement.Measurement{msmt}
-	
-	if flag == "AMQP"{
+
+	if flag == "AMQP" {
 		logMessage := fmt.Sprintf("project: %v measurement: %v", chargerMsg.ProjectId, newMeasurement)
 		l.Debug().Str("msg", logMessage).Str("type", flag).Msg("Publishing MQTT message")
 	}
-	
-	measurement.PublishVariable(mqttClient, chargerMsg.ProjectId, newMeasurement, func(){})
+
+	measurement.PublishVariable(mqttClient, chargerMsg.ProjectId, newMeasurement, func() {})
 }
 
 func CloseAmqpConnectionChannel(conn *amqp091.Connection, ch *amqp091.Channel) error {
-    // First attempt to close the channel
+	// First attempt to close the channel
 
-    if err := ch.Close(); err != nil {
-        utils.LogError(err, "Failed to close channel")
+	if err := ch.Close(); err != nil {
+		utils.LogError(err, "Failed to close channel")
 		return err
-    }
+	}
 
-    if err := conn.Close(); err != nil {
-        utils.LogError(err, "Failed to close connection")
+	if err := conn.Close(); err != nil {
+		utils.LogError(err, "Failed to close connection")
 
-        return err 
-    }
+		return err
+	}
 	l := utils.GetLogger()
 	l.Debug().Msg("Easee AMQP closed successfully")
 
-    return nil
+	return nil
 }
 
-func UpdateMeasurementsHTTP(duration time.Duration, mqttClient *mqtt.Client){
+func UpdateMeasurementsHTTP(duration time.Duration, mqttClient *mqtt.Client) {
 	l := utils.GetLogger()
-	
+
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
 	for {
@@ -465,11 +462,11 @@ func UpdateMeasurementsHTTPOnce(mqttClient *mqtt.Client) error {
 			}
 
 			chargerMsg := EaseeChargerMessage{
-				ChargerId:  chargerId,
-				ObservationId:   observation.Id,
-				Value:      val,
-				ProjectId:  mapping.ProjectId,
-				ArrivalTime: time.Now(),
+				ChargerId:     chargerId,
+				ObservationId: observation.Id,
+				Value:         val,
+				ProjectId:     mapping.ProjectId,
+				ArrivalTime:   time.Now(),
 			}
 
 			// Send value as measurement via MQTT
@@ -480,38 +477,38 @@ func UpdateMeasurementsHTTPOnce(mqttClient *mqtt.Client) error {
 }
 
 func convertObservationIdsAsString() string {
-    var parts []string
-    for id, _ := range observationIds {
-        parts = append(parts, strconv.Itoa(id))
-    }
-    return strings.Join(parts, ",")
+	var parts []string
+	for id, _ := range observationIds {
+		parts = append(parts, strconv.Itoa(id))
+	}
+	return strings.Join(parts, ",")
 }
 
 func byteToFloat64(observationId int, value []byte) (float64, error) {
 	switch observationIds[observationId] {
-		case "double":
-			var num float64
-			if err := json.Unmarshal(value, &num); err == nil {
-				return num, nil
-			}
-		case "integer":
-			var num int
-			if err := json.Unmarshal(value, &num); err == nil {
-				return float64(num), nil
-			}
-		default:
-			return 0, fmt.Errorf("obersvation type not implemented")
+	case "double":
+		var num float64
+		if err := json.Unmarshal(value, &num); err == nil {
+			return num, nil
+		}
+	case "integer":
+		var num int
+		if err := json.Unmarshal(value, &num); err == nil {
+			return float64(num), nil
+		}
+	default:
+		return 0, fmt.Errorf("obersvation type not implemented")
 	}
 	return 0, fmt.Errorf("error unmarshalling observation value")
 }
 
 func interfaceToFloat64(observationId int, value interface{}) (float64, error) {
 	switch observationIds[observationId] {
-		case "double":
-			return value.(float64), nil
-		case "integer":
-			return value.(float64), nil
-		default:
-			return 0, fmt.Errorf("unsupported observationId")
+	case "double":
+		return value.(float64), nil
+	case "integer":
+		return value.(float64), nil
+	default:
+		return 0, fmt.Errorf("unsupported observationId")
 	}
 }

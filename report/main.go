@@ -16,9 +16,9 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 
-	"github.com/efficientIO/efficientIO/report/pkg/report"
+	"github.com/eneries/eneries/report/pkg/report"
 	_ "github.com/lib/pq"
 )
 

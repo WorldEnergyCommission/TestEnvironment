@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"mime/multipart"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"

@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/invoice"
+	"github.com/eneries/eneries/api/pkg/resource/invoice"
 
 	"github.com/gorilla/mux"
 )

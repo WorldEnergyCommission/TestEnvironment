@@ -13,14 +13,14 @@ import (
 	"github.com/philippseith/signalr"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/resource/project"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 
-	"github.com/efficientIO/efficientIO/recorder/pkg/easee"
-	"github.com/efficientIO/efficientIO/recorder/pkg/oeamtc"
-	"github.com/efficientIO/efficientIO/recorder/pkg/oqdo"
+	"github.com/eneries/eneries/recorder/pkg/easee"
+	"github.com/eneries/eneries/recorder/pkg/oeamtc"
+	"github.com/eneries/eneries/recorder/pkg/oqdo"
 
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
@@ -47,7 +47,7 @@ var (
 
 	envOeamtcEventHubConnectionString = os.Getenv("OEAMTC_EVENT_HUB_CONNECTION_STRING")
 	envOqdoSignalrConnectionString    = os.Getenv("OQDO_SIGNALR_CONNECTION_STRING")
-	envEaseeAmqpConnectionString    = os.Getenv("EASEE_AMQP_CONNECTION_STRING")
+	envEaseeAmqpConnectionString      = os.Getenv("EASEE_AMQP_CONNECTION_STRING")
 
 	variablesCreated    int64
 	measurementsCreated int64
@@ -145,7 +145,7 @@ func main() {
 			}
 		}(client)
 	}
-	
+
 	// connect to the easee amqp service if the environment variable contains information
 	if strings.TrimSpace(envEaseeAmqpConnectionString) != "" {
 
@@ -161,7 +161,7 @@ func main() {
 		if err != nil {
 			l.Fatal().Err(err).Msg("Failed to create Easee API Client")
 		}
-	
+
 		l.Debug().Msg("Access Token retrieved successfully")
 
 		conn, ch := easee.ConnectAMQP(&mqttClient)
@@ -176,8 +176,8 @@ func main() {
 		if err != nil {
 			l.Debug().Err(err).Msg("Failed to obtain measurements via HTTP")
 		}
-		
-		go easee.UpdateMeasurementsHTTP(time.Minute * 15, &mqttClient)
+
+		go easee.UpdateMeasurementsHTTP(time.Minute*15, &mqttClient)
 	}
 
 	// get the export mappings for all variables
@@ -189,7 +189,6 @@ func main() {
 
 	// update the export mappings in the background
 	go updateExportMappings()
-
 
 	// start the web server with the metrics endpoint
 	if err := http.ListenAndServe(":8000", http.HandlerFunc(handleMetrics)); err != nil {
@@ -262,4 +261,3 @@ func mqttMessageHandler(_ mqtt.Client, message mqtt.Message) {
 		}
 	}
 }
-

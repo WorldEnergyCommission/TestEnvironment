@@ -15,8 +15,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/samber/lo"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/utils"
 )
 
 var (

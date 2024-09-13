@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/rule"
+	"github.com/eneries/eneries/api/pkg/resource/rule"
 
 	"github.com/gorilla/mux"
 )

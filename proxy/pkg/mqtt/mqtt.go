@@ -4,8 +4,8 @@ import (
 	"io"
 	"net"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
-	"github.com/efficientIO/efficientIO/proxy/pkg/session"
+	"github.com/eneries/eneries/api/pkg/utils"
+	"github.com/eneries/eneries/proxy/pkg/session"
 )
 
 // Proxy is main MQTT proxy struct

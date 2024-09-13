@@ -9,9 +9,9 @@ import (
 
 	eventhub "github.com/Azure/azure-event-hubs-go/v3"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 )
 
 var (

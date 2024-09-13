@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/icon"
+	"github.com/eneries/eneries/api/pkg/resource/icon"
 )
 
 // iconsListHandler handles the request to list icons based on a query parameter.

@@ -9,8 +9,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
-	"github.com/efficientIO/efficientIO/report/pkg/pdf"
+	"github.com/eneries/eneries/api/pkg/utils"
+	"github.com/eneries/eneries/report/pkg/pdf"
 )
 
 const (

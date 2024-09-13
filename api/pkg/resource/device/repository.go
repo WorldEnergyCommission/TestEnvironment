@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"golang.org/x/exp/slices"
 
 	"github.com/google/uuid"

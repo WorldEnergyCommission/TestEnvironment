@@ -1,10 +1,10 @@
-module github.com/efficientIO/efficientIO/admin
+module github.com/eneries/eneries/admin
 
 go 1.21
 
 require (
 	github.com/Nerzal/gocloak/v13 v13.8.0
-	github.com/efficientIO/efficientIO/api v0.0.0
+	github.com/eneries/eneries/api v0.0.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
@@ -83,4 +83,4 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace github.com/efficientIO/efficientIO/api v0.0.0 => ../api
+replace github.com/eneries/eneries/api v0.0.0 => ../api

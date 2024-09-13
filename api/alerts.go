@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/alert"
+	"github.com/eneries/eneries/api/pkg/resource/alert"
 	"github.com/gorilla/mux"
 )
 

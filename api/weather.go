@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/weather"
+	"github.com/eneries/eneries/api/pkg/resource/weather"
 )
 
 // weatherGetHandler retrieves weather information based on latitude and longitude.

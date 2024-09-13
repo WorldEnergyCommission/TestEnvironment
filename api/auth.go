@@ -6,8 +6,8 @@ import (
 
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/auth"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/user"
+	"github.com/eneries/eneries/api/pkg/auth"
+	"github.com/eneries/eneries/api/pkg/resource/user"
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/gorilla/mux"

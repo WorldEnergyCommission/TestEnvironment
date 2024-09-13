@@ -11,7 +11,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"
 
@@ -315,7 +315,7 @@ func stringToUnix(ts string) (time.Time, error) {
 	return time.Unix(val, 0), nil
 }
 
-//TODO use func from api
+// TODO use func from api
 func getVariableID(project, variable string) (int, error) {
 	// get a redis connection
 	conn := redisPool.Get()

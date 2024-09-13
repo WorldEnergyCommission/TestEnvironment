@@ -12,8 +12,8 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"

@@ -12,12 +12,12 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/utils"
 
-	"github.com/efficientIO/efficientIO/proxy/pkg/mqtt"
-	"github.com/efficientIO/efficientIO/proxy/pkg/session"
-	"github.com/efficientIO/efficientIO/proxy/pkg/websocket"
+	"github.com/eneries/eneries/proxy/pkg/mqtt"
+	"github.com/eneries/eneries/proxy/pkg/session"
+	"github.com/eneries/eneries/proxy/pkg/websocket"
 	"github.com/gomodule/redigo/redis"
 )
 

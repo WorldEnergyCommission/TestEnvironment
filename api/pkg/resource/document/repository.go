@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/minio/minio-go/v7"
 	"github.com/rs/zerolog"
 )

@@ -1,11 +1,11 @@
-module github.com/efficientIO/efficientIO/console
+module github.com/eneries/eneries/console
 
 go 1.21
 
-replace github.com/efficientIO/efficientIO/api v0.0.0 => ../api
+replace github.com/eneries/eneries/api v0.0.0 => ../api
 
 require (
-	github.com/efficientIO/efficientIO/api v0.0.0
+	github.com/eneries/eneries/api v0.0.0
 	golang.org/x/crypto v0.24.0
 )
 

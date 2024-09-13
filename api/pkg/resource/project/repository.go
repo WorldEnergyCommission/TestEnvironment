@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/rule"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/rule"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"

@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/asset"
+	"github.com/eneries/eneries/api/pkg/resource/asset"
 	"github.com/gorilla/mux"
 )
 

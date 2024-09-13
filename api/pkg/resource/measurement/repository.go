@@ -10,8 +10,8 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/lib/pq"
 	"github.com/samber/lo"
 	"golang.org/x/exp/maps"

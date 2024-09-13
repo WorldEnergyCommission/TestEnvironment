@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/permission"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/permission"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/google/uuid"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/notification"
+	"github.com/eneries/eneries/api/pkg/resource/notification"
 )
 
 const (

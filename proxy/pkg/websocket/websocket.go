@@ -5,10 +5,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/efficientIO/efficientIO/proxy/pkg/session"
+	"github.com/eneries/eneries/proxy/pkg/session"
 	"github.com/gorilla/websocket"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 )
 
 // Proxy represents WS Proxy.

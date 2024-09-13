@@ -3,10 +3,11 @@ package icon_test
 
 import (
 	"bytes"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/icon"
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	"github.com/eneries/eneries/api/pkg/resource/icon"
 )
 
 type MockClient struct {

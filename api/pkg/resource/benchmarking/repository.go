@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"time"
 
-	data_mapping "github.com/efficientIO/efficientIO/api/pkg/resource/data_mapping"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/measurement"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	data_mapping "github.com/eneries/eneries/api/pkg/resource/data_mapping"
+	"github.com/eneries/eneries/api/pkg/resource/measurement"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/gomodule/redigo/redis"
 )
 

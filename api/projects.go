@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/member"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/user"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/member"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/resource/user"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/gorilla/mux"
 )

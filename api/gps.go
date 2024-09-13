@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/adrianmo/go-nmea"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/gorilla/mux"
 
 	"io/ioutil"

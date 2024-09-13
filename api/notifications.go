@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/notification"
 	"net/http"
+
+	"github.com/eneries/eneries/api/pkg/resource/notification"
 )
 
 func notificationsCreateHandler(w http.ResponseWriter, r *http.Request) {

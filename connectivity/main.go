@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/rule"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/rule"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/procyon-projects/chrono"
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/util/sets"

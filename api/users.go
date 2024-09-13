@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/user"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/user"
+	"github.com/eneries/eneries/api/pkg/utils"
 
 	"github.com/gorilla/mux"
 )

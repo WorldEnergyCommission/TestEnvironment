@@ -1,12 +1,12 @@
-module github.com/efficientIO/efficientIO/publisher
+module github.com/eneries/eneries/publisher
 
 go 1.21
 
-replace github.com/efficientIO/efficientIO/api v0.0.0 => ../api
+replace github.com/eneries/eneries/api v0.0.0 => ../api
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/efficientIO/efficientIO/api v0.0.0
+	github.com/eneries/eneries/api v0.0.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/lib/pq v1.10.9
 )

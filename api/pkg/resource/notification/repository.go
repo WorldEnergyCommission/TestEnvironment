@@ -9,9 +9,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/efficientIO/efficientIO/api/pkg/resource/alert"
-	"github.com/efficientIO/efficientIO/api/pkg/resource/project"
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/resource/alert"
+	"github.com/eneries/eneries/api/pkg/resource/project"
+	"github.com/eneries/eneries/api/pkg/utils"
 	"github.com/samber/lo"
 )
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/efficientIO/efficientIO/api/pkg/utils"
+	"github.com/eneries/eneries/api/pkg/utils"
 )
 
 type (

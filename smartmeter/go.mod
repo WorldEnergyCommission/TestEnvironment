@@ -1,10 +1,10 @@
-module github.com/efficientIO/efficientIO/recorder
+module github.com/eneries/eneries/recorder
 
 go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/efficientIO/efficientIO/api v0.0.0
+	github.com/eneries/eneries/api v0.0.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/lib/pq v1.10.9
 	github.com/samber/lo v1.38.1
@@ -72,4 +72,4 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace github.com/efficientIO/efficientIO/api v0.0.0 => ../api
+replace github.com/eneries/eneries/api v0.0.0 => ../api
