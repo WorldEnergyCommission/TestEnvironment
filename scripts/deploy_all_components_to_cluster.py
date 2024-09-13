@@ -26,7 +26,8 @@ CLUSTER_CONFIG = ((('terraform_ci_cd.yaml',), 120),
                     'eventwatcher_ci_cd.yaml', 'empa_ci_cd.yaml', 'controller_ci_cd.yaml', 'connectivity_ci_cd.yaml',
                     'api_ci_cd.yaml', 'admin_ci_cd.yaml', 'publisher_ci_cd.yaml'), 120),
                   (('ai_ci_cd.yaml', 'realm_ci_cd.yaml', 'smartmeter_ci_cd.yaml'), 180),
-                  (('nginx_ci_cd.yaml', 'kubernetes_dashboard_ci_cd.yaml'), 60))
+                  (('nginx_ci_cd.yaml', 'kubernetes_dashboard_ci_cd.yaml', 
+                    'rabbitmq_ci_cd.yaml', 'keda_ci_cd.yaml'), 120))
 
 
 def get_args():
