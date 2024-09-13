@@ -8,7 +8,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/invoices",
+        url: "https://api.eneries.com/v1/invoices",
         method: "GET",
         status: 200,
         response: [

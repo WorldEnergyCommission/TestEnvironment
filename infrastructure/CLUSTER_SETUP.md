@@ -34,18 +34,18 @@
    - EXOSCALE_EFFICIENTIO_LINUX_SERVER_PRIVATE_KEY (if you want to have an own key per cluster, please change it,
      otherwise you can copy it)
    - EXOSCALE_HUGE_SKS_NODEPOOL_INSTANCE_TYPE (for new clusters take the configuration from one other cluster)
-   - EXOSCALE_HUGE_SKS_NODEPOOL (for new clusters take the configuration from one non-efficientio cluster)
-   - MINIMUM_RAM_BIG_SERVICES (for new clusters take the configuration from one non-efficientio cluster)
-   - MINIMUM_CPU_BIG_SERVICES (for new clusters take the configuration from one non-efficientio cluster)
-   - MAXIMUM_CPU_BIG_SERVICES (for new clusters take the configuration from one non-efficientio cluster)
-   - MAXIMUM_RAM_BIG_SERVICES (for new clusters take the configuration from one non-efficientio cluster)
-   - POSTGRES_CONFIG_BIG_SERVICES (for new clusters take the configuration from one non-efficientio cluster)
+   - EXOSCALE_HUGE_SKS_NODEPOOL (for new clusters take the configuration from one non-eneries cluster)
+   - MINIMUM_RAM_BIG_SERVICES (for new clusters take the configuration from one non-eneries cluster)
+   - MINIMUM_CPU_BIG_SERVICES (for new clusters take the configuration from one non-eneries cluster)
+   - MAXIMUM_CPU_BIG_SERVICES (for new clusters take the configuration from one non-eneries cluster)
+   - MAXIMUM_RAM_BIG_SERVICES (for new clusters take the configuration from one non-eneries cluster)
+   - POSTGRES_CONFIG_BIG_SERVICES (for new clusters take the configuration from one non-eneries cluster)
    - OPENWEATHERMAP_KEY (if you want to have an own key per cluster, please change it, otherwise you can copy it)
-   - OQDO_SIGNALR_CONNECTION_STRING (copy from efficientio to actually have a connection, otherwise the connection is
+   - OQDO_SIGNALR_CONNECTION_STRING (copy from eneries to actually have a connection, otherwise the connection is
      disabled)
-   - OEAMTC_EVENT_HUB_CONNECTION_STRING (copy from efficientio to actually have a connection, otherwise the connection
+   - OEAMTC_EVENT_HUB_CONNECTION_STRING (copy from eneries to actually have a connection, otherwise the connection
      is disabled)
-   - EASEE_AMQP_CONNECTION_STRING (copy from efficientio to actually have a connection, otherwise the connection
+   - EASEE_AMQP_CONNECTION_STRING (copy from eneries to actually have a connection, otherwise the connection
      is disabled)
 
 4. Add the cluster name as key **{CLUSTER_PREFIX}\_CLUSTER_NAME_BASE64**, make sure it is correctly encoded and
@@ -66,7 +66,7 @@
     path, keepass password and mode equal to "apply", update the state file in Git
 13. When it is finished add the two entries **S3_ACCESS_KEY** and **S3_SECRET_KEY** to Keypass from the respective entry
     in the Terraform state file, you can find the entry by searching for "exoscale_iam_api_key" (you need to BASE64
-    encode the entries), the one S3 keypair from the efficientio cluster is also used in the clusterIndependent folder
+    encode the entries), the one S3 keypair from the eneries cluster is also used in the clusterIndependent folder
     to store the Longhorn backups
 14. Then, add the last entry in Keepass called **KUBECONFIG**, from the respective entry in the Terraform state file,
     you can find the entry by searching for "exoscale_sks_kubeconfig" (make sure to replace the **\n** with real

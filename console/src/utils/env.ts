@@ -16,7 +16,7 @@ import { getAppId } from "@/utils/appBootstrapFunctions";
  */
 function getWhitelabelConfig(): WhitelabelConfig {
   // this is the default whitelabel config - here you can set the config used for the dev server
-  let whitelabelConfig = getWhitelabelConfigForWhitelabelName(WhitelabelName.efficientio);
+  let whitelabelConfig = getWhitelabelConfigForWhitelabelName(WhitelabelName.eneries);
   // change config based on host or app
   if (Capacitor.isNativePlatform()) {
     // get the current app

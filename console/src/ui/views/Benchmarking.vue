@@ -220,7 +220,7 @@ function generateReport() {
   generatingPDF.value = true;
   const doc = new jsPDF("p", "px", "A4");
 
-  doc.text("EfficientIO Report", 10, 20);
+  doc.text("ENERIES Report", 10, 20);
 
   doc.text(t("modules.report.chart.pv"), 10, 40);
   addChartRefToPDF(chart_solar, doc, 25, 60);

@@ -1,4 +1,4 @@
-package com.efficientio.console;
+package com.eneries.console;
 
 import com.getcapacitor.BridgeActivity;
 

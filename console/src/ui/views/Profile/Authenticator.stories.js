@@ -6,7 +6,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/users/me/otp/qr",
+        url: "https://api.eneries.io/v1/users/me/otp/qr",
         method: "GET",
         status: 200,
         response: {
@@ -15,7 +15,7 @@ export default {
         },
       },
       {
-        url: "https://api.efficientio.io/v1/users/me/otp",
+        url: "https://api.eneries.io/v1/users/me/otp",
         method: "GET",
         status: 200,
         response: [

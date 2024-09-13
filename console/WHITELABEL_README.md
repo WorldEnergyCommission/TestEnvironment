@@ -67,18 +67,18 @@ domains = []string{ ... }
 #### Keepass & other configs
 
 20. Then under `keepass/secrets.kdbx`, add the new realm under the
-    path `efficientIO/cloud/{cluster_name}Cluster/realms/{realmName}`,
+    path `eneries/cloud/{cluster_name}Cluster/realms/{realmName}`,
 21. you can start by copying over another realm and changing the key values.
 22. After that, execute **realm_ci_cd.yaml** in GitHub Actions.
 23. Then under `keepass/secrets.kdbx`, add the new realm mail config under the
-    path `efficientIO/cloud/{cluster_name}Cluster/environment/{clusterName}_SENDGRID_CONFIGS_BASE64`.
+    path `eneries/cloud/{cluster_name}Cluster/environment/{clusterName}_SENDGRID_CONFIGS_BASE64`.
 
 #### Publishing
 
 24. Then in the `Google Play Console` and in `App Store Connect`/`Apple Developer` (add new application id and mobile
     provision file), add the new applications with the corresponding package identifiers.
 25. Then under `keepass/secrets.kdbx`, add the new app deployment config under the
-    path `efficientIO/app/{whitelabel_name}`.
+    path `eneries/app/{whitelabel_name}`.
 26. For the Android workflow to run successfully, you must upload the first build manually (let the workflow run once
     and upload the output from the failed run)
 

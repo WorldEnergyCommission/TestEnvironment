@@ -8,27 +8,28 @@
 5. adjust the file "/etc/lora/customized_scripts/mappings.lua" that maps identifiers to a base name and a device type to
    the identifiers at hand, these are the file names in the folder "/var/iot/channels" when the Dragino gateway is in
    the custom script execution mode
-6. fill in the custom script parameters, these are "mqttHost" (parameter 1, example: mqtt.efficientio.com), 
-   "mqttPort" (parameter 2, example: 8883), "mqttUser" (parameter 3, example: ecfbe82f-2099-4eca-8dc4-78aedc5d50f8), 
+6. fill in the custom script parameters, these are "mqttHost" (parameter 1, example: mqtt.eneries.com),
+   "mqttPort" (parameter 2, example: 8883), "mqttUser" (parameter 3, example: ecfbe82f-2099-4eca-8dc4-78aedc5d50f8),
    "mqttPass" (parameter 4, example: 0b18c213-18c3-4cff-a259-8b0cd9d073e3) and "checkIntervalSeconds" (parameter 5, example: 30)
 7. after starting the custom script, logs will be written to "/var/customized_script_output.log" and the standard
    output, the payload conversion function can be tested by copying the file "./dragino/018229B9" to the folder "
    /var/iot/channels" with the default "./dragino/mappings.lua" configuration while the script is running
 
 # How to set up the LoRaWAN sensor
+
 ## for Dragino sensors via AT commands, tested with: LSN50v2, LHT65N
 
 1. set the 'network join mode' to "ABP mode" <br>
-      `AT+NJM=0`&emsp;&emsp;_// Set the Network Join Mode. (0: ABP, 1: OTAA)_
+   `AT+NJM=0`&emsp;&emsp;_// Set the Network Join Mode. (0: ABP, 1: OTAA)_
 2. adopt the data transmission interval if necessary<br>
-      `AT+TDC=300000`&emsp;&emsp;_// set the application data transmission interval in ms_
+   `AT+TDC=300000`&emsp;&emsp;_// set the application data transmission interval in ms_
 3. reset MCU<br>
-      `ATZ`&emsp;&emsp;_// Trig a reset of the MCU_
+   `ATZ`&emsp;&emsp;_// Trig a reset of the MCU_
 4. fetch all required data either by fetching it directly or via global config print<br>
-      `AT+DADDR=?`&emsp;&emsp;_// Get the Device Address_<br>
-      `AT+NWKSKEY=?`&emsp;&emsp;_// Get the Network Session Key_<br>
-      `AT+APPSKEY=?`&emsp;&emsp;_// Get the Application Session Key_<br>
-      `AT+CFG`&emsp;&emsp;_// print out all configuration_<br>
+   `AT+DADDR=?`&emsp;&emsp;_// Get the Device Address_<br>
+   `AT+NWKSKEY=?`&emsp;&emsp;_// Get the Network Session Key_<br>
+   `AT+APPSKEY=?`&emsp;&emsp;_// Get the Application Session Key_<br>
+   `AT+CFG`&emsp;&emsp;_// print out all configuration_<br>
 
 ## Elsys sensors via App, tested with: ERS CO2, ERS CO2 Lite
 
@@ -36,5 +37,5 @@
 2. disable OTAA, so the sensor switches to ABP mode
 3. adopt timebase (= transmission interval)
 4. set Device address, App session key and Network session key<br>
-      _(!) needed to be done in the first test, seems pretty strange, may this isn't really necessary_
+   _(!) needed to be done in the first test, seems pretty strange, may this isn't really necessary_
 5. write settings to the sensor

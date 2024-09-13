@@ -8,7 +8,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/modules/types/DeviceId/properties",
+        url: "https://api.eneries.com/v1/modules/types/DeviceId/properties",
         method: "GET",
         status: 200,
         response: [

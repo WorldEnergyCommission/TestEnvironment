@@ -6,7 +6,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/projects/project1/modules/report?tz=Europe/Warsaw",
+        url: "https://api.eneries.com/v1/projects/project1/modules/report?tz=Europe/Warsaw",
         method: "GET",
         status: 200,
         response: {

@@ -6,7 +6,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/projects/projectId/data-mapping/list",
+        url: "https://api.eneries.io/v1/projects/projectId/data-mapping/list",
         method: "GET",
         status: 200,
         response: [
@@ -23,7 +23,7 @@ export default {
         ],
       },
       {
-        url: "https://api.efficientio.io/v1/data-mapping/types/list",
+        url: "https://api.eneries.io/v1/data-mapping/types/list",
         method: "GET",
         status: 200,
         response: [
@@ -34,7 +34,7 @@ export default {
         ],
       },
       {
-        url: "https://api.efficientio.io/v1/data-mapping/types/DataMappingId/properties",
+        url: "https://api.eneries.io/v1/data-mapping/types/DataMappingId/properties",
         method: "GET",
         status: 200,
         response: [

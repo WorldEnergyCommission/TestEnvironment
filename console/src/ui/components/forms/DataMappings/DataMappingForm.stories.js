@@ -6,7 +6,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/data-mapping/types/id/properties",
+        url: "https://api.eneries.com/v1/data-mapping/types/id/properties",
         method: "GET",
         status: 200,
         response: [

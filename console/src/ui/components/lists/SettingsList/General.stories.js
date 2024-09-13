@@ -6,7 +6,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/places?q=Location",
+        url: "https://api.eneries.com/v1/places?q=Location",
         method: "GET",
         status: 200,
         response: ["Location 1", "Location 2"],

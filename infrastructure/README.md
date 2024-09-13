@@ -57,7 +57,7 @@ kubectl delete pod --field-selector=status.phase==Failed -n lynus
 1. Prefer the use of rollout restart (this does not cause downtime):
 
 ```bash
-kubectl --kubeconfig efficientio_kube_config_cluster.yml rollout restart deployment keycloak -n lynus
+kubectl --kubeconfig eneries_kube_config_cluster.yml rollout restart deployment keycloak -n lynus
 ```
 
 2. otherwise use this trick to scale the deployment down to 0 and then back to the original amount of replicas (most

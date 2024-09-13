@@ -395,7 +395,7 @@ function main()
     local mqttPass = terminateIfStringIsEmpty(getParameterAtIndex(4))
     local checkIntervalSeconds = terminateIfStringIsEmpty(getParameterAtIndex(5))
     --[[
-    local mqttHost = 'mqtt.efficientio.io'
+    local mqttHost = 'mqtt.eneries.io'
     local mqttPort = 8883
     local mqttUser = '907a2b72-b82f-401e-aa63-9360abccb3df'
     local mqttPass = '82b288a3-b047-424e-9f02-613e7328786b'

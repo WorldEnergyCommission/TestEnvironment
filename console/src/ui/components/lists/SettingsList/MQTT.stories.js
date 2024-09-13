@@ -6,7 +6,7 @@ export default {
   parameters: {
     mockData: [
       {
-        url: "https://api.efficientio.io/v1/projects/projectId/mqtt-secret",
+        url: "https://api.eneries.com/v1/projects/projectId/mqtt-secret",
         method: "GET",
         status: 200,
         response: "secret",

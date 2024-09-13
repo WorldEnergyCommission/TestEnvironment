@@ -1,6 +1,6 @@
 # SPS Preparation
 
-files located at: `efficientio/projects/spsbase`
+files located at: `eneries/projects/spsbase`
 
 ## MQTT Cert
 
@@ -38,7 +38,7 @@ files located at: `efficientio/projects/spsbase`
 
 # XAE Preparation (TwinCAT Engineering Workstation)
 
-files located at: `efficientio/projects/spsbase/XAE`
+files located at: `eneries/projects/spsbase/XAE`
 
 ## ADS-over-MQTT
 
