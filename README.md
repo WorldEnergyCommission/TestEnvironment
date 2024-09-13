@@ -1,4 +1,4 @@
-# efficientIO
+# ENERIES
 
 # Technologies
 
@@ -15,14 +15,6 @@
 
 - task specifications should be written down into JIRA
 - task problems and help requests that make no sense to document in JIRA are handled via Teams video calls or chats
-
-# People
-
-- Hannes Brantner (mostly backend development, some frontend work)
-- Johannes Pirker (frontend and backend development)
-- Markus Gall (ai services development)
-- Markus Schwarzmann (operations and hardware installation at the customers place)
-- Mohammad Mostajab (programs BACNet to OPC UA mapper to replace oqdo)
 
 # Nice to know
 
@@ -79,7 +71,7 @@
 
 ![development_process.svg](./dev_process_2.0.svg "Development Proces")
 
-### What to do if changes are necessary to an already merged PR? 
+### What to do if changes are necessary to an already merged PR?
 
 1. go to the ticket in Jira and open a new Branch from there. Make sure the ticket-id is included e.g. DEV2-183-xxx
 2. commit new changes to this branch
@@ -121,5 +113,3 @@ commitType(scope) commitMessage
   - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - test
   - Adding missing tests or correcting existing tests
-
-test
