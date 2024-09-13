@@ -39,16 +39,7 @@ const (
 var (
 	// new domains must be added to this slice
 	domains = []string{
-		"console.efficientio.com",
-		"console.efficientio.io",
-		"console.tsg-portal.de",
-		"connect.peneder.com",
-		"bmsystems.efficientio.com",
-		"be-leo-business.burgenlandenergie.at",
-		"console.power-link.at",
-		"console.smartsitepower.com",
-		"console.bmsystems.at",
-		"console.effectas.com",
+		"console.eneries.com"
 	}
 	// the latest git sha, will be replaced on program start
 	latestSha = ""
