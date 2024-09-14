@@ -27,6 +27,9 @@ jobs:
           keepass-file-path: "keepass/secrets.kdbx"
           keepass-master-password: ${{ secrets.KEEPASS_MASTER_PASSWORD }}
           keepass-group-filter: "cloud"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.7"
       - name: Deploy
         run: |
           python3 scripts/check_terraform.py --cluster "${{ steps.string.outputs.lowercase }}"
