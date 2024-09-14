@@ -9,8 +9,8 @@ import requests
 
 from constants import get_clusters
 
-OWNER = 'efficientIO'
-REPO = 'efficientIO'
+OWNER = 'eneries'
+REPO = 'eneries'
 NON_CLUSTER_WORKFLOW_FILES = {
     'android_app_ci_cd.yaml', 'ios_app_ci_cd.yaml', 'github_secrets_ci_cd.yaml'}
 OWN_WORKFLOW_FILE = 'cluster_ci_cd.yaml'
