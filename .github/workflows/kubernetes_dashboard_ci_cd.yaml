@@ -31,13 +31,4 @@ jobs:
         run: |
           python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/dashboard/deployment.yaml" --no-replace_tag --sha "${{ github.sha }}" --resource_name "kubernetes-dashboard" --namespace_name "kubernetes-dashboard" --restart_mode "no" --apply_only_on_changes
           python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/dashboard/auth/deployment.yaml" --no-replace_tag --sha "${{ github.sha }}" --resource_name "admin-user" --namespace_name "kubernetes-dashboard" --restart_mode "no" --apply_only_on_changes
-      - name: Success notification
-        uses: ./.github/actions/teams_notification_success
-        if: success()
-        with:
-          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
-      - name: Failure notification
-        uses: ./.github/actions/teams_notification_failure
-        if: failure()
-        with:
-          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
+      

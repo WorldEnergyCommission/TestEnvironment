@@ -28,13 +28,4 @@ jobs:
           cd scripts
           CLUSTER=${{ github.event.inputs.cluster }}
           python3 deploy_all_components_to_cluster.py --cluster ${CLUSTER:-"all"} --token ${{ env.ACTIONS_GITHUB_TOKEN }}
-      - name: Success notification
-        uses: ./.github/actions/teams_notification_success
-        if: success()
-        with:
-          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
-      - name: Failure notification
-        uses: ./.github/actions/teams_notification_failure
-        if: failure()
-        with:
-          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
+      

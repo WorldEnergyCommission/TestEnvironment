@@ -45,13 +45,4 @@ jobs:
       - name: Deploy ingress objects
         run: |
           python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/nginx/reverse-proxy.yaml" --replace_domain --restart_mode "no" --apply_only_on_changes --resource_name "reverse-proxy" --namespace_name "ingress-nginx" --sha "${{ github.sha }}"
-      - name: Success notification
-        uses: ./.github/actions/teams_notification_success
-        if: success()
-        with:
-          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
-      - name: Failure notification
-        uses: ./.github/actions/teams_notification_failure
-        if: failure()
-        with:
-          notification-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI_DEPLOYMENTS }}
+      
