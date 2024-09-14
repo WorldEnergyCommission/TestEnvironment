@@ -6,13 +6,14 @@ terraform {
   required_providers {
     exoscale = {
       source  = "exoscale/exoscale"
-      version = "0.53.0"
+      version = "0.60.0"
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "5.22.0"
+      version = "5.67.0"
     }
   }
+  required_version = "1.5.7"
 }
 
 provider "exoscale" {
@@ -27,7 +28,7 @@ resource "exoscale_sks_cluster" "efficientio_sks_cluster" {
   exoscale_ccm   = "true"
   metrics_server = "true"
   service_level  = "pro"
-  version        = "1.28.6"
+  version        = "1.31.0"
 }
 
 resource "exoscale_security_group" "efficientio_security_group" {
