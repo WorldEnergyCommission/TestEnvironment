@@ -29,6 +29,9 @@ env:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      packages: write
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -69,4 +72,3 @@ jobs:
       - name: Deploy
         run: |
           python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "${{ env.IMAGE_NAME }}/deployment.yaml" --replace_tag --sha "${{ github.sha }}" --resource_name "mpc" --namespace_name "lynus" --restart_mode "full" --apply_only_on_changes --replace_resources_big_services
-      
