@@ -147,6 +147,10 @@ resource "aws_s3_bucket" "efficientio-s3-bucket" {
   bucket = "efficientio-${var.exoscale_cluster_name}-s3-bucket"
 }
 
+resource "aws_s3_bucket" "backup-s3-bucket" {
+  bucket = "backup-${var.exoscale_cluster_name}-s3-bucket"
+}
+
 resource "exoscale_iam_role" "efficientio_s3_buckets_role" {
   name        = "efficientio_s3_buckets_role"
   description = "efficientio_s3_buckets_role"
