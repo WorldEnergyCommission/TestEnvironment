@@ -34,15 +34,12 @@ allow-snippet-annotations: "true"
 http-snippet: "proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=icons:10m max_size=10g  inactive=60m use_temp_path=off;"
 ```
 
-### Service Loadbalancer
+### Service Load Balancer
 
-The following annotations were added to the service defintion of the load balancer
+The following annotations were added to the service definition of the load balancer
 
 ```yaml
 service.beta.kubernetes.io/exoscale-loadbalancer-service-instancepool-id: "INSTANCEPOOL_ID"
-service.beta.kubernetes.io/exoscale-loadbalancer-id: "LOADBALANCER_ID"
-service.beta.kubernetes.io/exoscale-loadbalancer-name: ingress-nginx-controller
-service.beta.kubernetes.io/exoscale-loadbalancer-external: "true"
 ```
 
 Also the following ports were added

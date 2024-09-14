@@ -35,7 +35,7 @@ jobs:
           python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/nginx/mqtt-ssl-proxy.yaml" --restart_mode "rolling" --apply_only_on_changes  --resource_name "mqtt-ssl-proxy" --namespace_name "lynus" --no-replace_tag --sha "${{ github.sha }}"
       - name: Deploy ingress
         run: |
-          python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/nginx/ingress.yaml" --replace_instancepool_id --replace_ingress_loadbalancer_id --restart_mode "no" --apply_only_on_changes  --resource_name "ingress-nginx" --namespace_name "ingress-nginx" --sha "${{ github.sha }}"
+          python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/nginx/ingress.yaml" --replace_instancepool_id --restart_mode "no" --apply_only_on_changes  --resource_name "ingress-nginx" --namespace_name "ingress-nginx" --sha "${{ github.sha }}"
       - name: Deploy cert-manager
         run: |
           python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/nginx/cert-manager.yaml" --restart_mode "no" --apply_only_on_changes --resource_name "cert-manager" --namespace_name "cert-manager" --sha "${{ github.sha }}"
@@ -45,4 +45,3 @@ jobs:
       - name: Deploy ingress objects
         run: |
           python3 scripts/deploy_and_restart.py --cluster "${{ steps.string.outputs.lowercase }}" --deployment_file "infrastructure/deployment/nginx/reverse-proxy.yaml" --replace_domain --restart_mode "no" --apply_only_on_changes --resource_name "reverse-proxy" --namespace_name "ingress-nginx" --sha "${{ github.sha }}"
-      

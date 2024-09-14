@@ -29,11 +29,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--no-replace_instancepool_id',
                         dest='replace_instancepool_id', action='store_false')
     parser.set_defaults(replace_instancepool_id=False)
-    parser.add_argument('--replace_ingress_loadbalancer_id',
-                        action='store_true')
-    parser.add_argument('--no-replace_ingress_loadbalancer_id',
-                        dest='replace_ingress_loadbalancer_id', action='store_false')
-    parser.set_defaults(replace_ingress_loadbalancer_id=False)
     parser.add_argument('--sha', type=str, required=True)
     parser.add_argument('--resource_name', type=str, default='')
     parser.add_argument('--resource_type', type=str, default='deployment')
@@ -125,59 +120,6 @@ def get_instance_pool_id_for_load_balancer(cluster: str) -> str:
     return biggest_instance_pool_id['id']
 
 
-def get_ingress_load_balancer(cluster: str) -> str:
-    """Get the loadbalancer id for the nginx loadbalancer (selects one without name "console-loadbalancer")
-
-
-    :param cluster: Cluster to get loadbalancer id for
-    :type cluster: str
-    :raises RuntimeError: If the API request to Exoscale failed
-    :raises ValueError: If now load balancer can be found
-    :return: ID of the loadbalancer
-    :rtype: str
-    """
-    api_key = get_value_from_env(cluster, 'EXOSCALE_API_KEY')
-    api_secret = get_value_from_env(cluster, 'EXOSCALE_SECRET_KEY')
-    load_balancers = []
-    available_zone_ids = (
-        'ch-gva-2',
-        # 'ch-dk-2',
-        # 'de-fra-1',
-        # 'de-muc-1',
-        'at-vie-1',
-        # 'at-vie-2',
-        # 'bg-sof-1'
-    )
-
-    for zone_id in available_zone_ids:
-
-        auth = ExoscaleV2Auth(api_key,
-                              api_secret)
-
-        response = requests.get(f"https://api-{zone_id}.exoscale.com/v2/load-balancer",
-                                auth=auth)
-        if not response.ok:
-            if response.status_code == 403:
-                continue
-            else:
-                logging.info(response)
-                raise RuntimeError
-
-        response_object = response.json()['load-balancers']
-        if len(response_object) != 0:
-            load_balancers.extend(response_object)
-
-    if len(load_balancers) == 0:
-        raise ValueError
-
-    print(load_balancers)
-    sorted_load_balancers = list(filter(
-        lambda x: x['name'] != 'console-loadbalancer', load_balancers))
-    print(sorted_load_balancers)
-    first_load_balancer = sorted_load_balancers[0]
-    return first_load_balancer['id']
-
-
 def replace_in_file(file_path: str, search_string: str, replace_string: str) -> None:
     with open(file_path) as file:
         content = file.read()
@@ -246,7 +188,7 @@ def fill_in_values_from_env(deployment_file: str, cluster: str) -> None:
 def deploy_and_restart(cluster: str, deployment_file: str, replace_tag: bool, sha: str, resource_name: str,
                        resource_type: str,
                        namespace_name: str, restart_mode: str, apply_only_on_changes: bool,
-                       wait_seconds: int, replace_instancepool_id: bool, replace_resources_big_services: bool, replace_domain=False, replace_ingress_loadbalancer_id=False) -> None:
+                       wait_seconds: int, replace_instancepool_id: bool, replace_resources_big_services: bool, replace_domain=False) -> None:
     set_k8s_context(cluster)
     fill_in_values_from_env(deployment_file, cluster)
     if replace_tag:
@@ -254,9 +196,6 @@ def deploy_and_restart(cluster: str, deployment_file: str, replace_tag: bool, sh
     if replace_instancepool_id:
         replace_in_file(deployment_file, 'INSTANCEPOOL_ID',
                         get_instance_pool_id_for_load_balancer(cluster))
-    if replace_ingress_loadbalancer_id:
-        replace_in_file(deployment_file, 'LOADBALANCER_ID',
-                        get_ingress_load_balancer(cluster))
     if replace_resources_big_services:
         replace_in_file(deployment_file, 'MINIMUM_RAM_BIG_SERVICES',
                         get_value_from_env(cluster, 'MINIMUM_RAM_BIG_SERVICES'))
@@ -320,7 +259,7 @@ def main() -> None:
         deploy_and_restart(
             cluster, args.deployment_file, args.replace_tag, args.sha, args.resource_name, args.resource_type,
             args.namespace_name, args.restart_mode, args.apply_only_on_changes, args.wait_seconds,
-            args.replace_instancepool_id, args.replace_resources_big_services, args.replace_domain, args.replace_ingress_loadbalancer_id)
+            args.replace_instancepool_id, args.replace_resources_big_services, args.replace_domain)
         # restore the initial state of the file
         with open(args.deployment_file, 'w') as file:
             file.write(deployment_file_copy)
