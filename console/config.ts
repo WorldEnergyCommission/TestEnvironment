@@ -318,7 +318,7 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
         LOGO_URL_LIGHT: "/images/eneriesLight.svg",
         LOGO_URL_DARK: "/images/eneriesDark.svg",
         FAVICON_URL: "/images/eneries_favicon.ico",
-        LOGIN_LOGO: "/images/login/logo-eneries.svg",
+        LOGIN_LOGO: "/images/eneriesLight.svg",
         LOGIN_LOGO_DARK: "/images/eneriesDark.svg",
         LOGIN_BACKGROUND: "/images/login/background-eneries.jpg",
         REALM: "eneries",
