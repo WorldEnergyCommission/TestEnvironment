@@ -99,7 +99,7 @@ def generate_ios_assets(whitelabel: str) -> None:
         print(
             f'generated ios file {index + 1}/{len(target_files)} on path {target_file} ...')
 
-    print("Reverting unnecessary git chagnes...")
+    print("Reverting unnecessary git changes...")
     if whitelabel != 'main':
         for created_file in created_files:
             source_folder_path_parts = list(created_file.parts)
