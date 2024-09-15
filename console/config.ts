@@ -322,8 +322,8 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
         LOGIN_LOGO_DARK: "/images/eneriesDark.svg",
         LOGIN_BACKGROUND: "/images/login/background-eneries.jpg",
         REALM: "eneries",
-        LIGHT_MAPBOX_STYLE_ID: "m-schwarzmann/cl123p5ts003s14o2ld3zb3p3",
-        DARK_MAPBOX_STYLE_ID: "m-schwarzmann/cl124rh1p001914l9xpeklwkr",
+        LIGHT_MAPBOX_STYLE_ID: "mattries/cm1396inb01ex01qo3tb3a3d9",
+        DARK_MAPBOX_STYLE_ID: "mattries/cm138vdq801ge01pj6rn05ogm",
         THEMES: {
           light: {
             colors: {
