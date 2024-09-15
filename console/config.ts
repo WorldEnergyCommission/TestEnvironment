@@ -106,7 +106,7 @@ export interface WhitelabelConfig {
  * All supported whitelabel names
  */
 export enum WhitelabelName {
-  eneries = "eneries"
+  eneries = "eneries",
 }
 
 /**
@@ -272,7 +272,7 @@ const DEFAULT_WHITELABEL_CONFIG_VALUES = {
  * All supported whitelabel hosts
  */
 export enum WhitelabelHost {
-  eneries = "console.eneries.com"
+  eneries = "console.eneries.com",
 }
 
 /**
@@ -290,7 +290,7 @@ export function getWhitelabelNameForWhitelabelHost(host: WhitelabelHost): Whitel
  * All supported whitelabel apps
  */
 export enum WhitelabelApp {
-  eneries = "com.eneries.app"
+  eneries = "com.eneries.app",
 }
 
 /**
