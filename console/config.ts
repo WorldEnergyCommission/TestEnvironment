@@ -106,7 +106,7 @@ export interface WhitelabelConfig {
  * All supported whitelabel names
  */
 export enum WhitelabelName {
-  eneries = "eneries"
+  eneries = "eneries",
 }
 
 /**
@@ -272,7 +272,7 @@ const DEFAULT_WHITELABEL_CONFIG_VALUES = {
  * All supported whitelabel hosts
  */
 export enum WhitelabelHost {
-  eneries = "console.eneries.com"
+  eneries = "console.eneries.com",
 }
 
 /**
@@ -290,7 +290,7 @@ export function getWhitelabelNameForWhitelabelHost(host: WhitelabelHost): Whitel
  * All supported whitelabel apps
  */
 export enum WhitelabelApp {
-  eneries = "com.eneries.app"
+  eneries = "com.eneries.app",
 }
 
 /**
@@ -322,7 +322,7 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
         LOGIN_LOGO_DARK: "/images/eneriesLight.svg",
         LOGIN_BACKGROUND: "/images/login/background-eneries.jpg",
         REALM: "eneries",
-        LIGHT_MAPBOX_STYLE_ID: "mattries/cm1396inb01ex01qo3tb3a3d9",
+        LIGHT_MAPBOX_STYLE_ID: "mattries/cm13jok5s01jl01qk0e1x4sk7",
         DARK_MAPBOX_STYLE_ID: "mattries/cm138vdq801ge01pj6rn05ogm",
         THEMES: {
           light: {
