@@ -54,7 +54,7 @@ domains = []string{ ... }
 15. To add new Android and iOS icons and splash screens, run the script `scripts/generate_app_assets.py` and pass the
     parameter **--whitelabel {whitelabel_name}**.
 16. To use the new app icon in each iOS target, select the corresponding whitelabel target and change under
-    **General/App Icons and Launch ScreenProduct** the **App Icon** setting to **{whitelabel_name}AppIcon**.
+    **General/App Icons and Launch Screen** the **App Icon** setting to **{whitelabel_name}AppIcon**.
 17. To use the new splash screen in each iOS target, create a new launch screen file under **File -> New -> File... ->
     Launch Screen**, leave everything set to default, just add this launch screen to the corresponding whitelabel target
     and save it as `console/ios/App/App/LaunchScreens/{whitelabel_name}LaunchScreen.storyboard` and close the opened
