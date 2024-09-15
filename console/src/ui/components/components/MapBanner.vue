@@ -134,7 +134,7 @@ export default defineComponent({
       return {
         id: this.$vuetify.theme.current.dark ? envDarkMapboxStyleId : envLightMapboxStyleId,
         accessToken:
-          "pk.eyJ1IjoibS1zY2h3YXJ6bWFubiIsImEiOiJjbDEyMmtlYzcwN2RpM2pwNGJ3NDlzbWdtIn0.i6Talt_hNZNEITLOZhY2kA",
+          "pk.eyJ1IjoibWF0dHJpZXMiLCJhIjoiY20xMzhubWZvMTJubTJscjNydGIyMGl2diJ9.tqeXc85uAR_iM6zZFWN8og",
         tileSize: 256,
       };
     },
