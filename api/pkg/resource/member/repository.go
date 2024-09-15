@@ -35,7 +35,7 @@ const (
 	FROM public.user_role
 	JOIN  project on user_role.realm = project.realm 
 	WHERE project.id = $1 AND user_id = $2 AND role_id = 'adminUser';`
-	getMemberQuery        = baseGetMemberQuery + "AND user_id=$2" + baseGetMemberQueryPlatformAdmins
+	getMemberQuery        = baseGetMemberQuery + "AND user_id=$2 " + baseGetMemberQueryPlatformAdmins
 	listMemberQuery       = baseGetMemberQuery + baseGetMemberQueryPlatformAdmins
 	countQuery            = "SELECT COUNT(*) FROM project_user_role WHERE project_id=$1"
 	adminCountQuery       = "SELECT COUNT(*) FROM project_user_role WHERE project_id=$1 and role_id = 'projectAdmin'"
