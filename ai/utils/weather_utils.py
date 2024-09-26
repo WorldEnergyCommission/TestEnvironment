@@ -73,6 +73,8 @@ def get_nearest_site(long: float, lat: float) -> tuple[int, float, float]:
     """determines the nearest site for the specified longitude and latitude or 0 when no site has been found"""
 
     sites = list_weather_sites().json()["payload"]["solarforecast"]["sites"]
+    if sites == []:
+        sites = {}
     nearest_site, nearest_longitude, nearest_latitude, nearest_distance = 0, 0.0, 0.0, 5.0
 
     for site, attr in sites.items():
