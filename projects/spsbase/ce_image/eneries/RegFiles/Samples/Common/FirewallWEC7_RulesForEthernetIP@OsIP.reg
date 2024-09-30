@@ -1,0 +1,26 @@
+;-------------------------------------------------------------------------------
+; Rules needed for Ethernet IP if OS ip adress will be used
+;-------------------------------------------------------------------------------
+; * Block TCP RST from OS (IPv4)
+; * Block ICMP Destination Port Unreachable from OS (IPv4)
+;-------------------------------------------------------------------------------
+[HKEY_LOCAL_MACHINE\Comm\Tcpip\Firewall\Rules\BlockTcpRstOnCloseV4]
+    "layerKey"="{ac4a9833-f69d-4648-b261-6dc84835ef39}"
+    "actionType"=dword:5003
+    "actionCalloutKey"="{eda08606-2494-4d78-89bc-67837c03b969}"
+    "weightValue"=dword:5
+[HKEY_LOCAL_MACHINE\Comm\Tcpip\Firewall\Rules\BlockTcpRstOnCloseV4\Condition1]
+    "fieldKey"="{632ce23b-5167-435c-86d7-e903684aa80c}"
+    "matchType"=dword:8
+    "conditionType"=dword:3
+    "conditionValue"=dword:3
+
+[HKEY_LOCAL_MACHINE\Comm\Tcpip\Firewall\Rules\BlockIcmpErrorV4]
+    "layerKey"="{41390100-564c-4b32-bc1d-718048354d7c}"
+    "actionType"=dword:1001
+    "weightValue"=dword:5
+[HKEY_LOCAL_MACHINE\Comm\Tcpip\Firewall\Rules\BlockIcmpErrorV4\Condition1]
+    "fieldKey"="{0c1ba1af-5765-453f-af22-a8f791ac775b}"
+    "matchType"=dword:0
+    "conditionType"=dword:2
+    "conditionValue"=dword:3
