@@ -1,0 +1,759 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_MqttCommunicator_V5" Id="{40762d28-f95b-4a2a-b53c-7c6e4af647f6}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'hide_all_locals'}
+FUNCTION_BLOCK FB_MqttCommunicator_V5
+VAR_INPUT
+	bConnect      				: BOOL;															//If True then a connection to the cloud service is established
+	strAuthKey					: String (20);													//Customer Authentication Key, provided from EfficientIO
+	sUserName     				: STRING(36);     												//Username that was given in the cloud when the project was created
+    sUserPassword 				: STRING(36);   					 							//Password that was given in the cloud when the project was created
+	eSavePositionCertificate	: eSavePositionOnPLC;											//Save Position from the certificate (HardDisk\ or C:\) 
+	{attribute 'hide'}
+	time_HeartBeat_sec			: TIME:=T#60S;													// Heart Beat Time 					
+END_VAR
+VAR_OUTPUT
+	bConnected					: BOOL;															//True = PLC is Connected to the cloud service FALSE = Not connected
+	bError          			: BOOL;															//Error flag
+    hrErrorCode      			: HRESULT;														//Error code if bError is true
+    eConnectionState 			: ETcIotMqttClientState;										//State of the cloud connection
+	eErrorMessage_Out			: eErrorMessage;												//Error State from received Messege
+END_VAR
+VAR
+	(*-----------------------------------------------------Other-----------------------------------------------------------------------------------------*)
+	fbMqttClient    			: FB_IotMqttClient;												//Function mqtt client
+	fbJsonWrite					: FB_MessageWrite;												//Json Write function
+	fbJsonRead					: FB_MessageRead;												//Json Read function
+	fbGetTime					: NT_GetTime;													//System time
+	FNGetTimeDate				: F_TRIG;														//Intern falling edge
+	timError					: TON;															//Timer error to clear Message Queue
+    bSetParameter   			: BOOL := TRUE;													//Set new parameter
+	bClientIDCreated			: BOOL;															//True if the client id is generated
+	byLPCopyValuesGV_1			: BYTE;															//Loop to copy the data from global interface in the read Json function
+	udiLPCopyValuesGV_2			: UDINT;														//Loop to copy the data from global interface in the read Json function
+	sUserNameOld     			: STRING(36);    												//Old User name from the project
+    sUserPasswordOld 			: STRING(36);    												//Old Password for the project
+	sClientID					: STRING(255);													//Client ID
+	eSavePositionCertificateOld	: eSavePositionOnPLC;											//Old Position from the certificate (HardDisk\ or C:\) 
+	(*---------------------------------------------------published message---------------------------------------------------------------------------*)
+	arrBusySendigInterface		: ARRAY[1..10] OF BOOL;											//Array to save with what Send Interface it was sending the last message to enbale that after sending for new Message
+	arrTimoutSendinigInterface	: ARRAY[1..10] OF TON;											//Timer to Reset a Sending Interface after a Delay. That its not possible to block everytime the sending interface 
+   	bHBSending					: BOOL;															//Heart Beat Sending is in progress
+	byLPJsonSend				: BYTE;															//Loop to prepear data befor sending
+	byLPSendInterface			: BYTE;															//Loop for the send interface
+	uiStatePublish				: UINT;															//State maschine sending
+	sTopicPub   				: STRING(255);													//Topic publish
+    sPayloadPub 				: STRING(7000);													//Payload publish
+    fbTimerPub 					: TON;															//Timer to send the message to the broker after expiration of time 
+	fbTimerHB					: TON;															//Timer for sending the Heart Beat
+	(*---------------------------------------------------received message----------------------------------------------------------------------------*)
+    bSubscribed    				: BOOL;															//True if the connection to the broker is on
+	bUnsubscribe				: BOOL;															//True if the connection to the broker is off
+	bReadOut					: BOOL;															//Read out value from received buffer
+	bBusyWrite					: BOOL;															//Interface write is busy	
+	bErrorWrite					: BOOL;															//Interface write has a error
+	byCounterBusyErrorWrite		: BYTE;															//Counter to clear error or busy state
+    byLPWriteInterface			: BYTE;															//Loop for the write interface
+	sTopicSub      				: STRING(255);													//Topic subscrib
+	{attribute 'TcEncoding':='UTF-8'}
+  	sPayloadRcv    				: STRING(7000);													//Payload received
+  	fbMessageQueue 				: FB_IotMqttMessageQueue;										//Function message queuee
+    fbMessage      				: FB_IotMqttMessage;											//Function message
+	int_Target: INT;
+	str_sHostName				: STRING(40);
+	str_Certificate				: STRING(100);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Patrick Kolb
+//Company : EneRies
+//Date : 30.09.2024
+//Version : 1.0
+
+//With this function we can commiunicate over mqtt with the ventus cloud service to write data from plc to the cloud or receive data from cloud and write to plc
+//Max data from cloud to the plc is every 250MS 1 messege.
+//Data from plc to cloud is every 50MS if messages are in the buffer from the interface
+//So that the mqtt function starts, the scann function must be completed  
+
+// SL: V2: Added input time_HeartBeat_sec for adjustable heart beat
+// SL V2.1: Added input strAuthKey with related IF (Line 25-54. Changed str_sHostName and str_Certificate accordingly. Moved time_HeartBeat_sec from input to VAR 
+// SL V2.3: Added DEV MQTT target, changed ttime_HeartBeat_sec to input & hidden
+// SL V3: Addes BMS MQTT target
+// SL V4: Addes Effectas MQTT target
+
+//Create Client ID
+fbGetTime(START:= NOT bClientIDCreated,);
+	FNGetTimeDate(CLK:= fbGetTime.BUSY, Q=> );
+
+IF FNGetTimeDate.Q AND NOT fbGetTime.ERR THEN
+	sClientID := CONCAT(CONCAT(WORD_TO_STRING(fbGetTime.TIMESTR.wYear),WORD_TO_STRING(fbGetTime.TIMESTR.wMonth)),CONCAT(CONCAT(WORD_TO_STRING(fbGetTime.TIMESTR.wDay),WORD_TO_STRING(fbGetTime.TIMESTR.wDayOfWeek)),CONCAT(CONCAT(WORD_TO_STRING(fbGetTime.TIMESTR.wHour),WORD_TO_STRING(fbGetTime.TIMESTR.wMinute)),
+					CONCAT(CONCAT(WORD_TO_STRING(fbGetTime.TIMESTR.wSecond),WORD_TO_STRING(fbGetTime.TIMESTR.wMilliseconds)),TwinCAT_SystemInfoVarList._AppInfo.ProjectName))));
+		bClientIDCreated := TRUE;
+END_IF		
+
+
+// find out which designation String is selected
+IF strAuthKey = 'EIO08031879806' THEN			// EfficientIO
+	str_sHostName	:= 'mqtt.efficientio.com';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt.pem';		
+	END_IF	
+ELSIF strAuthKey = 'TSG88376368072' THEN		// TSG
+	str_sHostName	:= 'mqtt.tsg-portal.de';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt_tsg.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt_tsg.pem';	
+	END_IF	
+ELSIF strAuthKey = 'BE736352867778' THEN		//Burgenland Energie
+	str_sHostName	:= 'mqtt.leo-b2b.burgenlandenergie.at';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt_be.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt_be.pem';	
+	END_IF	
+ELSIF strAuthKey = 'PEN94103490274' THEN		//Peneder
+	str_sHostName	:= 'mqtt.connect.peneder.com';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt_peneder.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt_peneder.pem';	
+	END_IF	
+ELSIF strAuthKey = 'DEV01673741737' THEN		//DEV
+	str_sHostName	:= 'mqtt.efficientio.io';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt_dev.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt_dev.pem';	
+	END_IF
+ELSIF strAuthKey = 'BMS99299754422' THEN		//BMS
+	str_sHostName	:= 'mqtt.ems.bmsystems.at';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt_bms.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt_bms.pem';	
+	END_IF
+ELSIF strAuthKey = 'EFF49452273573' THEN		//Effectas
+	str_sHostName	:= 'mqtt.effectas.com';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt_effectas.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt_effectas.pem';	
+	END_IF
+ELSIF strAuthKey = 'ENE87365342998' THEN		//EneRies
+	str_sHostName	:= 'mqtt.eneries.com';
+	IF eSavePositionCertificate = eSavePositionOnPLC.ePostionHardDisk THEN 
+		str_Certificate      := 'Hard Disk\TwinCAT\3.1\Config\Certificates\mqtt_eneries.pem';
+	ELSIF eSavePositionCertificate = eSavePositionOnPLC.ePostionC THEN
+		str_Certificate      := 'C:\TwinCAT\3.1\Config\Certificates\mqtt_eneries.pem';	
+	END_IF
+END_IF
+
+IF bSetParameter AND bClientIDCreated THEN
+    bSetParameter               := FALSE;
+	fbMqttClient.sClientId		:= sClientID;
+    fbMqttClient.sHostName      := str_sHostName;
+    fbMqttClient.nHostPort      := 8883;
+  	fbMqttClient.sTopicPrefix   := ''; 
+	fbMqttClient.nKeepAlive     := 30; 
+	fbMqttClient.sUserName      := sUserName;
+	fbMqttClient.sUserPassword  := sUserPassword; 
+	//TLS
+	fbMqttClient.stTLS.sCA      := str_Certificate;
+
+	fbMqttClient.stTLS.sVersion	:= 'tlsv1.2';
+    fbMqttClient.ipMessageQueue := fbMessageQueue;
+END_IF
+
+//Config timer pub
+fbTimerPub.PT := T#25MS;
+
+//Change Inputs and disconnect connection
+IF sUserName <> sUserNameOld OR sUserPassword <> sUserPasswordOld OR eSavePositionCertificate <> eSavePositionCertificateOld THEN 
+	bConnect := FALSE; bSetParameter := TRUE; sUserNameOld := sUserName; sUserPasswordOld := sUserPassword; 
+		eSavePositionCertificateOld := eSavePositionCertificate;	
+END_IF 
+
+//Subscribe and Unsubscribe befor remove client connection
+IF NOT bConnect OR Lynus_Standards.GVL_Communicator.bBusyInfoAlVariables OR Lynus_Standards.GVL_Communicator.bErrorInfoAlVariables OR NOT Lynus_Standards.GVL_Communicator.bInfoAlVariablesOK THEN
+	IF NOT bUnsubscribe THEN
+		bUnsubscribe := fbMqttClient.Unsubscribe(sTopic:= sTopicSub);
+	END_IF
+		fbMqttClient.Execute(FALSE);
+			bSubscribed := FALSE;
+				//Stop ADS read/write when the connection to the broker is off and clear the received buffer
+				FOR byLPSendInterface := 1 TO 10 BY 1 DO 
+					Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPSendInterface].bBusy := FALSE;
+						Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPSendInterface].bErrorSending := TRUE;
+							arrBusySendigInterface[byLPSendInterface] := FALSE;
+				END_FOR
+					fbTimerPub(IN:= FALSE); bReadOut := FALSE; 	bBusyWrite := FALSE; bErrorWrite := FALSE;
+						sPayloadRcv := ''; uiStatePublish := 0;
+							fbMessageQueue.ResetQueue();										
+ELSE
+	IF NOT bSetParameter AND NOT Lynus_Standards.GVL_Communicator.bBusyInfoAlVariables AND NOT Lynus_Standards.GVL_Communicator.bErrorInfoAlVariables AND Lynus_Standards.GVL_Communicator.bInfoAlVariablesOK THEN
+		bUnsubscribe := FALSE;
+			fbMqttClient.Execute(TRUE);
+				//Start ADS read/write when the connection to the broker is on and no error
+				IF NOT fbMqttClient.bError AND fbMqttClient.bConnected THEN 
+					FOR byLPSendInterface := 1 TO 10 BY 1 DO 
+						Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPSendInterface].bErrorSending := FALSE;
+					END_FOR
+				ELSE 
+					//Stop read/write and clear the received buffer from old messages
+					FOR byLPSendInterface := 1 TO 10 BY 1 DO 
+						Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPSendInterface].bErrorSending := TRUE;
+							arrBusySendigInterface[byLPSendInterface] := FALSE;
+					END_FOR
+						bReadOut := FALSE; bBusyWrite := FALSE; bErrorWrite := FALSE;
+							sPayloadRcv := ''; uiStatePublish := 0;
+								fbMessageQueue.ResetQueue();
+				END_IF		
+	END_IF	
+END_IF
+
+(*----------------------------------------------------------------------------------Send Messeges---------------------------------------------------------------*)
+
+//Prepare Json Doc for sending
+time_HeartBeat_sec := LIMIT (T#5S,time_HeartBeat_sec,T#3600S);
+IF bConnected AND NOT bError AND NOT bHBSending THEN 
+	fbTimerHB.IN := TRUE; 
+ELSE 
+	fbTimerHB.IN := FALSE; 
+END_IF
+fbTimerHB(	IN:= , 
+			PT:= time_HeartBeat_sec, 
+			Q=> , 
+			ET=> );
+
+IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN	
+	FOR byLPJsonSend := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO 	
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].sFullSymbolName := Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].sFullSymbolName;
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].sSymbolUnit := Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].sSymbolUnit; 
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].sSymbolType := Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].sSymbolType;
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].arrValue := Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].arrValue; 	
+	END_FOR 	
+END_IF
+
+//Heart Beat			
+IF (fbTimerHB.Q AND uiStatePublish = 0) OR bHBSending THEN
+	fbJsonWrite.stInfoToConvertInMessage[1].sFullSymbolName := '';
+	fbJsonWrite.stInfoToConvertInMessage[1].sSymbolUnit := ''; 
+	fbJsonWrite.stInfoToConvertInMessage[1].sSymbolType := 'STRING(30)';
+	fbJsonWrite.stInfoToConvertInMessage[1].arrValue[1] := 'hb';
+	bHBSending := TRUE;
+	FOR byLPJsonSend := 2 TO 10 BY 1 DO
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].sFullSymbolName := '';
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].sSymbolUnit := ''; 
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].sSymbolType := '';
+		fbJsonWrite.stInfoToConvertInMessage[byLPJsonSend].arrValue[1] := '';
+	END_FOR
+END_IF  			
+
+IF uiStatePublish = 0 THEN 
+	fbJsonWrite.bEnable := TRUE; 
+END_IF
+			
+fbJsonWrite(stInfoToConvertInMessage:= , sMessageDocToWrite=> sPayloadPub, eErrorMessage_Out => ,);
+
+//Publish
+IF fbMqttClient.bConnected AND NOT bSetParameter THEN
+    IF NOT bSubscribed THEN
+        bSubscribed := fbMqttClient.Subscribe(sTopic:= sTopicSub, eQoS:=TcIotMqttQos.AtMostOnceDelivery);
+    END_IF
+ END_IF
+
+//Topics
+sTopicPub := CONCAT(CONCAT('projects/',sUserName),'/messages');
+sTopicSub := CONCAT(CONCAT('projects/',sUserName),'/messages2'); 
+ 
+CASE uiStatePublish OF
+	
+	0://Wait to publish
+		IF NOT bHBSending THEN
+			IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN
+				FOR byLPJsonSend := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO
+					IF Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].bBusy AND fbJsonWrite.bDone THEN 
+						uiStatePublish := 1; 
+						arrBusySendigInterface[byLPJsonSend] := TRUE;
+						fbJsonWrite.bEnable := FALSE;
+					END_IF
+				END_FOR
+			END_IF
+		END_IF
+		IF bHBSending AND fbJsonWrite.bDone THEN 
+			uiStatePublish := 2; 
+			fbJsonWrite.bEnable := FALSE; 
+		END_IF
+			
+	1://Publish the message
+		fbTimerPub(IN := TRUE);
+		IF fbTimerPub.Q THEN // publish new payload every 25MS if messages are in the buffer after ads read
+			fbTimerPub(IN := FALSE);
+				IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN
+					FOR byLPJsonSend := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO
+					//Mark the sendet variables on interfaces as done
+						IF arrBusySendigInterface[byLPJsonSend] THEN 
+							Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].bBusy := FALSE; 
+							arrBusySendigInterface[byLPJsonSend] := FALSE; 
+							Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].sSymbolType := '';	
+						END_IF
+					END_FOR
+				END_IF
+			IF NOT fbJsonWrite.bError THEN 
+				fbMqttClient.Publish(	sTopic:= sTopicPub, 
+										pPayload:= ADR(sPayloadPub), 
+										nPayloadSize:= LEN2(ADR(sPayloadPub)), 
+										eQoS:= TcIotMqttQos.AtMostOnceDelivery, 
+										bRetain:= FALSE, 
+										bQueue:= FALSE);	
+			END_IF
+				uiStatePublish := 0;
+			END_IF	
+		
+	2://Publish the HB Message
+		IF NOT fbJsonWrite.bError THEN
+			fbMqttClient.Publish(	sTopic:= sTopicPub, 
+									pPayload:= ADR(sPayloadPub), 
+									nPayloadSize:= LEN2(ADR(sPayloadPub)), 
+									eQoS:= TcIotMqttQos.AtMostOnceDelivery, 
+									bRetain:= FALSE, 
+									bQueue:= FALSE);
+		END_IF
+		bHBSending := FALSE;					
+		uiStatePublish := 0;
+
+END_CASE
+
+//Reset the Sending Interface after it is to long time busy to enable it for a new Messages from the Buffer
+FOR byLPJsonSend := 1 TO 10 BY 1 DO
+	IF Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].bBusy THEN 
+		arrTimoutSendinigInterface[byLPJsonSend].IN := TRUE; 
+	ELSE 
+		arrTimoutSendinigInterface[byLPJsonSend].IN := FALSE; 
+	END_IF
+	IF arrTimoutSendinigInterface[byLPJsonSend].Q THEN 
+		Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].bBusy := FALSE;
+		arrBusySendigInterface[byLPJsonSend] := FALSE;
+		Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueSendTo[byLPJsonSend].sSymbolType := '';	
+	END_IF    
+END_FOR
+
+arrTimoutSendinigInterface[1](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[2](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[3](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[4](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[5](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[6](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[7](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[8](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[9](IN:= , PT:= T#15S, Q=> , ET=> );
+arrTimoutSendinigInterface[10](IN:= , PT:= T#15S, Q=> , ET=> );
+
+(*----------------------------------------------------------------------------------Received Messeges---------------------------------------------------------------*)
+
+byCounterBusyErrorWrite := 0;
+
+//Busy write interface
+IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN 
+	FOR byLPWriteInterface := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO 
+		IF Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].bBusy THEN bBusyWrite := TRUE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].bBusy THEN byCounterBusyErrorWrite := byCounterBusyErrorWrite + 1; END_IF  
+	END_FOR 
+END_IF
+	IF byCounterBusyErrorWrite >= Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction THEN bBusyWrite := FALSE; END_IF
+
+byCounterBusyErrorWrite := 0;
+
+//Error on a write interface
+IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN 
+	FOR byLPWriteInterface := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO 
+		IF Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].bErrorWrite THEN bErrorWrite := TRUE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].bErrorWrite THEN byCounterBusyErrorWrite := byCounterBusyErrorWrite + 1; END_IF  
+	END_FOR 
+END_IF
+IF byCounterBusyErrorWrite >= Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction THEN 
+	bErrorWrite := FALSE; 
+END_IF 
+	 
+IF fbMqttClient.bConnected AND NOT fbMqttClient.bError AND NOT bBusyWrite AND NOT bErrorWrite THEN 
+	bReadOut := TRUE; 
+ELSE 
+	bReadOut := FALSE; 
+END_IF  
+
+IF (fbMessageQueue.nQueuedMessages > 0 AND bReadOut) OR	(fbMessageQueue.nQueuedMessages > 0 AND bReadOut AND (fbJsonRead.bError)) THEN
+		IF fbMessageQueue.Dequeue(fbMessage:=fbMessage) THEN
+			IF fbMessage.CompareTopic(sTopicSub) THEN
+				fbMessage.GetPayload(	pPayload:=ADR(sPayloadRcv), 
+										nPayloadSize:=SIZEOF(sPayloadRcv), 
+										bSetNullTermination:= TRUE);
+			END_IF
+		END_IF
+END_IF
+
+//Copy only as much data as you have to save resources
+IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN
+	FOR byLPCopyValuesGV_1 := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO
+		IF Lynus_Standards.GVL_Communicator.arrCounterVariableInArray[byLPCopyValuesGV_1] >= 1 AND Lynus_Standards.GVL_Communicator.arrCounterVariableInArray[byLPCopyValuesGV_1] <= Lynus_Standards.Constants_Communicator.udiArraySizeMarkedSymobls THEN
+			FOR udiLPCopyValuesGV_2 := 1 TO Lynus_Standards.GVL_Communicator.arrCounterVariableInArray[byLPCopyValuesGV_1] BY 1 DO  			
+				fbJsonRead.arrVarInfos[byLPCopyValuesGV_1,udiLPCopyValuesGV_2] := Lynus_Standards.GVL_Communicator.arrInterfaceInfoAlVariables[byLPCopyValuesGV_1,udiLPCopyValuesGV_2];	
+			END_FOR
+		END_IF 
+	END_FOR
+END_IF    
+
+fbJsonRead(
+	sReceivedMessageDoc:= sPayloadRcv, 
+	arrVarInfos:= , 
+	stInfoFromReceivedMessage=> , 
+	bError=> , 
+	bMuchMoreInformationReceived=> , 
+	eErrorMessage_Out=> );
+
+IF NOT fbJsonRead.bError AND bReadOut AND fbJsonRead.stInfoFromReceivedMessage.sSymbolType <> '' THEN
+	sPayloadRcv := '';
+	Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[fbJsonRead.stInfoFromReceivedMessage.byReadWriteArrayNumber].bWriteNewValue := TRUE;
+	Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[fbJsonRead.stInfoFromReceivedMessage.byReadWriteArrayNumber].sFullSymbolName := fbJsonRead.stInfoFromReceivedMessage.sFullSymbolName;
+	Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[fbJsonRead.stInfoFromReceivedMessage.byReadWriteArrayNumber].sSymbolType := fbJsonRead.stInfoFromReceivedMessage.sSymbolType;
+	Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[fbJsonRead.stInfoFromReceivedMessage.byReadWriteArrayNumber].arrValue := fbJsonRead.stInfoFromReceivedMessage.arrValue;	
+	Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[fbJsonRead.stInfoFromReceivedMessage.byReadWriteArrayNumber].uiSizeArray := fbJsonRead.stInfoFromReceivedMessage.uiSizeArray;
+END_IF
+IF fbJsonRead.bError THEN 
+	sPayloadRcv := ''; 
+END_IF
+	
+//Data to ADS Write
+IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN
+	FOR byLPWriteInterface := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO 
+		Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].udiCountBuffer := fbMessageQueue.nQueuedMessages; 
+	END_FOR
+ELSE
+	FOR byLPWriteInterface := 1 TO 10 BY 1 DO 
+		Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].udiCountBuffer := 0; 
+	END_FOR
+END_IF
+
+//Outputs
+bConnected := fbMqttClient.bConnected;
+hrErrorCode := fbMqttClient.hrErrorCode;
+eConnectionState := fbMqttClient.eConnectionState;
+
+//Data to send the connected Flag to the GVL to enable all other Lynus Devices on PLC
+Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := bConnected;	
+
+IF Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction >= 1 AND Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction <= 10 THEN
+	FOR byLPWriteInterface := 1 TO Lynus_Standards.GVL_Communicator.byNumberOfReadWriteFunction BY 1 DO 
+		Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].bSendFunctionOK := bConnected; 
+	END_FOR
+ELSE
+	FOR byLPWriteInterface := 1 TO 10 BY 1 DO 
+		Lynus_Standards.GVL_Communicator.arrInterfaceInfoValueWriteTo[byLPWriteInterface].bSendFunctionOK := FALSE;
+	END_FOR
+END_IF		
+		
+IF fbMqttClient.bError OR fbJsonRead.bError OR fbGetTime.ERR THEN 
+	bError := TRUE; 
+ELSE 
+	bError := FALSE; 
+END_IF	
+
+IF fbJsonRead.bError THEN 
+	eErrorMessage_Out := fbJsonRead.eErrorMessage_Out; 
+END_IF
+IF fbJsonWrite.bError THEN 
+	eErrorMessage_Out := fbJsonWrite.eErrorMessage_Out; 
+END_IF
+
+IF NOT fbJsonRead.bError AND NOT fbJsonWrite.bError THEN 
+	eErrorMessage_Out := eErrorMessage.eNoError; 
+END_IF  
+
+//Clear receive buffer, if the json string has the error too long
+timError(	IN:= fbJsonRead.bError AND NOT timError.Q, 
+			PT:= T#30S, 
+			Q=> , 
+			ET=> );
+	
+IF timError.Q THEN 
+	sPayloadRcv := '';
+	bReadOut := FALSE;
+	fbMessageQueue.ResetQueue();
+END_IF	]]></ST>
+    </Implementation>
+    <LineIds Name="FB_MqttCommunicator_V5">
+      <LineId Id="10" Count="2" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="939" Count="1" />
+      <LineId Id="1830" Count="0" />
+      <LineId Id="1829" Count="0" />
+      <LineId Id="1888" Count="0" />
+      <LineId Id="1060" Count="0" />
+      <LineId Id="2244" Count="0" />
+      <LineId Id="2005" Count="0" />
+      <LineId Id="2307" Count="0" />
+      <LineId Id="1061" Count="2" />
+      <LineId Id="1065" Count="0" />
+      <LineId Id="1006" Count="0" />
+      <LineId Id="1077" Count="0" />
+      <LineId Id="1068" Count="0" />
+      <LineId Id="1079" Count="0" />
+      <LineId Id="1067" Count="0" />
+      <LineId Id="1899" Count="1" />
+      <LineId Id="1893" Count="0" />
+      <LineId Id="1901" Count="1" />
+      <LineId Id="1911" Count="3" />
+      <LineId Id="1909" Count="0" />
+      <LineId Id="1904" Count="0" />
+      <LineId Id="1915" Count="4" />
+      <LineId Id="1906" Count="0" />
+      <LineId Id="1921" Count="12" />
+      <LineId Id="1920" Count="0" />
+      <LineId Id="1995" Count="5" />
+      <LineId Id="1903" Count="0" />
+      <LineId Id="2175" Count="5" />
+      <LineId Id="2001" Count="0" />
+      <LineId Id="2308" Count="6" />
+      <LineId Id="2440" Count="5" />
+      <LineId Id="2439" Count="0" />
+      <LineId Id="2181" Count="0" />
+      <LineId Id="1080" Count="0" />
+      <LineId Id="1066" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="1082" Count="0" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="45" Count="3" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="1005" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="428" Count="1" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="113" Count="1" />
+      <LineId Id="998" Count="0" />
+      <LineId Id="1000" Count="0" />
+      <LineId Id="999" Count="0" />
+      <LineId Id="53" Count="2" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="635" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="1480" Count="0" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="446" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="637" Count="0" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="639" Count="1" />
+      <LineId Id="1479" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="1742" Count="1" />
+      <LineId Id="165" Count="1" />
+      <LineId Id="1827" Count="0" />
+      <LineId Id="1256" Count="0" />
+      <LineId Id="2068" Count="1" />
+      <LineId Id="2071" Count="0" />
+      <LineId Id="2070" Count="0" />
+      <LineId Id="1253" Count="0" />
+      <LineId Id="2072" Count="2" />
+      <LineId Id="1483" Count="0" />
+      <LineId Id="1476" Count="0" />
+      <LineId Id="1257" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="169" Count="2" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="1484" Count="0" />
+      <LineId Id="1277" Count="0" />
+      <LineId Id="1269" Count="0" />
+      <LineId Id="1264" Count="0" />
+      <LineId Id="1274" Count="2" />
+      <LineId Id="1273" Count="0" />
+      <LineId Id="1282" Count="0" />
+      <LineId Id="1415" Count="0" />
+      <LineId Id="1418" Count="2" />
+      <LineId Id="1416" Count="1" />
+      <LineId Id="1272" Count="0" />
+      <LineId Id="1563" Count="1" />
+      <LineId Id="2075" Count="1" />
+      <LineId Id="1259" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="1499" Count="0" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="66" Count="3" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="1139" Count="0" />
+      <LineId Id="1136" Count="0" />
+      <LineId Id="1138" Count="0" />
+      <LineId Id="661" Count="0" />
+      <LineId Id="1137" Count="0" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="667" Count="0" />
+      <LineId Id="1278" Count="0" />
+      <LineId Id="1481" Count="0" />
+      <LineId Id="1421" Count="0" />
+      <LineId Id="668" Count="0" />
+      <LineId Id="1486" Count="0" />
+      <LineId Id="1488" Count="0" />
+      <LineId Id="1565" Count="0" />
+      <LineId Id="1487" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="1482" Count="0" />
+      <LineId Id="1279" Count="1" />
+      <LineId Id="2077" Count="2" />
+      <LineId Id="1353" Count="0" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="757" Count="1" />
+      <LineId Id="691" Count="0" />
+      <LineId Id="1492" Count="0" />
+      <LineId Id="1494" Count="0" />
+      <LineId Id="1506" Count="0" />
+      <LineId Id="1495" Count="0" />
+      <LineId Id="1502" Count="1" />
+      <LineId Id="1505" Count="0" />
+      <LineId Id="1504" Count="0" />
+      <LineId Id="1496" Count="0" />
+      <LineId Id="1493" Count="0" />
+      <LineId Id="1192" Count="0" />
+      <LineId Id="677" Count="1" />
+      <LineId Id="2081" Count="0" />
+      <LineId Id="679" Count="0" />
+      <LineId Id="2082" Count="1" />
+      <LineId Id="1193" Count="0" />
+      <LineId Id="681" Count="0" />
+      <LineId Id="674" Count="0" />
+      <LineId Id="1356" Count="0" />
+      <LineId Id="1284" Count="0" />
+      <LineId Id="1292" Count="0" />
+      <LineId Id="1287" Count="1" />
+      <LineId Id="2080" Count="0" />
+      <LineId Id="1285" Count="0" />
+      <LineId Id="2084" Count="1" />
+      <LineId Id="1293" Count="0" />
+      <LineId Id="1291" Count="0" />
+      <LineId Id="1290" Count="0" />
+      <LineId Id="666" Count="0" />
+      <LineId Id="665" Count="0" />
+      <LineId Id="1745" Count="3" />
+      <LineId Id="2086" Count="3" />
+      <LineId Id="1762" Count="0" />
+      <LineId Id="1764" Count="0" />
+      <LineId Id="1767" Count="0" />
+      <LineId Id="1765" Count="0" />
+      <LineId Id="1763" Count="0" />
+      <LineId Id="1749" Count="2" />
+      <LineId Id="1753" Count="8" />
+      <LineId Id="1568" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="1741" Count="0" />
+      <LineId Id="716" Count="0" />
+      <LineId Id="731" Count="0" />
+      <LineId Id="726" Count="0" />
+      <LineId Id="717" Count="0" />
+      <LineId Id="706" Count="1" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="713" Count="0" />
+      <LineId Id="712" Count="0" />
+      <LineId Id="732" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="715" Count="0" />
+      <LineId Id="718" Count="3" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="714" Count="0" />
+      <LineId Id="2090" Count="1" />
+      <LineId Id="708" Count="0" />
+      <LineId Id="494" Count="0" />
+      <LineId Id="2092" Count="3" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="445" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="2096" Count="1" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="769" Count="0" />
+      <LineId Id="767" Count="0" />
+      <LineId Id="806" Count="0" />
+      <LineId Id="809" Count="1" />
+      <LineId Id="814" Count="2" />
+      <LineId Id="813" Count="0" />
+      <LineId Id="811" Count="1" />
+      <LineId Id="1357" Count="0" />
+      <LineId Id="313" Count="5" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="730" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="332" Count="1" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="818" Count="0" />
+      <LineId Id="2098" Count="1" />
+      <LineId Id="1627" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="642" Count="1" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="645" Count="1" />
+      <LineId Id="649" Count="1" />
+      <LineId Id="647" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="2" />
+      <LineId Id="1683" Count="0" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="1684" Count="1" />
+      <LineId Id="653" Count="7" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="652" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="2100" Count="3" />
+      <LineId Id="1194" Count="1" />
+      <LineId Id="2104" Count="1" />
+      <LineId Id="1196" Count="0" />
+      <LineId Id="2106" Count="1" />
+      <LineId Id="1198" Count="0" />
+      <LineId Id="1197" Count="0" />
+      <LineId Id="2108" Count="1" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="475" Count="1" />
+      <LineId Id="2110" Count="2" />
+      <LineId Id="454" Count="1" />
+      <LineId Id="466" Count="1" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="465" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
