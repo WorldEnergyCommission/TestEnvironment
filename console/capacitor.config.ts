@@ -40,6 +40,7 @@ const config: CapacitorConfig = {
       androidScaleType: "CENTER_CROP",
     },
   },
+  zoomEnabled: false,
   android: {
     flavor: getFlavorConfiguration().flavor,
   },
