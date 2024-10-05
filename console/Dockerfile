@@ -1,7 +1,7 @@
 FROM node:18.18.2-alpine3.18
 RUN apk update && apk add --no-cache zip
 WORKDIR /app
-COPY console/package*.json console/yarn.lock ./
+COPY console/package*.json ./
 RUN npm ci
 COPY console .
 RUN npm run build
