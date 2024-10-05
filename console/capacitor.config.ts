@@ -23,6 +23,7 @@ function getFlavorConfiguration(): FlavorConfiguration {
 const config: CapacitorConfig = {
   webDir: "dist",
   server: {
+    androidScheme: "https",
     url: process.env.LOCAL_NETWORK_IP ? `http://${process.env.LOCAL_NETWORK_IP}:8080` : undefined,
     cleartext: !!process.env.LOCAL_NETWORK_IP,
   },
