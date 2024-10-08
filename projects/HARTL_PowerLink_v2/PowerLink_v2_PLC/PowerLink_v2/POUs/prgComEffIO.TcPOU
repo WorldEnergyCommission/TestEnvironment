@@ -3,7 +3,7 @@
   <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgComEffIO
 VAR
-	fbCom		: FB_MqttCommunicator_V2;
+	fbCom		: FB_MqttCommunicator_V5;
 	int_PowerLinkNumber: INT;
 END_VAR
 ]]></Declaration>
@@ -136,8 +136,9 @@ ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020005' THEN   // SSP #EIOPL020005 
 	prgPV.m_Hoymiles_DTU_ProS_PV_Inverter := FALSE;
     int_PowerLinkNumber :=8; 
 ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020006' THEN
-    fbCom.sUserName:= 'fc49cab8-c489-47bf-9a1e-01e802dbd72b'; 
-    fbCom.sUserPassword:= '5b8f0f3c-4fa8-4180-a0d2-8e94018e7d1c';
+    fbCom.strAuthKey := 'ENE87365342998';
+	fbCom.sUserName:= '5e40e5ac-3703-4f5f-9f52-ba03377c35fa'; 
+    fbCom.sUserPassword:= '59e5db9d-55c1-4ab1-9fa8-3a1a7815345b';
 	prgEM.uiCurrentTransformerRatioL1 := 100;
 	prgEM.uiCurrentTransformerRatioL2 := 100;
 	prgEM.uiCurrentTransformerRatioL3 := 100;	
@@ -550,7 +551,9 @@ ELSIF prg_ReadDeviceName.sDeviceName = 'EIOPL020028' THEN
       <LineId Id="282" Count="0" />
       <LineId Id="431" Count="0" />
       <LineId Id="283" Count="9" />
-      <LineId Id="294" Count="85" />
+      <LineId Id="294" Count="24" />
+      <LineId Id="853" Count="0" />
+      <LineId Id="319" Count="60" />
       <LineId Id="164" Count="0" />
       <LineId Id="184" Count="2" />
       <LineId Id="380" Count="7" />
