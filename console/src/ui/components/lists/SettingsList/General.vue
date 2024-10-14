@@ -376,13 +376,13 @@ const removeProject = async () => {
 
 /** Project Image */
 
-const fileObject = ref<File[]>([]);
+const fileObject = ref<File>(null);
 const handleProjectImageUpload = async () => {
   if (fileObject.value) {
-    if (fileObject.value[0].name.lastIndexOf(".") <= 0) {
+    if (fileObject.value.name.lastIndexOf(".") <= 0) {
       return;
     }
-    const result = await postAsset(fileObject.value[0]);
+    const result = await postAsset(fileObject.value);
     await updateProject({
       ...project.value,
       ...(result && {
@@ -398,13 +398,13 @@ const handleProjectImageUpload = async () => {
 
 /** Report image */
 
-const reportImageObject = ref<File[]>([]);
+const reportImageObject = ref<File>(null);
 const handleReportImageUpload = async () => {
   if (reportImageObject.value) {
-    if (reportImageObject.value[0].name.lastIndexOf(".") <= 0) {
+    if (reportImageObject.value.name.lastIndexOf(".") <= 0) {
       return;
     }
-    const result = await postAsset(reportImageObject.value[0]);
+    const result = await postAsset(reportImageObject.value);
     await updateProject({
       ...project.value,
       ...(result && {
