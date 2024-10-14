@@ -49,7 +49,7 @@ export default defineComponent({
     ProjectDocumentsList,
   },
   data() {
-    const file = [] as File[];
+    const file: File = null;
 
     return {
       file,
@@ -78,8 +78,8 @@ export default defineComponent({
      * Uploads files
      */
     async uploadProjectFiles() {
-      if (!this.file || this.file.length < 1) return;
-      const { name, size, type } = this.file[0];
+      if (!this.file) return;
+      const { name, size, type } = this.file;
 
       const res = await api.fetch(`/projects/${this.projectId}/documents`, "POST", {
         name,
@@ -90,7 +90,7 @@ export default defineComponent({
       Object.keys(res.form).forEach((key) => {
         formData.append(key, res.form[key]);
       });
-      formData.append("file", this.file[0]);
+      formData.append("file", this.file);
       this.uploading = true;
       await axios
         .post(`https://s3.${envDomain}/documents/`, formData, {
@@ -119,14 +119,13 @@ export default defineComponent({
       try {
         this.uploading = true;
         const FILE_CHUNK_SIZE = 10000000; // 10MB
-        const fileSize = this.file[0].size;
+        const fileSize = this.file.size;
         const NUM_CHUNKS = Math.floor(fileSize / FILE_CHUNK_SIZE) + 1;
 
         let start, end, blob;
 
-        const { name, size } = this.file[0];
-        const type =
-          this.file[0].type && this.file[0].type != "" ? this.file[0].type : "text/plain";
+        const { name, size } = this.file;
+        const type = this.file.type && this.file.type != "" ? this.file.type : "text/plain";
         const { upload_id, asset } = await api.fetch(
           `/projects/${this.projectId}/documents/multipart`,
           "POST",
@@ -142,7 +141,7 @@ export default defineComponent({
         for (let index = 1; index < NUM_CHUNKS + 1; index++) {
           start = (index - 1) * FILE_CHUNK_SIZE;
           end = index * FILE_CHUNK_SIZE;
-          blob = index < NUM_CHUNKS ? this.file[0].slice(start, end) : this.file[0].slice(start);
+          blob = index < NUM_CHUNKS ? this.file.slice(start, end) : this.file.slice(start);
 
           // (1) Generate presigned URL for each part
           const getUploadUrlResp = await api.fetch(
