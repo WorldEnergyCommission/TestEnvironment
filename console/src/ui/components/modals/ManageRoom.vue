@@ -85,7 +85,7 @@ export default defineComponent({
   data() {
     const icons: Icon[] = [];
     const iconObject = undefined as Icon | undefined;
-    const pictureObject: File[] = [];
+    const pictureObject: File = null;
     const dialog: boolean | undefined = false;
 
     return {
@@ -147,8 +147,9 @@ export default defineComponent({
       } as any;
 
       // save picture data in room object if a picture was selected when creating the room
-      if (this.radioGroup === 0 && this.pictureObject.length !== 0) {
-        args.cover = this.pictureObject[0];
+      if (this.radioGroup === 0 && this.pictureObject) {
+        console.log("HERE", this.pictureObject);
+        args.cover = this.pictureObject;
         args.coverType = "picture";
       }
       // save icon data in room object if icon was selected when creating the room
