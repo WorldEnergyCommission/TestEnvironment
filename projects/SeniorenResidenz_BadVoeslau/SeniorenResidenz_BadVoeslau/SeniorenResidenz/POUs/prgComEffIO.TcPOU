@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgComEffIO
 VAR
-	fbCom		: FB_MqttCommunicator;
+	fbCom		: FB_MqttCommunicator_V5;
 	
 	bHBTimmer: BOOL;							//{#lynus.ag#()}
 	bHBSending: BOOL;							//{#lynus.ag#()}
@@ -18,10 +18,11 @@ END_VAR
     <Implementation>
       <ST><![CDATA[fbCom(
 	bConnect:= TRUE, 
-//	strAuthkey := 'EIO08031879806',
-	sUserName:= '23350b8f-0dd0-45a1-81c8-ba17e8bb725d', 
-	sUserPassword:= '85980257-5407-453d-9391-9272ac26737f', 
+	strAuthkey := 'ENE87365342998',
+	sUserName:= 'e6a81f80-1adc-41aa-92f3-882fd2685fc6', 
+	sUserPassword:= 'c755b11c-3f9d-40f0-ac27-e35cd683b09b', 
 	eSavePositionCertificate:= eSavePositionOnPLC.ePostionC, 
+	time_HeartBeat_sec := T#1S,
 	bConnected=> , 
 	bError=> , 
 	hrErrorCode=> , 
@@ -51,7 +52,9 @@ time_Temp := fbCom.fbTimerHB.ET;
     <LineIds Name="prgComEffIO">
       <LineId Id="8" Count="1" />
       <LineId Id="21" Count="0" />
-      <LineId Id="10" Count="6" />
+      <LineId Id="10" Count="2" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="13" Count="3" />
       <LineId Id="5" Count="0" />
       <LineId Id="27" Count="1" />
       <LineId Id="30" Count="0" />
