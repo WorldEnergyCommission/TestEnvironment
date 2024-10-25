@@ -84,7 +84,7 @@ domains = []string{ ... }
 
 #### Keycloak & E-Mails
 
-27. Add and configure the corresponding Keycloak theme to the directory **keycloak/themes/{whitelabel_name}**, change the corresponding images in the Keycloak template (used for mail verification, for example)
+27. Add and configure the corresponding Keycloak theme to the directory **keycloak/themes/{whitelabel_name}**, change the corresponding images in the Keycloak template (used for mail verification, for example) - the relevant images to change are in **keycloak/themes/{whitelabel_name}/common/resources/img/** folder
 28. Write a Flyway script that inserts all the necessary **email templates** into the database. If you copy templates, make sure to edit the respective URLs, images and texts correctly. Currently these are:
     - Invite Template:
       These have to be in HTML format. `V18__project_invites.sql` contains examples.
