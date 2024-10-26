@@ -218,9 +218,9 @@ if ($result -eq 8) {
     # copy Files for EneRies
     Write-Output "copy Certificates..."
     Copy-Item "..\projects\spsbase\mqtt_eneries.pem" -Destination "${drive}:\TwinCat\3.1\Config\Certificates"
-    Copy-Item "..\projects\spsbase\CA.crt" -Destination "${drive}:\TwinCat\3.1\Target\Certificates"
-    Copy-Item "..\projects\spsbase\TwinCAT_XAR.crt" -Destination "${drive}:\TwinCat\3.1\Target\Certificates"
-    Copy-Item "..\projects\spsbase\TwinCAT_XAR.key" -Destination "${drive}:\TwinCat\3.1\Target\Certificates"
+    Copy-Item "..\projects\spsbase\CA_eneries.crt" -Destination "${drive}:\TwinCat\3.1\Target\Certificates"
+    Copy-Item "..\projects\spsbase\TwinCAT_XAR_eneries.crt" -Destination "${drive}:\TwinCat\3.1\Target\Certificates"
+    Copy-Item "..\projects\spsbase\TwinCAT_XAR_eneries.key" -Destination "${drive}:\TwinCat\3.1\Target\Certificates"
     Write-Output "Certificates copied"
 }
 
