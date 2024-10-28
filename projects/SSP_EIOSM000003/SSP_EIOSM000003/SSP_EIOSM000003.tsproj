@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.56">
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.62">
 	<DataTypes>
 		<DataType>
 			<Name GUID="{18071995-0000-0000-0000-002000000006}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..5] OF BIT</Name>
@@ -91,7 +91,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{038338A9-D021-4F46-8316-7FAEC67642FB}" Name="EIOSM000003" PrjFilePath="EIOSM000003\EIOSM000003.plcproj" TmcFilePath="EIOSM000003\EIOSM000003.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="EIOSM000003\EIOSM000003.tmc" TmcHash="{5100F4F0-EEF6-096A-56AE-9638F9C67745}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="EIOSM000003\EIOSM000003.tmc" TmcHash="{F8F250D7-EADA-19E8-4F73-7E6D8777E701}">
 					<Name>EIOSM000003 Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1" ContextId="1" AreaNo="16">
@@ -157,11 +157,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_L2_Status_Overcurrent</Name>
-							<Comment><![CDATA[ linked via attribute ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_341_L1_Basic_Voltage</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
@@ -190,6 +185,11 @@
 							<Name>prgHW.MDP5001_341_L1_Power_Power_Factor</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_341_L2_Status_Overcurrent</Name>
+							<Comment><![CDATA[ linked via attribute ]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_341_L2_Status_Inaccurate_Voltage</Name>
@@ -227,11 +227,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_L3_Status_Voltage_Sign_Bit</Name>
-							<Comment><![CDATA[ linked via attribute ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_341_L2_Basic_Voltage</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
@@ -260,6 +255,11 @@
 							<Name>prgHW.MDP5001_341_L2_Power_Power_Factor</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_341_L3_Status_Voltage_Sign_Bit</Name>
+							<Comment><![CDATA[ linked via attribute ]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_341_L3_Status_Overvoltage</Name>
@@ -317,11 +317,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_Total_Status_Frequency_Guard_Warning</Name>
-							<Comment><![CDATA[ linked via attribute ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_341_L3_Basic_Voltage</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
@@ -350,6 +345,11 @@
 							<Name>prgHW.MDP5001_341_L3_Power_Power_Factor</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_341_Total_Status_Frequency_Guard_Warning</Name>
+							<Comment><![CDATA[ linked via attribute ]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_341_Total_Status_Frequency_Guard_Error</Name>
@@ -407,11 +407,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_TxPDO_Toggle</Name>
-							<Comment><![CDATA[ linked via attribute ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_341_Total_Status_Power_Quality_Factor</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
@@ -432,12 +427,12 @@
 							<Type>REAL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Index_1_REAL</Name>
+							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_TxPDO_Toggle</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
-							<Type>UINT</Type>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Index_2_REAL</Name>
+							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Index_1_REAL</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>UINT</Type>
 						</Var>
@@ -447,9 +442,9 @@
 							<Type>REAL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Value_2_REAL</Name>
+							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Index_2_REAL</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
-							<Type>REAL</Type>
+							<Type>UINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Index_3_REAL</Name>
@@ -457,14 +452,19 @@
 							<Type>UINT</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Index_4_ULINT</Name>
+							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Value_2_REAL</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
-							<Type>UINT</Type>
+							<Type>REAL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Value_3_REAL</Name>
 							<Comment><![CDATA[ linked via attribute ]]></Comment>
 							<Type>REAL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_341_Total_Variant_Value_In_Index_4_ULINT</Name>
+							<Comment><![CDATA[ linked via attribute ]]></Comment>
+							<Type>UINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_341_DPM_Data_Data_1</Name>
@@ -629,10 +629,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I2_Channel_Inaccurate_Current_EM1</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Current_EM1</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -651,6 +647,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Active_Energy_EM1</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I2_Channel_Inaccurate_Current_EM1</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Current_Guard_Warning_EM1</Name>
@@ -697,10 +697,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I3_Channel_Overcurrent_EM1</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Current_EM1</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -719,6 +715,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Active_Energy_EM1</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I3_Channel_Overcurrent_EM1</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Inaccurate_Current_EM1</Name>
@@ -769,6 +769,18 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>prgHW.MDP5001_342_I4_Channel_Overcurrent_EM1</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I4_Channel_Inaccurate_Current_EM1</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I4_Channel_Current_Guard_Warning_EM1</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Current_EM1</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -787,18 +799,6 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Active_Energy_EM1</Name>
 							<Type>DINT</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I4_Channel_Overcurrent_EM1</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I4_Channel_Inaccurate_Current_EM1</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I4_Channel_Current_Guard_Warning_EM1</Name>
-							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Current_Guard_Error_EM1</Name>
@@ -849,10 +849,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I5_Channel_Current_Guard_Warning_EM1</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Current_EM1</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -871,6 +867,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Active_Energy_EM1</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I5_Channel_Current_Guard_Warning_EM1</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Current_Guard_Error_EM1</Name>
@@ -917,10 +917,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I6_Channel_Inaccurate_Current_EM1</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Current_EM1</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -939,6 +935,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Active_Energy_EM1</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I6_Channel_Inaccurate_Current_EM1</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Current_Guard_Warning_EM1</Name>
@@ -985,10 +985,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_EM1</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Current_EM1</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1009,11 +1005,16 @@
 							<Type>DINT</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_EM1</Name>
-							<Type>UINT</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_EM1</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_2_REAL_EM1</Name>
+							<Name>prgHW.MDP5001_342_I1_Channel_Overcurrent_EM2</Name>
+							<Comment><![CDATA[ IOs for EL3446-2]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_EM1</Name>
 							<Type>UINT</Type>
 						</Var>
 						<Var>
@@ -1021,29 +1022,28 @@
 							<Type>REAL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_2_REAL_EM1</Name>
-							<Type>REAL</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_2_REAL_EM1</Name>
+							<Type>UINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_3_REAL_EM1</Name>
 							<Type>UINT</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT_EM1</Name>
-							<Type>UINT</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_2_REAL_EM1</Name>
+							<Type>REAL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_3_REAL_EM1</Name>
 							<Type>REAL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_EM1</Name>
-							<Type>ULINT</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT_EM1</Name>
+							<Type>UINT</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I1_Channel_Overcurrent_EM2</Name>
-							<Comment><![CDATA[ IOs for EL3446-2]]></Comment>
-							<Type>BOOL</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_EM1</Name>
+							<Type>ULINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Inaccurate_Current_EM2</Name>
@@ -1102,10 +1102,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I2_Channel_Current_Guard_Warning_EM2</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Current_EM2</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1124,6 +1120,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Active_Energy_EM2</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I2_Channel_Current_Guard_Warning_EM2</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Current_Guard_Error_EM2</Name>
@@ -1170,10 +1170,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I3_Channel_Inaccurate_Current_EM2</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Current_EM2</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1192,6 +1188,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Active_Energy_EM2</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I3_Channel_Inaccurate_Current_EM2</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Current_Guard_Warning_EM2</Name>
@@ -1238,10 +1238,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I4_Channel_Overcurrent_EM2</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Current_EM2</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1260,6 +1256,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Active_Energy_EM2</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I4_Channel_Overcurrent_EM2</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Inaccurate_Current_EM2</Name>
@@ -1310,6 +1310,18 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>prgHW.MDP5001_342_I5_Channel_Overcurrent_EM2</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I5_Channel_Inaccurate_Current_EM2</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I5_Channel_Current_Guard_Warning_EM2</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Current_EM2</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1328,18 +1340,6 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Active_Energy_EM2</Name>
 							<Type>DINT</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I5_Channel_Overcurrent_EM2</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I5_Channel_Inaccurate_Current_EM2</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I5_Channel_Current_Guard_Warning_EM2</Name>
-							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Current_Guard_Error_EM2</Name>
@@ -1390,10 +1390,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I6_Channel_Current_Guard_Warning_EM2</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Current_EM2</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1412,6 +1408,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Active_Energy_EM2</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I6_Channel_Current_Guard_Warning_EM2</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Current_Guard_Error_EM2</Name>
@@ -1455,11 +1455,6 @@
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_EM2</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I1_Channel_Overcurrent_EM3</Name>
-							<Comment><![CDATA[ IOs for EL3446-3]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -1515,6 +1510,11 @@
 							<Type>ULINT</Type>
 						</Var>
 						<Var>
+							<Name>prgHW.MDP5001_342_I1_Channel_Overcurrent_EM3</Name>
+							<Comment><![CDATA[ IOs for EL3446-3]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Inaccurate_Current_EM3</Name>
 							<Type>BOOL</Type>
 						</Var>
@@ -1563,6 +1563,18 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>prgHW.MDP5001_342_I2_Channel_Overcurrent_EM3</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I2_Channel_Inaccurate_Current_EM3</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I2_Channel_Current_Guard_Warning_EM3</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Current_EM3</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1581,18 +1593,6 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Active_Energy_EM3</Name>
 							<Type>DINT</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I2_Channel_Overcurrent_EM3</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I2_Channel_Inaccurate_Current_EM3</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I2_Channel_Current_Guard_Warning_EM3</Name>
-							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Current_Guard_Error_EM3</Name>
@@ -1643,10 +1643,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I3_Channel_Current_Guard_Warning_EM3</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Current_EM3</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1665,6 +1661,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Active_Energy_EM3</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I3_Channel_Current_Guard_Warning_EM3</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Current_Guard_Error_EM3</Name>
@@ -1711,10 +1711,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I4_Channel_Inaccurate_Current_EM3</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Current_EM3</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1733,6 +1729,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Active_Energy_EM3</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I4_Channel_Inaccurate_Current_EM3</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Current_Guard_Warning_EM3</Name>
@@ -1779,10 +1779,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I5_Channel_Overcurrent_EM3</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Current_EM3</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1801,6 +1797,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Active_Energy_EM3</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I5_Channel_Overcurrent_EM3</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Inaccurate_Current_EM3</Name>
@@ -1851,6 +1851,18 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>prgHW.MDP5001_342_I6_Channel_Overcurrent_EM3</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I6_Channel_Inaccurate_Current_EM3</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I6_Channel_Current_Guard_Warning_EM3</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Current_EM3</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -1869,18 +1881,6 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Active_Energy_EM3</Name>
 							<Type>DINT</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I6_Channel_Overcurrent_EM3</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I6_Channel_Inaccurate_Current_EM3</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I6_Channel_Current_Guard_Warning_EM3</Name>
-							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Current_Guard_Error_EM3</Name>
@@ -1927,8 +1927,9 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_EM3</Name>
-							<Type>UINT</Type>
+							<Name>prgHW.MDP5001_342_I1_Channel_Overcurrent_EM4</Name>
+							<Comment><![CDATA[ IOs for EL3446-4]]></Comment>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Current_EM3</Name>
@@ -1951,37 +1952,36 @@
 							<Type>DINT</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_1_REAL_EM3</Name>
-							<Type>REAL</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_EM3</Name>
+							<Type>UINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_2_REAL_EM3</Name>
 							<Type>UINT</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_3_REAL_EM3</Name>
-							<Type>UINT</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_1_REAL_EM3</Name>
+							<Type>REAL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_2_REAL_EM3</Name>
 							<Type>REAL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_3_REAL_EM3</Name>
-							<Type>REAL</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_3_REAL_EM3</Name>
+							<Type>UINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_4_ULINT_EM3</Name>
 							<Type>UINT</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_EM3</Name>
-							<Type>ULINT</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_3_REAL_EM3</Name>
+							<Type>REAL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I1_Channel_Overcurrent_EM4</Name>
-							<Comment><![CDATA[ IOs for EL3446-4]]></Comment>
-							<Type>BOOL</Type>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_EM3</Name>
+							<Type>ULINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Inaccurate_Current_EM4</Name>
@@ -2032,10 +2032,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I2_Channel_Overcurrent_EM4</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Current_EM4</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -2054,6 +2050,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I1_Channel_Active_Energy_EM4</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I2_Channel_Overcurrent_EM4</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Inaccurate_Current_EM4</Name>
@@ -2104,6 +2104,18 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>prgHW.MDP5001_342_I3_Channel_Overcurrent_EM4</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I3_Channel_Inaccurate_Current_EM4</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I3_Channel_Current_Guard_Warning_EM4</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Current_EM4</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -2122,18 +2134,6 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I2_Channel_Active_Energy_EM4</Name>
 							<Type>DINT</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I3_Channel_Overcurrent_EM4</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I3_Channel_Inaccurate_Current_EM4</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_I3_Channel_Current_Guard_Warning_EM4</Name>
-							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Current_Guard_Error_EM4</Name>
@@ -2184,10 +2184,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I4_Channel_Current_Guard_Warning_EM4</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Current_EM4</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -2206,6 +2202,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I3_Channel_Active_Energy_EM4</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I4_Channel_Current_Guard_Warning_EM4</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Current_Guard_Error_EM4</Name>
@@ -2252,10 +2252,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I5_Channel_Inaccurate_Current_EM4</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Current_EM4</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -2274,6 +2270,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I4_Channel_Active_Energy_EM4</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I5_Channel_Inaccurate_Current_EM4</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Current_Guard_Warning_EM4</Name>
@@ -2320,10 +2320,6 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>prgHW.MDP5001_342_I6_Channel_Overcurrent_EM4</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Current_EM4</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -2342,6 +2338,10 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I5_Channel_Active_Energy_EM4</Name>
 							<Type>DINT</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_I6_Channel_Overcurrent_EM4</Name>
+							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Inaccurate_Current_EM4</Name>
@@ -2392,6 +2392,14 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_EM4</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_EM4</Name>
+							<Type>UINT</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Current_EM4</Name>
 							<Type>REAL</Type>
 						</Var>
@@ -2410,14 +2418,6 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_I6_Channel_Active_Energy_EM4</Name>
 							<Type>DINT</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_TxPDO_Toggle_EM4</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Index_1_REAL_EM4</Name>
-							<Type>UINT</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_1_REAL_EM4</Name>
@@ -2459,6 +2459,10 @@
 					<Vars VarGrpType="2" ContextId="1" AreaNo="17">
 						<Name>PlcTask Outputs</Name>
 						<Var>
+							<Name>prgHW.MDP5001_341_Total_Interval_Reset_Interval</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>prgHW.MDP5001_341_Total_Variant_Value_Out_Index_1_REAL</Name>
 							<Type>UINT</Type>
 						</Var>
@@ -2473,10 +2477,6 @@
 						<Var>
 							<Name>prgHW.MDP5001_341_Total_Variant_Value_Out_Index_4_ULINT</Name>
 							<Type>UINT</Type>
-						</Var>
-						<Var>
-							<Name>prgHW.MDP5001_341_Total_Interval_Reset_Interval</Name>
-							<Type>BOOL</Type>
 						</Var>
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_Out_Index_1_REAL_EM1</Name>
