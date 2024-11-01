@@ -107,6 +107,7 @@ export interface WhitelabelConfig {
  */
 export enum WhitelabelName {
   eneries = "eneries",
+  effectas = "effectas",
 }
 
 /**
@@ -273,6 +274,7 @@ const DEFAULT_WHITELABEL_CONFIG_VALUES = {
  */
 export enum WhitelabelHost {
   eneries = "console.eneries.com",
+  effectas = "console.effectas.com",
 }
 
 /**
@@ -291,6 +293,7 @@ export function getWhitelabelNameForWhitelabelHost(host: WhitelabelHost): Whitel
  */
 export enum WhitelabelApp {
   eneries = "com.eneries.app",
+  effectas = "com.effectas.app",
 }
 
 /**
@@ -300,6 +303,9 @@ export function getWhitelabelNameForWhitelabelApp(app: WhitelabelApp): Whitelabe
   switch (app) {
     case WhitelabelApp.eneries: {
       return WhitelabelName.eneries;
+    }
+    case WhitelabelApp.effectas: {
+      return WhitelabelName.effectas;
     }
   }
 }
@@ -381,6 +387,78 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
         SETTINGS_IMPRINT_URL: "https://www.eneries.com/impressum/",
         WORKBENCH_CATEGORIES: [...DEFAULT_WHITELABEL_CONFIG_VALUES.WORKBENCH_CATEGORIES],
         MPC_Devices_List: [...DEFAULT_WHITELABEL_CONFIG_VALUES.MPC_Devices_List, "LoadMonitor"],
+      };
+    }
+    case WhitelabelName.effectas: {
+      return {
+        ...DEFAULT_WHITELABEL_CONFIG_VALUES,
+        TITLE: "Effectas",
+        DOMAIN: "effectas.com",
+        MQTT_CERT_FILE_POSTFIX: "_effectas",
+        LOGO_URL_LIGHT: "/images/effectas_logo_white.svg",
+        LOGO_URL_DARK: "/images/effectas_logo_white.svg",
+        FAVICON_URL: "/images/effectas_favicon.ico",
+        LOGIN_LOGO: "/images/login/logo-effectas_dark.svg",
+        LOGIN_LOGO_DARK: "/images/login/logo-effectas_white.svg",
+        LOGIN_BACKGROUND: "/images/login/background-effectas.jpg",
+        REALM: "effectas",
+        LIGHT_MAPBOX_STYLE_ID: "mattries/cm1gs5k4v002j01qrfkmthrst",
+        DARK_MAPBOX_STYLE_ID: "mattries/cm1gs0edd002y01ph1wq38mrr",
+        THEMES: {
+          light: {
+            colors: {
+              primary: "#ffffff",
+              surface: "#ffffff",
+              sideBarColor: "#242a7e",
+              secondary: "#ffffff",
+              accent: "#FF8E01",
+              accentLight: "#ffa333",
+              lynusText: "#242a7e",
+              lynusTextInvert: "#ffffff",
+              lynusTextSidebar: "#ffffff",
+              projectBackground: "#ffffff",
+              deviceBackground: "#ffffff",
+              secondaryDeviceBackground: "#9d9d95",
+              dndItemBackground: "#ffffff",
+              inactiveItem: "#ffffff",
+              activeItem: "#ffaf4d",
+              primaryBorder: "#9d9d95",
+              error: "#E83B3A",
+              overlay: "#ffa333",
+              lynusIcon: "#242a7e",
+              green: "#30BF54",
+              borderColoring: "#FF8E01",
+            },
+          },
+          dark: {
+            colors: {
+              primary: "#242a7e",
+              surface: "#242a7e",
+              sideBarColor: "#242a7e",
+              secondary: "#242a7e",
+              accent: "#FF8E01",
+              accentLight: "#ffa333",
+              lynusText: "#FFFFFF",
+              lynusTextInvert: "#242a7e",
+              lynusTextSidebar: "#FFFFFF",
+              projectBackground: "#242a7e",
+              deviceBackground: "#242a7e",
+              secondaryDeviceBackground: "#9d9d95",
+              dndItemBackground: "#242a7e",
+              inactiveItem: "#242a7e",
+              activeItem: "#ffaf4d",
+              primaryBorder: "#9d9d95",
+              error: "#E83B3A",
+              overlay: "#ffa333",
+              lynusIcon: "#FF8E01",
+              green: "#30BF54",
+              borderColoring: "#FF8E01",
+            },
+          },
+        },
+        SETTINGS_MAIL_SUPPORT: "info@effectas.com",
+        SETTINGS_TERMS_URL: "https://www.effectas.com/",
+        SETTINGS_IMPRINT_URL: "https://effectas.com/imprint/",
       };
     }
   }

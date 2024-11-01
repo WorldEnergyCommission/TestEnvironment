@@ -38,7 +38,10 @@ const (
 
 var (
 	// new domains must be added to this slice
-	domains = []string{"console.eneries.com"}
+	domains = []string{
+	"console.eneries.com",
+	"console.effectas.com",
+	}
 	// the latest git sha, will be replaced on program start
 	latestSha = ""
 )
