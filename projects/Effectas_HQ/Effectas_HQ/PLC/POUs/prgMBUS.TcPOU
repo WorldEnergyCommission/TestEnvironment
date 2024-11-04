@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="prgMBUS" Id="{75a6bae3-d772-49c9-ad22-4c5eae811182}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMBUS
+VAR
+	fbMBusKL6781 		: FB_MBUSKL6781;        // Haupt-Funktionsbaustein für die M-Bus-Kommunikation
+	stComIn    AT %I*	: ST_KL6781inData22B;  // Eingabestruktur für KL6781
+	stComOut   AT %Q*	: ST_KL6781outData22B; // Ausgabestruktur für KL6781
+	stCom				: ST_MBUS_Communication; // Kommunikationsstruktur für alle M-Bus-Geräte
+	fb_Mbus_Heat		: FB_MBUS_General_Heat; // Funktionsbaustein für Wasserzähler
+	fbmbusScan			: FB_MBUS_Scan;        // Funktionsbaustein zum Scannen der Geräte
+	m_StartScan			: BOOL;                 // Variable, um den Scanvorgang zu starten
+	FB_ChangeAdress 	: FB_MBUS_ChangeAdr;    // Funktionsbaustein zum Ändern der Adresse
+	m_Start 			: BOOL;                 // Variable zum Starten der Kommunikation mit dem Wasserzähler
+	usi_Old 			: USINT;                // Alte Adresse für Adressänderung
+	usi_New	 			: USINT;                // Neue Adresse für Adressänderung
+	m_Start_Change		: BOOL;                 // Variable zum Starten der Adressänderung
+	m_Disable_Change 	: BOOL;                 // Deaktiviert die Adressänderung
+	usi_ScannedAddress  : USINT;                // Gefundene Adresse nach dem Scan
+	bDataReady          : BOOL;    				// Flag, dass die Daten bereit sind
+	
+	lrPowerKW_MBUS		:REAL;
+	lrEnergyKWh_MBUS	:REAL;
+END_VAR
+VAR PERSISTENT
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Initialisierung des M-Bus-Kommunikationsbausteins
+fbMBusKL6781(
+	usiRetries:= 3,                    // Anzahl der Wiederholungen bei Fehler
+	bStart:= TRUE,                     // Startet den M-Bus
+	bDisabled:= FALSE,                 // Deaktiviert den M-Bus nicht
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	stComIn:= stComIn, 
+	stComOut:= stComOut, 
+	stCom:= stCom
+);
+
+// Kommunikation mit dem Wärmezähler starten
+fb_Mbus_Heat(
+	usiAddress:= usi_ScannedAddress,      // Verwendet die gescannte Adresse des Wärmezählers
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud9600, 
+	bStart:= m_Start,                     // Startet die Kommunikation mit dem Wärmezähler
+	tMinSendTime:= T#10S, 
+	bDisabled:= FALSE,                    // Wärmezähler-Kommunikation aktivieren
+	bBusy=> , 
+	bReady=> bDataReady,                  // Status, ob Daten bereit sind
+	bError=> , 
+	eError=> , 
+	stCom:= stCom
+);
+
+// Scannen der M-Bus-Geräte
+fbmbusScan(
+	bStart:= m_StartScan, 
+	bStop:= NOT m_StartScan, 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud9600, 
+	bDisabled:= FALSE, 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	usiAddress=> usi_ScannedAddress,   // Gefundene Adresse wird hier gespeichert
+	usiCount=> , 
+	arrDevice=> , 
+	stCom:= stCom
+);
+
+// Daten auslesen, wenn bereit korrektur WORDTOREAL
+IF bDataReady THEN
+    lrPowerKW_MBUS 		:= WORD_TO_REAL(fb_Mbus_Heat.stPower);   			// Aktuelle Leistung in kW
+    lrEnergyKWh_MBUS 	:= WORD_TO_REAL(fb_Mbus_Heat.stEnergy); 				// Gesamtenergie in kWh
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMBUS">
+      <LineId Id="364" Count="13" />
+      <LineId Id="420" Count="11" />
+      <LineId Id="390" Count="16" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="433" Count="1" />
+      <LineId Id="444" Count="0" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="348" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
