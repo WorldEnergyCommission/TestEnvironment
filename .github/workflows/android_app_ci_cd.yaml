@@ -99,4 +99,4 @@ jobs:
           fileDir: "."
           encodedString: ${{ env[format('{0}_SERVICE_ACCOUNT_JSON_BASE64', steps.string.outputs.uppercase)] }}
       - name: deploy to Play Store
-        run: fastlane supply --aab './app-${{ matrix.flavor }}-release-signed.aab' --json_key '${{ steps.serviceAccountJsonFileDecode.outputs.filePath }}' --package_name '${{ env[format('{0}_APP_NAME', steps.string.outputs.uppercase)] }}' --track 'internal' --release_status 'draft'
+        run: fastlane supply --aab './app-${{ matrix.flavor }}-release-signed.aab' --json_key '${{ steps.serviceAccountJsonFileDecode.outputs.filePath }}' --package_name '${{ env[format('{0}_ANDROID_APP_NAME', steps.string.outputs.uppercase)] }}' --track 'internal' --release_status 'draft'
