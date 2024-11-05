@@ -395,9 +395,9 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
     case WhitelabelName.effectas: {
       return {
         ...DEFAULT_WHITELABEL_CONFIG_VALUES,
-        TITLE: "Effectas",
-        DOMAIN: "effectas.com",
-        MQTT_CERT_FILE_POSTFIX: "_effectas",
+        TITLE: "EFFECTAS",
+        DOMAIN: "eneries.com",
+        MQTT_CERT_FILE_POSTFIX: "_eneries",
         LOGO_URL_LIGHT: "/images/effectas_logo_white.svg",
         LOGO_URL_DARK: "/images/effectas_logo_white.svg",
         FAVICON_URL: "/images/effectas_favicon.ico",
