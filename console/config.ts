@@ -285,6 +285,9 @@ export function getWhitelabelNameForWhitelabelHost(host: WhitelabelHost): Whitel
     case WhitelabelHost.eneries: {
       return WhitelabelName.eneries;
     }
+    case WhitelabelHost.effectas: {
+      return WhitelabelName.effectas;
+    }
   }
 }
 
