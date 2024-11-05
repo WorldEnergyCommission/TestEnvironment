@@ -295,7 +295,8 @@ export function getWhitelabelNameForWhitelabelHost(host: WhitelabelHost): Whitel
  * All supported whitelabel apps
  */
 export enum WhitelabelApp {
-  eneries = "com.eneries.app",
+  ios_eneries = "com.eneries.app",
+  android_eneries = "android.eneries.app",
   effectas = "com.effectas.app",
 }
 
@@ -304,7 +305,10 @@ export enum WhitelabelApp {
  */
 export function getWhitelabelNameForWhitelabelApp(app: WhitelabelApp): WhitelabelName {
   switch (app) {
-    case WhitelabelApp.eneries: {
+    case WhitelabelApp.ios_eneries: {
+      return WhitelabelName.eneries;
+    }
+    case WhitelabelApp.android_eneries: {
       return WhitelabelName.eneries;
     }
     case WhitelabelApp.effectas: {
