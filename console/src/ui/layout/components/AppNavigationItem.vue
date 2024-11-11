@@ -48,12 +48,15 @@ const iconSizes = computed(() => {
 });
 
 const location = computed(() => {
+  let path;
   if (!props.item.pathName && !props.item.path) {
-    return undefined;
+    path = undefined;
+  } else {
+    path = props.item.pathName
+      ? { name: props.item.pathName, params: { id: route.params.id }, force: true }
+      : { path: props.item.path, force: true };
   }
-  return props.item.pathName
-    ? { name: props.item.pathName, params: { id: route.params.id } }
-    : props.item.path;
+  return path;
 });
 
 const iconColor = computed(() => {
