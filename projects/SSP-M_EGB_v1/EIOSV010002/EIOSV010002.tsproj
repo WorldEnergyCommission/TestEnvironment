@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.56">
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.62">
 	<Translations>
 		<Text TxtId="Internal error.">
 			<Text LcId="1031"><![CDATA[Interner Fehler.]]></Text>
@@ -376,6 +376,15 @@
 			<ArrayInfo>
 				<LBound>0</LBound>
 				<Elements>6</Elements>
+			</ArrayInfo>
+		</DataType>
+		<DataType>
+			<Name GUID="{18071995-0000-0000-0000-000700000001}" IecBaseType="true" AutoDeleteType="true">ARRAY [0..0] OF OTCID</Name>
+			<BitSize>32</BitSize>
+			<BaseType GUID="{18071995-0000-0000-0000-00000000000F}">OTCID</BaseType>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>1</Elements>
 			</ArrayInfo>
 		</DataType>
 		<DataType>
@@ -6996,7 +7005,7 @@
 			</Method>
 		</DataType>
 		<DataType>
-			<Name GUID="{CBABCE69-289D-4490-A8FE-F81B1741D1A1}" TcBaseType="true" CName="TcEventArgumentType*">TcEventArgumentType</Name>
+			<Name GUID="{A2D6ACE7-8C54-4AB6-8BF8-E2C54DC040A0}" TcBaseType="true" CName="TcEventArgumentType*">TcEventArgumentType</Name>
 			<BitSize>16</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000006}">INT</BaseType>
 			<EnumInfo>
@@ -7048,11 +7057,11 @@
 				<Enum>11</Enum>
 			</EnumInfo>
 			<EnumInfo>
-				<Text><![CDATA[Char]]></Text>
+				<Text><![CDATA[CharType]]></Text>
 				<Enum>12</Enum>
 			</EnumInfo>
 			<EnumInfo>
-				<Text><![CDATA[WChar]]></Text>
+				<Text><![CDATA[WCharType]]></Text>
 				<Enum>13</Enum>
 			</EnumInfo>
 			<EnumInfo>
@@ -7098,6 +7107,7 @@
 			<Hides>
 				<Hide GUID="{A1C88D80-AC7F-419E-838D-233C8A8C0184}"/>
 				<Hide GUID="{939C2FD3-7468-4E5B-AA5D-A64A143B36A8}"/>
+				<Hide GUID="{CBABCE69-289D-4490-A8FE-F81B1741D1A1}"/>
 			</Hides>
 		</DataType>
 		<DataType>
@@ -7120,7 +7130,7 @@
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>eType</Name>
-					<Type GUID="{CBABCE69-289D-4490-A8FE-F81B1741D1A1}">TcEventArgumentType</Type>
+					<Type GUID="{A2D6ACE7-8C54-4AB6-8BF8-E2C54DC040A0}">TcEventArgumentType</Type>
 					<BitSize>16</BitSize>
 				</Parameter>
 				<Parameter>
@@ -7145,7 +7155,7 @@
 				</Parameter>
 				<Parameter>
 					<Name>eType</Name>
-					<Type GUID="{CBABCE69-289D-4490-A8FE-F81B1741D1A1}" ReferenceTo="true">TcEventArgumentType</Type>
+					<Type GUID="{A2D6ACE7-8C54-4AB6-8BF8-E2C54DC040A0}" ReferenceTo="true">TcEventArgumentType</Type>
 					<BitSize X64="64">32</BitSize>
 				</Parameter>
 				<Parameter>
@@ -7165,7 +7175,7 @@
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>pArgumentTypes</Name>
-					<Type GUID="{CBABCE69-289D-4490-A8FE-F81B1741D1A1}" PointerTo="1">TcEventArgumentType</Type>
+					<Type GUID="{A2D6ACE7-8C54-4AB6-8BF8-E2C54DC040A0}" PointerTo="1">TcEventArgumentType</Type>
 					<BitSize X64="64">32</BitSize>
 				</Parameter>
 			</Method>
@@ -14724,7 +14734,7 @@
 			</Hides>
 		</DataType>
 	</DataTypes>
-	<Project ProjectGUID="{F661834F-7E31-41F4-A6CA-1E27A561CC70}" TargetNetId="5.146.125.41.1.1" ShowHideConfigurations="#x3c6">
+	<Project ProjectGUID="{F661834F-7E31-41F4-A6CA-1E27A561CC70}" TargetNetId="5.146.125.125.1.1" ShowHideConfigurations="#x3c6">
 		<System>
 			<Settings RouterMemory="67108864"/>
 			<Tasks>
@@ -14859,6 +14869,12 @@
 								<BitSize>96</BitSize>
 								<BaseType GUID="{18071995-0000-0000-0000-000400000006}">ARRAY [0..5] OF WORD</BaseType>
 								<PTCID>#x0850801c</PTCID>
+							</Parameter>
+							<Parameter ReadOnly="true">
+								<Name>Mapping OIDs</Name>
+								<BitSize>32</BitSize>
+								<BaseType GUID="{18071995-0000-0000-0000-000700000001}">ARRAY [0..0] OF OTCID</BaseType>
+								<PTCID>#x08500006</PTCID>
 							</Parameter>
 						</Parameters>
 						<DataAreas>
@@ -26197,24 +26213,72 @@
 								<EnumText>TRUE</EnumText>
 							</Value>
 							<Value>
-								<Name>Task Module OIDs</Name>
-								<Data>012050080220500803205008</Data>
+								<Name>Task Module OIDs[0]</Name>
+								<Value>139468801</Value>
 							</Value>
 							<Value>
-								<Name>Task Module SortOrders</Name>
-								<Data>000000000000000000000000</Data>
+								<Name>Task Module OIDs[1]</Name>
+								<Value>139468802</Value>
+							</Value>
+							<Value>
+								<Name>Task Module OIDs[2]</Name>
+								<Value>139468803</Value>
+							</Value>
+							<Value>
+								<Name>Task Module SortOrders[0]</Name>
+								<Value>0</Value>
+							</Value>
+							<Value>
+								<Name>Task Module SortOrders[1]</Name>
+								<Value>0</Value>
+							</Value>
+							<Value>
+								<Name>Task Module SortOrders[2]</Name>
+								<Value>0</Value>
 							</Value>
 							<Value>
 								<Name>Task Module Names</Name>
 								<Data>466173745461736b00536c6f775461736b004d6964646c655461736b0000</Data>
 							</Value>
 							<Value>
-								<Name>Task Caller OIDs</Name>
-								<Data>200001024000010230000102</Data>
+								<Name>Task Caller OIDs[0]</Name>
+								<Value>33620000</Value>
 							</Value>
 							<Value>
-								<Name>Task Module ADI Indices</Name>
-								<Data>ffffffffffffffff20002100</Data>
+								<Name>Task Caller OIDs[1]</Name>
+								<Value>33620032</Value>
+							</Value>
+							<Value>
+								<Name>Task Caller OIDs[2]</Name>
+								<Value>33620016</Value>
+							</Value>
+							<Value>
+								<Name>Task Module ADI Indices[0]</Name>
+								<Value>65535</Value>
+							</Value>
+							<Value>
+								<Name>Task Module ADI Indices[1]</Name>
+								<Value>65535</Value>
+							</Value>
+							<Value>
+								<Name>Task Module ADI Indices[2]</Name>
+								<Value>65535</Value>
+							</Value>
+							<Value>
+								<Name>Task Module ADI Indices[3]</Name>
+								<Value>65535</Value>
+							</Value>
+							<Value>
+								<Name>Task Module ADI Indices[4]</Name>
+								<Value>32</Value>
+							</Value>
+							<Value>
+								<Name>Task Module ADI Indices[5]</Name>
+								<Value>33</Value>
+							</Value>
+							<Value>
+								<Name>Mapping OIDs</Name>
+								<Value>33751056</Value>
 							</Value>
 						</ParameterValues>
 					</TmcDesc>
@@ -27113,6 +27177,7 @@ Bit 15 = Acyc. Function atcive (e.g. K-Bus Reset)
 		</Io>
 	</Project>
 	<Mappings>
+		<MappingInfo Identifier="{00000000-2003-0850-0220-500810000403}" Id="#x02030010"/>
 		<OwnerA Name="TIPC^SSP-M_EGB_v1^SSP-M_EGB_v1 Instance">
 			<OwnerB Name="TIID^Device 2 (CX-BK)^Box 1 (CX-BK)">
 				<Link VarA="MiddleTask Inputs^prgEM.fbEM1.fbKL3403.byStateCH1" VarB="Term 2 (KL3403)^Channel 1^State"/>
