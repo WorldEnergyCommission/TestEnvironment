@@ -11,7 +11,7 @@ VAR
 	fbmbusScan			: FB_MBUS_Scan;        // Funktionsbaustein zum Scannen der Geräte
 	m_StartScan			: BOOL;                 // Variable, um den Scanvorgang zu starten
 	FB_ChangeAdress 	: FB_MBUS_ChangeAdr;    // Funktionsbaustein zum Ändern der Adresse
-	m_Start 			: BOOL;                 // Variable zum Starten der Kommunikation mit dem Wasserzähler
+	m_Start 			: BOOL;                 // Variable zum Starten der Kommunikation mit dem Wärmezähler
 	usi_Old 			: USINT;                // Alte Adresse für Adressänderung
 	usi_New	 			: USINT;                // Neue Adresse für Adressänderung
 	m_Start_Change		: BOOL;                 // Variable zum Starten der Adressänderung
@@ -71,11 +71,12 @@ fbmbusScan(
 );
 
 // Daten auslesen, wenn bereit korrektur WORDTOREAL
+(*
 IF bDataReady THEN
     lrPowerKW_MBUS 		:= WORD_TO_REAL(fb_Mbus_Heat.stPower);   			// Aktuelle Leistung in kW
     lrEnergyKWh_MBUS 	:= WORD_TO_REAL(fb_Mbus_Heat.stEnergy); 				// Gesamtenergie in kWh
 END_IF
-
+*)
 ]]></ST>
     </Implementation>
     <LineIds Name="prgMBUS">
@@ -83,7 +84,9 @@ END_IF
       <LineId Id="420" Count="11" />
       <LineId Id="390" Count="16" />
       <LineId Id="437" Count="0" />
-      <LineId Id="433" Count="1" />
+      <LineId Id="433" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="434" Count="0" />
       <LineId Id="444" Count="0" />
       <LineId Id="443" Count="0" />
       <LineId Id="442" Count="0" />
