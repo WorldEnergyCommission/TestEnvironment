@@ -115,8 +115,6 @@ func InitializeBaseUrlClientIdAndSubscriptionKey(signalrConnectionString string)
 		return errors.New("invalid oqdo connection string")
 	}
 	baseUrl, clientId, subscriptionKey = parts[0], parts[1], parts[2]
-	// Log the extracted components
-	l.Info().Str("clientId", clientId).Msg("Extracted OQDO connection string component.")
 	return nil
 }
 
