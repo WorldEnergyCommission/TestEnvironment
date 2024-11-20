@@ -106,6 +106,18 @@ func main() {
 	}(mqttClient)
 
 	l.Info().Msg("Starting Eventwatcher ...")
+	
+	// Log the content of OQDO_SIGNALR_CONNECTION_STRING
+	if strings.TrimSpace(envOqdoSignalrConnectionString) == "" {
+		l.Warn().Msg("The environment variable OQDO_SIGNALR_CONNECTION_STRING is not set or is empty.")
+	} else {
+		// Obfuscate sensitive parts if needed
+		obfuscatedSignalrString := envOqdoSignalrConnectionString
+		if len(envOqdoSignalrConnectionString) > 10 {
+			obfuscatedSignalrString = envOqdoSignalrConnectionString[:10] + "..."
+		}
+		l.Info().Str("OQDO_SIGNALR_CONNECTION_STRING", obfuscatedSignalrString).Msg("Loaded SignalR connection string.")
+	}
 
 	// connect to the oeamtc azure event hub if the environment variable contains information
 	if strings.TrimSpace(envOeamtcEventHubConnectionString) != "" {
