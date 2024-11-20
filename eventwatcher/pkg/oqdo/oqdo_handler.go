@@ -116,11 +116,7 @@ func InitializeBaseUrlClientIdAndSubscriptionKey(signalrConnectionString string)
 	}
 	baseUrl, clientId, subscriptionKey = parts[0], parts[1], parts[2]
 	// Log the extracted components
-	l.Info().
-        Str("baseUrl", baseUrl).
-        Str("clientId", clientId).
-        Str("subscriptionKey", subscriptionKey). 
-        Msg("Extracted OQDO connection string components.")
+	l.Info().Str("clientId", clientId).Msg("Extracted OQDO connection string component.")
 	return nil
 }
 
