@@ -119,7 +119,7 @@ func InitializeBaseUrlClientIdAndSubscriptionKey(signalrConnectionString string)
 	l.Info().
         Str("baseUrl", baseUrl).
         Str("clientId", clientId).
-        Str("subscriptionKey", subscriptionKey[:3]+"..."). // Obfuscate for security
+        Str("subscriptionKey", subscriptionKey). 
         Msg("Extracted OQDO connection string components.")
 	return nil
 }
