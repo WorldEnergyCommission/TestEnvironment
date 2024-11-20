@@ -142,16 +142,6 @@ func ConnectToSignalr() (signalr.Connection, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	signalrConnectionString := os.Getenv("OQDO_SIGNALR_CONNECTION_STRING")
-	l := utils.GetLogger()
-
-	if signalrConnectionString == "" {
-		l.Warn().Msg("The environment variable OQDO_SIGNALR_CONNECTION_STRING is not set or is empty.")
-	} else {
-		l.Info().Str("signalrConnectionString", signalrConnectionString).Msg("Loaded SignalR connection string.")
-	}
-	
 	return conn, nil
 }
 
