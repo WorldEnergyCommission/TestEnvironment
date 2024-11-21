@@ -163,9 +163,9 @@ func ConvertEventToCreateOptionsSlice(event ValueChangeEvent) ([]measurement.Cre
 	if !ok {
 		l := utils.GetLogger()
 		l.Debug().Str("key", fmt.Sprintf("%s.%s.%s", event.ResourceGroupId.String(), event.ObjectId.String(), event.PropertyName)).Msg("Cound not find oqdo import mapping")
-		l.Info().Str(ResourceGroupId).Msg("ResourceGroupID.")
-		l.Info().Str(ObjectId).Msg("ObjectId.")
-		l.Info().Str(PropertyName).Msg("PropertyName.")
+		l.Info().Str("ResourceGroupID", event.ResourceGroupId).Msg("ResourceGroupID.")
+		l.Info().Str("ObjectID", event.ObjectId).Msg("ObjectId.")
+		l.Info().Str("PropertyName", event.PropertyName).Msg("PropertyName.")
 		return createOptionsSlice, nil
 	}
 
