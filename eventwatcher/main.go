@@ -106,6 +106,7 @@ func main() {
 	}(mqttClient)
 
 	l.Info().Msg("Starting Eventwatcher ...")
+	l.Info().Str("OQDO_SIGNALR_CONNECTION_STRING", envOqdoSignalrConnectionString).Msg("Loaded SignalR connection string.")
 	
 	// Log the content of OQDO_SIGNALR_CONNECTION_STRING
 	if strings.TrimSpace(envOqdoSignalrConnectionString) == "" {
