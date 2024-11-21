@@ -250,13 +250,25 @@ func (r Repository) GetAllImportMappings(query string) (map[string]ImportMapping
 			utils.LogError(err, "")
 			return nil, err
 		}
-		var importConfig map[string]string
+	
+		var importConfig map[string]interface{}
 		if err := json.Unmarshal(importConfigBytes, &importConfig); err != nil {
-			utils.LogError(err, "")
+			utils.LogError(fmt.Errorf("invalid JSON for project %s: %s", projectId, string(importConfigBytes)), "")
 			return nil, err
 		}
-
-		for key, measurement := range importConfig {
+	
+		for key, value := range importConfig {
+			var measurement string
+			switch v := value.(type) {
+			case string:
+				measurement = v
+			case []interface{}:
+				measurement = fmt.Sprintf("%v", v)
+			default:
+				utils.LogError(fmt.Errorf("unexpected type for key %s in project %s: %T", key, projectId, v), "")
+				continue
+			}
+	
 			importMappings[key] = ImportMapping{
 				Project:  projectId,
 				Variable: measurement,
