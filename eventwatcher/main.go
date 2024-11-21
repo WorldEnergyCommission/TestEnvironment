@@ -55,7 +55,7 @@ var (
 	measurementRepo measurement.Repository
 	projectRepo     project.Repository
 
-	exportMappings     map[string]map[string]map[string][]string
+	exportMappings     map[string]map[string]string
 	exportMappingsLock = sync.RWMutex{}
 )
 
