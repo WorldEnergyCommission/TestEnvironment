@@ -8377,7 +8377,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{AA25D9A1-C5ED-E5D9-8E6C-C82F708695D9}" Namespace="Tc3_JsonXml" AutoDeleteType="true">FB_JsonDomParserBase</Name>
+			<Name GUID="{0C544674-1E6C-D5CE-0D76-8F9A75B1B9E1}" Namespace="Tc3_JsonXml" AutoDeleteType="true">FB_JsonDomParserBase</Name>
 			<BitSize>160</BitSize>
 			<SubItem>
 				<Name>ipDom</Name>
@@ -8436,13 +8436,22 @@
 				</Properties>
 			</SubItem>
 			<Method>
-				<Name>PopbackValue</Name>
-				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
+				<Name>GetHexBinary</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000009}">DINT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>p</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>n</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
@@ -8484,6 +8493,21 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>SetBool</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
+					<BitSize>8</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>SetJson</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -8515,30 +8539,14 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>PushbackFileTimeValue</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<Name>MemberBegin</Name>
+				<ReturnType GUID="{1CDBE9A4-A0EC-4898-8CED-1550896CC52E}">SJsonIterator</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000046}">FILETIME</Type>
-					<BitSize>64</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>GetDocumentLength</Name>
-				<Comment><![CDATA[| Returns the size of the DOM document in bytes (including the null termination).]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Local>
-					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" PointerTo="1">STRING(80)</Type>
-					<BitSize>32</BitSize>
-				</Local>
 			</Method>
 			<Method>
 				<Name>PushbackIntValue</Name>
@@ -8582,6 +8590,33 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>RemoveMemberByName</Name>
+				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>member</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+				<Parameter>
+					<Name>keepOrder</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
+					<BitSize>8</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>AddArrayMember</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -8604,6 +8639,16 @@
 				<Parameter>
 					<Name>reserve</Name>
 					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>SetNull</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
@@ -8639,23 +8684,34 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetAdsProvider</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
-				<Parameter>
-					<Name>oid</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000F}">OTCID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>IsDouble</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
+				<Name>PushbackUintValue</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>ParseDocument</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>sJson</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
 				</Parameter>
 			</Method>
 			<Method>
@@ -8695,17 +8751,6 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>RemoveAllMembers</Name>
-				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
 				<Name>SetDouble</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -8721,7 +8766,7 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetDcTime</Name>
+				<Name>PushbackBoolValue</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
@@ -8731,8 +8776,8 @@
 				</Parameter>
 				<Parameter>
 					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000047}">DCTIME</Type>
-					<BitSize>64</BitSize>
+					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
+					<BitSize>8</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -8797,6 +8842,16 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>SetObject</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>AddDateTimeMember</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -8833,60 +8888,7 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetStringLength</Name>
-				<Comment><![CDATA[| Returns the size in bytes (including the null termination).]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Local>
-					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
-					<BitSize>32</BitSize>
-				</Local>
-				<Local>
-					<Name>l</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
-				</Local>
-			</Method>
-			<Method>
-				<Name>AddJsonMember</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>member</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-				<Parameter>
-					<Name>rawJson</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>SetUint</Name>
+				<Name>PushbackUint64Value</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
@@ -8896,8 +8898,8 @@
 				</Parameter>
 				<Parameter>
 					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
+					<Type GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</Type>
+					<BitSize>64</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -8917,9 +8919,10 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetObject</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
+				<Name>RemoveAllMembers</Name>
+				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
@@ -8932,16 +8935,6 @@
 				<ReturnBitSize>8</ReturnBitSize>
 			</Method>
 			<Method>
-				<Name>GetArraySize</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
 				<Name>IsISO8601TimeFormat</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
 				<ReturnBitSize>8</ReturnBitSize>
@@ -8952,18 +8945,13 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>PushbackUint64Value</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<Name>GetArraySize</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</Type>
-					<BitSize>64</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -9035,6 +9023,21 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>SetDcTime</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000047}">DCTIME</Type>
+					<BitSize>64</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>SetArray</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -9050,35 +9053,35 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetBool</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<Name>GetFileTime</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000046}">FILETIME</ReturnType>
+				<ReturnBitSize>64</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>GetStringLength</Name>
+				<Comment><![CDATA[| Returns the size in bytes (including the null termination).]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
-					<BitSize>8</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>Swap</Name>
-				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+				<Local>
+					<Name>p</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
 					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>w</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+				</Local>
+				<Local>
+					<Name>l</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
 					<BitSize>32</BitSize>
-				</Parameter>
+				</Local>
 			</Method>
 			<Method>
 				<Name>SaveDocumentToFile</Name>
@@ -9138,9 +9141,9 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetUint64</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</ReturnType>
-				<ReturnBitSize>64</ReturnBitSize>
+				<Name>IsBase64</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
@@ -9148,7 +9151,7 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>IsBase64</Name>
+				<Name>IsTrue</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
 				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
@@ -9305,6 +9308,21 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>SetFileTime</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000046}">FILETIME</Type>
+					<BitSize>64</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>CopyString</Name>
 				<Comment><![CDATA[| The function copies a string to the given buffer if the given buffer size is big enough.
 | It returns the number of copied bytes (including the null termination).]]></Comment>
@@ -9348,38 +9366,6 @@
 				</Local>
 			</Method>
 			<Method>
-				<Name>AddStringMember</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>member</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-			</Method>
-			<Method>
 				<Name>SetBase64</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -9400,34 +9386,24 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetDocument</Name>
-				<Comment><![CDATA[ | Returns the full DOM document. 
- | If its size is more than 255 bytes an empty string is returned and the method CopyDocument() has to be used.]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-0001000000FF}">STRING(255)</ReturnType>
-				<ReturnBitSize>2048</ReturnBitSize>
+				<Name>GetJsonLength</Name>
+				<Comment><![CDATA[| Returns the size of the JSON document in bytes (including the null termination).]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
 				<Local>
 					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
-					<BitSize>32</BitSize>
-				</Local>
-				<Local>
-					<Name>q</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
-					<BitSize>32</BitSize>
-				</Local>
-				<Local>
-					<Name>t</Name>
-					<Type GUID="{18071995-0000-0000-0000-0001000000FF}" PointerTo="1">STRING(255)</Type>
-					<BitSize>32</BitSize>
-				</Local>
-				<Local>
-					<Name>length</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" PointerTo="1">STRING(80)</Type>
 					<BitSize>32</BitSize>
 				</Local>
 			</Method>
 			<Method>
-				<Name>IsHexBinary</Name>
+				<Name>Swap</Name>
+				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
 				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
@@ -9435,11 +9411,31 @@
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
+				<Parameter>
+					<Name>w</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetUint</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
+				<Name>SetUint64</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</Type>
+					<BitSize>64</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>IsHexBinary</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
@@ -9473,9 +9469,9 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetFileTime</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000046}">FILETIME</ReturnType>
-				<ReturnBitSize>64</ReturnBitSize>
+				<Name>IsFalse</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
@@ -9483,9 +9479,14 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetMaxDecimalPlaces</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000009}">DINT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
+				<Name>SetAdsProvider</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
+				<Parameter>
+					<Name>oid</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000F}">OTCID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
 			</Method>
 			<Method>
 				<Name>CopyMemberName</Name>
@@ -9572,6 +9573,21 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>PushbackFileTimeValue</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000046}">FILETIME</Type>
+					<BitSize>64</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>IsString</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
 				<ReturnBitSize>8</ReturnBitSize>
@@ -9582,7 +9598,18 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetNull</Name>
+				<Name>PopbackValue</Name>
+				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>AddJsonMember</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
@@ -9590,32 +9617,28 @@
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-			</Method>
-			<Method>
-				<Name>GetDateTime</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-00000000004D}">DATE_AND_TIME</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<Name>member</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
 					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
 				</Parameter>
-			</Method>
-			<Method>
-				<Name>GetJsonLength</Name>
-				<Comment><![CDATA[| Returns the size of the JSON document in bytes (including the null termination).]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<Name>rawJson</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
 					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
 				</Parameter>
-				<Local>
-					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" PointerTo="1">STRING(80)</Type>
-					<BitSize>32</BitSize>
-				</Local>
 			</Method>
 			<Method>
 				<Name>LoadDocumentFromFile</Name>
@@ -9655,9 +9678,9 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>IsTrue</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
+				<Name>GetDateTime</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-00000000004D}">DATE_AND_TIME</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
@@ -9759,6 +9782,15 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>SetMaxDecimalPlaces</Name>
+				<ReturnBitSize X64="64">32</ReturnBitSize>
+				<Parameter>
+					<Name>dp</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>FindMember</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -9841,17 +9873,58 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetMaxDecimalPlaces</Name>
-				<ReturnBitSize X64="64">32</ReturnBitSize>
+				<Name>SetUint</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
-					<Name>dp</Name>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>SetHexBinary</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>p</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>n</Name>
 					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetHexBinary</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000009}">DINT</ReturnType>
+				<Name>GetArrayValueByIdx</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>idx</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>PushbackHexBinaryValue</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
@@ -9906,21 +9979,6 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>PushbackBoolValue</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
-					<BitSize>8</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
 				<Name>AddBoolMember</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -9947,22 +10005,12 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetHexBinary</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
+				<Name>GetDcTime</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000047}">DCTIME</ReturnType>
+				<ReturnBitSize>64</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>n</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
@@ -10052,10 +10100,9 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>RemoveMemberByName</Name>
-				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
+				<Name>AddStringMember</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>v</Name>
 					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
@@ -10073,22 +10120,7 @@
 					</Properties>
 				</Parameter>
 				<Parameter>
-					<Name>keepOrder</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
-					<BitSize>8</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>PushbackJsonValue</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>rawJson</Name>
+					<Name>value</Name>
 					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
 					<BitSize>32</BitSize>
 					<Properties>
@@ -10120,28 +10152,17 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>ParseDocument</Name>
+				<Name>GetMaxDecimalPlaces</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000009}">DINT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+			</Method>
+			<Method>
+				<Name>GetArrayValue</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
-					<Name>sJson</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>IsFalse</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<Name>i</Name>
+					<Type GUID="{1CDBE9A4-A0EC-4898-8CEC-1550896CC52E}">SJsonAIterator</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
@@ -10156,136 +10177,11 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetArrayValue</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>i</Name>
-					<Type GUID="{1CDBE9A4-A0EC-4898-8CEC-1550896CC52E}">SJsonAIterator</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>SetFileTime</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000046}">FILETIME</Type>
-					<BitSize>64</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>PushbackDoubleValue</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-					<BitSize>64</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>PushbackHexBinaryValue</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>n</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>MemberBegin</Name>
-				<ReturnType GUID="{1CDBE9A4-A0EC-4898-8CED-1550896CC52E}">SJsonIterator</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>GetArrayValueByIdx</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>idx</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>SetUint64</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</Type>
-					<BitSize>64</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>GetDcTime</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000047}">DCTIME</ReturnType>
-				<ReturnBitSize>64</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>IsArray</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>GetJson</Name>
-				<Comment><![CDATA[| Returns the JSON document. 
-| If its size is more than 255 bytes an empty string is returned and the method CopyJson() has to be used.]]></Comment>
+				<Name>GetDocument</Name>
+				<Comment><![CDATA[ | Returns the full DOM document. 
+ | If its size is more than 255 bytes an empty string is returned and the method CopyDocument() has to be used.]]></Comment>
 				<ReturnType GUID="{18071995-0000-0000-0000-0001000000FF}">STRING(255)</ReturnType>
 				<ReturnBitSize>2048</ReturnBitSize>
-				<Parameter>
-					<Name>v</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
 				<Local>
 					<Name>p</Name>
 					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
@@ -10323,7 +10219,7 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>PushbackUintValue</Name>
+				<Name>PushbackDoubleValue</Name>
 				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
@@ -10333,7 +10229,111 @@
 				</Parameter>
 				<Parameter>
 					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
+					<BitSize>64</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>GetUint</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>GetUint64</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</ReturnType>
+				<ReturnBitSize>64</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>GetDocumentLength</Name>
+				<Comment><![CDATA[| Returns the size of the DOM document in bytes (including the null termination).]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Local>
+					<Name>p</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" PointerTo="1">STRING(80)</Type>
+					<BitSize>32</BitSize>
+				</Local>
+			</Method>
+			<Method>
+				<Name>GetJson</Name>
+				<Comment><![CDATA[| Returns the JSON document. 
+| If its size is more than 255 bytes an empty string is returned and the method CopyJson() has to be used.]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-0001000000FF}">STRING(255)</ReturnType>
+				<ReturnBitSize>2048</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Local>
+					<Name>p</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
+					<BitSize>32</BitSize>
+				</Local>
+				<Local>
+					<Name>q</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
+					<BitSize>32</BitSize>
+				</Local>
+				<Local>
+					<Name>t</Name>
+					<Type GUID="{18071995-0000-0000-0000-0001000000FF}" PointerTo="1">STRING(255)</Type>
+					<BitSize>32</BitSize>
+				</Local>
+				<Local>
+					<Name>length</Name>
 					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Local>
+			</Method>
+			<Method>
+				<Name>IsArray</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>PushbackJsonValue</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>rawJson</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>IsDouble</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
+				<Parameter>
+					<Name>v</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
@@ -10538,7 +10538,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{A1DBACC0-BD0F-50A2-CC9F-C51ADEBD581F}" Namespace="Tc3_JsonXml" AutoDeleteType="true">FB_XmlDomParser</Name>
+			<Name GUID="{4603DF17-0359-345C-249D-7DC65149BE34}" Namespace="Tc3_JsonXml" AutoDeleteType="true">FB_XmlDomParser</Name>
 			<BitSize>288</BitSize>
 			<SubItem>
 				<Name>initStatus</Name>
@@ -10640,6 +10640,43 @@
 					</SubItem>
 				</Default>
 			</SubItem>
+			<Method>
+				<Name>SaveDocumentToFile</Name>
+				<Comment><![CDATA[ | Saves a XML document to file.
+ | The asynchronous process is finished when the bExec reference input is set to FALSE.
+ | When the process is finished the method return value shows whether the process was successful or not.]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
+				<Parameter>
+					<Name>sFile</Name>
+					<Comment><![CDATA[ file path]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+				<Parameter>
+					<Name>bExec</Name>
+					<Comment><![CDATA[ a rising edge triggers the saving.]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000030}" ReferenceTo="true">BOOL</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>hrErrorCode</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>Output</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+			</Method>
 			<Method>
 				<Name>SetAttributeAsInt</Name>
 				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
@@ -10770,32 +10807,6 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>InsertChild</Name>
-				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>n</Name>
-					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>before</Name>
-					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>name</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-			</Method>
-			<Method>
 				<Name>NextAttribute</Name>
 				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -10852,6 +10863,21 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>SetChildAsInt</Name>
+				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>n</Name>
+					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>SetAdsProvider</Name>
 				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
@@ -10863,24 +10889,19 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>GetNodeTextLength</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
+				<Name>SetChildAsUint</Name>
+				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>n</Name>
 					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-				<Local>
-					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
-					<BitSize>32</BitSize>
-				</Local>
-				<Local>
-					<Name>l</Name>
+				<Parameter>
+					<Name>value</Name>
 					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
 					<BitSize>32</BitSize>
-				</Local>
+				</Parameter>
 			</Method>
 			<Method>
 				<Name>Attribute</Name>
@@ -10995,6 +11016,27 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>SetAttribute</Name>
+				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>a</Name>
+					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>SetChildAsBool</Name>
 				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
@@ -11041,19 +11083,24 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetChildAsUint</Name>
-				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
+				<Name>AttributeBegin</Name>
+				<ReturnType GUID="{43FE8B2A-7629-4D52-9486-1BB0B9415103}">SXmlIterator</ReturnType>
+				<ReturnBitSize>96</ReturnBitSize>
 				<Parameter>
 					<Name>n</Name>
 					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+				<Local>
+					<Name>i</Name>
+					<Type GUID="{43FE8B2A-7629-4D52-9486-1BB0B9415103}">SXmlIterator</Type>
+					<BitSize>96</BitSize>
+				</Local>
+				<Local>
+					<Name>__Index__0</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
 					<BitSize>32</BitSize>
-				</Parameter>
+				</Local>
 			</Method>
 			<Method>
 				<Name>ChildrenByName</Name>
@@ -11119,24 +11166,14 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>AttributeBegin</Name>
-				<ReturnType GUID="{43FE8B2A-7629-4D52-9486-1BB0B9415103}">SXmlIterator</ReturnType>
-				<ReturnBitSize>96</ReturnBitSize>
+				<Name>AttributeAsUint</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
-					<Name>n</Name>
-					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
+					<Name>a</Name>
+					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-				<Local>
-					<Name>i</Name>
-					<Type GUID="{43FE8B2A-7629-4D52-9486-1BB0B9415103}">SXmlIterator</Type>
-					<BitSize>96</BitSize>
-				</Local>
-				<Local>
-					<Name>__Index__0</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
-					<BitSize>32</BitSize>
-				</Local>
 			</Method>
 			<Method>
 				<Name>Attributes</Name>
@@ -11154,48 +11191,27 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>NodeAsBool</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
+				<Name>InsertChild</Name>
+				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>n</Name>
 					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-			</Method>
-			<Method>
-				<Name>SaveDocumentToFile</Name>
-				<Comment><![CDATA[ | Saves a XML document to file.
- | The asynchronous process is finished when the bExec reference input is set to FALSE.
- | When the process is finished the method return value shows whether the process was successful or not.]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
-					<Name>sFile</Name>
-					<Comment><![CDATA[ file path]]></Comment>
+					<Name>before</Name>
+					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>name</Name>
 					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
 					<BitSize>32</BitSize>
 					<Properties>
 						<Property>
 							<Name>ItemType</Name>
 							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-				<Parameter>
-					<Name>bExec</Name>
-					<Comment><![CDATA[ a rising edge triggers the saving.]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000030}" ReferenceTo="true">BOOL</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>hrErrorCode</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>Output</Value>
 						</Property>
 					</Properties>
 				</Parameter>
@@ -11219,32 +11235,6 @@
 							<Value>InOut</Value>
 						</Property>
 					</Properties>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>AppendAttributeAsBool</Name>
-				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>n</Name>
-					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>name</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
-					<BitSize>8</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -11381,32 +11371,6 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetChild</Name>
-				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>n</Name>
-					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-				<Parameter>
-					<Name>cdata</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
-					<BitSize>8</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
 				<Name>AttributeAsUlint</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</ReturnType>
 				<ReturnBitSize>64</ReturnBitSize>
@@ -11525,21 +11489,6 @@
 				<Parameter>
 					<Name>a</Name>
 					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>Children</Name>
-				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>n</Name>
-					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>it</Name>
-					<Type GUID="{43FE8B2A-7629-4D52-9486-1BB0B9415103}" ReferenceTo="true">SXmlIterator</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
@@ -11756,6 +11705,32 @@
 				</Parameter>
 			</Method>
 			<Method>
+				<Name>AppendAttributeAsLint</Name>
+				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>n</Name>
+					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>name</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000C}">LINT</Type>
+					<BitSize>64</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>BeginByName</Name>
 				<ReturnType GUID="{43FE8B2A-7629-4D52-9486-1BB0B9415103}">SXmlIterator</ReturnType>
 				<ReturnBitSize>96</ReturnBitSize>
@@ -11854,8 +11829,8 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>CopyNodeXml</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
+				<Name>SetChildAsUlint</Name>
+				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>n</Name>
@@ -11863,20 +11838,24 @@
 					<BitSize>32</BitSize>
 				</Parameter>
 				<Parameter>
-					<Name>sXml</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</Type>
+					<BitSize>64</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>SetChildAsDouble</Name>
+				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>n</Name>
+					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
 					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
 				</Parameter>
 				<Parameter>
-					<Name>nXml</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
+					<BitSize>64</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -11932,6 +11911,21 @@
 					<Name>n</Name>
 					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
 					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>SetAttributeAsLint</Name>
+				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>a</Name>
+					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000C}">LINT</Type>
+					<BitSize>64</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -11997,14 +11991,19 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>AttributeAsUint</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
+				<Name>AttributeName</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000100000050}">STRING(80)</ReturnType>
+				<ReturnBitSize>648</ReturnBitSize>
 				<Parameter>
 					<Name>a</Name>
 					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
+				<Local>
+					<Name>p</Name>
+					<Type GUID="{18071995-0000-0000-0000-0001000000FF}" PointerTo="1">STRING(255)</Type>
+					<BitSize>32</BitSize>
+				</Local>
 			</Method>
 			<Method>
 				<Name>AppendChildAsUint</Name>
@@ -12076,7 +12075,7 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetChildAsUlint</Name>
+				<Name>SetChild</Name>
 				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
@@ -12086,8 +12085,34 @@
 				</Parameter>
 				<Parameter>
 					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000B}">ULINT</Type>
-					<BitSize>64</BitSize>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+				<Parameter>
+					<Name>cdata</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
+					<BitSize>8</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>SetAttributeAsFloat</Name>
+				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>a</Name>
+					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>value</Name>
+					<Type GUID="{18071995-0000-0000-0000-00000000000D}">REAL</Type>
+					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -12121,7 +12146,7 @@
 				</Local>
 			</Method>
 			<Method>
-				<Name>AppendAttributeAsLint</Name>
+				<Name>AppendAttributeAsFloat</Name>
 				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
@@ -12142,8 +12167,8 @@
 				</Parameter>
 				<Parameter>
 					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000C}">LINT</Type>
-					<BitSize>64</BitSize>
+					<Type GUID="{18071995-0000-0000-0000-00000000000D}">REAL</Type>
+					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
@@ -12235,21 +12260,6 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetAttributeAsLint</Name>
-				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>a</Name>
-					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000C}">LINT</Type>
-					<BitSize>64</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
 				<Name>RemoveAttribute</Name>
 				<Comment><![CDATA[ returns TRUE if succeeded]]></Comment>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
@@ -12318,17 +12328,12 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetChildAsInt</Name>
-				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
+				<Name>NodeAsBool</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
 				<Parameter>
 					<Name>n</Name>
 					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000009}">DINT</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
@@ -12369,29 +12374,8 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetAttribute</Name>
-				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>a</Name>
-					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>ItemType</Name>
-							<Value>InOut</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>AppendChildAsDouble</Name>
-				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
+				<Name>CopyNodeXml</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>n</Name>
@@ -12399,7 +12383,7 @@
 					<BitSize>32</BitSize>
 				</Parameter>
 				<Parameter>
-					<Name>name</Name>
+					<Name>sXml</Name>
 					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
 					<BitSize>32</BitSize>
 					<Properties>
@@ -12410,25 +12394,30 @@
 					</Properties>
 				</Parameter>
 				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-					<BitSize>64</BitSize>
+					<Name>nXml</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetAttributeAsFloat</Name>
-				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
+				<Name>GetNodeTextLength</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
-					<Name>a</Name>
-					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
+					<Name>n</Name>
+					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-				<Parameter>
-					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000D}">REAL</Type>
+				<Local>
+					<Name>p</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000001}" PointerTo="1">BYTE</Type>
 					<BitSize>32</BitSize>
-				</Parameter>
+				</Local>
+				<Local>
+					<Name>l</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Local>
 			</Method>
 			<Method>
 				<Name>GetDocumentLength</Name>
@@ -12512,13 +12501,24 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>SetChildAsDouble</Name>
+				<Name>AppendChildAsDouble</Name>
 				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>n</Name>
 					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
 					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>name</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" ReferenceTo="true">STRING(80)</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>ItemType</Name>
+							<Value>InOut</Value>
+						</Property>
+					</Properties>
 				</Parameter>
 				<Parameter>
 					<Name>value</Name>
@@ -12543,7 +12543,22 @@
 				</Parameter>
 			</Method>
 			<Method>
-				<Name>AppendAttributeAsFloat</Name>
+				<Name>Children</Name>
+				<ReturnType GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>n</Name>
+					<Type GUID="{C55E7C3F-6C77-43E9-9E3E-1DD1F38E492E}">SXmlNode</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>it</Name>
+					<Type GUID="{43FE8B2A-7629-4D52-9486-1BB0B9415103}" ReferenceTo="true">SXmlIterator</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name>AppendAttributeAsBool</Name>
 				<ReturnType GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
@@ -12564,24 +12579,9 @@
 				</Parameter>
 				<Parameter>
 					<Name>value</Name>
-					<Type GUID="{18071995-0000-0000-0000-00000000000D}">REAL</Type>
-					<BitSize>32</BitSize>
+					<Type GUID="{18071995-0000-0000-0000-000000000030}">BOOL</Type>
+					<BitSize>8</BitSize>
 				</Parameter>
-			</Method>
-			<Method>
-				<Name>AttributeName</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000100000050}">STRING(80)</ReturnType>
-				<ReturnBitSize>648</ReturnBitSize>
-				<Parameter>
-					<Name>a</Name>
-					<Type GUID="{E5A44D6F-CAD6-482F-A0EE-B23ADA3BC36A}">SXmlAttribute</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Local>
-					<Name>p</Name>
-					<Type GUID="{18071995-0000-0000-0000-0001000000FF}" PointerTo="1">STRING(255)</Type>
-					<BitSize>32</BitSize>
-				</Local>
 			</Method>
 			<Properties>
 				<Property>
@@ -12595,7 +12595,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{5814C7AF-EB12-2632-F8D2-FFF9ED21290C}" Namespace="Tc3_IotBase" AutoDeleteType="true">FB_IotHttpRequest</Name>
+			<Name GUID="{9019C8C0-7492-DE32-5153-1D86248B8366}" Namespace="Tc3_IotBase" AutoDeleteType="true">FB_IotHttpRequest</Name>
 			<BitSize>10752</BitSize>
 			<Implements GUID="{B80ED7CD-387C-4076-92F9-C85AD8604DE8}">true</Implements>
 			<SubItem>
@@ -12792,6 +12792,66 @@
 				</Properties>
 			</Method>
 			<Method>
+				<Name>OnHttpRequestFailed</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>nInvokeId</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>eErrorId</Name>
+					<Type GUID="{82B3C2D3-DCF2-4FD2-9D70-14AE5E655CD9}">ETcIotHttpRequestError</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Properties>
+					<Property>
+						<Name>c++_compatible</Name>
+					</Property>
+					<Property>
+						<Name>minimal_input_size</Name>
+						<Value>4</Value>
+					</Property>
+					<Property>
+						<Name>conditionalshow</Name>
+					</Property>
+					<Property>
+						<Name>pack_mode</Name>
+						<Value>4</Value>
+					</Property>
+				</Properties>
+			</Method>
+			<Method>
+				<Name>GetJsonDomContent</Name>
+				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>fbJson</Name>
+					<Type GUID="{0C544674-1E6C-D5CE-0D76-8F9A75B1B9E1}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_JsonDomParserBase</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Local>
+					<Name>jsonDoc</Name>
+					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
+					<BitSize>32</BitSize>
+				</Local>
+				<Local>
+					<Name>pStrContent</Name>
+					<Type GUID="{18071995-0000-0000-0000-000100000050}" PointerTo="1">STRING(80)</Type>
+					<BitSize>32</BitSize>
+				</Local>
+			</Method>
+			<Method>
+				<Name>FreeResponse</Name>
+				<ReturnBitSize X64="64">32</ReturnBitSize>
+				<Properties>
+					<Property>
+						<Name>conditionalshow</Name>
+					</Property>
+				</Properties>
+			</Method>
+			<Method>
 				<Name>SendJsonDomRequest</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
 				<ReturnBitSize>8</ReturnBitSize>
@@ -12819,7 +12879,7 @@
 				</Parameter>
 				<Parameter>
 					<Name>fbJson</Name>
-					<Type GUID="{AA25D9A1-C5ED-E5D9-8E6C-C82F708695D9}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_JsonDomParserBase</Type>
+					<Type GUID="{0C544674-1E6C-D5CE-0D76-8F9A75B1B9E1}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_JsonDomParserBase</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 				<Parameter>
@@ -12853,35 +12913,6 @@
 					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
 					<BitSize>32</BitSize>
 				</Local>
-			</Method>
-			<Method>
-				<Name>GetJsonDomContent</Name>
-				<ReturnType GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>fbJson</Name>
-					<Type GUID="{AA25D9A1-C5ED-E5D9-8E6C-C82F708695D9}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_JsonDomParserBase</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Local>
-					<Name>jsonDoc</Name>
-					<Type GUID="{928162FC-F0DF-42B8-9EC0-1494F07A4E2F}">SJsonValue</Type>
-					<BitSize>32</BitSize>
-				</Local>
-				<Local>
-					<Name>pStrContent</Name>
-					<Type GUID="{18071995-0000-0000-0000-000100000050}" PointerTo="1">STRING(80)</Type>
-					<BitSize>32</BitSize>
-				</Local>
-			</Method>
-			<Method>
-				<Name>FreeResponse</Name>
-				<ReturnBitSize X64="64">32</ReturnBitSize>
-				<Properties>
-					<Property>
-						<Name>conditionalshow</Name>
-					</Property>
-				</Properties>
 			</Method>
 			<Method>
 				<Name>GetContent</Name>
@@ -12983,7 +13014,7 @@
 				</Parameter>
 				<Parameter>
 					<Name>fbXml</Name>
-					<Type GUID="{A1DBACC0-BD0F-50A2-CC9F-C51ADEBD581F}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_XmlDomParser</Type>
+					<Type GUID="{4603DF17-0359-345C-249D-7DC65149BE34}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_XmlDomParser</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 				<Parameter>
@@ -13044,7 +13075,7 @@
 				</Parameter>
 				<Local>
 					<Name>pHttpRequest</Name>
-					<Type GUID="{5814C7AF-EB12-2632-F8D2-FFF9ED21290C}" Namespace="Tc3_IotBase" PointerTo="1">FB_IotHttpRequest</Type>
+					<Type GUID="{9019C8C0-7492-DE32-5153-1D86248B8366}" Namespace="Tc3_IotBase" PointerTo="1">FB_IotHttpRequest</Type>
 					<BitSize>32</BitSize>
 				</Local>
 				<Local>
@@ -13070,32 +13101,25 @@
 				</Properties>
 			</Method>
 			<Method>
-				<Name>OnHttpRequestFailed</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<Name>TcRelease</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
 				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>nInvokeId</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>eErrorId</Name>
-					<Type GUID="{82B3C2D3-DCF2-4FD2-9D70-14AE5E655CD9}">ETcIotHttpRequestError</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
 				<Properties>
-					<Property>
-						<Name>c++_compatible</Name>
-					</Property>
-					<Property>
-						<Name>minimal_input_size</Name>
-						<Value>4</Value>
-					</Property>
 					<Property>
 						<Name>conditionalshow</Name>
 					</Property>
 					<Property>
+						<Name>c++_compatible</Name>
+					</Property>
+					<Property>
 						<Name>pack_mode</Name>
+						<Value>4</Value>
+					</Property>
+					<Property>
+						<Name>show</Name>
+					</Property>
+					<Property>
+						<Name>minimal_input_size</Name>
 						<Value>4</Value>
 					</Property>
 				</Properties>
@@ -13106,7 +13130,7 @@
 				<ReturnBitSize>32</ReturnBitSize>
 				<Parameter>
 					<Name>fbXml</Name>
-					<Type GUID="{A1DBACC0-BD0F-50A2-CC9F-C51ADEBD581F}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_XmlDomParser</Type>
+					<Type GUID="{4603DF17-0359-345C-249D-7DC65149BE34}" Namespace="Tc3_JsonXml" ReferenceTo="true">FB_XmlDomParser</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
 				<Local>
@@ -13224,30 +13248,6 @@
 					</Property>
 				</Properties>
 			</Method>
-			<Method>
-				<Name>TcRelease</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Properties>
-					<Property>
-						<Name>conditionalshow</Name>
-					</Property>
-					<Property>
-						<Name>c++_compatible</Name>
-					</Property>
-					<Property>
-						<Name>pack_mode</Name>
-						<Value>4</Value>
-					</Property>
-					<Property>
-						<Name>show</Name>
-					</Property>
-					<Property>
-						<Name>minimal_input_size</Name>
-						<Value>4</Value>
-					</Property>
-				</Properties>
-			</Method>
 			<Properties>
 				<Property>
 					<Name>PouType</Name>
@@ -13270,9 +13270,9 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{900B27CE-276B-CCCD-35B2-432359C2AD51}" Namespace="Tc3_JsonXml" AutoDeleteType="true">FB_JsonDomParser</Name>
+			<Name GUID="{776CB03B-E066-3A48-3D4E-E617DCB27B89}" Namespace="Tc3_JsonXml" AutoDeleteType="true">FB_JsonDomParser</Name>
 			<BitSize>320</BitSize>
-			<ExtendsType GUID="{AA25D9A1-C5ED-E5D9-8E6C-C82F708695D9}" Namespace="Tc3_JsonXml">FB_JsonDomParserBase</ExtendsType>
+			<ExtendsType GUID="{0C544674-1E6C-D5CE-0D76-8F9A75B1B9E1}" Namespace="Tc3_JsonXml">FB_JsonDomParserBase</ExtendsType>
 			<SubItem>
 				<Name>initStatus</Name>
 				<Type GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</Type>
@@ -13360,7 +13360,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{1593DC86-6068-92EA-4131-EE9A57C34A3D}" AutoDeleteType="true">FB_ECS_LIBREO_Helper</Name>
+			<Name GUID="{07134948-37FB-5D99-D6ED-A3A1BD8F9B98}" AutoDeleteType="true">FB_ECS_LIBREO_Helper</Name>
 			<BitSize>28288</BitSize>
 			<SubItem>
 				<Name>bSend</Name>
@@ -13472,13 +13472,13 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbRequestStatus</Name>
-				<Type GUID="{5814C7AF-EB12-2632-F8D2-FFF9ED21290C}" Namespace="Tc3_IotBase">FB_IotHttpRequest</Type>
+				<Type GUID="{9019C8C0-7492-DE32-5153-1D86248B8366}" Namespace="Tc3_IotBase">FB_IotHttpRequest</Type>
 				<BitSize>10752</BitSize>
 				<BitOffs>224</BitOffs>
 			</SubItem>
 			<SubItem>
 				<Name>fbJson</Name>
-				<Type GUID="{900B27CE-276B-CCCD-35B2-432359C2AD51}" Namespace="Tc3_JsonXml">FB_JsonDomParser</Type>
+				<Type GUID="{776CB03B-E066-3A48-3D4E-E617DCB27B89}" Namespace="Tc3_JsonXml">FB_JsonDomParser</Type>
 				<BitSize>320</BitSize>
 				<BitOffs>10976</BitOffs>
 			</SubItem>
@@ -13506,7 +13506,7 @@
 				<BitSize>32</BitSize>
 				<BitOffs>11616</BitOffs>
 				<Default>
-					<DateTime>T</DateTime>
+					<DateTime>T#30S</DateTime>
 				</Default>
 			</SubItem>
 			<SubItem>
@@ -13571,7 +13571,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{E4F5469C-F532-5596-3DCF-E659AD50303B}" AutoDeleteType="true">FB_ECS_LIBREO</Name>
+			<Name GUID="{15CF121F-8C15-7839-4DCB-1C1A2E28B0F1}" AutoDeleteType="true">FB_ECS_LIBREO</Name>
 			<BitSize>53184</BitSize>
 			<SubItem>
 				<Name>bStart</Name>
@@ -13592,7 +13592,7 @@
 				<BitSize>32</BitSize>
 				<BitOffs>64</BitOffs>
 				<Default>
-					<DateTime>T</DateTime>
+					<DateTime>T#1S</DateTime>
 				</Default>
 				<Properties>
 					<Property>
@@ -13760,7 +13760,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbHttpGet</Name>
-				<Type GUID="{1593DC86-6068-92EA-4131-EE9A57C34A3D}">FB_ECS_LIBREO_Helper</Type>
+				<Type GUID="{07134948-37FB-5D99-D6ED-A3A1BD8F9B98}">FB_ECS_LIBREO_Helper</Type>
 				<BitSize>28288</BitSize>
 				<BitOffs>24448</BitOffs>
 			</SubItem>
@@ -14810,7 +14810,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{75D8F111-BC5B-ABF3-E4F7-337156E55C62}" AutoDeleteType="true">FB_Enphase_Helper</Name>
+			<Name GUID="{E2748358-16B6-757A-C4FC-A9E47C357B56}" AutoDeleteType="true">FB_Enphase_Helper</Name>
 			<BitSize>28288</BitSize>
 			<SubItem>
 				<Name>bSend</Name>
@@ -14886,13 +14886,13 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbRequestEnphase</Name>
-				<Type GUID="{5814C7AF-EB12-2632-F8D2-FFF9ED21290C}" Namespace="Tc3_IotBase">FB_IotHttpRequest</Type>
+				<Type GUID="{9019C8C0-7492-DE32-5153-1D86248B8366}" Namespace="Tc3_IotBase">FB_IotHttpRequest</Type>
 				<BitSize>10752</BitSize>
 				<BitOffs>256</BitOffs>
 			</SubItem>
 			<SubItem>
 				<Name>fbJson</Name>
-				<Type GUID="{900B27CE-276B-CCCD-35B2-432359C2AD51}" Namespace="Tc3_JsonXml">FB_JsonDomParser</Type>
+				<Type GUID="{776CB03B-E066-3A48-3D4E-E617DCB27B89}" Namespace="Tc3_JsonXml">FB_JsonDomParser</Type>
 				<BitSize>320</BitSize>
 				<BitOffs>11008</BitOffs>
 			</SubItem>
@@ -14920,7 +14920,7 @@
 				<BitSize>32</BitSize>
 				<BitOffs>11648</BitOffs>
 				<Default>
-					<DateTime>T</DateTime>
+					<DateTime>T#30S</DateTime>
 				</Default>
 			</SubItem>
 			<SubItem>
@@ -14985,7 +14985,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{918E4887-52C5-3A8A-A3C1-AC6C6013E6D4}" AutoDeleteType="true">FB_Enphase</Name>
+			<Name GUID="{B2225D5B-3F90-3677-D5DB-1E629B6BB068}" AutoDeleteType="true">FB_Enphase</Name>
 			<BitSize>53184</BitSize>
 			<SubItem>
 				<Name>bStart</Name>
@@ -15006,7 +15006,7 @@
 				<BitSize>32</BitSize>
 				<BitOffs>64</BitOffs>
 				<Default>
-					<DateTime>T</DateTime>
+					<DateTime>T#3S</DateTime>
 				</Default>
 				<Properties>
 					<Property>
@@ -15140,7 +15140,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbHttpGet</Name>
-				<Type GUID="{75D8F111-BC5B-ABF3-E4F7-337156E55C62}">FB_Enphase_Helper</Type>
+				<Type GUID="{E2748358-16B6-757A-C4FC-A9E47C357B56}">FB_Enphase_Helper</Type>
 				<BitSize>28288</BitSize>
 				<BitOffs>24448</BitOffs>
 			</SubItem>
@@ -17222,7 +17222,7 @@
 			</SubItem>
 		</DataType>
 		<DataType>
-			<Name GUID="{7EE0FB0A-0A09-3340-1A60-1ED9C8B37CA3}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_SourceInfoData</Name>
+			<Name GUID="{A8CCF282-61CE-1FAA-2DA6-5B76045D4D0B}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_SourceInfoData</Name>
 			<BitSize>2880</BitSize>
 			<Implements GUID="{F7BF6767-548B-493C-899B-06A477976F11}">true</Implements>
 			<SubItem>
@@ -17462,32 +17462,6 @@
 				</Properties>
 			</Method>
 			<Method>
-				<Name>GetData</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>ppData</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000018}" PointerTo="1">PVOID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Properties>
-					<Property>
-						<Name>c++_compatible</Name>
-					</Property>
-					<Property>
-						<Name>pack_mode</Name>
-						<Value>4</Value>
-					</Property>
-					<Property>
-						<Name>show</Name>
-					</Property>
-					<Property>
-						<Name>minimal_input_size</Name>
-						<Value>4</Value>
-					</Property>
-				</Properties>
-			</Method>
-			<Method>
 				<Name>ExtendName</Name>
 				<Comment><![CDATA[ extends the source name on the right side of the string by the given extension.
  If the source name string size is exceeded nothing more is extended.
@@ -17505,26 +17479,6 @@
 						</Property>
 					</Properties>
 				</Parameter>
-			</Method>
-			<Method>
-				<Name RpcEnable="plc">__setnSourceId</Name>
-				<ReturnBitSize X64="64">32</ReturnBitSize>
-				<Parameter>
-					<Name>nSourceId</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}" RpcDirection="in">UDINT</Type>
-					<BitSize>32</BitSize>
-					<Properties>
-						<Property>
-							<Name>monitoring</Name>
-							<Value>call</Value>
-						</Property>
-					</Properties>
-				</Parameter>
-				<Properties>
-					<Property>
-						<Name>property</Name>
-					</Property>
-				</Properties>
 			</Method>
 			<Method>
 				<Name>ResetToDefault</Name>
@@ -17622,6 +17576,32 @@
 				</Properties>
 			</Method>
 			<Method>
+				<Name>GetData</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>ppData</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000018}" PointerTo="1">PVOID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Properties>
+					<Property>
+						<Name>c++_compatible</Name>
+					</Property>
+					<Property>
+						<Name>pack_mode</Name>
+						<Value>4</Value>
+					</Property>
+					<Property>
+						<Name>show</Name>
+					</Property>
+					<Property>
+						<Name>minimal_input_size</Name>
+						<Value>4</Value>
+					</Property>
+				</Properties>
+			</Method>
+			<Method>
 				<Name>__getsourceGuid</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000021}">GUID</ReturnType>
 				<ReturnBitSize>128</ReturnBitSize>
@@ -17708,6 +17688,26 @@
 				</Properties>
 			</Method>
 			<Method>
+				<Name RpcEnable="plc">__setnSourceId</Name>
+				<ReturnBitSize X64="64">32</ReturnBitSize>
+				<Parameter>
+					<Name>nSourceId</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}" RpcDirection="in">UDINT</Type>
+					<BitSize>32</BitSize>
+					<Properties>
+						<Property>
+							<Name>monitoring</Name>
+							<Value>call</Value>
+						</Property>
+					</Properties>
+				</Parameter>
+				<Properties>
+					<Property>
+						<Name>property</Name>
+					</Property>
+				</Properties>
+			</Method>
+			<Method>
 				<Name>__setsourceGuid</Name>
 				<ReturnBitSize X64="64">32</ReturnBitSize>
 				<Parameter>
@@ -17767,12 +17767,12 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{05F1DACB-3D66-68E5-2E59-3201A33AB2E7}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_TcSourceInfo</Name>
+			<Name GUID="{31D5834B-C8A0-B704-F07B-B050AC3625CA}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_TcSourceInfo</Name>
 			<BitSize>2944</BitSize>
 			<Implements GUID="{3DBDE9AD-015D-2FE2-FD3F-8E55E789FA90}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">true</Implements>
 			<SubItem>
 				<Name>fbSrcData</Name>
-				<Type GUID="{7EE0FB0A-0A09-3340-1A60-1ED9C8B37CA3}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_SourceInfoData</Type>
+				<Type GUID="{A8CCF282-61CE-1FAA-2DA6-5B76045D4D0B}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_SourceInfoData</Type>
 				<BitSize>2880</BitSize>
 				<BitOffs>64</BitOffs>
 				<Properties>
@@ -17823,6 +17823,10 @@
 					<Type GUID="{3DBDE9AD-015D-2FE2-FD3F-8E55E789FA90}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">I_TcSourceInfo</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
+			</Method>
+			<Method>
+				<Name>Clear</Name>
+				<ReturnBitSize X64="64">32</ReturnBitSize>
 			</Method>
 			<Method>
 				<Name>ExtendName</Name>
@@ -17877,8 +17881,19 @@
 				<ReturnBitSize>32</ReturnBitSize>
 			</Method>
 			<Method>
-				<Name>Clear</Name>
-				<ReturnBitSize X64="64">32</ReturnBitSize>
+				<Name>__getguid</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000021}">GUID</ReturnType>
+				<ReturnBitSize>128</ReturnBitSize>
+				<Local>
+					<Name>guid</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000021}">GUID</Type>
+					<BitSize>128</BitSize>
+				</Local>
+				<Properties>
+					<Property>
+						<Name>property</Name>
+					</Property>
+				</Properties>
 			</Method>
 			<Method>
 				<Name RpcEnable="plc" VTableIndex="11">__setnId</Name>
@@ -17924,21 +17939,6 @@
 					<Type GUID="{3DBDE9AD-015D-2FE2-FD3F-8E55E789FA90}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">I_TcSourceInfo</Type>
 					<BitSize>32</BitSize>
 				</Parameter>
-			</Method>
-			<Method>
-				<Name>__getguid</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000021}">GUID</ReturnType>
-				<ReturnBitSize>128</ReturnBitSize>
-				<Local>
-					<Name>guid</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000021}">GUID</Type>
-					<BitSize>128</BitSize>
-				</Local>
-				<Properties>
-					<Property>
-						<Name>property</Name>
-					</Property>
-				</Properties>
 			</Method>
 			<Method>
 				<Name RpcEnable="plc" VTableIndex="4">__getsName</Name>
@@ -18812,12 +18812,12 @@
 			</Method>
 		</DataType>
 		<DataType>
-			<Name GUID="{868BEC61-5115-374B-FCB2-811A87FBDCA4}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_TcEventBase</Name>
+			<Name GUID="{810BBB96-571B-399E-1C40-04A8E1C5A29E}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_TcEventBase</Name>
 			<BitSize>3520</BitSize>
 			<Implements GUID="{86352889-57BD-309E-2FB5-C31C0EC07269}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">true</Implements>
 			<SubItem>
 				<Name>fbSourceInfo</Name>
-				<Type GUID="{05F1DACB-3D66-68E5-2E59-3201A33AB2E7}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcSourceInfo</Type>
+				<Type GUID="{31D5834B-C8A0-B704-F07B-B050AC3625CA}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcSourceInfo</Type>
 				<BitSize>2944</BitSize>
 				<BitOffs>256</BitOffs>
 				<Default>
@@ -18983,7 +18983,7 @@
 				<ReturnBitSize>32</ReturnBitSize>
 			</Method>
 			<Method>
-				<Name>OnArgumentsChanged</Name>
+				<Name>UpdateLangId</Name>
 				<ReturnBitSize X64="64">32</ReturnBitSize>
 			</Method>
 			<Method>
@@ -19183,6 +19183,10 @@
 				</Local>
 			</Method>
 			<Method>
+				<Name>OnArgumentsChanged</Name>
+				<ReturnBitSize X64="64">32</ReturnBitSize>
+			</Method>
+			<Method>
 				<Name RpcEnable="plc" VTableIndex="11">__getsEventClassName</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-0001000000FF}" RpcDirection="out">STRING(255)</ReturnType>
 				<ReturnBitSize>2048</ReturnBitSize>
@@ -19345,10 +19349,6 @@
 				</Local>
 			</Method>
 			<Method>
-				<Name>UpdateLangId</Name>
-				<ReturnBitSize X64="64">32</ReturnBitSize>
-			</Method>
-			<Method>
 				<Name>EqualsToEventEntryEx</Name>
 				<Comment><![CDATA[ returns TRUE if equal.]]></Comment>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</ReturnType>
@@ -19488,9 +19488,9 @@
 			</Method>
 		</DataType>
 		<DataType>
-			<Name GUID="{1E6D333D-0D9F-35BC-0C75-ABC2619F1000}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_TcMessage</Name>
+			<Name GUID="{7ADF912A-ED2D-25B6-31B8-274F2A1F7F2F}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger" AutoDeleteType="true">FB_TcMessage</Name>
 			<BitSize>3584</BitSize>
-			<ExtendsType GUID="{868BEC61-5115-374B-FCB2-811A87FBDCA4}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcEventBase</ExtendsType>
+			<ExtendsType GUID="{810BBB96-571B-399E-1C40-04A8E1C5A29E}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcEventBase</ExtendsType>
 			<Implements GUID="{AD098F47-4145-D096-DC8A-196CC086D846}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">true</Implements>
 			<PropertyItem>
 				<Name>nTimeSent</Name>
@@ -19681,7 +19681,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{E9090CC4-75CF-746E-0A3D-EA33724ECA47}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_Register</Name>
+			<Name GUID="{FD25E4B0-EE9B-535A-D9ED-B3134848951D}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_Register</Name>
 			<Comment><![CDATA[ initializes the PLC API for IPC diagnostics on a specific IPC]]></Comment>
 			<BitSize>44032</BitSize>
 			<SubItem>
@@ -19828,7 +19828,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbErrorMessage</Name>
-				<Type GUID="{1E6D333D-0D9F-35BC-0C75-ABC2619F1000}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcMessage</Type>
+				<Type GUID="{7ADF912A-ED2D-25B6-31B8-274F2A1F7F2F}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcMessage</Type>
 				<BitSize>3584</BitSize>
 				<BitOffs>40192</BitOffs>
 				<Properties>
@@ -21012,7 +21012,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{FF1C8CD6-FB43-6EDA-AFB4-F260CE19CB9F}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_ParameterKey</Name>
+			<Name GUID="{0132DF87-1BE7-2F0D-8105-23B20BD94AA6}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_ParameterKey</Name>
 			<BitSize>896</BitSize>
 			<SubItem>
 				<Name>eParamKey</Name>
@@ -21208,6 +21208,12 @@
 				<ReturnBitSize>8</ReturnBitSize>
 			</Method>
 			<Method>
+				<Name>GetMDPTableID</Name>
+				<Comment><![CDATA[ returns the MDP table id (part of MDP address) ]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000001}">BYTE</ReturnType>
+				<ReturnBitSize>8</ReturnBitSize>
+			</Method>
+			<Method>
 				<Name>GetMDPSubIndex</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000001}">BYTE</ReturnType>
 				<ReturnBitSize>8</ReturnBitSize>
@@ -21231,11 +21237,6 @@
 				<Name>GetMDPFlags</Name>
 				<ReturnType GUID="{18071995-0000-0000-0000-000000000001}">BYTE</ReturnType>
 				<ReturnBitSize>8</ReturnBitSize>
-			</Method>
-			<Method>
-				<Name>GetMDPModuleType</Name>
-				<ReturnType GUID="{2D714C48-DBCA-85E3-FD04-D9D88651197F}" Namespace="Tc3_IPCDiag">E_IPCDiag_ModuleType</ReturnType>
-				<ReturnBitSize>16</ReturnBitSize>
 			</Method>
 			<Method>
 				<Name>__geteAccess</Name>
@@ -21263,10 +21264,9 @@
 				<ReturnBitSize>8</ReturnBitSize>
 			</Method>
 			<Method>
-				<Name>GetMDPTableID</Name>
-				<Comment><![CDATA[ returns the MDP table id (part of MDP address) ]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000001}">BYTE</ReturnType>
-				<ReturnBitSize>8</ReturnBitSize>
+				<Name>GetMDPModuleType</Name>
+				<ReturnType GUID="{2D714C48-DBCA-85E3-FD04-D9D88651197F}" Namespace="Tc3_IPCDiag">E_IPCDiag_ModuleType</ReturnType>
+				<ReturnBitSize>16</ReturnBitSize>
 			</Method>
 			<Method>
 				<Name>SetKey</Name>
@@ -21615,7 +21615,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{6642DA94-5EB5-117A-314D-36A800C6690A}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_ReadParameterBase</Name>
+			<Name GUID="{D5518404-DE3A-237D-B2E5-29889CC5434F}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_ReadParameterBase</Name>
 			<Comment><![CDATA[| reads an IPC diagnostic parameter.
 | If the parameter exists in more than one module (configuration area) all values can be read at once.
 | If the parameter is a list parameter the full list will be read. (but only of one specified module)]]></Comment>
@@ -21708,7 +21708,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbRegister</Name>
-				<Type GUID="{E9090CC4-75CF-746E-0A3D-EA33724ECA47}" Namespace="Tc3_IPCDiag" ReferenceTo="true">FB_IPCDiag_Register</Type>
+				<Type GUID="{FD25E4B0-EE9B-535A-D9ED-B3134848951D}" Namespace="Tc3_IPCDiag" ReferenceTo="true">FB_IPCDiag_Register</Type>
 				<Comment><![CDATA[ read-only]]></Comment>
 				<BitSize>32</BitSize>
 				<BitOffs>480</BitOffs>
@@ -21811,7 +21811,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbKey</Name>
-				<Type GUID="{FF1C8CD6-FB43-6EDA-AFB4-F260CE19CB9F}" Namespace="Tc3_IPCDiag">FB_IPCDiag_ParameterKey</Type>
+				<Type GUID="{0132DF87-1BE7-2F0D-8105-23B20BD94AA6}" Namespace="Tc3_IPCDiag">FB_IPCDiag_ParameterKey</Type>
 				<BitSize>896</BitSize>
 				<BitOffs>640</BitOffs>
 				<Properties>
@@ -22118,7 +22118,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbErrorMessage</Name>
-				<Type GUID="{1E6D333D-0D9F-35BC-0C75-ABC2619F1000}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcMessage</Type>
+				<Type GUID="{7ADF912A-ED2D-25B6-31B8-274F2A1F7F2F}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcMessage</Type>
 				<BitSize>3584</BitSize>
 				<BitOffs>8576</BitOffs>
 				<Properties>
@@ -22402,7 +22402,7 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{C42749C4-28B1-6384-87EB-666CC77BFE11}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_ReadParameter</Name>
+			<Name GUID="{816425C0-D4EA-66DD-D7A2-65ED200ABEA2}" Namespace="Tc3_IPCDiag" AutoDeleteType="true">FB_IPCDiag_ReadParameter</Name>
 			<Comment><![CDATA[| reads an IPC diagnostic parameter.
 | If the parameter exists in more than one module (configuration area) all values can be read at once.
 | If the parameter is a list parameter the full list will be read. (but only of one specified module)]]></Comment>
@@ -22495,7 +22495,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbRegister</Name>
-				<Type GUID="{E9090CC4-75CF-746E-0A3D-EA33724ECA47}" Namespace="Tc3_IPCDiag" ReferenceTo="true">FB_IPCDiag_Register</Type>
+				<Type GUID="{FD25E4B0-EE9B-535A-D9ED-B3134848951D}" Namespace="Tc3_IPCDiag" ReferenceTo="true">FB_IPCDiag_Register</Type>
 				<Comment><![CDATA[ read-only]]></Comment>
 				<BitSize>32</BitSize>
 				<BitOffs>480</BitOffs>
@@ -22620,7 +22620,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbReadParam</Name>
-				<Type GUID="{6642DA94-5EB5-117A-314D-36A800C6690A}" Namespace="Tc3_IPCDiag">FB_IPCDiag_ReadParameterBase</Type>
+				<Type GUID="{D5518404-DE3A-237D-B2E5-29889CC5434F}" Namespace="Tc3_IPCDiag">FB_IPCDiag_ReadParameterBase</Type>
 				<BitSize>12480</BitSize>
 				<BitOffs>768</BitOffs>
 				<Properties>
@@ -22631,7 +22631,7 @@
 			</SubItem>
 			<SubItem>
 				<Name>fbErrorMessage</Name>
-				<Type GUID="{1E6D333D-0D9F-35BC-0C75-ABC2619F1000}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcMessage</Type>
+				<Type GUID="{7ADF912A-ED2D-25B6-31B8-274F2A1F7F2F}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory.Tc3_EventLogger">FB_TcMessage</Type>
 				<BitSize>3584</BitSize>
 				<BitOffs>13248</BitOffs>
 				<Properties>
@@ -22901,6 +22901,112 @@
 				<GetCodeOffs>119519492</GetCodeOffs>
 			</PropertyItem>
 			<Method>
+				<Name>Clear</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+			</Method>
+			<Method>
+				<Name>GetFreeSpaceOfVol</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>pBuffer</Name>
+					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>nBufferSize</Name>
+					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
+				<Name RpcEnable="plc" VTableIndex="6">__getipMemMan</Name>
+				<ReturnType GUID="{0A415CFE-BBD8-136A-1BB3-3F0398C66BB9}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory" RpcDirection="out">I_DynMem_Manager</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Local>
+					<Name>ipMemMan</Name>
+					<Type GUID="{0A415CFE-BBD8-136A-1BB3-3F0398C66BB9}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory">I_DynMem_Manager</Type>
+					<BitSize>32</BitSize>
+				</Local>
+				<Properties>
+					<Property>
+						<Name>property</Name>
+					</Property>
+				</Properties>
+			</Method>
+			<Method>
+				<Name>GetMDPVersion</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>pBuffer</Name>
+					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>nBufferSize</Name>
+					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Local>
+					<Name>nLen</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000005}">UINT</Type>
+					<BitSize>16</BitSize>
+				</Local>
+			</Method>
+			<Method>
+				<Name>GetTCVersion</Name>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>pBuffer</Name>
+					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>nBufferSize</Name>
+					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Local>
+					<Name>nLen</Name>
+					<Type GUID="{18071995-0000-0000-0000-000000000005}">UINT</Type>
+					<BitSize>16</BitSize>
+				</Local>
+			</Method>
+			<Method>
+				<Name>GetParameterStrings</Name>
+				<Comment><![CDATA[| access a read string parameter with multiple values.
+| If more than one value is available all values can be copied to an ARRAY[] OF STRING at once.]]></Comment>
+				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
+				<ReturnBitSize>32</ReturnBitSize>
+				<Parameter>
+					<Name>pBuffer</Name>
+					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>nBufferSize</Name>
+					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
+					<BitSize>32</BitSize>
+				</Parameter>
+				<Parameter>
+					<Name>nStrings</Name>
+					<Comment><![CDATA[ max. number of strings to be copied (each string with size=nBufferSize/nStrings)]]></Comment>
+					<Type GUID="{18071995-0000-0000-0000-000000000002}">USINT</Type>
+					<BitSize>8</BitSize>
+				</Parameter>
+			</Method>
+			<Method>
 				<Name>ReadFreeSpaceOfVol</Name>
 				<ReturnBitSize X64="64">32</ReturnBitSize>
 				<Local>
@@ -22969,112 +23075,6 @@
 						</Property>
 					</Properties>
 				</Local>
-			</Method>
-			<Method>
-				<Name>GetFreeSpaceOfVol</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>pBuffer</Name>
-					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>nBufferSize</Name>
-					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name>GetMDPVersion</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>pBuffer</Name>
-					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>nBufferSize</Name>
-					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Local>
-					<Name>nLen</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000005}">UINT</Type>
-					<BitSize>16</BitSize>
-				</Local>
-			</Method>
-			<Method>
-				<Name>Clear</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-			</Method>
-			<Method>
-				<Name>GetTCVersion</Name>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>pBuffer</Name>
-					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>nBufferSize</Name>
-					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Local>
-					<Name>nLen</Name>
-					<Type GUID="{18071995-0000-0000-0000-000000000005}">UINT</Type>
-					<BitSize>16</BitSize>
-				</Local>
-			</Method>
-			<Method>
-				<Name>GetParameterStrings</Name>
-				<Comment><![CDATA[| access a read string parameter with multiple values.
-| If more than one value is available all values can be copied to an ARRAY[] OF STRING at once.]]></Comment>
-				<ReturnType GUID="{18071995-0000-0000-0000-000000000019}">HRESULT</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Parameter>
-					<Name>pBuffer</Name>
-					<Comment><![CDATA[ parameter buffer with a given size of nBufferSize]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000018}">PVOID</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>nBufferSize</Name>
-					<Comment><![CDATA[ buffer size in bytes (for one or more values)]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-					<BitSize>32</BitSize>
-				</Parameter>
-				<Parameter>
-					<Name>nStrings</Name>
-					<Comment><![CDATA[ max. number of strings to be copied (each string with size=nBufferSize/nStrings)]]></Comment>
-					<Type GUID="{18071995-0000-0000-0000-000000000002}">USINT</Type>
-					<BitSize>8</BitSize>
-				</Parameter>
-			</Method>
-			<Method>
-				<Name RpcEnable="plc" VTableIndex="6">__getipMemMan</Name>
-				<ReturnType GUID="{0A415CFE-BBD8-136A-1BB3-3F0398C66BB9}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory" RpcDirection="out">I_DynMem_Manager</ReturnType>
-				<ReturnBitSize>32</ReturnBitSize>
-				<Local>
-					<Name>ipMemMan</Name>
-					<Type GUID="{0A415CFE-BBD8-136A-1BB3-3F0398C66BB9}" Namespace="EfficientIO_Communicator.Tc3_IotBase.Tc3_DynamicMemory">I_DynMem_Manager</Type>
-					<BitSize>32</BitSize>
-				</Local>
-				<Properties>
-					<Property>
-						<Name>property</Name>
-					</Property>
-				</Properties>
 			</Method>
 			<Method>
 				<Name>ReadMDPVersion</Name>
@@ -24234,7 +24234,7 @@
 			</Hides>
 		</DataType>
 	</DataTypes>
-	<Project ProjectGUID="{D7602FBF-3EF6-4A0D-9487-3CB6396A7006}" TargetNetId="5.109.229.183.1.1" Target64Bit="true" ShowHideConfigurations="#x3c7">
+	<Project ProjectGUID="{D7602FBF-3EF6-4A0D-9487-3CB6396A7006}" TargetNetId="5.109.229.183.1.1" ShowHideConfigurations="#x3c7">
 		<System>
 			<Licenses>
 				<Target>
@@ -24255,7 +24255,7 @@
 		</System>
 		<Plc>
 			<Project Name="PowerLink_v2" AmsPort="851" TargetArchiveSettings="#x0001" FileArchiveSettings="#x0000" SymbolicMapping="true">
-				<Instance Id="#x08502000" KeepUnrestoredLinks="2" AutoReloadTmc="true" TmcPath="..\PowerLink_v2_PLC\PowerLink_v2\PowerLink_v2.tmc" TmcHash="{B6B64133-2F73-29F1-B3F2-B9F873915130}">
+				<Instance Id="#x08502000" KeepUnrestoredLinks="2" AutoReloadTmc="true" TmcPath="..\PowerLink_v2_PLC\PowerLink_v2\PowerLink_v2.tmc" TmcHash="{D7F71CD8-AD21-A08C-15BE-8BEF5AA14A33}">
 					<Name>PowerLink_v2 Instance</Name>
 					<TmcDesc GUID="{997CED0E-95F6-4FFD-B4E8-88E04BFF00F3}" TcSmClass="TComPlcObjDef">
 						<Name>PowerLink_v2</Name>
@@ -24402,6 +24402,234 @@
 								<Name>FastTask Internal</Name>
 								<ContextId>0</ContextId>
 								<ByteSize>120782848</ByteSize>
+								<Symbol TcContextMask="#x00000007">
+									<Name>Global_Variables.AMSPORT_R3_SYSSERV</Name>
+									<Comment><![CDATA[ TwinCAT System Service ]]></Comment>
+									<BitSize>16</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
+									<Default>
+										<Value>10000</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3072848</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSIGRP_SYM_HNDBYNAME</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>61443</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073312</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSIGRP_SYM_VALBYHND</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>61445</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073376</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSIGRP_SYM_RELEASEHND</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>61446</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073408</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSIGRP_SYM_INFOBYNAME</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>61447</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073440</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSIGRP_SYM_UPLOAD</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>61451</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073568</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSIGRP_SYM_UPLOADINFO</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>61452</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073600</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.SYSTEMSERVICE_FOPEN</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>120</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074208</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.SYSTEMSERVICE_FCLOSE</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>121</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074240</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.SYSTEMSERVICE_FSEEK</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>124</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074336</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.SYSTEMSERVICE_FTELL</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>125</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074368</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.SYSTEMSERVICE_FGETS</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>126</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074400</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.SYSTEMSERVICE_REG_HKEYLOCALMACHINE</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>200</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074688</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.FOPEN_MODEREAD</Name>
+									<Comment><![CDATA["r": Opens for reading. If the file does not exist or cannot be found, the call fails.]]></Comment>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000007}">DWORD</BaseType>
+									<Default>
+										<Value>1</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3075296</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.FOPEN_MODETEXT</Name>
+									<Comment><![CDATA["t": Open in text (translated) mode.]]></Comment>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000007}">DWORD</BaseType>
+									<Default>
+										<Value>32</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3075456</BitOffs>
+								</Symbol>
+								<Symbol TcContextMask="#x00000007">
+									<Name>Global_Variables.DEFAULT_ADS_TIMEOUT</Name>
+									<Comment><![CDATA[ Default ADS timeout value ]]></Comment>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000048}">TIME</BaseType>
+									<Default>
+										<DateTime>5000</DateTime>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3075936</BitOffs>
+								</Symbol>
 								<Symbol>
 									<Name>prgRWEffIO.fbRW1</Name>
 									<BitSize>3399040</BitSize>
@@ -25442,6 +25670,106 @@
 								<Name>MiddleTask Internal</Name>
 								<ContextId>1</ContextId>
 								<ByteSize>120782848</ByteSize>
+								<Symbol>
+									<Name>Global_Variables.AMSPORT_R0_IO</Name>
+									<Comment><![CDATA[ I/O Driver ]]></Comment>
+									<BitSize>16</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
+									<Default>
+										<Value>300</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3072624</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSSTATE_RESET</Name>
+									<BitSize>16</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
+									<Default>
+										<Value>2</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3072912</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSSTATE_POWERFAILURE</Name>
+									<BitSize>16</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
+									<Default>
+										<Value>9</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073024</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.ADSSTATE_SHUTDOWN</Name>
+									<BitSize>16</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
+									<Default>
+										<Value>12</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3073072</BitOffs>
+								</Symbol>
+								<Symbol TcContextMask="#x00000006">
+									<Name>Global_Variables.SYSTEMSERVICE_TIMESERVICES</Name>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>400</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074752</BitOffs>
+								</Symbol>
+								<Symbol TcContextMask="#x00000006">
+									<Name>Global_Variables.TIMESERVICE_DATEANDTIME</Name>
+									<Comment><![CDATA[ Date/time ]]></Comment>
+									<BitSize>32</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
+									<Default>
+										<Value>1</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3074848</BitOffs>
+								</Symbol>
+								<Symbol>
+									<Name>Global_Variables.PI</Name>
+									<BitSize>64</BitSize>
+									<BaseType GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</BaseType>
+									<Default>
+										<Value>3.14159265358979</Value>
+									</Default>
+									<Properties>
+										<Property>
+											<Name>TcVarGlobal</Name>
+										</Property>
+									</Properties>
+									<BitOffs>3075968</BitOffs>
+								</Symbol>
 								<Symbol>
 									<Name>prgEMS.bQ1On</Name>
 									<Comment><![CDATA[{#lynus.ag#()}]]></Comment>
@@ -26491,7 +26819,7 @@
 								<Symbol>
 									<Name>prgCS.fbLIBREO_1</Name>
 									<BitSize>53184</BitSize>
-									<BaseType GUID="{E4F5469C-F532-5596-3DCF-E659AD50303B}">FB_ECS_LIBREO</BaseType>
+									<BaseType GUID="{15CF121F-8C15-7839-4DCB-1C1A2E28B0F1}">FB_ECS_LIBREO</BaseType>
 									<BitOffs>886242368</BitOffs>
 								</Symbol>
 								<Symbol>
@@ -26657,7 +26985,7 @@
 									<Name>prgPV.fbEnphase</Name>
 									<Comment><![CDATA[	fbPV						: FB_Hoymiles_DTU_ProS_PV_Inverter;]]></Comment>
 									<BitSize>53184</BitSize>
-									<BaseType GUID="{918E4887-52C5-3A8A-A3C1-AC6C6013E6D4}">FB_Enphase</BaseType>
+									<BaseType GUID="{B2225D5B-3F90-3677-D5DB-1E629B6BB068}">FB_Enphase</BaseType>
 									<BitOffs>886356224</BitOffs>
 								</Symbol>
 								<Symbol>
@@ -26889,21 +27217,6 @@
 									<BitOffs>3072608</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.AMSPORT_R0_IO</Name>
-									<Comment><![CDATA[ I/O Driver ]]></Comment>
-									<BitSize>16</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
-									<Default>
-										<Value>300</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3072624</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.AMSPORT_R0_NC</Name>
 									<BitSize>16</BitSize>
 									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
@@ -27091,21 +27404,6 @@
 									<BitOffs>3072832</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.AMSPORT_R3_SYSSERV</Name>
-									<Comment><![CDATA[ TwinCAT System Service ]]></Comment>
-									<BitSize>16</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
-									<Default>
-										<Value>10000</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3072848</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.AMSPORT_R3_SCOPESERVER</Name>
 									<Comment><![CDATA[ TwinCAT Scope Server ]]></Comment>
 									<BitSize>16</BitSize>
@@ -27148,20 +27446,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3072896</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSSTATE_RESET</Name>
-									<BitSize>16</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
-									<Default>
-										<Value>2</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3072912</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.ADSSTATE_INIT</Name>
@@ -27248,20 +27532,6 @@
 									<BitOffs>3073008</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSSTATE_POWERFAILURE</Name>
-									<BitSize>16</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
-									<Default>
-										<Value>9</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073024</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.ADSSTATE_POWERGOOD</Name>
 									<BitSize>16</BitSize>
 									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
@@ -27288,20 +27558,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3073056</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSSTATE_SHUTDOWN</Name>
-									<BitSize>16</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000005}">UINT</BaseType>
-									<Default>
-										<Value>12</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073072</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.ADSSTATE_SUSPEND</Name>
@@ -27464,20 +27720,6 @@
 									<BitOffs>3073280</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSIGRP_SYM_HNDBYNAME</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>61443</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073312</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.ADSIGRP_SYM_VALBYNAME</Name>
 									<BitSize>32</BitSize>
 									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
@@ -27490,48 +27732,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3073344</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSIGRP_SYM_VALBYHND</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>61445</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073376</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSIGRP_SYM_RELEASEHND</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>61446</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073408</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSIGRP_SYM_INFOBYNAME</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>61447</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073440</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.ADSIGRP_SYM_VERSION</Name>
@@ -27574,34 +27774,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3073536</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSIGRP_SYM_UPLOAD</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>61451</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073568</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.ADSIGRP_SYM_UPLOADINFO</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>61452</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3073600</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.ADSIGRP_SYMNOTE</Name>
@@ -27874,34 +28046,6 @@
 									<BitOffs>3074176</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.SYSTEMSERVICE_FOPEN</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>120</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074208</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.SYSTEMSERVICE_FCLOSE</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>121</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074240</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.SYSTEMSERVICE_FREAD</Name>
 									<BitSize>32</BitSize>
 									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
@@ -27928,48 +28072,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3074304</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.SYSTEMSERVICE_FSEEK</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>124</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074336</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.SYSTEMSERVICE_FTELL</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>125</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074368</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.SYSTEMSERVICE_FGETS</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>126</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074400</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.SYSTEMSERVICE_FPUTS</Name>
@@ -28084,20 +28186,6 @@
 									<BitOffs>3074656</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.SYSTEMSERVICE_REG_HKEYLOCALMACHINE</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>200</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074688</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.SYSTEMSERVICE_SENDEMAIL</Name>
 									<BitSize>32</BitSize>
 									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
@@ -28110,20 +28198,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3074720</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.SYSTEMSERVICE_TIMESERVICES</Name>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>400</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074752</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.SYSTEMSERVICE_STARTPROCESS</Name>
@@ -28152,21 +28226,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3074816</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.TIMESERVICE_DATEANDTIME</Name>
-									<Comment><![CDATA[ Date/time ]]></Comment>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000008}">UDINT</BaseType>
-									<Default>
-										<Value>1</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3074848</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.TIMESERVICE_SYSTEMTIMES</Name>
@@ -28444,21 +28503,6 @@
 									<BitOffs>3075288</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.FOPEN_MODEREAD</Name>
-									<Comment><![CDATA["r": Opens for reading. If the file does not exist or cannot be found, the call fails.]]></Comment>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000007}">DWORD</BaseType>
-									<Default>
-										<Value>1</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3075296</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.FOPEN_MODEWRITE</Name>
 									<Comment><![CDATA["w": Opens an empty file for writing. If the given file exists, its contents are destroyed.]]></Comment>
 									<BitSize>32</BitSize>
@@ -28517,21 +28561,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3075424</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.FOPEN_MODETEXT</Name>
-									<Comment><![CDATA["t": Open in text (translated) mode.]]></Comment>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000007}">DWORD</BaseType>
-									<Default>
-										<Value>32</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3075456</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.TCEVENTFLAG_PRIOCLASS</Name>
@@ -28738,35 +28767,6 @@
 										</Property>
 									</Properties>
 									<BitOffs>3075920</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.DEFAULT_ADS_TIMEOUT</Name>
-									<Comment><![CDATA[ Default ADS timeout value ]]></Comment>
-									<BitSize>32</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-000000000048}">TIME</BaseType>
-									<Default>
-										<DateTime>5000</DateTime>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3075936</BitOffs>
-								</Symbol>
-								<Symbol TcContextMask="#x00000000">
-									<Name>Global_Variables.PI</Name>
-									<BitSize>64</BitSize>
-									<BaseType GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</BaseType>
-									<Default>
-										<Value>3.14159265358979</Value>
-									</Default>
-									<Properties>
-										<Property>
-											<Name>TcVarGlobal</Name>
-										</Property>
-									</Properties>
-									<BitOffs>3075968</BitOffs>
 								</Symbol>
 								<Symbol TcContextMask="#x00000000">
 									<Name>Global_Variables.MAX_STRING_LENGTH</Name>
@@ -34907,7 +34907,7 @@
 								<Symbol>
 									<Name>prg_ReadDeviceName.fbDiagRegister</Name>
 									<BitSize>44032</BitSize>
-									<BaseType GUID="{E9090CC4-75CF-746E-0A3D-EA33724ECA47}">Tc3_IPCDiag.FB_IPCDiag_Register</BaseType>
+									<BaseType GUID="{FD25E4B0-EE9B-535A-D9ED-B3134848951D}">Tc3_IPCDiag.FB_IPCDiag_Register</BaseType>
 									<Default>
 										<SubItem>
 											<Name>.sNetId</Name>
@@ -34928,7 +34928,7 @@
 								<Symbol>
 									<Name>prg_ReadDeviceName.fbDiagRead</Name>
 									<BitSize>18432</BitSize>
-									<BaseType GUID="{C42749C4-28B1-6384-87EB-666CC77BFE11}">Tc3_IPCDiag.FB_IPCDiag_ReadParameter</BaseType>
+									<BaseType GUID="{816425C0-D4EA-66DD-D7A2-65ED200ABEA2}">Tc3_IPCDiag.FB_IPCDiag_ReadParameter</BaseType>
 									<Default>
 										<SubItem>
 											<Name>.sNetId</Name>
@@ -35489,7 +35489,7 @@
 							</Property>
 							<Property>
 								<Name>ChangeDate</Name>
-								<Value>2024-10-29T23:15:42</Value>
+								<Value>2024-11-25T13:20:23</Value>
 							</Property>
 							<Property>
 								<Name>GeneratedCodeSize</Name>
@@ -35520,7 +35520,7 @@
 							</Value>
 							<Value>
 								<Name>Application Timestamp</Name>
-								<Value>1730243742</Value>
+								<Value>1732540823</Value>
 							</Value>
 							<Value>
 								<Name>Symbolic Mapping</Name>
