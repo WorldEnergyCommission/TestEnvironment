@@ -3,94 +3,121 @@
   <POU Name="prgMBUS" Id="{75a6bae3-d772-49c9-ad22-4c5eae811182}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgMBUS
 VAR
-	fbMBusKL6781 		: FB_MBUSKL6781;        // Haupt-Funktionsbaustein für die M-Bus-Kommunikation
-	stComIn    AT %I*	: ST_KL6781inData22B;  // Eingabestruktur für KL6781
-	stComOut   AT %Q*	: ST_KL6781outData22B; // Ausgabestruktur für KL6781
-	stCom				: ST_MBUS_Communication; // Kommunikationsstruktur für alle M-Bus-Geräte
-	fb_Mbus_Heat		: FB_MBUS_General_Heat; // Funktionsbaustein für Wasserzähler
-	fbmbusScan			: FB_MBUS_Scan;        // Funktionsbaustein zum Scannen der Geräte
-	m_StartScan			: BOOL;                 // Variable, um den Scanvorgang zu starten
-	FB_ChangeAdress 	: FB_MBUS_ChangeAdr;    // Funktionsbaustein zum Ändern der Adresse
-	m_Start 			: BOOL;                 // Variable zum Starten der Kommunikation mit dem Wärmezähler
-	usi_Old 			: USINT;                // Alte Adresse für Adressänderung
-	usi_New	 			: USINT;                // Neue Adresse für Adressänderung
-	m_Start_Change		: BOOL;                 // Variable zum Starten der Adressänderung
-	m_Disable_Change 	: BOOL;                 // Deaktiviert die Adressänderung
-	usi_ScannedAddress  : USINT;                // Gefundene Adresse nach dem Scan
-	bDataReady          : BOOL;    				// Flag, dass die Daten bereit sind
-	
-	lrPowerKW_MBUS		:REAL;
-	lrEnergyKWh_MBUS	:REAL;
-END_VAR
-VAR PERSISTENT
-END_VAR
-]]></Declaration>
+	// M-Bus Kommunikation (KL6781)
+	fbMBusKL6781         : FB_MBUSKL6781;             // Hauptbaustein für die M-Bus-Kommunikation
+	stComIn              AT %I* : ST_KL6781inData22B; // Eingabestruktur für KL6781
+	stComOut             AT %Q* : ST_KL6781outData22B;// Ausgabestruktur für KL6781
+	stCom                : ST_MBUS_Communication;     // Kommunikationsstruktur für alle M-Bus-Geräte
+
+	// Wärmezähler (Supercal 531)
+	fbSupercal1          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Wärmezähler 1
+	fbSupercal2          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Wärmezähler 2
+	fbSupercal3          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Wärmezähler 3
+
+	// Variablen für Steuerung
+	m_Start1             : BOOL;                      // Start Kommunikation Wärmezähler 1
+	m_Start2             : BOOL;                      // Start Kommunikation Wärmezähler 2
+	m_Start3             : BOOL;                      // Start Kommunikation Wärmezähler 3
+
+	// Status-Flags
+	bDataReady1          : BOOL;                      // Daten bereit Wärmezähler 1
+	bDataReady2          : BOOL;                      // Daten bereit Wärmezähler 2
+	bDataReady3          : BOOL;                      // Daten bereit Wärmezähler 3
+
+	// Ausgelesene Werte Wärmezähler
+	lrEnergy1            : LREAL;                     // Energie in kWh Wärmezähler 1
+	rFlow1               : REAL;                      // Durchfluss Wärmezähler 1
+	rPower1              : REAL;                      // Leistung Wärmezähler 1
+
+	lrEnergy2            : LREAL;                     // Energie in kWh Wärmezähler 2
+	rFlow2               : REAL;                      // Durchfluss Wärmezähler 2
+	rPower2              : REAL;                      // Leistung Wärmezähler 2
+
+	lrEnergy3            : LREAL;                     // Energie in kWh Wärmezähler 3
+	rFlow3               : REAL;                      // Durchfluss Wärmezähler 3
+	rPower3              : REAL;                      // Leistung Wärmezähler 3
+	lrEnergy			 : LREAL;					  // Variable für die Energie
+	lrFlow				 : LREAL;					  // Variable für den Durchfluss
+	lrPower				 : LREAL;					  // Variable für die Leistung
+END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// Initialisierung des M-Bus-Kommunikationsbausteins
+      <ST><![CDATA[// ** M-Bus Hauptkommunikation **
 fbMBusKL6781(
-	usiRetries:= 3,                    // Anzahl der Wiederholungen bei Fehler
-	bStart:= TRUE,                     // Startet den M-Bus
-	bDisabled:= FALSE,                 // Deaktiviert den M-Bus nicht
-	bBusy=> , 
-	bReady=> , 
-	bError=> , 
-	eError=> , 
-	stComIn:= stComIn, 
-	stComOut:= stComOut, 
-	stCom:= stCom
+	usiRetries := 3,                    // Anzahl der Wiederholungen bei Fehler
+	bStart := TRUE,                     // Startet die M-Bus-Kommunikation
+	bDisabled := FALSE,                 // Deaktiviert die M-Bus-Kommunikation nicht
+	bBusy => , 
+	bReady => , 
+	bError => , 
+	eError => , 
+	stComIn := stComIn, 
+	stComOut := stComOut, 
+	stCom := stCom
 );
 
-// Kommunikation mit dem Wärmezähler starten
-fb_Mbus_Heat(
-	usiAddress:= usi_ScannedAddress,      // Verwendet die gescannte Adresse des Wärmezählers
-	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud9600, 
-	bStart:= m_Start,                     // Startet die Kommunikation mit dem Wärmezähler
-	tMinSendTime:= T#10S, 
-	bDisabled:= FALSE,                    // Wärmezähler-Kommunikation aktivieren
-	bBusy=> , 
-	bReady=> bDataReady,                  // Status, ob Daten bereit sind
-	bError=> , 
-	eError=> , 
-	stCom:= stCom
+// ** Wärmezähler 1 (Supercal 531) auslesen **
+fbSupercal1(
+	usiAddress 	:= ,                    // M-Bus-Adresse des Wärmezählers 1 (Primär)
+	stSecAdr	:= ,					// M-Bus-Adresse des Wärmezählers 1 (Sekundär)
+	bStart 		:= m_Start1,                 // Startflag für Wärmezähler 1
+	bDisabled 	:= FALSE,                 // Wärmezähler 1 nicht deaktivieren
+	bBusy => , 
+	bReady => bDataReady1,              // Datenbereit-Status Wärmezähler 1
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
 );
-
-// Scannen der M-Bus-Geräte
-fbmbusScan(
-	bStart:= m_StartScan, 
-	bStop:= NOT m_StartScan, 
-	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud9600, 
-	bDisabled:= FALSE, 
-	bBusy=> , 
-	bReady=> , 
-	bError=> , 
-	eError=> , 
-	usiAddress=> usi_ScannedAddress,   // Gefundene Adresse wird hier gespeichert
-	usiCount=> , 
-	arrDevice=> , 
-	stCom:= stCom
-);
-
-// Daten auslesen, wenn bereit korrektur WORDTOREAL
-(*
-IF bDataReady THEN
-    lrPowerKW_MBUS 		:= WORD_TO_REAL(fb_Mbus_Heat.stPower);   			// Aktuelle Leistung in kW
-    lrEnergyKWh_MBUS 	:= WORD_TO_REAL(fb_Mbus_Heat.stEnergy); 				// Gesamtenergie in kWh
+IF bDataReady1 THEN
+    lrEnergy1 	:= STRING_TO_REAL(fbSupercal1.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow1 		:= STRING_TO_REAL(fbSupercal1.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower1 	:= STRING_TO_REAL(fbSupercal1.stPower.sValue);                    	// Leistung (kW)
 END_IF
-*)
-]]></ST>
+
+// ** Wärmezähler 2 (Supercal 531) auslesen **
+fbSupercal2(
+	usiAddress 	:= 2,                    // M-Bus-Adresse des Wärmezählers 2
+	stSecAdr	:= ,					// M-Bus-Adresse des Wärmezählers 1 (Sekundär)
+	bStart 		:= m_Start2,                 // Startflag für Wärmezähler 2
+	bDisabled 	:= FALSE,                 // Wärmezähler 2 nicht deaktivieren
+	bBusy => , 
+	bReady => bDataReady2,              // Datenbereit-Status Wärmezähler 2
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+IF bDataReady2 THEN
+    lrEnergy2 	:= STRING_TO_REAL(fbSupercal2.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow2 		:= STRING_TO_REAL(fbSupercal2.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower2 	:= STRING_TO_REAL(fbSupercal2.stPower.sValue);                    	// Leistung (kW)
+END_IF
+
+// ** Wärmezähler 3 (Supercal 531) auslesen **
+fbSupercal3(
+	usiAddress 	:= 3,                    // M-Bus-Adresse des Wärmezählers 3
+	bStart 		:= m_Start3,                 // Startflag für Wärmezähler 3
+	bDisabled 	:= FALSE,                 // Wärmezähler 3 nicht deaktivieren
+	bBusy => , 
+	bReady => bDataReady3,              // Datenbereit-Status Wärmezähler 3
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+IF bDataReady3 THEN
+    lrEnergy3 	:= STRING_TO_REAL(fbSupercal3.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow3 		:= STRING_TO_REAL(fbSupercal3.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower3 	:= STRING_TO_REAL(fbSupercal3.stPower.sValue);                    	// Leistung (kW)
+END_IF]]></ST>
     </Implementation>
     <LineIds Name="prgMBUS">
-      <LineId Id="364" Count="13" />
-      <LineId Id="420" Count="11" />
-      <LineId Id="390" Count="16" />
-      <LineId Id="437" Count="0" />
-      <LineId Id="433" Count="0" />
-      <LineId Id="468" Count="0" />
-      <LineId Id="434" Count="0" />
-      <LineId Id="444" Count="0" />
-      <LineId Id="443" Count="0" />
-      <LineId Id="442" Count="0" />
-      <LineId Id="441" Count="0" />
+      <LineId Id="629" Count="16" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="646" Count="8" />
+      <LineId Id="697" Count="1" />
+      <LineId Id="657" Count="5" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="663" Count="8" />
+      <LineId Id="695" Count="1" />
+      <LineId Id="674" Count="17" />
       <LineId Id="348" Count="0" />
     </LineIds>
   </POU>
