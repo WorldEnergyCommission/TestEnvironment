@@ -27,31 +27,6 @@
 			</Properties>
 		</DataType>
 		<DataType>
-			<Name GUID="{9C5D4328-9D49-5D84-32AA-448E1B17934D}" Namespace="Tc2_MBus" AutoDeleteType="true">ST_KL6781inData22B</Name>
-			<Comment><![CDATA[
-	This data type is corresponding to the
-	KL6781 data structure used in the
-	TwinCAT SystemManager
-]]></Comment>
-			<BitSize>192</BitSize>
-			<SubItem>
-				<Name>Status</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
-				<BitSize>16</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>D</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
-				<ArrayInfo>
-					<LBound>0</LBound>
-					<Elements>22</Elements>
-				</ArrayInfo>
-				<BitSize>176</BitSize>
-				<BitOffs>16</BitOffs>
-			</SubItem>
-		</DataType>
-		<DataType>
 			<Name GUID="{E4C24E72-EF65-C814-8E17-663F53275EE3}" Namespace="Tc2_ModbusRTU" AutoDeleteType="true">MB_KL6outData22B</Name>
 			<BitSize>192</BitSize>
 			<SubItem>
@@ -76,31 +51,6 @@
 				</Property>
 			</Properties>
 		</DataType>
-		<DataType>
-			<Name GUID="{BA9C462F-CFF8-B791-878F-07FF3A729923}" Namespace="Tc2_MBus" AutoDeleteType="true">ST_KL6781outData22B</Name>
-			<Comment><![CDATA[
-	This data type is corresponding to the
-	KL6781 data structure used in the
-	TwinCAT SystemManager
-]]></Comment>
-			<BitSize>192</BitSize>
-			<SubItem>
-				<Name>Ctrl</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000004}">WORD</Type>
-				<BitSize>16</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>D</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000001}">BYTE</Type>
-				<ArrayInfo>
-					<LBound>0</LBound>
-					<Elements>22</Elements>
-				</ArrayInfo>
-				<BitSize>176</BitSize>
-				<BitOffs>16</BitOffs>
-			</SubItem>
-		</DataType>
 	</DataTypes>
 	<Project ProjectGUID="{3DD79CA8-4D17-4717-8FA1-B80B526A0A15}" TargetNetId="5.123.218.205.1.1" ShowHideConfigurations="#x3c7">
 		<System>
@@ -124,11 +74,19 @@
 		</System>
 		<Plc>
 			<Project GUID="{544FF46F-C836-4E81-932F-A931626E6A16}" Name="PLC" PrjFilePath="PLC\PLC.plcproj" TmcFilePath="PLC\PLC.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC\PLC.tmc" TmcHash="{72A4D3C6-F308-BCE3-56C4-E62EFA837442}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC\PLC.tmc" TmcHash="{A65C01AC-7E1E-AFB4-02BD-5D4F97A84D8F}">
 					<Name>PLC Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
 						<Name>FastTask Inputs</Name>
+						<Var>
+							<Name>prgPV.fbModbusRtuMaster_KL6x22B.InData</Name>
+							<Type GUID="{F852D9F7-9DB9-AE77-EE6D-D9BA52CDE308}" Namespace="Tc2_ModbusRTU">MB_KL6inData22B</Type>
+						</Var>
+						<Var>
+							<Name>prgPV.fbModbusRtuMaster_KL6x22B.WcState</Name>
+							<Type>BOOL</Type>
+						</Var>
 						<Var>
 							<Name>prgPV.fb_RTU_Master.fbmodbusmaster.InData</Name>
 							<Type GUID="{F852D9F7-9DB9-AE77-EE6D-D9BA52CDE308}" Namespace="Tc2_ModbusRTU">MB_KL6inData22B</Type>
@@ -137,22 +95,16 @@
 							<Name>prgPV.fb_RTU_Master.fbmodbusmaster.WcState</Name>
 							<Type>BOOL</Type>
 						</Var>
-						<Var>
-							<Name>prgMBUS.stComIn</Name>
-							<Comment><![CDATA[ Eingabestruktur für KL6781]]></Comment>
-							<Type GUID="{9C5D4328-9D49-5D84-32AA-448E1B17934D}" Namespace="Tc2_MBus">ST_KL6781inData22B</Type>
-						</Var>
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>FastTask Outputs</Name>
 						<Var>
-							<Name>prgPV.fb_RTU_Master.fbmodbusmaster.OutData</Name>
+							<Name>prgPV.fbModbusRtuMaster_KL6x22B.OutData</Name>
 							<Type GUID="{E4C24E72-EF65-C814-8E17-663F53275EE3}" Namespace="Tc2_ModbusRTU">MB_KL6outData22B</Type>
 						</Var>
 						<Var>
-							<Name>prgMBUS.stComOut</Name>
-							<Comment><![CDATA[ Ausgabestruktur für KL6781]]></Comment>
-							<Type GUID="{BA9C462F-CFF8-B791-878F-07FF3A729923}" Namespace="Tc2_MBus">ST_KL6781outData22B</Type>
+							<Name>prgPV.fb_RTU_Master.fbmodbusmaster.OutData</Name>
+							<Type GUID="{E4C24E72-EF65-C814-8E17-663F53275EE3}" Namespace="Tc2_ModbusRTU">MB_KL6outData22B</Type>
 						</Var>
 					</Vars>
 					<Vars VarGrpType="1" ContextId="1" AreaNo="16">
@@ -202,24 +154,62 @@
 							<Type>BYTE</Type>
 						</Var>
 					</Vars>
-					<Vars VarGrpType="1" ContextId="2" AreaNo="32">
-						<Name>SlowTask Inputs</Name>
-						<Var>
-							<Name>prgPV.fbModbusRtuMaster_KL6x22B.InData</Name>
-							<Type GUID="{F852D9F7-9DB9-AE77-EE6D-D9BA52CDE308}" Namespace="Tc2_ModbusRTU">MB_KL6inData22B</Type>
-						</Var>
-						<Var>
-							<Name>prgPV.fbModbusRtuMaster_KL6x22B.WcState</Name>
-							<Type>BOOL</Type>
-						</Var>
-					</Vars>
-					<Vars VarGrpType="2" ContextId="2" AreaNo="33">
-						<Name>SlowTask Outputs</Name>
-						<Var>
-							<Name>prgPV.fbModbusRtuMaster_KL6x22B.OutData</Name>
-							<Type GUID="{E4C24E72-EF65-C814-8E17-663F53275EE3}" Namespace="Tc2_ModbusRTU">MB_KL6outData22B</Type>
-						</Var>
-					</Vars>
+					<UnrestoredVarLinks ImportTime="2024-11-28T07:30:15">
+						<OwnerA Name="InputDst" Prefix="TIPC^PLC^PLC Instance" Type="1">
+							<OwnerB Name="TIID^Device 3 (RT-Ethernet Protocol)^Box 2 (BK9050)">
+								<Link VarA="prgMBUS.stComIn^D[0]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 0" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[10]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 10" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[11]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 11" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[12]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 12" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[13]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 13" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[14]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 14" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[15]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 15" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[16]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 16" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[17]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 17" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[18]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 18" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[19]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 19" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[1]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 1" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[20]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 20" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[21]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 21" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[2]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 2" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[3]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 3" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[4]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 4" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[5]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 5" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[6]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 6" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[7]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 7" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[8]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 8" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^D[9]" TypeA="BYTE" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data In 9" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComIn^Status" TypeA="WORD" InOutA="0" ParentTypeA="ST_KL6781inData22B" GuidA="{18071995-0000-0000-0000-000000000004}" VarB="Term 4 (KL6041)^Channel 1^State" RestoreInfo="ANotFound"/>
+							</OwnerB>
+						</OwnerA>
+						<OwnerA Name="OutputSrc" Prefix="TIPC^PLC^PLC Instance" Type="2">
+							<OwnerB Name="TIID^Device 3 (RT-Ethernet Protocol)^Box 2 (BK9050)">
+								<Link VarA="prgMBUS.stComOut^Ctrl" TypeA="WORD" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000004}" VarB="Term 4 (KL6041)^Channel 1^Ctrl" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[0]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 0" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[10]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 10" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[11]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 11" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[12]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 12" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[13]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 13" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[14]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 14" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[15]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 15" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[16]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 16" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[17]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 17" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[18]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 18" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[19]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 19" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[1]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 1" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[20]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 20" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[21]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 21" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[2]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 2" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[3]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 3" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[4]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 4" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[5]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 5" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[6]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 6" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[7]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 7" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[8]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 8" RestoreInfo="ANotFound"/>
+								<Link VarA="prgMBUS.stComOut^D[9]" TypeA="BYTE" InOutA="1" ParentTypeA="ST_KL6781outData22B" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="Term 4 (KL6041)^Channel 1^Data Out 9" RestoreInfo="ANotFound"/>
+							</OwnerB>
+						</OwnerA>
+					</UnrestoredVarLinks>
 					<Contexts>
 						<Context>
 							<Id>0</Id>
@@ -260,7 +250,7 @@
 		<Io>
 			<Device Id="2" DevType="120">
 				<Name>Gerät 2 (CX-BK)</Name>
-				<DevData>000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffff0000000000000100000007000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</DevData>
+				<DevData>000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000007000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</DevData>
 				<Image Id="1" AddrType="1" ImageType="3" SizeIn="38" SizeOut="38">
 					<Name>Prozessabbild</Name>
 				</Image>
@@ -683,7 +673,7 @@ Bit 15 = Acyc. Function atcive (e.g. K-Bus Reset)
 					<Slot Id="#x03010011">
 						<Name>Slot 1 (MAC-DMA)</Name>
 						<ImageId>231</ImageId>
-						<CCatSlot SlotType="15000100030200000000010000400000" SlotData="0101a8c000ffffff0001057bdace0000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" SlotName="Slot 1 (MAC-DMA)" Ports="2" MacOids="1200010313000103140001030000000000000000000000000000000000000000" SlotNo="1"/>
+						<CCatSlot SlotType="15000100030200000000010000400000" SlotData="f101a8c000ffffff0001057bdace0000030000000101a8c000000000000000000000000000000000000000000000000000000000000000000000000000000000" SlotName="Slot 1 (MAC-DMA)" Ports="2" MacOids="1200010313000103140001030000000000000000000000000000000000000000" SlotNo="1"/>
 					</Slot>
 					<Slot Id="#x03010015">
 						<Name>Slot 2 (Switch)</Name>
@@ -1064,6 +1054,7 @@ inputs missed
 		</Io>
 	</Project>
 	<Mappings>
+		<MappingInfo Identifier="{00000000-2001-0850-0020-500820000403}" Id="#x02030020"/>
 		<MappingInfo Identifier="{00000000-2002-0850-0120-500810000403}" Id="#x02030010"/>
 		<OwnerA Name="TIPC^PLC^PLC Instance">
 			<OwnerB Name="TIID^Device 2 (CX-BK)^Box 1 (CX-BK)">
@@ -1079,52 +1070,52 @@ inputs missed
 				<Link VarA="MiddleTask Outputs^prgGrid.fbGrid.fbKL3403.byCntrCH3" VarB="Term 5 (KL3403)^Channel 3^Kontrolle"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 3 (RT-Ethernet Protocol)^Box 2 (BK9050)">
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[0]" VarB="Term 4 (KL6041)^Channel 1^Data In 0"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[10]" VarB="Term 4 (KL6041)^Channel 1^Data In 10"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[11]" VarB="Term 4 (KL6041)^Channel 1^Data In 11"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[12]" VarB="Term 4 (KL6041)^Channel 1^Data In 12"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[13]" VarB="Term 4 (KL6041)^Channel 1^Data In 13"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[14]" VarB="Term 4 (KL6041)^Channel 1^Data In 14"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[15]" VarB="Term 4 (KL6041)^Channel 1^Data In 15"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[16]" VarB="Term 4 (KL6041)^Channel 1^Data In 16"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[17]" VarB="Term 4 (KL6041)^Channel 1^Data In 17"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[18]" VarB="Term 4 (KL6041)^Channel 1^Data In 18"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[19]" VarB="Term 4 (KL6041)^Channel 1^Data In 19"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[1]" VarB="Term 4 (KL6041)^Channel 1^Data In 1"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[20]" VarB="Term 4 (KL6041)^Channel 1^Data In 20"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[21]" VarB="Term 4 (KL6041)^Channel 1^Data In 21"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[2]" VarB="Term 4 (KL6041)^Channel 1^Data In 2"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[3]" VarB="Term 4 (KL6041)^Channel 1^Data In 3"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[4]" VarB="Term 4 (KL6041)^Channel 1^Data In 4"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[5]" VarB="Term 4 (KL6041)^Channel 1^Data In 5"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[6]" VarB="Term 4 (KL6041)^Channel 1^Data In 6"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[7]" VarB="Term 4 (KL6041)^Channel 1^Data In 7"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[8]" VarB="Term 4 (KL6041)^Channel 1^Data In 8"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^D[9]" VarB="Term 4 (KL6041)^Channel 1^Data In 9"/>
-				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData^Status" VarB="Term 4 (KL6041)^Channel 1^State"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[0]" VarB="Term 4 (KL6041)^Channel 1^Data In 0"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[10]" VarB="Term 4 (KL6041)^Channel 1^Data In 10"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[11]" VarB="Term 4 (KL6041)^Channel 1^Data In 11"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[12]" VarB="Term 4 (KL6041)^Channel 1^Data In 12"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[13]" VarB="Term 4 (KL6041)^Channel 1^Data In 13"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[14]" VarB="Term 4 (KL6041)^Channel 1^Data In 14"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[15]" VarB="Term 4 (KL6041)^Channel 1^Data In 15"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[16]" VarB="Term 4 (KL6041)^Channel 1^Data In 16"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[17]" VarB="Term 4 (KL6041)^Channel 1^Data In 17"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[18]" VarB="Term 4 (KL6041)^Channel 1^Data In 18"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[19]" VarB="Term 4 (KL6041)^Channel 1^Data In 19"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[1]" VarB="Term 4 (KL6041)^Channel 1^Data In 1"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[20]" VarB="Term 4 (KL6041)^Channel 1^Data In 20"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[21]" VarB="Term 4 (KL6041)^Channel 1^Data In 21"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[2]" VarB="Term 4 (KL6041)^Channel 1^Data In 2"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[3]" VarB="Term 4 (KL6041)^Channel 1^Data In 3"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[4]" VarB="Term 4 (KL6041)^Channel 1^Data In 4"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[5]" VarB="Term 4 (KL6041)^Channel 1^Data In 5"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[6]" VarB="Term 4 (KL6041)^Channel 1^Data In 6"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[7]" VarB="Term 4 (KL6041)^Channel 1^Data In 7"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[8]" VarB="Term 4 (KL6041)^Channel 1^Data In 8"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^D[9]" VarB="Term 4 (KL6041)^Channel 1^Data In 9"/>
-				<Link VarA="SlowTask Inputs^prgPV.fbModbusRtuMaster_KL6x22B.InData^Status" VarB="Term 4 (KL6041)^Channel 1^State"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 0" Size="8" OffsA="16"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 1" Size="8" OffsA="24"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 10" Size="8" OffsA="96"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 11" Size="8" OffsA="104"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 12" Size="8" OffsA="112"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 13" Size="8" OffsA="120"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 14" Size="8" OffsA="128"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 15" Size="8" OffsA="136"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 16" Size="8" OffsA="144"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 17" Size="8" OffsA="152"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 18" Size="8" OffsA="160"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 19" Size="8" OffsA="168"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 2" Size="8" OffsA="32"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 20" Size="8" OffsA="176"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 21" Size="8" OffsA="184"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 3" Size="8" OffsA="40"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 4" Size="8" OffsA="48"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 5" Size="8" OffsA="56"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 6" Size="8" OffsA="64"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 7" Size="8" OffsA="72"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 8" Size="8" OffsA="80"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^Data In 9" Size="8" OffsA="88"/>
+				<Link VarA="FastTask Inputs^prgPV.fb_RTU_Master.fbmodbusmaster.InData" VarB="Term 4 (KL6041)^Channel 1^State"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Ctrl"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 0" Size="8" OffsA="16"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 1" Size="8" OffsA="24"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 10" Size="8" OffsA="96"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 11" Size="8" OffsA="104"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 12" Size="8" OffsA="112"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 13" Size="8" OffsA="120"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 14" Size="8" OffsA="128"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 15" Size="8" OffsA="136"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 16" Size="8" OffsA="144"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 17" Size="8" OffsA="152"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 18" Size="8" OffsA="160"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 19" Size="8" OffsA="168"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 2" Size="8" OffsA="32"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 20" Size="8" OffsA="176"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 21" Size="8" OffsA="184"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 3" Size="8" OffsA="40"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 4" Size="8" OffsA="48"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 5" Size="8" OffsA="56"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 6" Size="8" OffsA="64"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 7" Size="8" OffsA="72"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 8" Size="8" OffsA="80"/>
+				<Link VarA="FastTask Outputs^prgPV.fb_RTU_Master.fbmodbusmaster.OutData" VarB="Term 4 (KL6041)^Channel 1^Data Out 9" Size="8" OffsA="88"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>
