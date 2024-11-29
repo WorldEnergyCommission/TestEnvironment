@@ -29,11 +29,16 @@ VAR
 	rCabinetTemp_PV3			: REAL;					//{#lynus.ag#()}
 	usiAddress					: BYTE;
 	usi_ScannedAddress			: REAL;
+	n							: INT;
+	
 	
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+n:= n +1;
+
+
 fb_RTU_Master(
 	bConfigTerminal:= TRUE, 
 	uiKBusState_IN:= uint_KBusState, 
@@ -81,14 +86,14 @@ rCabinetTemp_PV1	:= fb_PV_1.stDeltaInverterData.rCabinetTemp;
 rCabinetTemp_PV2	:= fb_PV_2.stDeltaInverterData.rCabinetTemp;
 rCabinetTemp_PV3	:= fb_PV_3.stDeltaInverterData.rCabinetTemp;
 
-(*
+
 fbModbusRtuMaster_KL6x22B.ReadRegs(
 	UnitID		:=2,
-	Quantity	:=10,
-	MBAddr		:=0,
+	Quantity	:=1,
+	MBAddr		:=40073,
 	cbLength	:=20,
 	pMemoryAddr	:= ADR(wArrayReceiveBuffer),
-	Execute		:= TRUE,
+//	Execute		:= TRUE,
 	Timeout		:=t#1s,
 	BUSY		=>,
 	Error		=>,
@@ -97,8 +102,9 @@ fbModbusRtuMaster_KL6x22B.ReadRegs(
 );
 
 
-fbModbusRtuMaster_KL6x22B.Execute := FALSE;
+//fbModbusRtuMaster_KL6x22B.Execute := TRUE;
 
+(*
 FOR usiAddress := 1 TO 247 DO
    fbModbusRtuMaster_KL6x22B.ReadRegs(UnitID := usiAddress, Execute := TRUE);
    IF NOT fbModbusRtuMaster_KL6x22B.Error THEN
@@ -106,8 +112,8 @@ FOR usiAddress := 1 TO 247 DO
       EXIT;
    END_IF;
 END_FOR;
-
-
+*)
+(*
 // necessary for KL6041 to write the com settings
 fbConfigKL6041(
 	Execute 		:= mExecute,
@@ -124,12 +130,14 @@ fbConfigKL6041(
 ); *)]]></ST>
     </Implementation>
     <LineIds Name="prgPV">
+      <LineId Id="285" Count="2" />
       <LineId Id="51" Count="46" />
       <LineId Id="99" Count="2" />
       <LineId Id="235" Count="9" />
       <LineId Id="112" Count="1" />
       <LineId Id="216" Count="0" />
       <LineId Id="214" Count="1" />
+      <LineId Id="290" Count="0" />
       <LineId Id="248" Count="6" />
       <LineId Id="114" Count="0" />
       <LineId Id="217" Count="0" />
