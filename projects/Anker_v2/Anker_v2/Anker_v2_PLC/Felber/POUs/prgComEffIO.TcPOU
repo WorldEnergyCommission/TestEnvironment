@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgComEffIO
 VAR
-	fbCom		: FB_MqttCommunicator_V2;
+	fbCom		: FB_MqttCommunicator_V5;
 	byte_array : ARRAY[0..1023] OF BYTE;
-	struct_transfer	: struct_ADS_Anker;
+	struct_transfer	: struct_ADS_Felber;
 	mSize_to_Big: BOOL;
 	uint_size: UINT;
 	int_LiveCount_1min	:INT;						//{#lynus.ag#()}
@@ -15,7 +15,7 @@ END_VAR
     <Implementation>
       <ST><![CDATA[fbCom(
 	bConnect:= TRUE, 
-	strAuthkey := 'EIO08031879806',
+	strAuthkey := 'ENE87365342998',
 	sUserName:= , 			// see below
 	sUserPassword:= , 		// see below
 	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk, 
@@ -34,9 +34,9 @@ IF prg_ReadDeviceName.sDeviceName = '' THEN
 END_IF
 
 // select user / pass according device name:
-IF prg_ReadDeviceName.sDeviceName='EIOAN010001' THEN   // Rankgasse 25 		Filiale 5100
-	fbCom.sUserName:= 'e9b83688-ab68-4621-910d-c494104363e6'; 
-	fbCom.sUserPassword:= '6bac0a37-95e4-480d-b823-0ad746678bff';
+IF prg_ReadDeviceName.sDeviceName='Felber0001-Marg' THEN   // Felber Filiale Margaretenstraße 1040 Nähe TU
+	fbCom.sUserName:= 'a4398363-713f-45e4-8f12-13b95d7f2606'; 
+	fbCom.sUserPassword:= '196c948c-aabd-4764-8be4-f15873a2b8fa';
 	// define the hardware version
 	prgHW_v1();
 	// define voltage channels for current measurement	
@@ -45,12 +45,12 @@ IF prg_ReadDeviceName.sDeviceName='EIOAN010001' THEN   // Rankgasse 25 		Filiale
 	prgEM.ui_PhaseSelector_CH3 := 2;		// kühlvitrine L2
 	prgEM.ui_PhaseSelector_CH4 := 1;		// nicht verwendet
 	prgEM.ui_PhaseSelector_CH5 := 1;		// Außenbeleuchtung L1
-	prgEM.b_Invers_FB3446_CH1 := TRUE;
-	prgEM.b_Invers_FB3446_CH3 := TRUE;
-	prgEM.b_Invers_FB3446_CH5 := TRUE;
+	//prgEM.b_Invers_FB3446_CH1 := TRUE;
+	//prgEM.b_Invers_FB3446_CH3 := TRUE;
+	//prgEM.b_Invers_FB3446_CH5 := TRUE;
 	// define location
-	prgEMS.fDegreeOfLongitude 	:= 16.305299100;
-	prgEMS.fDegreeOfLatitude	:=	48.210828100;	
+	//prgEMS.fDegreeOfLongitude 	:= 16.305299100;
+	//prgEMS.fDegreeOfLatitude	:=	48.210828100;	
 ELSIF prg_ReadDeviceName.sDeviceName='EIOAN010004' THEN	   // Simonygasse/Gentzgasse		Filiale 5043
 	fbCom.sUserName:= 'f85edbec-db0b-4af5-af68-13e6fddbac2f'; 				
 	fbCom.sUserPassword:= '3f5546cc-754c-4735-900b-f5cc6395dbed';		
