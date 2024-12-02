@@ -229,8 +229,8 @@ END_IF
 FPConfigManual(CLK:= bConfigTerminal, Q=> );
 
 fbKL6xxxConfig(
-	Execute := config_execute,
-	//Execute:= (FPConfigAuto.Q AND NOT bTerminalIsConfigured) OR (timInit.Q AND NOT bTerminalIsConfigured AND FPConfigManual.Q), 
+//	Execute := config_execute,
+	Execute:= (FPConfigAuto.Q AND NOT bTerminalIsConfigured) OR (timInit.Q AND NOT bTerminalIsConfigured AND FPConfigManual.Q), 
 	Mode:= ,
 	Baudrate:= , 
 	NoDatabits:= , 
@@ -248,6 +248,10 @@ fbKL6xxxConfig(
 
 IF fbKL6xxxConfig.Done THEN
 	bTerminalIsConfigured := TRUE;
+
+ELSIF NOT fbKL6xxxConfig.Busy AND fbKL6xxxConfig.Error THEN
+	// ToDo bei Fehler neu anstossen.
+	//
 END_IF
 
 (*------------------------------------------------------------------Read-Write----------------------------------------------------------------------------*)
@@ -530,8 +534,12 @@ arrPD[2](lrValue:= INT_TO_LREAL(eDeviceType), bEventBasedActive=> );]]></ST>
     </Implementation>
     <LineIds Name="FB_KL6xxx_ModbusRTU_22B_Master">
       <LineId Id="2297" Count="128" />
-      <LineId Id="2819" Count="0" />
-      <LineId Id="2426" Count="295" />
+      <LineId Id="2917" Count="0" />
+      <LineId Id="2426" Count="17" />
+      <LineId Id="2920" Count="0" />
+      <LineId Id="2918" Count="1" />
+      <LineId Id="2921" Count="0" />
+      <LineId Id="2444" Count="277" />
       <LineId Id="1402" Count="0" />
     </LineIds>
   </POU>
