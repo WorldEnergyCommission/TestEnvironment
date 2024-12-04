@@ -1,0 +1,546 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_KL6xxx_ModbusRTU_22B_Master" Id="{1db7686b-c91d-45b9-be9c-c5c1732363c1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_KL6xxx_ModbusRTU_22B_Master
+VAR_INPUT
+	bConfigTerminal							: BOOL;																		//Possibility to configure the Terminal manually (Its only possible when the Terminal is not configured successfully)
+	uiKBusState_IN							: UINT;																		//K-Bus State from the K-Bus Box on wich the Terminal is connected. (Connect with FB_K_Bus_state)
+END_VAR
+VAR_OUTPUT
+	bBusy									: BOOL;																		//Function is Busy
+	byErrorWarning							: BYTE;																		//Error Warning State
+	byActualAdressInUse						: BYTE;																		//Actual Modbus Adress in Use
+	diNrOfMBRTUMasterLine_OUT				: DINT;																		//Active Number from the RTU Master Function for using on other functions
+	eMessageMBRTUMaster						: E_Message_MBRTUMaster;													//Message from the RTU Master Function
+END_VAR				
+VAR_OUTPUT PERSISTENT
+	bTerminalIsConfigured					: BOOL;																		//Its True when the configuration is successfully
+END_VAR
+VAR		
+	config_execute							: BOOL ;
+	//{attribute 'hide'}
+	fbKL6xxxConfig							: KL6configuration;															//FB KL6xxx to config the terminal
+	fbmodbusmaster							: ModbusRtuMaster_KL6x22B;													//FB Modbus RTU
+	{attribute 'hide'}
+	fbmodbusmaster_Init						: ModbusRtuMaster_KL6x22B;													//FB Modbus RTU Master for workaroud regarding the internal Beckhoff problem in this function
+	{attribute 'hide'}
+	fbNumberDevice							: FB_NumberOfDevice;														//Function block to calcualte the number of the Device	
+	{attribute 'hide'}
+	fbModbusRTUMessage						: FB_MBRTUMaster_Messages;													//Modbus RTU Messages	
+	{attribute 'hide'}
+	FPConfigManual							: R_TRIG;																	//Internal positive Edge
+	{attribute 'hide'}
+	FPConfigAuto							: R_TRIG;																	//Internal positive Edge
+	{attribute 'hide'}
+	FPProcessCompleted						: R_TRIG;																	//Internal positive Edge
+	{attribute 'hide'}
+	FPError									: R_TRIG;																	//Internal positive Edge
+	{attribute 'hide'}
+	FPErrorIsActive							: R_TRIG;																	//Internal positive Edge
+	{attribute 'hide'}
+	FNInitSmall								: F_TRIG;																	//Internal negative Edge
+	{attribute 'hide'}
+	FNBusy									: F_TRIG;																	//Internal negative Edge
+	{attribute 'hide'}
+	timInit									: TON;																		//Delay to start the Terminal Configuration after the start from the plc
+	{attribute 'hide'}
+	timTimout								: TON;																		//Timer Timout to go on next Modbus Adress when the Ack is not set back to False
+	{attribute 'hide'}
+	timDissableFunctions					: TON;																		//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL					: TON;																		//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	arrPD									: ARRAY[1..2] OF FB_PersistentData_Number;									//Function to save persistent data
+	{attribute 'hide'}
+	bTakeActualAdress						: BOOL;																		//True if the Current address is to be used
+	{attribute 'hide'}
+	bAdressHasChanged						: BOOL;																		//True if the Adress has changed
+	{attribute 'hide'}
+	bErrorIsActive							: BOOL;																		//True if a Error is happend. False after the next successfully read or write command
+	{attribute 'hide'}
+	bStopReadWrite							: BOOL;																		//Stop Function because Modbus Adress has chaged
+	{attribute 'hide'}
+	byLPSmallestAdress						: BYTE;																		//Loop to find out the smallest Modbus Adress
+	{attribute 'hide'}
+	byLPBiggestAdress						: BYTE;																		//Loop to find out the biggest Modbus Adress
+	{attribute 'hide'}
+	byLPActualAdress						: BYTE;																		//Loop to find out the next actuall adress
+	{attribute 'hide'}
+	byLPNumbersOfTotalSlaves				: BYTE;																		//Loop to find out the number of total Modbus Slaves
+	{attribute 'hide'}
+	bySmallestAdress						: BYTE;																		//Smallest Modbus Adress
+	{attribute 'hide'}
+	byBiggestAdress							: BYTE;																		//Biggest Modbus Adress
+	{attribute 'hide'}
+	byActualAdressInUse_CP					: BYTE;																		//Actual Modbus Adress in Use to compare it with the old one
+	{attribute 'hide'}
+	byNumberOfTotalSlaves					: BYTE;																		//Number of all Modbus Slaves
+	{attribute 'hide'}
+	byWaitInStep							: BYTE;																		//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	byLPMBAdress							: BYTE;																		//Loop for manage new Modbus Adress List after a change
+	{attribute 'hide'}
+	bySearchMBAdress						: BYTE;																		//Search Modbus Adress after change
+	{attribute 'hide'}
+	byPosInArrayMBAdress					: BYTE;																		//Save new Range from Modbus adress in the Array after a change
+	{attribute 'hide'}
+	iStateGVLData							: INT;																		//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	iStateSetMBAdress						: INT;																		//State machin eto order the Modbus Adress after a change
+	{attribute 'hide'}
+	diCounterForGVL							: DINT;																		//Counter to clean old data on GVL
+	{attribute 'hide'}
+	arrRead									: ARRAY[1..Constants_Bussystems.wQuantityOfRegistersMBRTUMaster] OF WORD;	//Puffer for read out data
+	{attribute 'hide'}
+	arrMBAdress								: ARRAY[1..247] OF BYTE;													//Array with the actual Modbus Adress Config
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	eDeviceType								: E_MBRTUMaster_DeviceType;													//Device Type on witch the Terminal is configured
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 08.07.2021
+//Version : 1.0.0.0
+
+//With this FB a serial 22 byte terminal can be configured and data can be sent/received via Modbus RTU.
+//Only devices of the same type may be operated on the same master (because its not good to write to much new configurations on the terminal).
+//The 1 slave that is called before the master FB in the PLC code configures the terminal
+//The block must be called in a task of 5MS
+//The system works according to the Master Slave principle
+//Multiple communication is not possible in RTU principle
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*-------------------------------------------------------------Calcualte the number of RTU Master---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Bussystems.diNumberOfMBRTUMasters, 
+	diMaxNumberOfDevices:= Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfMBRTUMasterLine_OUT, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Bussystems.diNumberOfMBRTUMasters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Bussystems.diNumberOfMBRTUMasters := diNrOfMBRTUMasterLine_OUT;	
+		iStateGVLData := 1; 
+END_IF	
+	
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+
+(*------------------------------------------------------------------Configuration----------------------------------------------------------------------------*)
+			
+//Configurate the seriall Terminal
+//The configuration is depending what Slave is connected to the terminal
+timInit(IN:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType <> E_MBRTUMaster_DeviceType.eNoModbusRTUDevice AND uiKBusState_IN = 0, PT:=T#500MS, Q=> , ET=> );
+
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType <> eDeviceType AND timInit.Q THEN
+	FPConfigAuto.CLK := TRUE;
+		eDeviceType := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType;
+ELSE
+	FPConfigAuto.CLK := FALSE;
+END_IF 	 
+
+FPConfigAuto(CLK:= , Q=> );
+
+//Configuration from the Terminal by the Slave Type
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType = E_MBRTUMaster_DeviceType.ePilotPMAC201_HW THEN
+	//Pilot PMAC201 HW Energymessurement Device
+	fbKL6xxxConfig.Mode := SERIALLINEMODE_KL6_22B_STANDARD;
+	fbKL6xxxConfig.Baudrate := 38400;
+	fbKL6xxxConfig.NoDatabits := 8;
+	fbKL6xxxConfig.Parity := PARITY_NONE;
+	fbKL6xxxConfig.Stopbits := 1;
+	fbKL6xxxConfig.Handshake := RS485_HALFDUPLEX;
+	fbKL6xxxConfig.ContinousMode := FALSE;
+	//Timout	
+	timTimout.PT := T#2S;
+	fbmodbusmaster.Timeout := T#2S;
+ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType = E_MBRTUMaster_DeviceType.eDrexelAWeiss_AereosilentStratosLU_Ventilation THEN
+	//Aereosilent Stratos Ventilation Drexel and Weiss
+	fbKL6xxxConfig.Mode := SERIALLINEMODE_KL6_22B_STANDARD;
+	fbKL6xxxConfig.Baudrate := 19200;
+	fbKL6xxxConfig.NoDatabits := 8;
+	fbKL6xxxConfig.Parity := PARITY_NONE;
+	fbKL6xxxConfig.Stopbits := 1;
+	fbKL6xxxConfig.Handshake := HANDSHAKE_NONE;
+	fbKL6xxxConfig.ContinousMode := FALSE;
+	//Timout	
+	timTimout.PT := T#10S;
+	fbmodbusmaster.Timeout := T#3S;
+ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType = E_MBRTUMaster_DeviceType.eABB_CM_UFD_M31M_NAProtection THEN
+	//CM_UFD_M31M ABB NA Protection
+	fbKL6xxxConfig.Mode := SERIALLINEMODE_KL6_22B_STANDARD;
+	fbKL6xxxConfig.Baudrate := 38400;
+	fbKL6xxxConfig.NoDatabits := 8;
+	fbKL6xxxConfig.Parity := PARITY_NONE;
+	fbKL6xxxConfig.Stopbits := 1;
+	fbKL6xxxConfig.Handshake := RS485_HALFDUPLEX;
+	fbKL6xxxConfig.ContinousMode := FALSE;
+	//Timout	
+	timTimout.PT := T#2S;
+	fbmodbusmaster.Timeout := T#1S;
+ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType = E_MBRTUMaster_DeviceType.eSchrack_ECS_CIONHOME_SEMIPUBLIC THEN
+	//Schrack Electric Charging Station CionHome and Semipublic
+	fbKL6xxxConfig.Mode := SERIALLINEMODE_KL6_22B_STANDARD;
+	fbKL6xxxConfig.Baudrate := 57600;
+	fbKL6xxxConfig.NoDatabits := 8;
+	fbKL6xxxConfig.Parity := PARITY_NONE;
+	fbKL6xxxConfig.Stopbits := 1;
+	fbKL6xxxConfig.Handshake := RS485_HALFDUPLEX;
+	fbKL6xxxConfig.ContinousMode := FALSE;
+	//Timout	
+	timTimout.PT := T#2S;
+	fbmodbusmaster.Timeout := T#2S;
+ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUDeviceType = E_MBRTUMaster_DeviceType.ePV_DeltaSunspec THEN
+	//Delte PV Inverter with Sunspec Protocol
+	fbKL6xxxConfig.Mode := SERIALLINEMODE_KL6_22B_STANDARD;
+	fbKL6xxxConfig.Baudrate := 19200;
+	fbKL6xxxConfig.NoDatabits := 8;
+	fbKL6xxxConfig.Parity := PARITY_NONE;
+	fbKL6xxxConfig.Stopbits := 1;
+	fbKL6xxxConfig.Handshake := RS485_HALFDUPLEX;
+	fbKL6xxxConfig.ContinousMode := FALSE;
+	//Timout	
+	timTimout.PT := T#2S;
+	fbmodbusmaster.Timeout := T#2S;
+END_IF
+
+FPConfigManual(CLK:= bConfigTerminal, Q=> );
+
+fbKL6xxxConfig(
+//	Execute := config_execute,
+	Execute:= (FPConfigAuto.Q AND NOT bTerminalIsConfigured) OR (timInit.Q AND NOT bTerminalIsConfigured AND FPConfigManual.Q), 
+	Mode:= ,
+	Baudrate:= , 
+	NoDatabits:= , 
+	Parity:= , 
+	Stopbits:= , 
+	Handshake:= , 
+	ContinousMode:= , 
+	pComIn:= ADR(fbmodbusmaster.InData), 
+	pComOut:= ADR(fbmodbusmaster.OutData), 
+	SizeComIn:= SIZEOF(fbmodbusmaster.InData),
+	Done=> , 
+	Busy=> , 
+	Error=> , 
+	ErrorId=> );
+
+IF fbKL6xxxConfig.Done THEN
+	bTerminalIsConfigured := TRUE;
+
+ELSIF NOT fbKL6xxxConfig.Busy AND fbKL6xxxConfig.Error THEN
+	// ToDo bei Fehler neu anstossen.
+	//
+END_IF
+
+(*------------------------------------------------------------------Read-Write----------------------------------------------------------------------------*)
+	 
+//Choose the right Modbus RTU Action for Read or Write Data
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_Diagnostics THEN 
+	fbmodbusmaster.Diagnostics(); 
+		fbmodbusmaster.cbLength := SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+			fbmodbusmaster.pMemoryAddr := ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadCoils THEN 
+	fbmodbusmaster.ReadCoils(); 
+		fbmodbusmaster.cbLength := SIZEOF(arrRead);
+			fbmodbusmaster.pMemoryAddr := ADR(arrRead);	
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadInputRegs THEN 
+	fbmodbusmaster.ReadInputRegs(); 
+		fbmodbusmaster.cbLength := SIZEOF(arrRead);
+			fbmodbusmaster.pMemoryAddr := ADR(arrRead);
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadInputStatus THEN 
+	fbmodbusmaster.ReadInputStatus(); 
+		fbmodbusmaster.cbLength := SIZEOF(arrRead);
+			fbmodbusmaster.pMemoryAddr := ADR(arrRead);
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs THEN 
+	fbmodbusmaster.ReadRegs();
+		fbmodbusmaster.cbLength := SIZEOF(arrRead);
+			fbmodbusmaster.pMemoryAddr := ADR(arrRead); 
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_WriteMultipleCoils THEN 
+	fbmodbusmaster.WriteMultipleCoils();
+		fbmodbusmaster.cbLength := SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+			fbmodbusmaster.pMemoryAddr := ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData); 
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_WriteRegs THEN 
+	fbmodbusmaster.WriteRegs(); 
+		fbmodbusmaster.cbLength := SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+			fbmodbusmaster.pMemoryAddr := ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_WriteSingleCoil THEN 
+	fbmodbusmaster.WriteSingleCoil(); 
+		fbmodbusmaster.cbLength := SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+			fbmodbusmaster.pMemoryAddr := ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+END_IF
+IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].eMBRTUReadWriteMode = E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_WriteSingleRegister THEN 
+	fbmodbusmaster.WriteSingleRegister(); 
+		fbmodbusmaster.cbLength := SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+			fbmodbusmaster.pMemoryAddr := ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrWriteOutData);
+END_IF
+
+//Order the range of MB Adress when we have a change on that on the slave Functions
+IF MEMCMP(ADR(arrMBAdress),ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses),SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses)) <> 0 AND iStateSetMBAdress = 0 THEN
+	iStateSetMBAdress := 1;
+		bStopReadWrite := TRUE;
+			MEMCPY(ADR(arrMBAdress),ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses),SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses));
+END_IF
+
+CASE iStateSetMBAdress OF
+	
+	0://Init
+		bStopReadWrite := FALSE;
+
+	1://Set the Actual Adress in use to 0 and Clear old MB Adresses in Array
+		bTakeActualAdress := FALSE;
+			byActualAdressInUse := 0;
+				bySearchMBAdress := 0;
+					byPosInArrayMBAdress := 0;	
+
+		FOR byLPMBAdress := 1 TO 247 BY 1 DO
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPMBAdress] := 0;
+		END_FOR 
+			
+			iStateSetMBAdress := 2;	
+		
+	2://Order the new Adresses from lowest to highest
+		bySearchMBAdress := bySearchMBAdress + 1;
+			bySearchMBAdress := LIMIT(1,bySearchMBAdress,247);			
+	
+		FOR byLPMBAdress := 1 TO 247 BY 1 DO
+			IF arrMBAdress[byLPMBAdress] = bySearchMBAdress THEN
+				byPosInArrayMBAdress := byPosInArrayMBAdress + 1;
+					byPosInArrayMBAdress := LIMIT(1,byPosInArrayMBAdress,247);
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byPosInArrayMBAdress] := arrMBAdress[byLPMBAdress]; 	
+			END_IF
+		END_FOR  
+		
+		//Done
+		IF bySearchMBAdress >= 247 THEN 
+			iStateSetMBAdress := 0;
+				MEMCPY(ADR(arrMBAdress),ADR(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses),SIZEOF(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses));
+		END_IF 
+	
+END_CASE
+
+//Check the Modbus Adresses from each Slave Device
+FPProcessCompleted(CLK:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].bReadWriteIsDone, Q=> );
+	FPError(CLK:= fbmodbusmaster.Error, Q=> );
+
+bySmallestAdress := 247;	
+	FOR byLPSmallestAdress := 1 TO 247 BY 1 DO
+		IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPSmallestAdress] < bySmallestAdress AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPSmallestAdress] <> 0 THEN bySmallestAdress := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPSmallestAdress]; END_IF
+	END_FOR
+byBiggestAdress := 0;
+	FOR byLPBiggestAdress := 1 TO 247 BY 1 DO
+		IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPBiggestAdress] > byBiggestAdress THEN byBiggestAdress := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPBiggestAdress]; END_IF  
+	END_FOR
+//Take the Next Adress after the Read/write is done
+IF FPProcessCompleted.Q OR FPError.Q THEN
+	bTakeActualAdress := TRUE;
+		FOR byLPActualAdress := 1 TO 247 BY 1 DO
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPActualAdress] > byActualAdressInUse THEN 
+				byActualAdressInUse := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPActualAdress]; 
+					EXIT;
+			END_IF
+		END_FOR		
+END_IF
+
+//Count the Number of RTU Slaves
+byNumberOfTotalSlaves := 0;
+	FOR byLPNumbersOfTotalSlaves := 1 TO 247 BY 1 DO
+		IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrAllModbusSlaveAdresses[byLPNumbersOfTotalSlaves] <> 0 THEN byNumberOfTotalSlaves := byNumberOfTotalSlaves + 1; END_IF
+	END_FOR
+
+FNInitSmall(CLK:= bySmallestAdress = 247, Q=> );
+
+IF byActualAdressInUse <> byActualAdressInUse_CP THEN bAdressHasChanged := TRUE; byActualAdressInUse_CP := byActualAdressInUse; ELSE bAdressHasChanged := FALSE; END_IF 
+
+IF ((FPError.Q OR FPProcessCompleted.Q) AND NOT bAdressHasChanged) OR FNInitSmall.Q OR bySmallestAdress = byBiggestAdress THEN byActualAdressInUse := bySmallestAdress; END_IF
+
+timTimout(IN:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].bReadWriteIsDone, PT:= , Q=> , ET=> );
+
+IF FPProcessCompleted.Q OR timTimout.Q THEN Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].bReadWriteIsDone := FALSE; END_IF
+
+IF NOT bTakeActualAdress THEN 
+	fbmodbusmaster.UnitID := bySmallestAdress;
+ELSE
+	fbmodbusmaster.UnitID := byActualAdressInUse;
+END_IF
+
+fbmodbusmaster(
+	UnitID:= , 
+	Quantity:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].wNumberOfRegister, 
+	MBAddr:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].wModbusRegister, 
+	cbLength:= , 
+	pMemoryAddr:= , 
+	Execute:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].bSlaveStartReadOrWrite AND bTerminalIsConfigured AND NOT timDissableFunctions.Q AND NOT bStopReadWrite, 
+	Timeout:= , 
+	BUSY=> , 
+	Error=> , 
+	ErrorId=> , 
+	cbRead=> );	
+	
+(*------------------------------------------------------------------Busy Flag----------------------------------------------------------------------------*)
+
+IF NOT bTerminalIsConfigured THEN
+	bBusy := fbKL6xxxConfig.Busy;
+ELSE
+	bBusy := fbmodbusmaster.BUSY;
+END_IF
+
+//When we have a change on the MB Adress List we set the Function always on Busy that al other Slave Functions Stops in the Init Step
+IF bStopReadWrite THEN bBusy := TRUE; END_IF
+
+FNBusy(CLK:= fbmodbusmaster.BUSY, Q=> );
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)
+
+IF timDissableFunctions.Q THEN fbModbusRTUMessage.bWarning := TRUE; fbModbusRTUMessage.iWarningCode := 0; ELSE fbModbusRTUMessage.bWarning := FALSE; END_IF   
+	IF (Lynus_Standards.GVL_Bussystems.diNumberOfMBRTUMasters > Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx) OR (NOT bTerminalIsConfigured AND fbKL6xxxConfig.Error) OR (bTerminalIsConfigured AND fbmodbusmaster.Error) OR bStopReadWrite THEN 
+		fbModbusRTUMessage.bError := TRUE;
+	ELSE
+		fbModbusRTUMessage.bError := FALSE;
+	END_IF
+
+IF Lynus_Standards.GVL_Bussystems.diNumberOfMBRTUMasters > Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx THEN
+	fbModbusRTUMessage.iErrorCode := 1;	
+ELSIF NOT bTerminalIsConfigured THEN 
+	IF fbKL6xxxConfig.Error THEN 
+		fbModbusRTUMessage.iErrorCode := 2; 
+	END_IF
+//When we have a change on the MB Adress List we set the Function always on Error that al other Slave Functions go back to the Init Step
+ELSIF bStopReadWrite THEN
+	fbModbusRTUMessage.iErrorCode := 2; 
+ELSE
+	IF fbmodbusmaster.ErrorId = 1 THEN fbModbusRTUMessage.iErrorCode := 3; END_IF
+	IF fbmodbusmaster.ErrorId = 2 THEN fbModbusRTUMessage.iErrorCode := 4; END_IF
+	IF fbmodbusmaster.ErrorId = 3 THEN fbModbusRTUMessage.iErrorCode := 5; END_IF
+	IF fbmodbusmaster.ErrorId = 4 THEN fbModbusRTUMessage.iErrorCode := 6; END_IF
+	IF fbmodbusmaster.ErrorId = 5 THEN fbModbusRTUMessage.iErrorCode := 7; END_IF
+	IF fbmodbusmaster.ErrorId = 6 THEN fbModbusRTUMessage.iErrorCode := 8; END_IF
+	IF fbmodbusmaster.ErrorId = 7 THEN fbModbusRTUMessage.iErrorCode := 9; END_IF
+	IF fbmodbusmaster.ErrorId = 8 THEN fbModbusRTUMessage.iErrorCode := 10; END_IF
+	IF fbmodbusmaster.ErrorId = 16#A THEN fbModbusRTUMessage.iErrorCode := 11; END_IF
+	IF fbmodbusmaster.ErrorId = 16#B THEN fbModbusRTUMessage.iErrorCode := 12; END_IF
+	IF fbmodbusmaster.ErrorId = 16#20 THEN fbModbusRTUMessage.iErrorCode := 13; END_IF
+	IF fbmodbusmaster.ErrorId = 16#21 THEN fbModbusRTUMessage.iErrorCode := 14; END_IF
+	IF fbmodbusmaster.ErrorId = 16#22 THEN fbModbusRTUMessage.iErrorCode := 15; END_IF
+	IF fbmodbusmaster.ErrorId = 16#23 THEN fbModbusRTUMessage.iErrorCode := 16; END_IF
+	IF fbmodbusmaster.ErrorId = 16#24 THEN fbModbusRTUMessage.iErrorCode := 17; END_IF
+	IF fbmodbusmaster.ErrorId = 16#25 THEN fbModbusRTUMessage.iErrorCode := 18; END_IF
+	IF fbmodbusmaster.ErrorId = 102 THEN fbModbusRTUMessage.iErrorCode := 19; END_IF
+	IF fbmodbusmaster.ErrorId = 103 THEN fbModbusRTUMessage.iErrorCode := 20; END_IF
+	IF fbmodbusmaster.ErrorId = 107 THEN fbModbusRTUMessage.iErrorCode := 21; END_IF
+	IF fbmodbusmaster.ErrorId = 110 THEN fbModbusRTUMessage.iErrorCode := 22; END_IF
+	IF fbmodbusmaster.ErrorId = 120 THEN fbModbusRTUMessage.iErrorCode := 23; END_IF
+	IF fbmodbusmaster.ErrorId = 150 THEN fbModbusRTUMessage.iErrorCode := 24; END_IF
+	IF fbmodbusmaster.ErrorId = 232 THEN fbModbusRTUMessage.iErrorCode := 25; END_IF
+	IF fbmodbusmaster.ErrorId = 233 THEN fbModbusRTUMessage.iErrorCode := 26; END_IF
+END_IF
+
+fbModbusRTUMessage(
+	bTerminalConfigured:= bTerminalIsConfigured, 
+	bError:= , 
+	bWarning:= , 
+	iWarningCode:= , 
+	iErrorCode:= , 
+	byErrorWarning=> byErrorWarning, 
+	eMessageMBRTUMaster=> eMessageMBRTUMaster);
+
+//Set this Flag after a Error and Reset after next Read or Write command without Error	
+IF FPError.Q THEN bErrorIsActive := TRUE; END_IF
+	IF FNBusy.Q AND NOT fbmodbusmaster.Error THEN bErrorIsActive := FALSE; END_IF	
+	
+FPErrorIsActive(CLK:= bErrorIsActive, Q=> );
+	
+(*-----------------------------------------------------------Handle data to Global structure for Modbus RTU Communication-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			diCounterForGVL := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+	//Some Parts in the GVL Reset the Slave. Otherwise there will be problems when writing the new addresses to the array in the GVL.
+	Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diCounterForGVL].bMasterIsBusy := FALSE;	
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diCounterForGVL].bTerminalIsConfigured := FALSE;	
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diCounterForGVL].byNumberOfSlaves := 0;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diCounterForGVL].byErrorWarning := 0;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diCounterForGVL].byActualMBAdressInProgrss := 0;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diCounterForGVL].bNoNewMBusAdress := FALSE;	
+														 		
+		diCounterForGVL := diCounterForGVL + 1;
+			diCounterForGVL := LIMIT(0,diCounterForGVL,Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx);
+				//Back to the init step
+				IF diCounterForGVL >= Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx THEN iStateGVLData := 0; END_IF
+
+END_CASE 
+	
+IF diNrOfMBRTUMasterLine_OUT > 0 AND fbNumberDevice.bNumberIsCalculatet THEN  
+	Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].bMasterIsBusy := bBusy;
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].byErrorWarning := byErrorWarning;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].bTerminalIsConfigured := bTerminalIsConfigured;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].byActualMBAdressInProgrss := fbmodbusmaster.UnitID;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].byNumberOfSlaves := byNumberOfTotalSlaves;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diCounterForGVL].bNoNewMBusAdress := bStopReadWrite;
+						IF FNBusy.Q THEN
+							IF NOT fbmodbusmaster.Error THEN
+								Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_OUT].arrReadOutData := arrRead;
+							ELSE
+								//Workarround about internal Beckhoff Lib Error 
+								IF FPErrorIsActive.Q THEN 
+									MEMCPY(ADR(fbmodbusmaster),ADR(fbmodbusmaster_Init),SIZEOF(fbmodbusmaster_Init));
+								END_IF
+							END_IF
+						END_IF	
+END_IF	
+	
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bTerminalIsConfigured), bEventBasedActive=> );
+arrPD[2](lrValue:= INT_TO_LREAL(eDeviceType), bEventBasedActive=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_KL6xxx_ModbusRTU_22B_Master">
+      <LineId Id="2297" Count="128" />
+      <LineId Id="2917" Count="0" />
+      <LineId Id="2426" Count="17" />
+      <LineId Id="2920" Count="0" />
+      <LineId Id="2918" Count="1" />
+      <LineId Id="2921" Count="0" />
+      <LineId Id="2444" Count="277" />
+      <LineId Id="1402" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

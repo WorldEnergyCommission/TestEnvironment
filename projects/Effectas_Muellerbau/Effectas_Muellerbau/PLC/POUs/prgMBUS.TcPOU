@@ -1,0 +1,299 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="prgMBUS" Id="{75a6bae3-d772-49c9-ad22-4c5eae811182}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMBUS
+VAR
+	// M-Bus Kommunikation (KL6781)
+	fbMBusKL6781         : FB_MBUSKL6781;             // Hauptbaustein für die M-Bus-Kommunikation
+	stComIn              AT %I* : ST_KL6781inData22B; // Eingabestruktur für KL6781
+	stComOut             AT %Q* : ST_KL6781outData22B;// Ausgabestruktur für KL6781
+	stCom                : ST_MBUS_Communication;     // Kommunikationsstruktur für alle M-Bus-Geräte
+
+	fbScann              : FB_MBUS_Scan;
+
+	// Wärmezähler (Supercal 531)
+	fbSupercal1          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Holzkessel
+	fbSupercal2          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für MAB Fußbodenheizung
+	fbSupercal3          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für DSP Produktion
+	fbSupercal4          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Heizkörper Büro
+	fbSupercal5          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Halle Bestand S100
+	fbSupercal6          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Lüftung
+
+	// Variablen für Steuerung
+	m_Start1             : BOOL;                      
+	m_Start2             : BOOL;                      
+	m_Start3             : BOOL;
+	m_Start4             : BOOL;
+	m_Start5             : BOOL;
+	m_Start6             : BOOL;                      
+
+	// Status-Flags
+	bDataReady1          : BOOL;                      
+	bDataReady2          : BOOL;                      
+	bDataReady3          : BOOL;                      
+	bDataReady4          : BOOL;
+	bDataReady5          : BOOL;
+	bDataReady6          : BOOL;
+	
+	// Ausgelesene Werte Wärmezähler
+	lrEnergy1            : LREAL;                     
+	rFlow1               : REAL;                      
+	rPower1              : REAL;                      
+
+	lrEnergy2            : LREAL;                     
+	rFlow2               : REAL;                      
+	rPower2              : REAL;                      
+
+	lrEnergy3            : LREAL;                     
+	rFlow3               : REAL;                      
+	rPower3              : REAL; 
+	
+	lrEnergy4            : LREAL;                     
+	rFlow4               : REAL;                      
+	rPower4              : REAL;
+	
+	lrEnergy5            : LREAL;                     
+	rFlow5               : REAL;                      
+	rPower5              : REAL; 
+	
+	lrEnergy6            : LREAL;                     
+	rFlow6               : REAL;                      
+	rPower6              : REAL; 
+                     
+	lrEnergy			 : LREAL;					  
+	lrFlow				 : LREAL;					  
+	lrPower				 : LREAL;				
+
+	Err1 : E_MBUS_ERROR;
+	Busy1Trig : R_TRIG;
+	DataReadyCount : DINT;
+	DevError : ST_MBus_Info; 
+
+	DataReadyCount2 : DINT;
+	DevError2       : ST_MBus_Info; 
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// ** M-Bus Hauptkommunikation **
+
+fbMBusKL6781(
+	usiRetries := 3,                    // Anzahl der Wiederholungen bei Fehler
+	bStart := TRUE,                     // Startet die M-Bus-Kommunikation
+	bDisabled := FALSE,                 // Deaktiviert die M-Bus-Kommunikation nicht
+	bBusy => , 
+	bReady => , 
+	bError => , 
+	eError => , 
+	stComIn := stComIn, 
+	stComOut := stComOut, 
+	stCom := stCom
+);
+
+fbScann(
+	bStart:= , 
+	bStop:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	usiAddress=> , 
+	usiCount=> , 
+	arrDevice=> , 
+	stCom:= stCom);
+
+
+// ** Holzkessel (Supercal 531) auslesen **
+
+//fbSupercal1.stSecAdr.udiIdNumber:= 30868639;
+
+//fbSupercal1(
+////	usiAddress 	:= 002,                    	// M-Bus-Adresse(Primär)
+////	stSecAdr	:= 30868639,				// M-Bus-Adresse(Sekundär)
+//	bStart 		:= m_Start1,                // Startflag
+//	bDisabled 	:= FALSE,                 	
+//	bBusy => , 
+//	bReady => bDataReady1,              	// Datenbereit-Status
+//	bError => , 
+//	eError => , 
+//	stCom 		:= stCom
+//);
+
+Busy1Trig(CLK:= NOT fbSupercal1.bBusy);
+IF Busy1Trig.Q THEN
+
+	IF fbSupercal1.bError THEN
+	
+		Err1:= fbSupercal1.eError;
+	ELSE
+		Err1:= E_MBUS_ERROR.eMBus_no_error;
+	END_IF
+END_IF
+
+
+IF bDataReady1 THEN
+	DataReadyCount:= DataReadyCount + 1;
+
+    lrEnergy1 	:= STRING_TO_REAL(fbSupercal1.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow1 		:= STRING_TO_REAL(fbSupercal1.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower1 	:= STRING_TO_REAL(fbSupercal1.stPower.sValue);                    	// Leistung (kW)
+	
+	DevError:= fbSupercal1.stDeviceError;
+END_IF
+
+// ** MAB Fußbodenheizung (Supercal 531) auslesen **
+fbSupercal2(
+	usiAddress 	:= 002,                    	// M-Bus-Adresse (Primär)
+//	stSecAdr	:= 33189538,				// M-Bus-Adresse (Sekundär)
+	bStart 		:= m_Start2,                // Startflag
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => bDataReady2,              	// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF bDataReady2 THEN
+
+	DataReadyCount2:= DataReadyCount2 + 1;
+
+    lrEnergy2 	:= STRING_TO_REAL(fbSupercal2.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow2 		:= STRING_TO_REAL(fbSupercal2.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower2 	:= STRING_TO_REAL(fbSupercal2.stPower.sValue);                    	// Leistung (kW)
+	
+	DevError2 := fbSupercal2.stDeviceError;
+END_IF
+
+// ** SP Produktion (Supercal 531) auslesen **
+//fbSupercal3(
+//	usiAddress 	:= 003,                    	// M-Bus-Adresse (Primär)
+//	stSecAdr	:= 32649807,				// M-Bus-Adresse (Sekundär)
+//	bStart 		:= m_Start3,                // Startflag
+//	bDisabled 	:= FALSE,                 	
+//	bBusy => , 
+//	bReady => bDataReady3,              	// Datenbereit-Status
+//	bError => , 
+//	eError => , 
+//	stCom 		:= stCom
+//);
+(*
+IF bDataReady3 THEN
+    lrEnergy3 	:= STRING_TO_REAL(fbSupercal3.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow3 		:= STRING_TO_REAL(fbSupercal3.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower3 	:= STRING_TO_REAL(fbSupercal3.stPower.sValue);                    	// Leistung (kW)
+END_IF *)
+
+// ** SP Produktion (Supercal 531) auslesen **
+//fbSupercal4(
+//	usiAddress 	:= 004,                    	// M-Bus-Adresse (Primär)
+//	stSecAdr	:= 32640253,				// M-Bus-Adresse (Sekundär)
+//	bStart 		:= m_Start4,                // Startflag
+//	bDisabled 	:= FALSE,                 	
+//	bBusy => , 
+//	bReady => bDataReady4,              	// Datenbereit-Status
+//	bError => , 
+//	eError => , 
+//	stCom 		:= stCom
+//);
+
+(*
+IF bDataReady4 THEN
+    lrEnergy4 	:= STRING_TO_REAL(fbSupercal4.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow4 		:= STRING_TO_REAL(fbSupercal4.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower4 	:= STRING_TO_REAL(fbSupercal4.stPower.sValue);                    	// Leistung (kW)
+END_IF *)
+
+// ** Halle Bestand S100 (Supercal 531) auslesen **
+//fbSupercal5(
+//	usiAddress 	:= 005,                    	// M-Bus-Adresse (Primär)
+//	stSecAdr	:= 32822198,				// M-Bus-Adresse (Sekundär)
+//	bStart 		:= m_Start5,                // Startflag
+//	bDisabled 	:= FALSE,                 	
+//	bBusy => , 
+//	bReady => bDataReady5,              	// Datenbereit-Status
+//	bError => , 
+//	eError => , 
+//	stCom 		:= stCom
+//);
+
+(*
+IF bDataReady5 THEN
+    lrEnergy5 	:= STRING_TO_REAL(fbSupercal5.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow5 		:= STRING_TO_REAL(fbSupercal5.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower5 	:= STRING_TO_REAL(fbSupercal5.stPower.sValue);                    	// Leistung (kW)
+END_IF *)
+
+// ** Lüftung (Supercal 531) auslesen **
+//fbSupercal6(
+//	usiAddress 	:= 006,                    	// M-Bus-Adresse (Primär)
+//	stSecAdr	:= 32739276,				// M-Bus-Adresse (Sekundär)
+//	bStart 		:= m_Start6,                // Startflag
+//	bDisabled 	:= FALSE,                 	
+//	bBusy => , 
+//	bReady => bDataReady6,              	// Datenbereit-Status
+//	bError => , 
+//	eError => , 
+//	stCom 		:= stCom
+//);
+
+(*
+IF bDataReady6 THEN
+    lrEnergy6 	:= STRING_TO_REAL(fbSupercal6.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow6 		:= STRING_TO_REAL(fbSupercal6.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower6 	:= STRING_TO_REAL(fbSupercal6.stPower.sValue);                    	// Leistung (kW)
+END_IF *)
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMBUS">
+      <LineId Id="629" Count="0" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="630" Count="12" />
+      <LineId Id="896" Count="11" />
+      <LineId Id="893" Count="2" />
+      <LineId Id="643" Count="0" />
+      <LineId Id="888" Count="2" />
+      <LineId Id="644" Count="1" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="646" Count="7" />
+      <LineId Id="909" Count="3" />
+      <LineId Id="883" Count="0" />
+      <LineId Id="886" Count="1" />
+      <LineId Id="913" Count="0" />
+      <LineId Id="916" Count="0" />
+      <LineId Id="915" Count="0" />
+      <LineId Id="884" Count="1" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="920" Count="1" />
+      <LineId Id="697" Count="1" />
+      <LineId Id="657" Count="0" />
+      <LineId Id="923" Count="1" />
+      <LineId Id="658" Count="4" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="663" Count="7" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="932" Count="2" />
+      <LineId Id="695" Count="1" />
+      <LineId Id="674" Count="0" />
+      <LineId Id="927" Count="1" />
+      <LineId Id="675" Count="2" />
+      <LineId Id="785" Count="9" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="740" Count="0" />
+      <LineId Id="688" Count="3" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="796" Count="12" />
+      <LineId Id="839" Count="0" />
+      <LineId Id="809" Count="4" />
+      <LineId Id="795" Count="0" />
+      <LineId Id="841" Count="18" />
+      <LineId Id="840" Count="0" />
+      <LineId Id="861" Count="18" />
+      <LineId Id="860" Count="0" />
+      <LineId Id="744" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

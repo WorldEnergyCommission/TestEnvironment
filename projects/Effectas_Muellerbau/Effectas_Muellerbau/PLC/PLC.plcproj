@@ -18,20 +18,128 @@
     <LibraryReferences>{6ab6719c-27bc-43e3-87b5-abbe9640c910}</LibraryReferences>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="PlcTask.TcTTO">
+    <Compile Include="Fast_Task.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_Delta_PV_Inverter_Sunspec.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_KL6xxx_ModbusRTU_22B_Master.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_Shelly_3EM.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_Shelly_3EM_Helper.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_Shelly_HT.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_Shelly_HTplus.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_Shelly_HTplus_Helper.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FB\FB_Shelly_HT_Helper.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Middle_Task.TcTTO">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\MAIN.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgComEffIO.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgEM.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgGrid.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgHouse.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgMBUS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgPersistent.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgPV.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgRWEffIO.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\prgVarEffIO.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Slow_Task.TcTTO">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DUTs" />
     <Folder Include="GVLs" />
+    <Folder Include="FB" />
     <Folder Include="VISUs" />
     <Folder Include="POUs" />
   </ItemGroup>
   <ItemGroup>
+    <PlaceholderReference Include="EfficientIO Communicator">
+      <DefaultResolution>EfficientIO Communicator, * (EfficientIO)</DefaultResolution>
+      <Namespace>EfficientIO_Communicator</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="EfficientIO Energy Basic">
+      <DefaultResolution>EfficientIO Energy Basic, * (EfficientIO)</DefaultResolution>
+      <Namespace>EfficientIO_Energy_Basic</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="EfficientIO ModbusTCP">
+      <DefaultResolution>EfficientIO ModbusTCP, * (EfficientIO)</DefaultResolution>
+      <Namespace>EfficientIO_ModbusTCP</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Lynus Energy ModbusRTU">
+      <DefaultResolution>Lynus Energy ModbusRTU, * (Lynus AG)</DefaultResolution>
+      <Namespace>Lynus_Energy_ModbusRTU</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Lynus Persistent Data V1">
+      <DefaultResolution>Lynus Persistent Data V1, * (Lynus AG)</DefaultResolution>
+      <Namespace>Lynus_Persistent_Data_V1</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Lynus Standards">
+      <DefaultResolution>Lynus Standards, * (EfficientIO)</DefaultResolution>
+      <Namespace>Lynus_Standards</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Math">
+      <DefaultResolution>Tc2_Math, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Math</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_MBus">
+      <DefaultResolution>Tc2_MBus, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Parameters>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>CMBUS_MAXDATA</Key>
+          <Value>40</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>CMBUS_MAXTELEGRAMS</Key>
+          <Value>5</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>CMBUS_MAXDATAPARAM</Key>
+          <Value>10</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>CMBUS_TIMEOUTREADBYTE</Key>
+          <Value>TIME#1s0ms</Value>
+        </Parameter>
+      </Parameters>
+      <Namespace>Tc2_MBus</Namespace>
+    </PlaceholderReference>
     <PlaceholderReference Include="Tc2_Standard">
       <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc2_Standard</Namespace>
@@ -39,17 +147,81 @@
     <PlaceholderReference Include="Tc2_System">
       <DefaultResolution>Tc2_System, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc2_System</Namespace>
+      <Parameters>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>TABLE_UPPER_BOUND</Key>
+          <Value>15</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>STRING_LENGTH_EXP</Key>
+          <Value>255</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>STRING_LENGTH_ADDRESS</Key>
+          <Value>20</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>STRING_LENGTH_COMMENT</Key>
+          <Value>255</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>STRING_LENGTH_OUTSTRING</Key>
+          <Value>255</Value>
+        </Parameter>
+        <Parameter ListName="PARAM" xmlns="">
+          <Key>TABLE_SHOW_VALID_ITEMS</Key>
+          <Value>FALSE</Value>
+        </Parameter>
+      </Parameters>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Utilities">
+      <DefaultResolution>Tc2_Utilities, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Parameters>
+        <Parameter ListName="PARAMETERLIST" xmlns="">
+          <Key>NMAXLICENSES</Key>
+          <Value>50</Value>
+        </Parameter>
+        <Parameter ListName="PARAMETERLIST" xmlns="">
+          <Key>NMAXLICENSEDEVICES</Key>
+          <Value>16</Value>
+        </Parameter>
+        <Parameter ListName="PARAMETERLIST" xmlns="">
+          <Key>NMAXCPUCOUNT</Key>
+          <Value>64</Value>
+        </Parameter>
+        <Parameter ListName="PARAMETERLIST" xmlns="">
+          <Key>CMAXCHARACTERS</Key>
+          <Value>16#FFFFFFF0</Value>
+        </Parameter>
+        <Parameter ListName="PARAMETERLIST" xmlns="">
+          <Key>NMAXFILESONDONGLE</Key>
+          <Value>20</Value>
+        </Parameter>
+        <Parameter ListName="PARAMETERLIST" xmlns="">
+          <Key>CMAXCSVFIELDVALUESIZE</Key>
+          <Value>255</Value>
+        </Parameter>
+      </Parameters>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_JsonXml">
+      <DefaultResolution>Tc3_JsonXml, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_JsonXml</Namespace>
     </PlaceholderReference>
     <PlaceholderReference Include="Tc3_Module">
       <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc3_Module</Namespace>
     </PlaceholderReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="PLC.tmc">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>
-  <Data>
-    <o xml:space="preserve" t="OptionKey">
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
       <v n="Name">"&lt;ProjectRoot&gt;"</v>
       <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
         <v>{40450F57-0AA3-4216-96F3-5444ECB29763}</v>
@@ -70,13 +242,13 @@
       </d>
       <d n="Values" t="Hashtable" />
     </o>
-  </Data>
-  <TypeList>
-    <Type n="Hashtable">System.Collections.Hashtable</Type>
-    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
-    <Type n="String">System.String</Type>
-  </TypeList>
-</XmlArchive>
+        </Data>
+        <TypeList>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+        </TypeList>
+      </XmlArchive>
     </PlcProjectOptions>
   </ProjectExtensions>
 </Project>
