@@ -8,22 +8,38 @@ VAR
 	lrHousePower				: LREAL;								//{#lynus.ag#()}
 	lrNetzEinspeisung			: LREAL;								//{#lynus.ag#()}
 	lrBetriebMuellerBau			: LREAL;								//{#lynus.ag#()}
-	fbGrid1						: FB_EM_Beckhoff_KL3403;  	//UV Müller Holzbau
-	fbGrid2						: FB_EM_Beckhoff_KL3403;	//Abgang Direktmessung
-	fbGrid3						: FB_EM_Beckhoff_KL3403;	//Produktion PV
+	lrElektromobilitaet			: LREAL;								//{#lynus.ag#()}
+	lrHolzschnitzel				: LREAL;								//{#lynus.ag#()}
+	lrLueftung_Kaelte			: LREAL;								//{#lynus.ag#()}
+	rPVProd						: REAL;									//{#lynus.ag#()}
+	fbGrid1						: FB_EM_Beckhoff_KL3403;  	//Elektromobilität 
+	fbGrid2						: FB_EM_Beckhoff_KL3403;	//Holzschnitzelheizung
+	fbGrid3						: FB_EM_Beckhoff_KL3403;	//Lüftung/Kälte Büro
+	
+	
 
     Volt1L1  AT %I* : REAL;
     Strom1L1 AT %I* : REAL;
+	//UV Müller Holzbau
 	ActivePowerTotal_1	AT %I*	: REAL;									//{#lynus.ag#()}
+	//Abgang Direktmessung
 	ActivePowerTotal_2	AT %I*	: REAL;									//{#lynus.ag#()}
+	//Produktion PV
 	ActivePowerTotal_3	AT %I*	: REAL;									//{#lynus.ag#()}
 
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[lrNetzEinspeisung := fbGrid1.stDataEMPower.lrPowerTotal + fbGrid2.stDataEMPower.lrPowerTotal - fbGrid3.stDataEMPower.lrPowerTotal;	
+      <ST><![CDATA[lrBetriebMuellerBau := fbGrid1.stDataEMPower.lrPowerTotal - fbGrid2.stDataEMPower.lrPowerTotal - fbGrid3.stDataEMPower.lrPowerTotal + ActivePowerTotal_1/1000 ;	
 
-lrBetriebMuellerBau := (ActivePowerTotal_1 + ActivePowerTotal_2 + ActivePowerTotal_3) - fbGrid1.stDataEMPower.lrPowerTotal;
+lrNetzEinspeisung := ActivePowerTotal_1/1000 + ActivePowerTotal_2/1000 + ActivePowerTotal_3/1000;
+
+lrElektromobilitaet	:= fbGrid1.stDataEMPower.lrPowerTotal;
+lrHolzschnitzel		:= fbGrid2.stDataEMPower.lrPowerTotal;
+lrLueftung_Kaelte	:= fbGrid3.stDataEMPower.lrPowerTotal;
+rPVProd				:= (ActivePowerTotal_3/1000) * -1;					//Invertieren
+
+lrHousePower := lrBetriebMuellerBau *-1;						//Invertierte Einspeisung für Darstellung
 
 //The mapping of this function must be linked with the K-Bus State in the E/A Part
 fbKBusState(	uiKBusState_OUT=> , 
@@ -80,6 +96,11 @@ fbGrid3(
     <LineIds Name="prgHouse">
       <LineId Id="5" Count="0" />
       <LineId Id="68" Count="1" />
+      <LineId Id="111" Count="2" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="103" Count="0" />
       <LineId Id="76" Count="3" />
       <LineId Id="73" Count="0" />
       <LineId Id="18" Count="0" />
