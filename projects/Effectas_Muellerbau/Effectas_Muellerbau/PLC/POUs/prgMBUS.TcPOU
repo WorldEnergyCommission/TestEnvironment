@@ -8,16 +8,14 @@ VAR
 	stComIn              AT %I* : ST_KL6781inData22B; // Eingabestruktur für KL6781
 	stComOut             AT %Q* : ST_KL6781outData22B;// Ausgabestruktur für KL6781
 	stCom                : ST_MBUS_Communication;     // Kommunikationsstruktur für alle M-Bus-Geräte
-
 	fbScann              : FB_MBUS_Scan;
-
 	// Wärmezähler (Supercal 531)
-	fbSupercal1          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Holzkessel
-	fbSupercal2          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für MAB Fußbodenheizung
-	fbSupercal3          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für DSP Produktion
-	fbSupercal4          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Heizkörper Büro
-	fbSupercal5          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Halle Bestand S100
-	fbSupercal6          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Lüftung
+	fbHolzkessel         : FB_MBUS_General;          	 // Funktionsbaustein für Holzkessel
+	fbFussbodenheizung   : FB_MBUS_General;   		 	 // Funktionsbaustein für MAB Fußbodenheizung
+	fbDSP_Produktion     : FB_MBUS_General;   			// Funktionsbaustein für DSP Produktion
+	fbHeizkoerper_buero  : FB_MBUS_General;   			// Funktionsbaustein für Heizkörper Büro
+	fbHalle_Bestand_S100 : FB_MBUS_General;   			// Funktionsbaustein für Halle Bestand S100
+	fbLueftung	         : FB_MBUS_General;   			// Funktionsbaustein für Lüftung
 
 	// Variablen für Steuerung
 	m_Start1             : BOOL;                      
@@ -25,46 +23,44 @@ VAR
 	m_Start3             : BOOL;
 	m_Start4             : BOOL;
 	m_Start5             : BOOL;
-	m_Start6             : BOOL;                      
-
-	// Status-Flags
-	bDataReady1          : BOOL;                      
-	bDataReady2          : BOOL;                      
-	bDataReady3          : BOOL;                      
-	bDataReady4          : BOOL;
-	bDataReady5          : BOOL;
-	bDataReady6          : BOOL;
+	m_Start6             : BOOL;
+	
+	//
+	//TODO austausch FLOW mit Vorlauf und Rücklauftemperatur
+	//
 	
 	// Ausgelesene Werte Wärmezähler
-	lrEnergy1            : LREAL;                     
-	rFlow1               : REAL;                      
-	rPower1              : REAL;                      
+	lrEnergy_Holzkessel	 		: LREAL;								//{#lynus.ag#()}
+	rFlow_Holzkessel     		: REAL;
+	rPower_Holzkessel    		: REAL;									//{#lynus.ag#()}
 
-	lrEnergy2            : LREAL;                     
-	rFlow2               : REAL;                      
-	rPower2              : REAL;                      
+	lrEnergy_Fussboden   		: LREAL;								//{#lynus.ag#()}
+	rFlow_Fussboden         	: REAL;
+	rPower_Fussboden        	: REAL;									//{#lynus.ag#()}
 
-	lrEnergy3            : LREAL;                     
-	rFlow3               : REAL;                      
-	rPower3              : REAL; 
+	lrEnergy_DSP_Produktion 	: LREAL;								//{#lynus.ag#()}
+	rFlow_DSP_Produktion    	: REAL;
+	rPower_DSP_Produktion   	: REAL;									//{#lynus.ag#()}
 	
-	lrEnergy4            : LREAL;                     
-	rFlow4               : REAL;                      
-	rPower4              : REAL;
+	lrEnergy_Heizkoerper_buero  : LREAL;								//{#lynus.ag#()}
+	rFlow_Heizkoerper_buero     : REAL;
+	rPower_Heizkoerper_buero    : REAL;									//{#lynus.ag#()}
 	
-	lrEnergy5            : LREAL;                     
-	rFlow5               : REAL;                      
-	rPower5              : REAL; 
+	lrEnergy_Halle_Bestand_S100 : LREAL;								//{#lynus.ag#()}
+	rFlow_Halle_Bestand_S100    : REAL;
+	rPower_Halle_Bestand_S100   : REAL;									//{#lynus.ag#()}
 	
-	lrEnergy6            : LREAL;                     
-	rFlow6               : REAL;                      
-	rPower6              : REAL; 
-                     
-	lrEnergy			 : LREAL;					  
-	lrFlow				 : LREAL;					  
-	lrPower				 : LREAL;				
+	lrEnergy_Lueftung           : LREAL;								//{#lynus.ag#()}
+	rFlow_Lueftung              : REAL;
+	rPower_Lueftung             : REAL;									//{#lynus.ag#()}
 
 	Err1 : E_MBUS_ERROR;
+	Err2 : E_MBUS_ERROR;
+	Err3 : E_MBUS_ERROR;
+	Err4 : E_MBUS_ERROR;
+	Err5 : E_MBUS_ERROR;
+	Err6 : E_MBUS_ERROR;
+	
 	Busy1Trig : R_TRIG;
 	DataReadyCount : DINT;
 	DevError : ST_MBus_Info; 
@@ -108,192 +104,154 @@ fbScann(
 
 //fbSupercal1.stSecAdr.udiIdNumber:= 30868639;
 
-//fbSupercal1(
-////	usiAddress 	:= 002,                    	// M-Bus-Adresse(Primär)
-////	stSecAdr	:= 30868639,				// M-Bus-Adresse(Sekundär)
-//	bStart 		:= m_Start1,                // Startflag
-//	bDisabled 	:= FALSE,                 	
-//	bBusy => , 
-//	bReady => bDataReady1,              	// Datenbereit-Status
-//	bError => , 
-//	eError => , 
-//	stCom 		:= stCom
-//);
-
-Busy1Trig(CLK:= NOT fbSupercal1.bBusy);
-IF Busy1Trig.Q THEN
-
-	IF fbSupercal1.bError THEN
-	
-		Err1:= fbSupercal1.eError;
-	ELSE
-		Err1:= E_MBUS_ERROR.eMBus_no_error;
-	END_IF
-END_IF
-
-
-IF bDataReady1 THEN
-	DataReadyCount:= DataReadyCount + 1;
-
-    lrEnergy1 	:= STRING_TO_REAL(fbSupercal1.stEnergy.sValue);                 	// Energie (kWh)
-    rFlow1 		:= STRING_TO_REAL(fbSupercal1.stFlow.sValue);                      	// Durchfluss (m³/h)
-    rPower1 	:= STRING_TO_REAL(fbSupercal1.stPower.sValue);                    	// Leistung (kW)
-	
-	DevError:= fbSupercal1.stDeviceError;
-END_IF
-
-// ** MAB Fußbodenheizung (Supercal 531) auslesen **
-fbSupercal2(
-	usiAddress 	:= 002,                    	// M-Bus-Adresse (Primär)
-//	stSecAdr	:= 33189538,				// M-Bus-Adresse (Sekundär)
-	bStart 		:= m_Start2,                // Startflag
+fbHolzkessel(
+	usiAddress 	:= 1,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start1,                // Startflag
+	usiUnit     := 1,               		// KW
 	bDisabled 	:= FALSE,                 	
 	bBusy => , 
-	bReady => bDataReady2,              	// Datenbereit-Status
+	bReady => ,              	// Datenbereit-Status
 	bError => , 
 	eError => , 
 	stCom 		:= stCom
 );
 
-IF bDataReady2 THEN
+IF NOT fbHolzkessel.bBusy AND fbHolzkessel.bError THEN
 
-	DataReadyCount2:= DataReadyCount2 + 1;
-
-    lrEnergy2 	:= STRING_TO_REAL(fbSupercal2.stEnergy.sValue);                 	// Energie (kWh)
-    rFlow2 		:= STRING_TO_REAL(fbSupercal2.stFlow.sValue);                      	// Durchfluss (m³/h)
-    rPower2 	:= STRING_TO_REAL(fbSupercal2.stPower.sValue);                    	// Leistung (kW)
-	
-	DevError2 := fbSupercal2.stDeviceError;
+	Err1:= fbHolzkessel.eError;
 END_IF
 
-// ** SP Produktion (Supercal 531) auslesen **
-//fbSupercal3(
-//	usiAddress 	:= 003,                    	// M-Bus-Adresse (Primär)
-//	stSecAdr	:= 32649807,				// M-Bus-Adresse (Sekundär)
-//	bStart 		:= m_Start3,                // Startflag
-//	bDisabled 	:= FALSE,                 	
-//	bBusy => , 
-//	bReady => bDataReady3,              	// Datenbereit-Status
-//	bError => , 
-//	eError => , 
-//	stCom 		:= stCom
-//);
-(*
-IF bDataReady3 THEN
-    lrEnergy3 	:= STRING_TO_REAL(fbSupercal3.stEnergy.sValue);                 	// Energie (kWh)
-    rFlow3 		:= STRING_TO_REAL(fbSupercal3.stFlow.sValue);                      	// Durchfluss (m³/h)
-    rPower3 	:= STRING_TO_REAL(fbSupercal3.stPower.sValue);                    	// Leistung (kW)
-END_IF *)
+IF fbHolzkessel.bReady THEN
 
-// ** SP Produktion (Supercal 531) auslesen **
-//fbSupercal4(
-//	usiAddress 	:= 004,                    	// M-Bus-Adresse (Primär)
-//	stSecAdr	:= 32640253,				// M-Bus-Adresse (Sekundär)
-//	bStart 		:= m_Start4,                // Startflag
-//	bDisabled 	:= FALSE,                 	
-//	bBusy => , 
-//	bReady => bDataReady4,              	// Datenbereit-Status
-//	bError => , 
-//	eError => , 
-//	stCom 		:= stCom
-//);
+    lrEnergy_Holzkessel 	:= STRING_TO_REAL(fbHolzkessel.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_Holzkessel 		:= STRING_TO_REAL(fbHolzkessel.arrData[6].sValue);                      	// Durchfluss (m³/h)
+    rPower_Holzkessel 	:= STRING_TO_REAL(fbHolzkessel.arrData[7].sValue);                    	// Leistung (kW)
+END_IF
 
-(*
-IF bDataReady4 THEN
-    lrEnergy4 	:= STRING_TO_REAL(fbSupercal4.stEnergy.sValue);                 	// Energie (kWh)
-    rFlow4 		:= STRING_TO_REAL(fbSupercal4.stFlow.sValue);                      	// Durchfluss (m³/h)
-    rPower4 	:= STRING_TO_REAL(fbSupercal4.stPower.sValue);                    	// Leistung (kW)
-END_IF *)
+fbFussbodenheizung(
+	usiAddress 	:= 2,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start2,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              	// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
 
-// ** Halle Bestand S100 (Supercal 531) auslesen **
-//fbSupercal5(
-//	usiAddress 	:= 005,                    	// M-Bus-Adresse (Primär)
-//	stSecAdr	:= 32822198,				// M-Bus-Adresse (Sekundär)
-//	bStart 		:= m_Start5,                // Startflag
-//	bDisabled 	:= FALSE,                 	
-//	bBusy => , 
-//	bReady => bDataReady5,              	// Datenbereit-Status
-//	bError => , 
-//	eError => , 
-//	stCom 		:= stCom
-//);
+IF NOT fbFussbodenheizung.bBusy AND fbFussbodenheizung.bError THEN
 
-(*
-IF bDataReady5 THEN
-    lrEnergy5 	:= STRING_TO_REAL(fbSupercal5.stEnergy.sValue);                 	// Energie (kWh)
-    rFlow5 		:= STRING_TO_REAL(fbSupercal5.stFlow.sValue);                      	// Durchfluss (m³/h)
-    rPower5 	:= STRING_TO_REAL(fbSupercal5.stPower.sValue);                    	// Leistung (kW)
-END_IF *)
+	Err2:= fbFussbodenheizung.eError;
+END_IF
 
-// ** Lüftung (Supercal 531) auslesen **
-//fbSupercal6(
-//	usiAddress 	:= 006,                    	// M-Bus-Adresse (Primär)
-//	stSecAdr	:= 32739276,				// M-Bus-Adresse (Sekundär)
-//	bStart 		:= m_Start6,                // Startflag
-//	bDisabled 	:= FALSE,                 	
-//	bBusy => , 
-//	bReady => bDataReady6,              	// Datenbereit-Status
-//	bError => , 
-//	eError => , 
-//	stCom 		:= stCom
-//);
+IF fbFussbodenheizung.bReady THEN
 
-(*
-IF bDataReady6 THEN
-    lrEnergy6 	:= STRING_TO_REAL(fbSupercal6.stEnergy.sValue);                 	// Energie (kWh)
-    rFlow6 		:= STRING_TO_REAL(fbSupercal6.stFlow.sValue);                      	// Durchfluss (m³/h)
-    rPower6 	:= STRING_TO_REAL(fbSupercal6.stPower.sValue);                    	// Leistung (kW)
-END_IF *)
-]]></ST>
+    lrEnergy_Fussboden 	:= STRING_TO_REAL(fbFussbodenheizung.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_Fussboden 		:= STRING_TO_REAL(fbFussbodenheizung.arrData[6].sValue);                      	// Durchfluss (m³/h)
+    rPower_Fussboden 	:= STRING_TO_REAL(fbFussbodenheizung.arrData[7].sValue);                    	// Leistung (kW)
+END_IF
+
+fbDSP_Produktion(
+	usiAddress 	:= 3,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start3,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              	// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbDSP_Produktion.bBusy AND fbDSP_Produktion.bError THEN
+
+	Err3:= fbDSP_Produktion.eError;
+END_IF
+
+IF fbDSP_Produktion.bReady THEN
+
+    lrEnergy_DSP_Produktion 	:= STRING_TO_REAL(fbDSP_Produktion.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_DSP_Produktion 		:= STRING_TO_REAL(fbDSP_Produktion.arrData[6].sValue);                      	// Durchfluss (m³/h)
+    rPower_DSP_Produktion 	:= STRING_TO_REAL(fbDSP_Produktion.arrData[7].sValue);                    	// Leistung (kW)
+END_IF
+
+fbHeizkoerper_buero(
+	usiAddress 	:= 4,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start4,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              	// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbHeizkoerper_buero.bBusy AND fbHeizkoerper_buero.bError THEN
+
+	Err4:= fbHeizkoerper_buero.eError;
+END_IF
+
+IF fbHalle_Bestand_S100.bReady THEN
+
+    lrEnergy_Heizkoerper_buero 	:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_Heizkoerper_buero 		:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[6].sValue);                      	// Durchfluss (m³/h)
+    rPower_Heizkoerper_buero 	:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[7].sValue);                    	// Leistung (kW)
+END_IF
+
+fbHalle_Bestand_S100(
+	usiAddress 	:= 5,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start5,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              	// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbHalle_Bestand_S100.bBusy AND fbHalle_Bestand_S100.bError THEN
+
+	Err5:= fbHalle_Bestand_S100.eError;
+END_IF
+
+IF fbHalle_Bestand_S100.bReady THEN
+
+    lrEnergy_Halle_Bestand_S100 	:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_Halle_Bestand_S100 		:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[6].sValue);                      	// Durchfluss (m³/h)
+    rPower_Halle_Bestand_S100 	:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[7].sValue);                    	// Leistung (kW)
+END_IF
+
+
+fbLueftung(
+	usiAddress 	:= 6,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start6,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              	// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbLueftung.bBusy AND fbLueftung.bError THEN
+
+	Err6:= fbLueftung.eError;
+END_IF
+
+IF fbLueftung.bReady THEN
+
+    lrEnergy_Lueftung 	:= STRING_TO_REAL(fbLueftung.arrData[1].sValue);              // Energie (kWh)
+    rFlow_Lueftung 		:= STRING_TO_REAL(fbLueftung.arrData[6].sValue);              // Durchfluss (m³/h)
+    rPower_Lueftung 	:= STRING_TO_REAL(fbLueftung.arrData[7].sValue);              // Leistung (kW)
+END_IF]]></ST>
     </Implementation>
     <LineIds Name="prgMBUS">
-      <LineId Id="629" Count="0" />
-      <LineId Id="743" Count="0" />
-      <LineId Id="630" Count="12" />
-      <LineId Id="896" Count="11" />
-      <LineId Id="893" Count="2" />
-      <LineId Id="643" Count="0" />
-      <LineId Id="888" Count="2" />
-      <LineId Id="644" Count="1" />
-      <LineId Id="699" Count="0" />
-      <LineId Id="646" Count="7" />
-      <LineId Id="909" Count="3" />
-      <LineId Id="883" Count="0" />
-      <LineId Id="886" Count="1" />
-      <LineId Id="913" Count="0" />
-      <LineId Id="916" Count="0" />
-      <LineId Id="915" Count="0" />
-      <LineId Id="884" Count="1" />
-      <LineId Id="742" Count="0" />
-      <LineId Id="654" Count="0" />
-      <LineId Id="920" Count="1" />
-      <LineId Id="697" Count="1" />
-      <LineId Id="657" Count="0" />
-      <LineId Id="923" Count="1" />
-      <LineId Id="658" Count="4" />
-      <LineId Id="701" Count="0" />
-      <LineId Id="663" Count="7" />
-      <LineId Id="741" Count="0" />
-      <LineId Id="671" Count="0" />
-      <LineId Id="932" Count="2" />
-      <LineId Id="695" Count="1" />
-      <LineId Id="674" Count="0" />
-      <LineId Id="927" Count="1" />
-      <LineId Id="675" Count="2" />
-      <LineId Id="785" Count="9" />
-      <LineId Id="687" Count="0" />
-      <LineId Id="740" Count="0" />
-      <LineId Id="688" Count="3" />
-      <LineId Id="348" Count="0" />
-      <LineId Id="796" Count="12" />
-      <LineId Id="839" Count="0" />
-      <LineId Id="809" Count="4" />
-      <LineId Id="795" Count="0" />
-      <LineId Id="841" Count="18" />
-      <LineId Id="840" Count="0" />
-      <LineId Id="861" Count="18" />
-      <LineId Id="860" Count="0" />
-      <LineId Id="744" Count="0" />
+      <LineId Id="5782" Count="176" />
+      <LineId Id="1585" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
