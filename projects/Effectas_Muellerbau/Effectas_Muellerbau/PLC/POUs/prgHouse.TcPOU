@@ -31,16 +31,18 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[lrNetzEinspeisung := ActivePowerTotal_1/1000 + ActivePowerTotal_2/1000 + ActivePowerTotal_3;
+      <ST><![CDATA[lrNetzEinspeisung := ActivePowerTotal_1/1000 + ActivePowerTotal_2/1000 - rPVProd;
 
 lrElektromobilitaet	:= fbGrid1.stDataEMPower.lrPowerTotal;
 lrHolzschnitzel		:= fbGrid2.stDataEMPower.lrPowerTotal;
 lrLueftung_Kaelte	:= fbGrid3.stDataEMPower.lrPowerTotal;
-lrBetriebMuellerBau := fbGrid1.stDataEMPower.lrPowerTotal - fbGrid2.stDataEMPower.lrPowerTotal - fbGrid3.stDataEMPower.lrPowerTotal + ActivePowerTotal_1/1000 ;	
+lrHousePower		:= ActivePowerTotal_1/1000 + fbGrid1.stDataEMPower.lrPowerTotal + fbGrid2.stDataEMPower.lrPowerTotal + fbGrid3.stDataEMPower.lrPowerTotal;
 
-rPVProd				:= (ActivePowerTotal_3/1000) * -1;					//Invertieren
+lrBetriebMuellerBau := -fbGrid1.stDataEMPower.lrPowerTotal - fbGrid2.stDataEMPower.lrPowerTotal - fbGrid3.stDataEMPower.lrPowerTotal + lrHousePower;	
+
+rPVProd				:= (ActivePowerTotal_3)/100 * -1;					//Invertieren
 lrAbgaenge 			:= ActivePowerTotal_2/1000;
-lrHousePower 		:= lrBetriebMuellerBau * -1;						//Invertierte Einspeisung für Darstellung
+//lrHousePower 		:= lrBetriebMuellerBau * -1;						//Invertierte Einspeisung für Darstellung
 
 //The mapping of this function must be linked with the K-Bus State in the E/A Part
 fbKBusState(	uiKBusState_OUT=> , 
@@ -99,6 +101,8 @@ fbGrid3(
       <LineId Id="147" Count="0" />
       <LineId Id="112" Count="1" />
       <LineId Id="102" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="177" Count="0" />
       <LineId Id="148" Count="0" />
       <LineId Id="146" Count="0" />
       <LineId Id="115" Count="0" />
