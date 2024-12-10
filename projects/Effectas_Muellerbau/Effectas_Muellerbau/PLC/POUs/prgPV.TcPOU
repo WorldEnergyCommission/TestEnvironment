@@ -3,145 +3,27 @@
   <POU Name="prgPV" Id="{3ad762c7-2e17-4aec-b526-56e2d5b02505}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgPV
 VAR
-	lrPower_PV1					: LREAL;								//{#lynus.ag#()}
-	lrPower_PV2					: LREAL;								//{#lynus.ag#()}
-	lrPower_PV3					: LREAL;								//{#lynus.ag#()}
-	fb_PV_1						: FB_delta_PV_inverter_sunspec;
-	fb_PV_2						: FB_delta_PV_inverter_sunspec;
-	fb_PV_3						: FB_delta_PV_inverter_sunspec;
-
-	fb_RTU_Master 				: FB_KL6xxx_ModbusRTU_22B_Master;
-	fbModbusRtuMaster_KL6x22B	: ModbusRtuMaster_KL6x22B;
-	uint_KBusState				: UINT;							//{#lynus.ag#()}
-	fbConfigKL6041 				: KL6Configuration;
-	mExecute					: BOOL:= FALSE;
-	int_Handshake				: INT:=0;
-	mode						: ComSerialLineMode_t:=2;	
-	wArrayReceiveBuffer			: ARRAY[0..130] OF WORD;
-	lrCounterPV1				: LREAL;				//{#lynus.ag#()}
-	lrCounterPV2				: LREAL;				//{#lynus.ag#()}
-	lrCounterPV3				: LREAL;				//{#lynus.ag#()}
-	rHeatSinkTemp_PV1			: REAL;					//{#lynus.ag#()}
-	rHeatSinkTemp_PV2			: REAL;					//{#lynus.ag#()}
-	rHeatSinkTemp_PV3			: REAL;					//{#lynus.ag#()}
-	rCabinetTemp_PV1			: REAL;					//{#lynus.ag#()}
-	rCabinetTemp_PV2			: REAL;					//{#lynus.ag#()}
-	rCabinetTemp_PV3			: REAL;					//{#lynus.ag#()}
-	usiAddress					: BYTE;
-	usi_ScannedAddress			: REAL;
-	n							: INT;
-	
+	fbPV1		:FB_SunSpec_PV_Inverter;
 	
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
-n:= n +1;
 
-
-fb_RTU_Master(
-	bConfigTerminal:= TRUE, 
-	uiKBusState_IN:= uint_KBusState, 
-	bBusy=> , 
-	byErrorWarning=> , 
-	byActualAdressInUse=> , 
-	diNrOfMBRTUMasterLine_OUT=> , 
-	eMessageMBRTUMaster=> , 
-	bTerminalIsConfigured=> );
-
-fb_PV_1(
-	bEnable:= TRUE, 
-	byMBAdress:=2 , 
-	diNrOfMBRTUMasterLine_IN:= fb_RTU_Master.diNrOfMBRTUMasterLine_OUT, 
-	stDeltaInverterData=> , 
+fbPV1(
+	bEnable:= , 
+	sIPAdress:= , 
+	byUnitID_Inverter:= , 
+	stDataSunSpec=> , 
 	stDataEMPower_PV=> , 
 	stDataEMCounter_PV=> , 
-	diNrOfEM_OUT_PV=> );
-fb_PV_2(
-	bEnable:= TRUE, 
-	byMBAdress:=3 , 
-	diNrOfMBRTUMasterLine_IN:= fb_RTU_Master.diNrOfMBRTUMasterLine_OUT, 
-	stDeltaInverterData=> , 
-	stDataEMPower_PV=> , 
-	stDataEMCounter_PV=> , 
-	diNrOfEM_OUT_PV=> );
-fb_PV_3(
-	bEnable:= true, 
-	byMBAdress:=4 , 
-	diNrOfMBRTUMasterLine_IN:= fb_RTU_Master.diNrOfMBRTUMasterLine_OUT, 
-	stDeltaInverterData=> , 
-	stDataEMPower_PV=> , 
-	stDataEMCounter_PV=> , 
-	diNrOfEM_OUT_PV=> );
-lrPower_PV1 		:=fb_PV_1.stDataEMPower_PV.lrPowerTotal;
-lrPower_PV2 		:=fb_PV_2.stDataEMPower_PV.lrPowerTotal;
-lrPower_PV3 		:=fb_PV_3.stDataEMPower_PV.lrPowerTotal;
-lrCounterPV1 		:= fb_PV_1.stDataEMCounter_PV.lrCounterEnergyT1_Production;
-lrCounterPV2 		:= fb_PV_2.stDataEMCounter_PV.lrCounterEnergyT1_Production;
-lrCounterPV3 		:= fb_PV_3.stDataEMCounter_PV.lrCounterEnergyT1_Production;
-rHeatSinkTemp_PV1	:= fb_PV_1.stDeltaInverterData.rHeatSinkTemp;
-rHeatSinkTemp_PV2	:= fb_PV_2.stDeltaInverterData.rHeatSinkTemp;
-rHeatSinkTemp_PV3	:= fb_PV_3.stDeltaInverterData.rHeatSinkTemp;
-rCabinetTemp_PV1	:= fb_PV_1.stDeltaInverterData.rCabinetTemp;
-rCabinetTemp_PV2	:= fb_PV_2.stDeltaInverterData.rCabinetTemp;
-rCabinetTemp_PV3	:= fb_PV_3.stDeltaInverterData.rCabinetTemp;
-
-
-fbModbusRtuMaster_KL6x22B.ReadRegs(
-	UnitID		:=2,
-	Quantity	:=1,
-	MBAddr		:=40073,
-	cbLength	:=20,
-	pMemoryAddr	:= ADR(wArrayReceiveBuffer),
-//	Execute		:= TRUE,
-	Timeout		:=t#1s,
-	BUSY		=>,
-	Error		=>,
-	ErrorId		=>,
-	cbRead		=>
-);
-
-
-//fbModbusRtuMaster_KL6x22B.Execute := TRUE;
-
-(*
-FOR usiAddress := 1 TO 247 DO
-   fbModbusRtuMaster_KL6x22B.ReadRegs(UnitID := usiAddress, Execute := TRUE);
-   IF NOT fbModbusRtuMaster_KL6x22B.Error THEN
-      usi_ScannedAddress := usiAddress;
-      EXIT;
-   END_IF;
-END_FOR;
-*)
-(*
-// necessary for KL6041 to write the com settings
-fbConfigKL6041(
-	Execute 		:= mExecute,
-	Mode 			:= mode,
-	Baudrate 		:= 19200,
-	NoDatabits 		:= 8,
-	Parity 			:= 0,
-	Stopbits 		:= 1,
-	Handshake  		:= RS485_HALFDUPLEX, //int_Handshake,
-	ContinousMode 	:= FALSE,
-	pComIn 			:= ADR(fbModbusRtuMaster_KL6x22B.InData),
-	pComOut 		:= ADR(fbModbusRtuMaster_KL6x22B.OutData),
-	SizeComIn 		:= SIZEOF(fbModbusRtuMaster_KL6x22B.InData)		//fbModbusRtuMaster_KL6x22B
-); *)]]></ST>
+	diNrOfEM_OUT_PV=> 
+);]]></ST>
     </Implementation>
     <LineIds Name="prgPV">
-      <LineId Id="285" Count="2" />
-      <LineId Id="51" Count="46" />
-      <LineId Id="99" Count="2" />
-      <LineId Id="235" Count="9" />
-      <LineId Id="112" Count="1" />
-      <LineId Id="216" Count="0" />
-      <LineId Id="214" Count="1" />
-      <LineId Id="290" Count="0" />
-      <LineId Id="248" Count="6" />
-      <LineId Id="114" Count="0" />
-      <LineId Id="217" Count="0" />
-      <LineId Id="115" Count="14" />
+      <LineId Id="324" Count="8" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="335" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
