@@ -8,20 +8,20 @@ VAR
 	uint_KBusState				: UINT;							//{#lynus.ag#()}
 	fbGridCounter				: FB_EnergyCounter;
 	lrGridPower					: LREAL;								//{#lynus.ag#()}
-	lrVoltage_L1N					: LREAL;								//{#lynus.ag#()}
-	lrVoltage_L2N					: LREAL;								//{#lynus.ag#()}
-	lrVoltage_L3N					: LREAL;								//{#lynus.ag#()}
+	lrVoltage_L1N				: LREAL;								//{#lynus.ag#()}
+	lrVoltage_L2N				: LREAL;								//{#lynus.ag#()}
+	lrVoltage_L3N				: LREAL;								//{#lynus.ag#()}
 	
-	lrGrid_Voltage_L1  	AT %I* 	: REAL;										
-    lrGrid_Current_L1 	AT %I* 	: REAL;	
-	lrGrid_Power_L1		AT %I* 	: REAL;		
-	lrGrid_Voltage_L2  	AT %I* 	: REAL;										
-    lrGrid_Current_L2 	AT %I* 	: REAL;	
-	lrGrid_Power_L2		AT %I* 	: REAL;
-	lrGrid_Voltage_L3  	AT %I* 	: REAL;										
-    lrGrid_Current_L3 	AT %I* 	: REAL;	
-	lrGrid_Power_L3		AT %I* 	: REAL;									
-	ActivePowerTotal	AT %I*	: REAL;	
+	lrGrid_Voltage_L1  	AT %I* 	: REAL;									//{#lynus.ag#()}
+    lrGrid_Current_L1 	AT %I* 	: REAL;									//{#lynus.ag#()}
+	lrGrid_Power_L1		AT %I* 	: REAL;									//{#lynus.ag#()}
+	lrGrid_Voltage_L2  	AT %I* 	: REAL;									//{#lynus.ag#()}
+    lrGrid_Current_L2 	AT %I* 	: REAL;									//{#lynus.ag#()}
+	lrGrid_Power_L2		AT %I* 	: REAL;									//{#lynus.ag#()}
+	lrGrid_Voltage_L3  	AT %I* 	: REAL;									//{#lynus.ag#()}
+    lrGrid_Current_L3 	AT %I* 	: REAL;									//{#lynus.ag#()}
+	lrGrid_Power_L3		AT %I* 	: REAL;									//{#lynus.ag#()}
+	lrActivePowerTotal	AT %I*	: REAL;									//{#lynus.ag#()}
 	
 
 	Test : REAL;
@@ -45,21 +45,28 @@ fbKBusState(	uiKBusState_OUT=> ,
 				b_Kbus_notOk=> , 
 				word_ErrorCount=> );
 				
-
+//Variablen werden verwendet -> Middle Task
 Test:= lrGrid_Voltage_L1;
+Test:= lrGrid_Current_L1;
+Test:= lrGrid_Power_L1;
 Test:= lrGrid_Voltage_L2;
+Test:= lrGrid_Current_L2;
+Test:= lrGrid_Power_L2;
+Test:= lrGrid_Voltage_L3;
+Test:= lrGrid_Current_L3;
+Test:= lrGrid_Power_L3;
+Test:= lrActivePowerTotal;
 
-
-//The mapping of this function must be linked with the KL3403 in the E/A Part
+//The mapping of this function must be linked with the KL3443 in the E/A Part
 //UV1
 fbGrid(
 	bEnable:= FALSE, 
 	bChannel1Invers:= FALSE,				//Invert power data when transformer are mounted upside down
-	bChannel2Invers:= FALSE,			// CT seems to be wired the wrong wy around
+	bChannel2Invers:= FALSE,				// CT seems to be wired the wrong wy around
 	bChannel3Invers:= FALSE,
-	uiCurrentTransformerRatioL1:= 400, //Transformer ratio on the secondary side
-	uiCurrentTransformerRatioL2:= 400, 
-	uiCurrentTransformerRatioL3:= 400, 
+	uiCurrentTransformerRatioL1:= 300, 		//Transformer ratio on the secondary side
+	uiCurrentTransformerRatioL2:= 300, 
+	uiCurrentTransformerRatioL3:= 300, 
 	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
 	stDataEMPower=> , 
 	stDataEMCounter=> , 
@@ -67,8 +74,8 @@ fbGrid(
 	stDataEMCounterRealTime=> , 
 	diNrOfEM_OUT=> );
 	
-uint_KBusState :=	fbKBusState.uiKBusState_OUT;
-lrGridPower := fbGrid.stDataEMPower.lrPowerTotal;
+uint_KBusState 	:=	fbKBusState.uiKBusState_OUT;
+lrGridPower 	:= 	lrActivePowerTotal/1000;
 
 // EnergyCounter
 fbGridCounter(
@@ -99,7 +106,10 @@ lrVoltage_L3N := fbGrid.stDataEMPower.lrVoltageL3N;
       <LineId Id="134" Count="3" />
       <LineId Id="262" Count="0" />
       <LineId Id="269" Count="1" />
+      <LineId Id="314" Count="3" />
       <LineId Id="276" Count="0" />
+      <LineId Id="319" Count="1" />
+      <LineId Id="318" Count="0" />
       <LineId Id="271" Count="1" />
       <LineId Id="139" Count="17" />
       <LineId Id="169" Count="0" />

@@ -1,108 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="prgEM" Id="{3af41ed4-b9b9-451d-86e6-0d7631ab8bb0}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgEM
 VAR
-		// Grid Objekt H 3-phase, 400V
-	fb_UV_Garderobe					: FB_Shelly_3EM;
+	//RELAI 1
+	KaffeMaschine  	AT %Q* 	: BOOL;
+	Boiler  		AT %Q* 	: BOOL;
+	//RELAI 2
+	Reklame  		AT %Q* 	: BOOL;
+	Heizregister	AT %Q* 	: BOOL;
+	//RELAI 3
+	Zuluft  		AT %Q* 	: BOOL;
+	Abluft	 		AT %Q* 	: BOOL;
+	//RELAI 4 - OFFEN (Keine Anschlüsse)
+	//RELAI4_CH1		AT %I* 	: BOOL;
+	//RELAI4_CH2		AT %I* 	: BOOL;
 	
-	lrPower_UV_Garderobe_TotalkW		: LREAL;			//{#lynus.ag#()}
-	lrEnergy_UV_Garderobe_Total			: LREAL;			//{#lynus.ag#()}
-	lrCurrent_UV_Garderobe_L1			: LREAL;			//{#lynus.ag#()}
-	lrCurrent_UV_Garderobe_L2			: LREAL;			//{#lynus.ag#()}
-	lrCurrent_UV_Garderobe_L3			: LREAL;			//{#lynus.ag#()}
-	lrVoltage_UV_Garderobe_L1			: LREAL;			//{#lynus.ag#()}
-	lrVoltage_UV_Garderobe_L2			: LREAL;			//{#lynus.ag#()}
-	lrVoltage_UV_Garderobe_L3			: LREAL;			//{#lynus.ag#()}
-
-
-	fb_Temperature_1				: FB_Shelly_hT;
-	fb_Temperature_2				: FB_Shelly_HTplus;
-
-	str_ip: STRING(15):='172.32.12.127';
-	m_Start1: BOOL;
-	m_Start2: BOOL;
-	lrTemp1: LREAL;
-	lrTemp2: LREAL;
+	Test					:BOOL;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[	// Grid Objekt H 3-phase, 400V
-fb_UV_Garderobe(
-	bStart:= , 
-	tDelayRequest:= T#20S, 
-	sHostname:= '172.32.12.121', 
-	bValidResult=> , 
-	bBusy=> , 
-	bError=> , 
-	bDone=> , 
-	hrErrorCode=> ,
-	lrtotalpower=> ,
-	lrpowerL1=> ,
-	lrpowerL2=> ,
-	lrpowerL3=> ,
-	lrcurrentL1=> lrCurrent_UV_Garderobe_L1,
-	lrcurrentL2=> lrCurrent_UV_Garderobe_L2,
-	lrcurrentL3=> lrCurrent_UV_Garderobe_L3,
-	lrvoltageL1=> lrVoltage_UV_Garderobe_L1,
-	lrvoltageL2=> lrVoltage_UV_Garderobe_L2,
-	lrvoltageL3=> lrVoltage_UV_Garderobe_L3,
-	lrenergyL1=> ,
-	lrenergyL2=> ,
-	lrenergyL3=>  );
-
-lrPower_UV_Garderobe_TotalkW := 	fb_UV_Garderobe.lrtotalpower / 1000;
-// sum-up energy
-lrEnergy_UV_Garderobe_Total :=  fb_UV_Garderobe.lrenergyL1 + fb_UV_Garderobe.lrenergyL2 + fb_UV_Garderobe.lrenergyL3;
-
-
-fb_Temperature_1(
-	bStart:= m_Start1, 
-	tDelayRequest:= T#10S, 
-	sHostname:= '172.32.12.127', 
-	bValidResult=> , 
-	bBusy=> , 
-	bError=> , 
-	bDone=> , 
-	bConnected=> , 
-	lr_Temperature=> , 
-	lr_Humidity=> , 
-	hrErrorCode=> );
-	
-
-
-fb_Temperature_2(
-	bStart:= m_Start2, 
-	tDelayRequest:= T#10S, 
-	sHostname:= '172.32.12.124', 
-	bValidResult=> , 
-	bBusy=> , 
-	bError=> , 
-	bDone=> , 
-	bConnected=> , 
-	lr_Temperature=> , 
-	lr_Humidity=> , 
-	hrErrorCode=> );
-	
-IF fb_Temperature_1.lr_Temperature <> 0  THEN 
-	lrTemp1 :=  fb_Temperature_1.lr_Temperature;
-END_IF
-IF fb_Temperature_2.lr_Temperature<>0 THEN
-	lrTemp2 :=  fb_Temperature_2.lr_Temperature;
-END_IF]]></ST>
+      <ST><![CDATA[Test := KaffeMaschine;
+Test := Boiler;
+Test := Reklame;
+Test := Heizregister;
+Test := Zuluft;
+Test := Abluft;]]></ST>
     </Implementation>
     <LineIds Name="prgEM">
-      <LineId Id="26" Count="24" />
-      <LineId Id="61" Count="1" />
-      <LineId Id="67" Count="12" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="83" Count="0" />
-      <LineId Id="85" Count="12" />
-      <LineId Id="84" Count="0" />
-      <LineId Id="99" Count="2" />
-      <LineId Id="107" Count="1" />
-      <LineId Id="105" Count="0" />
       <LineId Id="102" Count="0" />
+      <LineId Id="148" Count="4" />
     </LineIds>
   </POU>
 </TcPlcObject>

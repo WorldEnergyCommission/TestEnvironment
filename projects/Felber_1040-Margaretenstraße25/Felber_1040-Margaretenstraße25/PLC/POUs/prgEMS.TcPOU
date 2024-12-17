@@ -1,0 +1,389 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgEMS" Id="{aca2bb65-97b9-484e-b233-502dec00e435}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgEMS
+VAR
+	FB_TimeSwitch_CH1: FB_TimeSwitch_v2;
+	FB_TimeSwitch_CH2: FB_TimeSwitch_v2;
+	FB_TimeSwitch_CH3: FB_TimeSwitch_v2;
+	FB_TimeSwitch_CH4: FB_TimeSwitch_v2;
+	FB_TimeSwitch_CH5: FB_TimeSwitch_v2;	// outside light
+	FB_TimeSwitch_CH6: FB_TimeSwitch_v2;	// Coffee maschine
+	FB_TimeSwitch_CH7: FB_TimeSwitch_v2;	// Ventilation
+	FB_TimeSwitch_CH8: FB_TimeSwitch_v2;	// Coffee maschine2
+	
+	b_Manual_On_CH1		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH1	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH2		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH2	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH3		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH3	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH4		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH4	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_CH5		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_CH5	: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_Coffee_CH6		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_Coffee_CH6		: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_Vent_CH7		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_Vent_CH7		: BOOL;						//{#lynus.ag#()}
+	b_Manual_On_Coffee2_CH8		: BOOL;						//{#lynus.ag#()}
+	b_Manual_Off_Coffee2_CH8	: BOOL;						//{#lynus.ag#()}
+
+	fbCalcSunriseSunset   		: FB_CalcSunriseSunset;
+	todSunrise            		: TOD;
+	todSunset             		: TOD;
+	fb_GetTimeZoneInfo	:FB_GetTimeZoneInformation;
+	b_firstCycle: BOOL;
+	RS_Outsidelight: RS;
+	r_trig_on: R_trig;
+	r_trig_off: R_trig;
+	b_Out_CH1: BOOL;
+	b_Out_CH2: BOOL;
+	b_Out_CH3: BOOL;
+	b_Out_CH4: BOOL;
+	b_Out_CH5: BOOL;
+	b_Out_CH6: BOOL;
+	b_Out_CH7: BOOL;		
+	b_Out_CH8: BOOL;		
+	b_LoadOn_CH1	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH2	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH3	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH4	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH5	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH6	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH7	: BOOL;						//{#lynus.ag#()}
+	b_LoadOn_CH8	: BOOL;						//{#lynus.ag#()}
+END_VAR
+VAR_INPUT
+	fDegreeOfLongitude 	:LREAL;
+	fDegreeOfLatitude	:LREAL;
+	b_Input_KeySwitch		: BOOL;						//{#lynus.ag#()}
+	b_Input_Spare			: BOOL;						//{#lynus.ag#()}
+	m_UnderGroundMode		: BOOL;						//{#lynus.ag#()}
+	int_test:INT;
+END_VAR
+VAR PERSISTENT
+// opening hours
+	byte_MoFr_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Open_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Close_Hour	:BYTE;					//{#lynus.ag#()}
+	byte_MoFr_Close_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Open_Minute		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Close_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_Sa_Close_Minute	:BYTE;					//{#lynus.ag#()}
+	byte_So_Open_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_So_Open_Minute		:BYTE;					//{#lynus.ag#()}
+	byte_So_Close_Hour		:BYTE;					//{#lynus.ag#()}
+	byte_So_Close_Minute	:BYTE;					//{#lynus.ag#()}
+// offset CH1 in hours			
+	b_Enable_Control_CH1		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH1		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH1		:REAL;				//{#lynus.ag#()}
+// offset CH2 in hours			
+	b_Enable_Control_CH2		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH2		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH2		:REAL;				//{#lynus.ag#()}
+// offset CH3 in hours			
+	b_Enable_Control_CH3		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH3		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH3		:REAL;				//{#lynus.ag#()}
+// offset CH4 in hours			
+	b_Enable_Control_CH4		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH4		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH4		:REAL;				//{#lynus.ag#()}
+// offset CH5 in hours			
+	b_Enable_Control_CH5		:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH5		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH5		:REAL;				//{#lynus.ag#()}
+// offset CH6 in hours			
+	b_Enable_Control_Coffee_CH6	:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_Coffee_CH6:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_Coffee_CH6	:REAL;				//{#lynus.ag#()}
+// offset CH7 in hours			
+	b_Enable_Control_Vent_CH7	:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_CH7		:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_CH7		:REAL;				//{#lynus.ag#()}
+// offset CH8 in hours			
+	b_Enable_Control_Coffee2_CH8	:BOOL;				//{#lynus.ag#()}
+	real_Offset_Start_Coffee2_CH8	:REAL;				//{#lynus.ag#()}
+	real_Offset_Stop_Coffee2_CH8	:REAL;				//{#lynus.ag#()}
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+FB_TimeSwitch_CH1(
+	b_Enable:= b_Enable_Control_CH1, 
+	b_StatusOn:= NOT b_Out_CH1, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_CH1 , 
+	real_Offset_Stop:= real_Offset_Stop_CH1 , 
+	b_On_Manual:= b_Manual_On_CH1, 
+	b_Off_Manual:= b_Manual_Off_CH1, 
+	b_Output_On=> b_LoadOn_CH1, 
+	b_Error=> );
+b_Out_CH1 := NOT FB_TimeSwitch_CH1.b_Output_On;
+
+FB_TimeSwitch_CH2(
+	b_Enable:= b_Enable_Control_CH2, 
+	b_StatusOn:= NOT b_Out_CH2, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_CH2 , 
+	real_Offset_Stop:= real_Offset_Stop_CH2 , 
+	b_On_Manual:= b_Manual_On_CH2, 
+	b_Off_Manual:= b_Manual_Off_CH2, 
+	b_Output_On=> b_LoadOn_CH2, 
+	b_Error=> );
+b_Out_CH2 := NOT FB_TimeSwitch_CH2.b_Output_On;
+
+FB_TimeSwitch_CH3(
+	b_Enable:= b_Enable_Control_CH3, 
+	b_StatusOn:= NOT b_Out_CH3, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_CH3 , 
+	real_Offset_Stop:= real_Offset_Stop_CH3 , 
+	b_On_Manual:= b_Manual_On_CH3, 
+	b_Off_Manual:= b_Manual_Off_CH3, 
+	b_Output_On=> b_LoadOn_CH3, 
+	b_Error=> );
+b_Out_CH3 := NOT FB_TimeSwitch_CH3.b_Output_On;
+	
+FB_TimeSwitch_CH4(
+	b_Enable:= b_Enable_Control_CH4, 
+	b_StatusOn:= NOT b_Out_CH4, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_CH4 , 
+	real_Offset_Stop:= real_Offset_Stop_CH4 , 
+	b_On_Manual:= b_Manual_On_CH4, 
+	b_Off_Manual:= b_Manual_Off_CH4, 
+	b_Output_On=> b_LoadOn_CH4 ,
+	b_Error=> );
+b_Out_CH4 := NOT FB_TimeSwitch_CH4.b_Output_On;
+	
+FB_TimeSwitch_CH5(
+	b_Enable:= b_Enable_Control_CH5, 
+	b_StatusOn:= NOT b_Out_CH5, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_CH5 , 
+	real_Offset_Stop:= real_Offset_Stop_CH5 , 
+	b_On_Manual:= b_Manual_On_CH5, 
+	b_Off_Manual:= b_Manual_Off_CH5, 
+	b_Output_On=>  , 
+	b_Error=> );
+//b_Out_CH5 := NOT FB_TimeSwitch_CH5.b_Output_On; 		Outside light, done below
+	
+FB_TimeSwitch_CH6(
+	b_Enable:= b_Enable_Control_Coffee_CH6, 
+	b_StatusOn:= NOT b_Out_CH6, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_Coffee_CH6 , 
+	real_Offset_Stop:= real_Offset_Stop_Coffee_CH6 , 
+	b_On_Manual:= b_Manual_On_Coffee_CH6, 
+	b_Off_Manual:= b_Manual_Off_Coffee_CH6, 
+	b_Output_On=> b_LoadOn_CH6, 
+	b_Error=> );
+b_Out_CH6 := NOT FB_TimeSwitch_CH6.b_Output_On;
+	
+FB_TimeSwitch_CH7(
+	b_Enable:= b_Enable_Control_Vent_CH7, 
+	b_StatusOn:= NOT b_Out_CH7, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_CH7 , 
+	real_Offset_Stop:= real_Offset_Stop_CH7 , 
+	b_On_Manual:= b_Manual_On_Vent_CH7, 
+	b_Off_Manual:= b_Manual_Off_Vent_CH7, 
+	b_Output_On=> b_LoadOn_CH7, 
+	b_Error=> );
+b_Out_CH7 := NOT FB_TimeSwitch_CH7.b_Output_On;
+	
+	
+// calculate sunset / sunrise
+// find out the time details	
+IF fDegreeOfLongitude= 0 OR fDegreeOfLatitude= 0 THEN 
+	fDegreeOfLongitude := 16.3731;   (* Longitude of Vienna *)
+	fDegreeOfLatitude := 48.2083;   (* Latitude of Vienna*)
+END_IF
+fb_GetTimeZoneInfo(
+	sNetID:= '', 
+	bExecute:= prgSystemTime.structSystemTime.wHour = 4 OR NOT b_firstCycle, 
+	tTimeout:= T#5S, 
+	bBusy=> , 
+	bError=> , 
+	nErrID=> , 
+	tzID=> , 
+	tzInfo=> );
+b_firstCycle := TRUE;
+
+
+fbCalcSunriseSunset(
+	fDegreeOfLongitude :=,
+	fDegreeOfLatitude := ,
+	fReferenceMeridian := SEL( fb_GetTimeZoneInfo.tzID = eTimeZoneID_Daylight ,15,30),  (* Central European Time 15 Winter Timer / 30 Summer Time *)
+	dCurrentDate := DT_TO_DATE(SYSTEMTIME_TO_Dt (prgSystemTime.structSystemTime)),
+	todSunrise => todSunrise,
+	todSunset => todSunset);
+	
+r_trig_on (clk := (FB_TimeSwitch_CH5.b_Output_On AND (DT_TO_TOD(systemtime_to_dt(prgSystemTime.structSystemTime))< (todSunrise +  T#1H))) OR (FB_TimeSwitch_CH5.b_Output_On AND m_UnderGroundMode));
+r_trig_off (clk := NOT FB_TimeSwitch_CH5.b_Output_On);
+
+RS_Outsidelight(	Set := r_trig_on.Q OR ((todSunset - T#2H) =  DT_TO_TOD(systemtime_to_dt(prgSystemTime.structSystemTime)) AND FB_TimeSwitch_CH5.b_Output_On AND NOT m_UnderGroundMode) OR b_Manual_On_CH5 ,
+					Reset1 := r_trig_off.Q OR (((todSunrise +  T#1H)= DT_TO_TOD(systemtime_to_dt(prgSystemTime.structSystemTime))) AND NOT m_UnderGroundMode) OR b_Manual_Off_CH5,
+					Q1 => b_LoadOn_CH5 );		
+b_Out_CH5	:= NOT b_LoadOn_CH5;
+	
+FB_TimeSwitch_CH8(
+	b_Enable:= b_Enable_Control_Coffee2_CH8, 
+	b_StatusOn:= NOT b_Out_CH8, 
+	structSystemTime:=prgSystemTime.structSystemTime , 
+	byte_MoFr_Open_Hour:= byte_MoFr_Open_Hour , 
+	byte_MoFr_Open_Minute:= byte_MoFr_Open_Minute, 
+	byte_MoFr_Close_Hour:= byte_MoFr_Close_Hour , 
+	byte_MoFr_Close_Minute:= byte_MoFr_Close_Minute, 
+	byte_Sa_Open_Hour:= byte_Sa_Open_Hour, 
+	byte_Sa_Open_Minute:= byte_Sa_Open_Minute , 
+	byte_Sa_Close_Hour:= byte_Sa_Close_Hour , 
+	byte_Sa_Close_Minute:= byte_Sa_Close_Minute, 
+	byte_So_Open_Hour:= byte_So_Open_Hour, 
+	byte_So_Open_Minute:= byte_So_Open_Minute, 
+	byte_So_Close_Hour:= byte_So_Close_Hour, 
+	byte_So_Close_Minute:= byte_So_Close_Minute, 
+	real_Offset_Start:= real_Offset_Start_Coffee2_CH8 , 
+	real_Offset_Stop:= real_Offset_Stop_Coffee2_CH8 , 
+	b_On_Manual:= b_Manual_On_Coffee2_CH8, 
+	b_Off_Manual:= b_Manual_Off_Coffee2_CH8, 
+	b_Output_On=> b_LoadOn_CH8, 
+	b_Error=> );
+b_Out_CH8 := NOT FB_TimeSwitch_CH8.b_Output_On;
+	
+	
+	]]></ST>
+    </Implementation>
+    <LineIds Name="prgEMS">
+      <LineId Id="66" Count="0" />
+      <LineId Id="154" Count="21" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="201" Count="21" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="225" Count="21" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="459" Count="0" />
+      <LineId Id="248" Count="21" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="271" Count="21" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="294" Count="21" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="317" Count="21" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="567" Count="0" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="343" Count="9" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="69" Count="5" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="362" Count="4" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="356" Count="1" />
+      <LineId Id="675" Count="21" />
+      <LineId Id="358" Count="3" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
