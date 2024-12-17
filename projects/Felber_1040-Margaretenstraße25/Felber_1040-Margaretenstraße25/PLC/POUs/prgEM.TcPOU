@@ -3,6 +3,17 @@
   <POU Name="prgEM" Id="{3af41ed4-b9b9-451d-86e6-0d7631ab8bb0}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgEM
 VAR
+	//Eingangsvariable: Aktueller Leistungswert aus prgGrid
+    PowerValue 				: REAL := prgGrid.lrGridPower;
+	Threshold 				: REAL := 35.0;  				//Schwelle zum Abschalten
+	//Hysterese zum Vermeiden von schnellen Ein-/Ausschaltvorgängen
+    Hysteresis 				: REAL := 5.0;
+	//Zustandsvariablen zur Vermeidung von Schwingungen
+    BoilerActive	 		: BOOL := TRUE;
+    ReklameActive	 		: BOOL := TRUE;
+	HeizregisterActive		: BOOL := TRUE;
+    ZuluftActive	 		: BOOL := TRUE;
+	AbluftActive	 		: BOOL := TRUE;
 	//RELAI 1
 	KaffeMaschine  	AT %Q* 	: BOOL;
 	Boiler  		AT %Q* 	: BOOL;
@@ -13,8 +24,8 @@ VAR
 	Zuluft  		AT %Q* 	: BOOL;
 	Abluft	 		AT %Q* 	: BOOL;
 	//RELAI 4 - OFFEN (Keine Anschlüsse)
-	//RELAI4_CH1		AT %I* 	: BOOL;
-	//RELAI4_CH2		AT %I* 	: BOOL;
+	//RELAI4_CH1		AT %Q* 	: BOOL;
+	//RELAI4_CH2		AT %Q* 	: BOOL;
 	
 	Test					:BOOL;
 	
@@ -26,11 +37,68 @@ Test := Boiler;
 Test := Reklame;
 Test := Heizregister;
 Test := Zuluft;
-Test := Abluft;]]></ST>
+Test := Abluft;
+(* Logik zum Lastenmanagement mit einem Schwellenwert *)
+
+(* Relais 1 CH 2 - Einschalten *)
+IF PowerValue > Threshold AND BoilerActive THEN
+    Boiler 			:= TRUE; 							//Relai wird eingeschalten um die Verbindung zu öffnen
+    BoilerActive 	:= FALSE;
+ELSIF PowerValue < (Threshold - Hysteresis) AND NOT BoilerActive THEN
+    Boiler 			:= FALSE;  
+    BoilerActive 	:= TRUE;
+END_IF;
+(*
+(* Relais 2 CH1 - Einschalten *)
+IF PowerValue > Threshold AND ReklameActive THEN
+    Reklame 		:= TRUE; (* Relais 2 einschalten *)
+    ReklameActive 	:= FALSE;
+ELSIF PowerValue < (Threshold - Hysteresis) AND NOT ReklameActive THEN
+    Reklame			:= FALSE;  (* Relais 2 ausschalten *)
+    ReklameActive 	:= TRUE;
+END_IF;
+*)
+(* Relais 2 CH2 - Einschalten *)
+IF PowerValue > Threshold AND HeizregisterActive THEN
+    Heizregister 		:= TRUE; (* Relais 2 einschalten *)
+    HeizregisterActive 	:= FALSE;
+ELSIF PowerValue < (Threshold - Hysteresis) AND NOT HeizregisterActive THEN
+    Heizregister		:= FALSE;  (* Relais 2 ausschalten *)
+    HeizregisterActive 	:= TRUE;
+END_IF;
+
+(* Relais 3 CH1 & CH2 - Einschalten *)
+IF PowerValue > Threshold AND ZuluftActive AND AbluftActive THEN
+    Zuluft := TRUE;
+	Abluft := TRUE;
+    ZuluftActive := FALSE;
+	AbluftActive := FALSE;
+ELSIF PowerValue < (Threshold - Hysteresis) AND NOT ZuluftActive AND NOT AbluftActive THEN
+    Zuluft := FALSE;
+	Abluft := FALSE;
+	ZuluftActive := TRUE;
+	AbluftActive := TRUE;
+END_IF;
+
+]]></ST>
     </Implementation>
     <LineIds Name="prgEM">
       <LineId Id="102" Count="0" />
       <LineId Id="148" Count="4" />
+      <LineId Id="196" Count="18" />
+      <LineId Id="236" Count="7" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="215" Count="3" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="248" Count="1" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="171" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
