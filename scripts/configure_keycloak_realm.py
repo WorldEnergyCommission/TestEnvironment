@@ -72,9 +72,6 @@ def log_into_keycloak(admin_executable_path: str, domain: str,
         host = f'https://{get_keycloak_hostname(domain)}'
     else:
         host = f'http://localhost:8080'
-        kcpath = os.path.join(pathlib.Path.home(), KEYCLOAK_FOLDER_NAME, 'bin', 'kc.sh')
-        subprocess.run([f'KEYCLOAK_ADMIN={keycloak_admin_name} KEYCLOAK_ADMIN_PASSWORD={keycloak_admin_password} '
-                        f'{kcpath} start-dev'], shell=True, check=True)
 
     subprocess.run([f'{admin_executable_path} config credentials --server '
                     f'"{host}/auth" --realm master '
