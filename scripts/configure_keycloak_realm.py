@@ -67,10 +67,15 @@ def log_into_keycloak(admin_executable_path: str, domain: str,
         subprocess.run(
             [f'{admin_executable_path} config truststore --trustpass {KEYSTORE_PASSWORD} {KEYCLOAK_ABBREVIATION}'],
             shell=True, check=True)
+
     if use_keystore:
         host = f'https://{get_keycloak_hostname(domain)}'
     else:
         host = f'http://localhost:8080'
+        kcpath = os.path.join(pathlib.Path.home(), KEYCLOAK_FOLDER_NAME, 'bin', 'kc.sh')
+        subprocess.run([f'KEYCLOAK_ADMIN={keycloak_admin_name} KEYCLOAK_ADMIN_PASSWORD={keycloak_admin_password} '
+                        f'{kcpath} start'], shell=True, check=True)
+
     subprocess.run([f'{admin_executable_path} config credentials --server '
                     f'"{host}/auth" --realm master '
                     f'--user {keycloak_admin_name} --password {keycloak_admin_password}'],
@@ -154,18 +159,11 @@ def forward_keycloak_port_to_localhost():
 
 def set_up_keycloak_realm(cluster: str, add_host_to_keystore: bool) -> None:
     set_k8s_context(cluster)
-    logging.info(f'cluster: {cluster}')
 
     domain = os.getenv(f'{cluster.upper()}_DOMAIN')
     keycloak_admin_name = os.getenv(f'{cluster.upper()}_KEYCLOAK_USERNAME')
     keycloak_admin_password = os.getenv(f'{cluster.upper()}_KEYCLOAK_PASSWORD')
-    logging.info(f'domain: {domain}')
-    logging.info(f'keycloak_admin_name: {keycloak_admin_name}')
-    logging.info(f'keycloak_admin_password: {keycloak_admin_password}')
-
     admin_executable_path = download_keycloak_and_return_admin_executable_path()
-    logging.info(f'admin_executable_path: {admin_executable_path}')
-    logging.info(f'add_host_to_keystore: {add_host_to_keystore}')
 
     if add_host_to_keystore:
         create_keystore(domain)
@@ -174,13 +172,6 @@ def set_up_keycloak_realm(cluster: str, add_host_to_keystore: bool) -> None:
                           add_host_to_keystore)
         for (realm_name, registration_allowed, console_uri, sendgrid_from_mail, sendgrid_mail_name, sendgrid_key,
              mail_as_username) in get_realm_configs_from_the_environment():
-            logging.info(f'realm_name: {realm_name}')
-            logging.info(f'registration_allowed: {registration_allowed}')
-            logging.info(f'console_uri: {console_uri}')
-            logging.info(f'sendgrid_from_mail: {sendgrid_from_mail}')
-            logging.info(f'sendgrid_mail_name: {sendgrid_mail_name}')
-            logging.info(f'sendgrid_key: {sendgrid_key}')
-            logging.info(f'mail_as_username: {mail_as_username}')
             if not does_realm_exist(admin_executable_path, realm_name):
                 create_realm(admin_executable_path, realm_name)
             for key, value in (
