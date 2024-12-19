@@ -1,6 +1,7 @@
 import argparse
 import contextlib
 import json
+import logging
 import os.path
 import pathlib
 import subprocess
@@ -153,10 +154,19 @@ def forward_keycloak_port_to_localhost():
 
 def set_up_keycloak_realm(cluster: str, add_host_to_keystore: bool) -> None:
     set_k8s_context(cluster)
+    logging.info('cluster: ', cluster)
+
     domain = os.getenv(f'{cluster.upper()}_DOMAIN')
     keycloak_admin_name = os.getenv(f'{cluster.upper()}_KEYCLOAK_USERNAME')
     keycloak_admin_password = os.getenv(f'{cluster.upper()}_KEYCLOAK_PASSWORD')
+    logging.info('domain: ', domain)
+    logging.info('keycloak_admin_name: ', keycloak_admin_name)
+    logging.info('keycloak_admin_password: ', keycloak_admin_password)
+
     admin_executable_path = download_keycloak_and_return_admin_executable_path()
+    logging.info('admin_executable_path: ', admin_executable_path)
+    logging.info('add_host_to_keystore: ', add_host_to_keystore)
+
     if add_host_to_keystore:
         create_keystore(domain)
     with forward_keycloak_port_to_localhost():
@@ -164,6 +174,13 @@ def set_up_keycloak_realm(cluster: str, add_host_to_keystore: bool) -> None:
                           add_host_to_keystore)
         for (realm_name, registration_allowed, console_uri, sendgrid_from_mail, sendgrid_mail_name, sendgrid_key,
              mail_as_username) in get_realm_configs_from_the_environment():
+            logging.info('realm_name: ', realm_name)
+            logging.info('registration_allowed: ', registration_allowed)
+            logging.info('console_uri: ', console_uri)
+            logging.info('sendgrid_from_mail: ', sendgrid_from_mail)
+            logging.info('sendgrid_mail_name: ', sendgrid_mail_name)
+            logging.info('sendgrid_key: ', sendgrid_key)
+            logging.info('mail_as_username: ', mail_as_username)
             if not does_realm_exist(admin_executable_path, realm_name):
                 create_realm(admin_executable_path, realm_name)
             for key, value in (
