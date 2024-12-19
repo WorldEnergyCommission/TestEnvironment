@@ -74,7 +74,7 @@ def log_into_keycloak(admin_executable_path: str, domain: str,
         host = f'http://localhost:8080'
 
     subprocess.run([f'{admin_executable_path} config credentials --server '
-                    f'"{host}/auth" --realm master '
+                    f'"{host}" --realm master '
                     f'--user {keycloak_admin_name} --password {keycloak_admin_password}'],
                    shell=True, check=True)
 
