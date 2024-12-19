@@ -108,6 +108,7 @@ export interface WhitelabelConfig {
 export enum WhitelabelName {
   eneries = "eneries",
   effectas = "effectas",
+  peneder = "peneder",
 }
 
 /**
@@ -275,6 +276,7 @@ const DEFAULT_WHITELABEL_CONFIG_VALUES = {
 export enum WhitelabelHost {
   eneries = "console.eneries.com",
   effectas = "console.effectas.com",
+  peneder = "connect.peneder.com",
 }
 
 /**
@@ -288,6 +290,9 @@ export function getWhitelabelNameForWhitelabelHost(host: WhitelabelHost): Whitel
     case WhitelabelHost.effectas: {
       return WhitelabelName.effectas;
     }
+    case WhitelabelHost.peneder: {
+      return WhitelabelName.peneder;
+    }
   }
 }
 
@@ -298,6 +303,7 @@ export enum WhitelabelApp {
   ios_eneries = "com.eneries.app",
   android_eneries = "droid.eneries.app",
   effectas = "com.effectas.app",
+  peneder = "com.peneder.app",
 }
 
 /**
@@ -313,6 +319,9 @@ export function getWhitelabelNameForWhitelabelApp(app: WhitelabelApp): Whitelabe
     }
     case WhitelabelApp.effectas: {
       return WhitelabelName.effectas;
+    }
+    case WhitelabelApp.peneder: {
+      return WhitelabelName.peneder;
     }
   }
 }
@@ -466,6 +475,79 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
         SETTINGS_MAIL_SUPPORT: "info@effectas.com",
         SETTINGS_TERMS_URL: "https://www.effectas.com/",
         SETTINGS_IMPRINT_URL: "https://effectas.com/imprint/",
+      };
+    }
+    case WhitelabelName.peneder: {
+      return {
+        ...DEFAULT_WHITELABEL_CONFIG_VALUES,
+        TITLE: "P_Connect",
+        DOMAIN: "connect.peneder.com",
+        MQTT_CERT_FILE_POSTFIX: "_peneder",
+        LOGO_URL_LIGHT: "/images/peneder_logo_white.svg",
+        LOGO_URL_DARK: "/images/peneder_logo_white.svg",
+        FAVICON_URL: "/images/peneder_favicon.ico",
+        LOGIN_LOGO: "/images/login/logo-peneder.svg",
+        LOGIN_LOGO_DARK: "/images/peneder_logo_white.svg",
+        LOGIN_BACKGROUND: "/images/login/background-peneder.jpg",
+        REALM: "peneder",
+        LIGHT_MAPBOX_STYLE_ID: "mattries/cm1gs5k4v002j01qrfkmthrst",
+        DARK_MAPBOX_STYLE_ID: "mattries/cm1gs0edd002y01ph1wq38mrr",
+        THEMES: {
+          light: {
+            colors: {
+              primary: "#ffffff",
+              surface: "#ffffff",
+              sideBarColor: "#222c37",
+              secondary: "#ffffff",
+              accent: "#ed1834",
+              accentLight: "#ffffff",
+              lynusText: "#222c37",
+              lynusTextInvert: "#ffffff",
+              lynusTextSidebar: "#ffffff",
+              projectBackground: "#ffffff",
+              deviceBackground: "#ffffff",
+              secondaryDeviceBackground: "#D6D6D6",
+              dndItemBackground: "#ffffff",
+              inactiveItem: "#ffffff",
+              activeItem: "#f0465c",
+              primaryBorder: "#646b73",
+              error: "#E83B3A",
+              overlay: "#f47485",
+              lynusIcon: "#222c37",
+              green: "#30BF54",
+              borderColoring: "#ed1834",
+            },
+          },
+          dark: {
+            colors: {
+              primary: "#222c37",
+              surface: "#222c37",
+              sideBarColor: "#222c37",
+              secondary: "#222c37",
+              accent: "#ed1834",
+              accentLight: "#ffffff",
+              lynusText: "#FFFFFF",
+              lynusTextInvert: "#222c37",
+              lynusTextSidebar: "#FFFFFF",
+              projectBackground: "#222c37",
+              deviceBackground: "#222c37",
+              secondaryDeviceBackground: "#414141",
+              dndItemBackground: "#222c37",
+              inactiveItem: "#222c37",
+              activeItem: "#f0465c",
+              primaryBorder: "#646b73",
+              error: "#E83B3A",
+              overlay: "#f47485",
+              lynusIcon: "#FFFFFF",
+              green: "#30BF54",
+              borderColoring: "#ed1834",
+            },
+          },
+        },
+        SETTINGS_MAIL_SUPPORT: "connect@peneder.com",
+        SETTINGS_TERMS_URL: "https://www.peneder.com/de-at/agb/",
+        SETTINGS_IMPRINT_URL: "https://www.peneder.com/de-at/impressum/",
+        HOME_SITE_TOP_CONTENT: "NO",
       };
     }
   }

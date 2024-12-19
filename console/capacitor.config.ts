@@ -12,9 +12,12 @@ function getFlavorConfiguration(): FlavorConfiguration {
     case "eneries":
       host = "console.eneries.com";
       break;
-      case "effectas":
-        host = "console.effectas.com";
-        break;
+    case "effectas":
+      host = "console.effectas.com";
+      break;
+    case "peneder":
+      host = "connect.peneder.com";
+      break;
   }
   if (host === undefined) {
     console.error("invalid flavor configuration ...");
