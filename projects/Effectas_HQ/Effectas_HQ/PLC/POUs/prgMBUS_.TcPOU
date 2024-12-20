@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="prgMBUS_" Id="{75a6bae3-d772-49c9-ad22-4c5eae811182}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMBUS_
+VAR
+	// M-Bus Kommunikation (KL6781)
+	fbMBusKL6781         : FB_MBUSKL6781;             // Hauptbaustein für die M-Bus-Kommunikation
+	//stComIn              AT %I* : ST_KL6781inData22B; // Eingabestruktur für KL6781
+	//stComOut             AT %Q* : ST_KL6781outData22B;// Ausgabestruktur für KL6781
+	stCom                : ST_MBUS_Communication;     // Kommunikationsstruktur für alle M-Bus-Geräte
+
+	// Wärmezähler (Supercal 531)
+	fbSupercal1          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Wärmezähler 1
+	fbSupercal2          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Wärmezähler 2
+	fbSupercal3          : FB_MBUS_SON_Supercal531;   // Funktionsbaustein für Wärmezähler 3
+
+	// Variablen für Steuerung
+	m_Start1             : BOOL;                      // Start Kommunikation Wärmezähler 1
+	m_Start2             : BOOL;                      // Start Kommunikation Wärmezähler 2
+	m_Start3             : BOOL;                      // Start Kommunikation Wärmezähler 3
+
+	// Status-Flags
+	bDataReady1          : BOOL;                      // Daten bereit Wärmezähler 1
+	bDataReady2          : BOOL;                      // Daten bereit Wärmezähler 2
+	bDataReady3          : BOOL;                      // Daten bereit Wärmezähler 3
+
+	// Ausgelesene Werte Wärmezähler
+	lrEnergy1            : LREAL;                     // Energie in kWh Wärmezähler 1
+	rFlow1               : REAL;                      // Durchfluss Wärmezähler 1
+	rPower1              : REAL;                      // Leistung Wärmezähler 1
+
+	lrEnergy2            : LREAL;                     // Energie in kWh Wärmezähler 2
+	rFlow2               : REAL;                      // Durchfluss Wärmezähler 2
+	rPower2              : REAL;                      // Leistung Wärmezähler 2
+
+	lrEnergy3            : LREAL;                     // Energie in kWh Wärmezähler 3
+	rFlow3               : REAL;                      // Durchfluss Wärmezähler 3
+	rPower3              : REAL;                      // Leistung Wärmezähler 3
+	lrEnergy			 : LREAL;					  // Variable für die Energie
+	lrFlow				 : LREAL;					  // Variable für den Durchfluss
+	lrPower				 : LREAL;					  // Variable für die Leistung
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// ** M-Bus Hauptkommunikation **
+
+fbMBusKL6781(
+	usiRetries := 3,                    // Anzahl der Wiederholungen bei Fehler
+	bStart := TRUE,                     // Startet die M-Bus-Kommunikation
+	bDisabled := FALSE,                 // Deaktiviert die M-Bus-Kommunikation nicht
+	bBusy => , 
+	bReady => , 
+	bError => , 
+	eError => , 
+	stComIn := stComIn, 
+	stComOut := stComOut, 
+	stCom := stCom
+);
+
+// ** Wärmezähler 1 (Supercal 531) auslesen **
+fbSupercal1(
+	usiAddress 	:= ,                    // M-Bus-Adresse des Wärmezählers 1 (Primär)
+	stSecAdr	:= ,					// M-Bus-Adresse des Wärmezählers 1 (Sekundär)
+	bStart 		:= m_Start1,                 // Startflag für Wärmezähler 1
+	bDisabled 	:= FALSE,                 // Wärmezähler 1 nicht deaktivieren
+	bBusy => , 
+	bReady => bDataReady1,              // Datenbereit-Status Wärmezähler 1
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+(*
+IF bDataReady1 THEN
+    lrEnergy1 	:= STRING_TO_REAL(fbSupercal1.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow1 		:= STRING_TO_REAL(fbSupercal1.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower1 	:= STRING_TO_REAL(fbSupercal1.stPower.sValue);                    	// Leistung (kW)
+END_IF
+*)
+// ** Wärmezähler 2 (Supercal 531) auslesen **
+fbSupercal2(
+	usiAddress 	:= 2,                    // M-Bus-Adresse des Wärmezählers 2
+	stSecAdr	:= ,					// M-Bus-Adresse des Wärmezählers 1 (Sekundär)
+	bStart 		:= m_Start2,                 // Startflag für Wärmezähler 2
+	bDisabled 	:= FALSE,                 // Wärmezähler 2 nicht deaktivieren
+	bBusy => , 
+	bReady => bDataReady2,              // Datenbereit-Status Wärmezähler 2
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+(*
+IF bDataReady2 THEN
+    lrEnergy2 	:= STRING_TO_REAL(fbSupercal2.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow2 		:= STRING_TO_REAL(fbSupercal2.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower2 	:= STRING_TO_REAL(fbSupercal2.stPower.sValue);                    	// Leistung (kW)
+END_IF
+*)
+// ** Wärmezähler 3 (Supercal 531) auslesen **
+fbSupercal3(
+	usiAddress 	:= 3,                    // M-Bus-Adresse des Wärmezählers 3
+	bStart 		:= m_Start3,                 // Startflag für Wärmezähler 3
+	bDisabled 	:= FALSE,                 // Wärmezähler 3 nicht deaktivieren
+	bBusy => , 
+	bReady => bDataReady3,              // Datenbereit-Status Wärmezähler 3
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+(*
+IF bDataReady3 THEN
+    lrEnergy3 	:= STRING_TO_REAL(fbSupercal3.stEnergy.sValue);                 	// Energie (kWh)
+    rFlow3 		:= STRING_TO_REAL(fbSupercal3.stFlow.sValue);                      	// Durchfluss (m³/h)
+    rPower3 	:= STRING_TO_REAL(fbSupercal3.stPower.sValue);                    	// Leistung (kW)
+END_IF *)
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgMBUS_">
+      <LineId Id="629" Count="0" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="630" Count="15" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="646" Count="7" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="697" Count="1" />
+      <LineId Id="657" Count="5" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="663" Count="7" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="695" Count="1" />
+      <LineId Id="674" Count="13" />
+      <LineId Id="740" Count="0" />
+      <LineId Id="688" Count="3" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="744" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
