@@ -40,17 +40,21 @@ def download_keycloak_and_return_admin_executable_path() -> str:
     return os.path.join(extract_folder, KEYCLOAK_FOLDER_NAME, 'bin', KEYSTORE_ADMIN_EXECUTABLE)
 
 
-def create_keystore(domain: str) -> None:
+def create_keystore(domain: str, cluster: str) -> None:
     subprocess.run([f'echo -n | openssl s_client -connect '
-                    f'{get_keycloak_hostname(domain)}:443 | openssl x509 > {CERTIFICATE_FILE_NAME}'],
+                    f'{get_keycloak_hostname(domain, cluster)}:443 | openssl x509 > {CERTIFICATE_FILE_NAME}'],
                    shell=True, check=True)
     subprocess.run([f'keytool -import -file {CERTIFICATE_FILE_NAME} -alias {KEYCLOAK_ABBREVIATION} '
                     f'-keystore {KEYCLOAK_ABBREVIATION} -storepass {KEYSTORE_PASSWORD} -noprompt'],
                    shell=True, check=True)
 
 
-def get_keycloak_hostname(domain: str) -> str:
-    return f'accounts.{domain}'
+def get_keycloak_hostname(domain: str, cluster: str) -> str:
+    if cluster == 'peneder':
+        # TODO: need to generalize instead of hard code
+        return f'accounts.eneries.com'
+    else:
+        return f'accounts.{domain}'
 
 
 def get_api_url(domain: str) -> str:
@@ -61,15 +65,14 @@ def get_dashboard_url(domain: str) -> str:
     return f'https://dashboard.{domain}'
 
 
-def log_into_keycloak(admin_executable_path: str, domain: str,
-                      keycloak_admin_name: str, keycloak_admin_password: str, use_keystore: bool) -> None:
+def log_into_keycloak(admin_executable_path: str, domain: str, keycloak_admin_name: str, keycloak_admin_password: str, use_keystore: bool, cluster: str) -> None:
     if use_keystore:
         subprocess.run(
             [f'{admin_executable_path} config truststore --trustpass {KEYSTORE_PASSWORD} {KEYCLOAK_ABBREVIATION}'],
             shell=True, check=True)
 
     if use_keystore:
-        host = f'https://{get_keycloak_hostname(domain)}'
+        host = f'https://{get_keycloak_hostname(domain, cluster)}'
     else:
         host = f'http://localhost:8080'
 
@@ -163,10 +166,9 @@ def set_up_keycloak_realm(cluster: str, add_host_to_keystore: bool) -> None:
     admin_executable_path = download_keycloak_and_return_admin_executable_path()
 
     if add_host_to_keystore:
-        create_keystore(domain)
+        create_keystore(domain, cluster)
     with forward_keycloak_port_to_localhost():
-        log_into_keycloak(admin_executable_path, domain, keycloak_admin_name, keycloak_admin_password,
-                          add_host_to_keystore)
+        log_into_keycloak(admin_executable_path, domain, keycloak_admin_name, keycloak_admin_password, add_host_to_keystore, cluster)
         for (realm_name, registration_allowed, console_uri, sendgrid_from_mail, sendgrid_mail_name, sendgrid_key,
              mail_as_username) in get_realm_configs_from_the_environment():
             if not does_realm_exist(admin_executable_path, realm_name):

@@ -96,12 +96,9 @@ def get_instance_pool_id_for_load_balancer(cluster: str) -> str:
     )
 
     for zone_id in available_zone_ids:
+        auth = ExoscaleV2Auth(api_key, api_secret)
 
-        auth = ExoscaleV2Auth(api_key,
-                              api_secret)
-
-        response = requests.get(f"https://api-{zone_id}.exoscale.com/v2/instance-pool",
-                                auth=auth)
+        response = requests.get(f"https://api-{zone_id}.exoscale.com/v2/instance-pool", auth=auth)
         if not response.ok:
             if response.status_code == 403:
                 continue
@@ -129,8 +126,7 @@ def replace_in_file(file_path: str, search_string: str, replace_string: str) -> 
 
 
 def apply_deployment_file(deployment_file: str) -> None:
-    subprocess.run(
-        [f'kubectl apply -f {deployment_file}'], shell=True, check=True)
+    subprocess.run([f'kubectl apply -f {deployment_file}'], shell=True, check=True)
 
 
 def delete_deployment_file(deployment_file: str) -> None:
