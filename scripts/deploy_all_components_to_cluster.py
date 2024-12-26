@@ -46,7 +46,8 @@ def start_workflow(workflow_file, cluster: str, token: str):
                         json={'ref': 'main', 'inputs': {'cluster': cluster}})
     if not res.ok:
         logging.error(
-            f'starting workflow failed: {({"status_code": res.status_code, "headers": res.headers, "text": res.text})} for workflow {workflow_file} with url: {url}')
+            f'starting workflow failed: {({"status_code": res.status_code, "text": res.text})} for workflow {workflow_file} with url: {url}')
+        # "headers": res.headers
         sys.exit(1)
 
 
