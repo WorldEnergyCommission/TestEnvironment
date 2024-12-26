@@ -43,7 +43,7 @@ def start_workflow(workflow_file, cluster: str, token: str):
     res = requests.post(url,
                         headers={'Accept': 'application/vnd.github.v3+json',
                                  'Authorization': f'token {token}'},
-                        json={'ref': 'main', 'inputs': {'cluster': cluster}})
+                        json={'ref': 'feat/peneder', 'inputs': {'cluster': cluster}})
     if not res.ok:
         logging.error(
             f'starting workflow failed: {({"status_code": res.status_code, "text": res.text})} for workflow {workflow_file} with url: {url}')
