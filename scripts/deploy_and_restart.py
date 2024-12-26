@@ -126,15 +126,15 @@ def replace_in_file(file_path: str, search_string: str, replace_string: str) -> 
 
 
 def apply_deployment_file(deployment_file: str) -> None:
+    logging.info(deployment_file)
     try:
         subprocess.run([f'kubectl apply -f {deployment_file}'], shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        if 'NotFound' in e.stderr.decode('utf-8').strip():
-            logging.info('NotFound')
-            raise e
-        else:
-            logging.info(get_output_object_from_error(e))
-            raise e
+        if e.stdout is not None:
+            logging.info(e.stdout.decode('utf-8').strip())
+        if e.stderr is not None:
+            logging.info(e.stderr.decode('utf-8').strip())
+        raise e
 
 
 def delete_deployment_file(deployment_file: str) -> None:
