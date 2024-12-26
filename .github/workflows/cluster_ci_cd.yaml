@@ -28,5 +28,5 @@ jobs:
         run: |
           cd scripts
           CLUSTER=${{ github.event.inputs.cluster }}
-          python3 deploy_all_components_to_cluster.py --cluster ${CLUSTER:-"all"} --token ${{ env.ACTIONS_GITHUB_TOKEN }}
+          python3 deploy_all_components_to_cluster.py --cluster ${CLUSTER:-"all"} --token ${{ secrets.ACTIONS_GITHUB_TOKEN }}
       
