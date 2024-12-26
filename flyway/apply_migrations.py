@@ -30,11 +30,11 @@ def create_database(database_url: str) -> None:
 
 def check_db_exists(database_url: str) -> bool:
     host, port, name, ssl_mode = get_host_port_name_ssl_mode_from_url(database_url)
-    command = f'SELECT 1 FROM pg_database WHERE datname={name}'
+    command = f"SELECT 1 FROM pg_database WHERE datname='{name}'"
     db_exists = subprocess.run(['psql', '-h', host, '-p', port, '-U', os.getenv('FLYWAY_USER'), '-X', '-c', command],
                    env={**os.environ, 'PGPASSWORD': os.getenv('FLYWAY_PASSWORD'), 'PGSSLMODE': ssl_mode},
                    check=True).stdout.decode('utf-8').strip()
-    return db_exists == '1'
+    return db_exists == 1
 
 
 def execute_sql_command(database_url: str, command: str) -> None:
