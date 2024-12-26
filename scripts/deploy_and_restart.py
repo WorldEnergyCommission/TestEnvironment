@@ -126,7 +126,6 @@ def replace_in_file(file_path: str, search_string: str, replace_string: str) -> 
 
 
 def apply_deployment_file(deployment_file: str) -> None:
-    logging.info(deployment_file)
     try:
         subprocess.run([f'kubectl apply -f {deployment_file}'], shell=True, check=True)
     except subprocess.CalledProcessError as e:

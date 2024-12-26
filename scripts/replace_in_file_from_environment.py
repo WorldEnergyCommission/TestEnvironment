@@ -23,6 +23,8 @@ def decode_base64_string(input_string: str) -> str:
 
 
 def replace_in_file_if_present(content: str, cluster: str, key: str, value: str, apply_decoded: bool) -> str:
+    logging.info(key)
+    logging.info(content)
     if not key.endswith(BASE64_POSTFIX):
         return content
     modified_key = key.replace(BASE64_POSTFIX, VALUE_POSTFIX)
