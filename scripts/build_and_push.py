@@ -27,6 +27,7 @@ def build_and_push_dockerfile(registry: str, user: str, password: str, repositor
     docker_url_base = f'{registry}/{repository.lower()}/{image}'
     docker_url_sha = f'{docker_url_base}:{sha}'
     docker_url_latest = f'{docker_url_base}:latest'
+    subprocess.run([f'docker logout {registry}'], shell=True, check=True)
     subprocess.run([f'docker login {registry} -u {user} -p {password}'], shell=True, check=True)
     try:
         subprocess.run([f'docker pull {docker_url_sha}'], shell=True, check=True)
