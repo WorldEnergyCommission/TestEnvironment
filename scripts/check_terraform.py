@@ -32,7 +32,6 @@ def get_terraform_state_file_path(cluster: str) -> str:
 
 def check_cluster_state(cluster: str) -> None:
     terraform_state_path = get_terraform_state_file_path(cluster)
-    logging.info(terraform_state_path)
     if not os.path.exists(terraform_state_path):
         logging.info('No terraform state file was found')
         return
