@@ -129,8 +129,12 @@ def apply_deployment_file(deployment_file: str) -> None:
     try:
         subprocess.run([f'kubectl apply -f {deployment_file}'], shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        logging.info(get_output_object_from_error(e))
-        raise e
+        if 'NotFound' in e.stderr.decode('utf-8').strip():
+            logging.info('NotFound')
+            raise e
+        else:
+            logging.info(get_output_object_from_error(e))
+            raise e
 
 
 def delete_deployment_file(deployment_file: str) -> None:
