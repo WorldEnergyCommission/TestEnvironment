@@ -23,8 +23,6 @@ def decode_base64_string(input_string: str) -> str:
 
 
 def replace_in_file_if_present(content: str, cluster: str, key: str, value: str, apply_decoded: bool) -> str:
-    logging.info(key)
-    logging.info(content)
     if not key.endswith(BASE64_POSTFIX):
         return content
     modified_key = key.replace(BASE64_POSTFIX, VALUE_POSTFIX)
@@ -42,8 +40,9 @@ def replace_in_file_from_environment(file_path: str, cluster: str, apply_decoded
     with open(file_path) as file:
         content = file.read()
     for key, value in os.environ.items():
-        content = replace_in_file_if_present(
-            content, cluster, key, value, apply_decoded)
+        logging.info(f'key: {key}')
+        logging.info(f'value: {value}')
+        content = replace_in_file_if_present(content, cluster, key, value, apply_decoded)
     with open(file_path, 'w') as file:
         logging.info(content)
         file.write(content)
