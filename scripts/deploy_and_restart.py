@@ -210,8 +210,8 @@ def deploy_and_restart(cluster: str, deployment_file: str, replace_tag: bool, sh
     if replace_domain:
         replace_in_file(deployment_file, '$DOMAIN',
                         get_value_from_env(cluster, 'DOMAIN'))
-    if not is_deployment_file_changed(deployment_file) and apply_only_on_changes and restart_mode != 'delete':
-        return
+    #if not is_deployment_file_changed(deployment_file) and apply_only_on_changes and restart_mode != 'delete':
+    #    return
 
     if restart_mode == 'full':
         if resource_type == 'daemonset':
