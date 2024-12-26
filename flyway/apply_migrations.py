@@ -33,7 +33,7 @@ def check_db_exists(database_url: str) -> bool:
     command = f"SELECT 1 FROM pg_database WHERE datname='{name}'"
     db_exists = subprocess.run(['psql', '-h', host, '-p', port, '-U', os.getenv('FLYWAY_USER'), '-X', '-c', command],
                    env={**os.environ, 'PGPASSWORD': os.getenv('FLYWAY_PASSWORD'), 'PGSSLMODE': ssl_mode},
-                   check=True).stdout.decode('utf-8').strip()
+                   shell=True, check=True, capture_output=True).stdout.decode('utf-8').strip()
     return db_exists == 1
 
 
