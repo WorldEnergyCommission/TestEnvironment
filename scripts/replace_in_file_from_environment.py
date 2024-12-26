@@ -40,8 +40,6 @@ def replace_in_file_from_environment(file_path: str, cluster: str, apply_decoded
     with open(file_path) as file:
         content = file.read()
     for key, value in os.environ.items():
-        logging.info(f'key: {key}')
-        logging.info(f'value: {value}')
         content = replace_in_file_if_present(content, cluster, key, value, apply_decoded)
     with open(file_path, 'w') as file:
         logging.info(content)
