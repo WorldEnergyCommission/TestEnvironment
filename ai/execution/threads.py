@@ -563,6 +563,10 @@ def setpoint_optimizer_prediction_thread(
                     measurements = {}
                     for system in systems:
                         name = system.on_off_state
+                        logger.info(f"system")
+                        logger.info(system)
+                        logger.info(f"system_states")
+                        logger.info(system_states)
                         value = system_states[system.identifier][0]
                         project_id = system_states[system.identifier][1]
                         if name == "":

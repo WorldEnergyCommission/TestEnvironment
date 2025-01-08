@@ -106,11 +106,6 @@ def fetch_forecast(site_id: int, action: str = "getforecast_cloudmove", control:
     req = RequestSession.get_session().get(url=url,
                                            timeout=MEDIUM_TIMEOUT_SECONDS,
                                            params=params)
-    
-    logger = logging.getLogger('fetch_forecast')
-    logger.info(f"key: {get_weather_api_key()}")
-    logger.info(f"site_id: {site_id}")
-    logger.info(f"action: {action}")
 
     data: dict = req.json()["payload"]["solarforecast"][str(site_id)]
 
