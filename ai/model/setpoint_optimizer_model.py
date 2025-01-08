@@ -333,6 +333,7 @@ class SetpointOptimizerModel(Model, VersionedClass):
     def apply_turned_off_to_the_state(
             curve_key: str, turn_off: bool, states: dict[str, list[int | str]], project_id: str) -> None:
         """update the state with a turn off signal for supported systems"""
+        logging.info(f"curve_key: {curve_key}")
 
         supported_curve_key_starts = [
             "heating_water"
