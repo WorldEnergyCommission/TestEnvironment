@@ -33,7 +33,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  dialogTitle: "EfficientIO Modal",
+  dialogTitle: "Adam Energy Saver",
 });
 
 const showDialog = defineModel<boolean>();

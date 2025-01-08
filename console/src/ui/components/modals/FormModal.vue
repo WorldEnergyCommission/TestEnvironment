@@ -43,7 +43,7 @@ import DialogHeader from "@/ui/components/modals/components/DialogHeader.vue";
 export default defineComponent({
   components: { DialogHeader },
   props: {
-    formTitle: { default: "EfficientIO Modal", type: String },
+    formTitle: { default: "Adam Energy Saver", type: String },
     fullHeight: { default: false, type: Boolean },
     defaultHeight: { default: false, type: Boolean },
     isCallContentClickEvent: { default: true, type: Boolean },
