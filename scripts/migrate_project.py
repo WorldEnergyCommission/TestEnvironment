@@ -130,7 +130,13 @@ def insert_csv_with_connection(conn: psycopg.Connection, table_name: str,
 
 
 def get_token(username: str, password: str, domain: str, realm: str):
-    response = requests.post(f'https://accounts.{domain}/auth/realms/{realm}/protocol/openid-connect/token',
+    if realm == 'peneder':
+        # TODO: need to generalize instead of hard code
+        keycloak_host = f'accounts.eneries.com'
+    else:
+        keycloak_host = f'accounts.{domain}'
+
+    response = requests.post(f'https://{keycloak_host}/auth/realms/{realm}/protocol/openid-connect/token',
                              headers={'Content-Type': 'application/x-www-form-urlencoded'},
                              data=f'username={username}&password={password}&grant_type=password&client_id=app',
                              verify=False)

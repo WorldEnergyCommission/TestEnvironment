@@ -37,7 +37,7 @@ def check_cluster_state(cluster: str) -> None:
         return
     try:
         terraform_process = subprocess.run([f'terraform plan -state {terraform_state_path}'],
-                                           shell=True, check=True, capture_output=True)
+                                           shell=True, check=True, capture_output=True, cwd = os.getcwd())
     except subprocess.CalledProcessError as e:
         print(f'stderr: {e.stderr.decode("utf-8")}\nstdout: {e.stdout.decode("utf-8")}')
         raise e

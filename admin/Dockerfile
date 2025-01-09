@@ -5,7 +5,7 @@
 #   minify all html files (remove obsolete quotes, <head> tag, etc.)
 # go:
 #   build a static, stripped binary to be used in a scratch image
-FROM node:18.18.2-alpine3.18
+FROM node:20.18.1-alpine3.21
 WORKDIR /build
 COPY admin .
 RUN yarn global add purgecss minify
