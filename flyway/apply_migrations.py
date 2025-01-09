@@ -66,7 +66,7 @@ def apply_schema(database_url: str) -> None:
 def main() -> None:
     for database_url in get_database_urls():
         create_database(database_url)
-        # apply_updates(database_url)
+        apply_updates(database_url)
         apply_schema(database_url)
 
 
