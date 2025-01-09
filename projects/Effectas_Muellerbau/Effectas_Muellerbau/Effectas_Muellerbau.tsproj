@@ -114,7 +114,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{6940596D-E9AF-4E07-BAB7-E453C8EA8D2E}" Name="PLC" PrjFilePath="PLC\PLC.plcproj" TmcFilePath="PLC\PLC.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC\PLC.tmc" TmcHash="{2BC0BC29-E458-EF10-162F-5EED697216D2}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC\PLC.tmc" TmcHash="{912E4E6E-B7A3-4573-4DB3-1021475DA0B8}">
 					<Name>PLC Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -223,11 +223,6 @@
 							<Type>REAL</Type>
 						</Var>
 						<Var>
-							<Name>prgHouse.ActivePowerTotal_3</Name>
-							<Comment><![CDATA[{#lynus.ag#()}]]></Comment>
-							<Type>REAL</Type>
-						</Var>
-						<Var>
 							<Name>prgGrid.fbKBusState.uiKBusState_OUT</Name>
 							<Comment><![CDATA[K-Bus State from the Basestation on wich the Terminal KL6301 is connected]]></Comment>
 							<Type>UINT</Type>
@@ -316,6 +311,11 @@
 						</Var>
 						<Var>
 							<Name>prgHouse.Strom1L1</Name>
+							<Type>REAL</Type>
+						</Var>
+						<Var>
+							<Name>prgHouse.ActivePowerTotal_3</Name>
+							<Comment><![CDATA[{#lynus.ag#()}]]></Comment>
 							<Type>REAL</Type>
 						</Var>
 					</Vars>
@@ -423,6 +423,9 @@
 				</AddressInfo>
 				<Image Id="1" AddrType="9" ImageType="3">
 					<Name>Prozessabbild</Name>
+				</Image>
+				<Image Id="4" AddrType="10" ImageType="3">
+					<Name>Prozessabbild-2</Name>
 				</Image>
 				<Box Id="1" BoxType="9099">
 					<Name>Klemme 1 (EK1200)</Name>
@@ -3216,13 +3219,13 @@
 			</Device>
 			<Device Id="3" DevType="138" AmsPort="28675" AmsNetId="5.146.124.165.4.1" RemoteName="Gerät 3 (RT-Ethernet Protocol)">
 				<Name>Gerät 3 (RT-Ethernet Protocol)</Name>
-				<AdditionalNetId>192.168.1.118.1.1</AdditionalNetId>
+				<AdditionalNetId>192.168.140.101.1.1</AdditionalNetId>
 				<AddressInfo>
 					<TcCom>
 						<ObjectId>#x03010014</ObjectId>
 					</TcCom>
 				</AddressInfo>
-				<Image Id="3" AddrType="1" ImageType="3">
+				<Image Id="3" AddrType="2" ImageType="3">
 					<Name>Prozessabbild</Name>
 				</Image>
 				<Box Id="6" BoxType="9005">
@@ -3272,7 +3275,7 @@ inputs missed
 							<BitOffs>480</BitOffs>
 						</Var>
 					</Vars>
-					<BusCoupler ComplexTermSupport="true" NewHardware="true" RemoteName="BK9050 (BK9050-0000 192.168.1.118)_Gerät 3 (RT-Ethernet Protocol)" NetId="192.168.1.118.1.1">
+					<BusCoupler ComplexTermSupport="true" NewHardware="true" RemoteName="BK9050 (BK9050-0000 192.168.1.118)_Gerät 3 (RT-Ethernet Protocol)" NetId="192.168.140.101.1.1">
 						<Term Id="2" TermType="#x1a7d" Fieldbus="7">
 							<Name>Klemme 2 (KL6781)</Name>
 							<ImageId>32</ImageId>
@@ -3823,6 +3826,7 @@ inputs missed
 	<Mappings>
 		<MappingInfo Identifier="{00000000-2001-0850-0020-500830000403}" Id="#x02030010"/>
 		<MappingInfo Identifier="{00000000-2002-0850-0120-500810000403}" Id="#x02030030"/>
+		<MappingInfo Identifier="{00000000-2003-0850-0220-500841000403}" Id="#x02030050"/>
 		<MappingInfo Identifier="{08502002-0030-0304-0020-500830000403}" Id="#x02030020" Watchdog="00000000000000000000000000000000"/>
 		<MappingInfo Identifier="{08502003-0010-0304-0020-500810000403}" Id="#x02030040" Watchdog="00000000000000000000000000000000"/>
 		<OwnerA Name="TIPC^PLC^PLC Instance">
@@ -3835,7 +3839,7 @@ inputs missed
 				<Link VarA="Slow_Task Inputs^prgHouse.Volt1L1" VarB="L1 Basic^Voltage"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1200)^43A8_Produktion_PV (EL3443-0010)">
-				<Link VarA="Middle_Task Inputs^prgHouse.ActivePowerTotal_3" VarB="Total Active^Active Power"/>
+				<Link VarA="Slow_Task Inputs^prgHouse.ActivePowerTotal_3" VarB="Total Active^Active Power"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 3 (RT-Ethernet Protocol)^BK9050 (BK9050-0000 192.168.1.118)">
 				<Link VarA="Fast_Task Inputs^prgMBUS.stComIn" VarB="Term 2 (KL6781)^Channel 1^Data In 0" Size="8" OffsA="16"/>

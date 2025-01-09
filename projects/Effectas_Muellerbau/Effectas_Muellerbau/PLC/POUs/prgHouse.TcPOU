@@ -11,7 +11,7 @@ VAR
 	lrElektromobilitaet			: LREAL;								//{#lynus.ag#()}
 	lrHolzschnitzel				: LREAL;								//{#lynus.ag#()}
 	lrLueftung_Kaelte			: LREAL;								//{#lynus.ag#()}
-	rPVProd						: REAL;									//{#lynus.ag#()}
+	//rPVProd						: REAL;									//{#lynus.ag#()}
 	lrAbgaenge					: REAL;									//{#lynus.ag#()}
 	fbGrid1						: FB_EM_Beckhoff_KL3403;  	//Elektromobilität 
 	fbGrid2						: FB_EM_Beckhoff_KL3403;	//Holzschnitzelheizung
@@ -31,7 +31,7 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[lrNetzEinspeisung := ActivePowerTotal_1/1000 + ActivePowerTotal_2/1000 - rPVProd;
+      <ST><![CDATA[lrNetzEinspeisung := ActivePowerTotal_1/1000 + ActivePowerTotal_2/1000 - prgPV.PV_Gesamt;
 
 lrElektromobilitaet	:= fbGrid1.stDataEMPower.lrPowerTotal;
 lrHolzschnitzel		:= fbGrid2.stDataEMPower.lrPowerTotal;
@@ -40,7 +40,7 @@ lrHousePower		:= ActivePowerTotal_1/1000 + fbGrid1.stDataEMPower.lrPowerTotal + 
 
 lrBetriebMuellerBau := -fbGrid1.stDataEMPower.lrPowerTotal - fbGrid2.stDataEMPower.lrPowerTotal - fbGrid3.stDataEMPower.lrPowerTotal + lrHousePower;	
 
-rPVProd				:= (ActivePowerTotal_3)/100 * -1;					//Invertieren
+//rPVProd				:= (ActivePowerTotal_3)/100 * -1;					//Invertieren
 lrAbgaenge 			:= ActivePowerTotal_2/1000;
 //lrHousePower 		:= lrBetriebMuellerBau * -1;						//Invertierte Einspeisung für Darstellung
 
