@@ -71,7 +71,7 @@ def log_into_keycloak(admin_executable_path: str, domain: str, keycloak_admin_na
             [f'{admin_executable_path} config truststore --trustpass {KEYSTORE_PASSWORD} {KEYCLOAK_ABBREVIATION}'],
             shell=True, check=True)
 
-    if use_keystore:
+    if use_keystore or cluster == 'peneder':
         host = f'https://{get_keycloak_hostname(domain, cluster)}'
     else:
         host = f'http://localhost:8080'
