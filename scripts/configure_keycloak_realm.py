@@ -66,7 +66,7 @@ def get_dashboard_url(domain: str) -> str:
 
 
 def log_into_keycloak(admin_executable_path: str, domain: str, keycloak_admin_name: str, keycloak_admin_password: str, use_keystore: bool, cluster: str) -> None:
-    if use_keystore:
+    if use_keystore or cluster == 'peneder':
         subprocess.run(
             [f'{admin_executable_path} config truststore --trustpass {KEYSTORE_PASSWORD} {KEYCLOAK_ABBREVIATION}'],
             shell=True, check=True)
@@ -165,14 +165,17 @@ def set_up_keycloak_realm(cluster: str, add_host_to_keystore: bool) -> None:
     keycloak_admin_password = os.getenv(f'{cluster.upper()}_KEYCLOAK_PASSWORD')
     admin_executable_path = download_keycloak_and_return_admin_executable_path()
 
-    if add_host_to_keystore:
+    if add_host_to_keystore or cluster == 'peneder':
         create_keystore(domain, cluster)
+
     with forward_keycloak_port_to_localhost():
         log_into_keycloak(admin_executable_path, domain, keycloak_admin_name, keycloak_admin_password, add_host_to_keystore, cluster)
+
         for (realm_name, registration_allowed, console_uri, sendgrid_from_mail, sendgrid_mail_name, sendgrid_key,
              mail_as_username) in get_realm_configs_from_the_environment():
             if not does_realm_exist(admin_executable_path, realm_name):
                 create_realm(admin_executable_path, realm_name)
+
             for key, value in (
                     ('loginTheme', realm_name), ('accountTheme', realm_name), ('internationalizationEnabled', 'true'),
                     ('supportedLocales', '["de","en"]'), ('defaultLocale', 'de'),
@@ -187,6 +190,7 @@ def set_up_keycloak_realm(cluster: str, add_host_to_keystore: bool) -> None:
                      f'"fromDisplayName":"{sendgrid_mail_name}","user":"apikey"}}'),
                     ('ssoSessionMaxLifespan', '2592000'), ('ssoSessionIdleTimeout', '2592000')):
                 update_realm_setting(admin_executable_path, realm_name, key, value)
+
             for client_id, redirect_uri, web_origin in (
                     ('console', f'{console_uri}/*', console_uri),
                     ('console-dev', f'{CONSOLE_DEV_URI}/*', CONSOLE_DEV_URI),
