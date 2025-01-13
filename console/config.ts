@@ -481,8 +481,10 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
       return {
         ...DEFAULT_WHITELABEL_CONFIG_VALUES,
         TITLE: "P_Connect",
-        DOMAIN: "connect.peneder.com",
-        MQTT_CERT_FILE_POSTFIX: "_peneder",
+        DOMAIN: "eneries.com",
+        MQTT_CERT_FILE_POSTFIX: "_eneries",
+        // DOMAIN: "connect.peneder.com",
+        // MQTT_CERT_FILE_POSTFIX: "_peneder",
         LOGO_URL_LIGHT: "/images/peneder_logo_white.svg",
         LOGO_URL_DARK: "/images/peneder_logo_white.svg",
         FAVICON_URL: "/images/peneder_favicon.ico",
