@@ -1,0 +1,288 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="prgMBUS" Id="{61a85606-3f9a-4381-814a-92d8a5a1f9a5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgMBUS
+VAR
+	// M-Bus Kommunikation (KL6781)
+	fbMBusKL6781         : FB_MBUSKL6781;             // Hauptbaustein für die M-Bus-Kommunikation
+	stComIn              AT %I* : ST_KL6781inData22B; // Eingabestruktur für KL6781
+	stComOut             AT %Q* : ST_KL6781outData22B;// Ausgabestruktur für KL6781
+	stCom                : ST_MBUS_Communication;     // Kommunikationsstruktur für alle M-Bus-Geräte
+	fbScann              : FB_MBUS_Scan;
+	// Wärmezähler (Supercal 531)
+	fbHolzkessel         : FB_MBUS_General;          	 // Funktionsbaustein für Holzkessel
+	fbFussbodenheizung   : FB_MBUS_General;   		 	 // Funktionsbaustein für MAB Fußbodenheizung
+	fbDSP_Produktion     : FB_MBUS_General;   			// Funktionsbaustein für DSP Produktion
+	fbHeizkoerper_buero  : FB_MBUS_General;   			// Funktionsbaustein für Heizkörper Büro
+	fbHalle_Bestand_S100 : FB_MBUS_General;   			// Funktionsbaustein für Halle Bestand S100
+	fbLueftung	         : FB_MBUS_General;   			// Funktionsbaustein für Lüftung
+
+	// Variablen für Steuerung
+	m_Start1             : BOOL;                      
+	m_Start2             : BOOL;                      
+	m_Start3             : BOOL;
+	m_Start4             : BOOL;
+	m_Start5             : BOOL;
+	m_Start6             : BOOL;
+	
+	//
+	//TODO austausch FLOW mit Vorlauf und Rücklauftemperatur
+	//
+	
+	// Ausgelesene Werte Wärmezähler
+	lrEnergy_Holzkessel	 		: LREAL;								//{#lynus.ag#()}
+	rFlow_Holzkessel     		: REAL;
+	rPower_Holzkessel    		: REAL;									//{#lynus.ag#()}
+	rflow_VL_Holzkessel			: REAL;									//{#lynus.ag#()}
+	rflow_RL_Holzkessel			: REAL;									//{#lynus.ag#()}
+
+	lrEnergy_Fussboden   		: LREAL;								//{#lynus.ag#()}
+	rFlow_Fussboden         	: REAL;
+	rPower_Fussboden        	: REAL;									//{#lynus.ag#()}
+	rflow_VL_Fussboden			: REAL;									//{#lynus.ag#()}
+	rflow_RL_Fussboden			: REAL;									//{#lynus.ag#()}
+
+	lrEnergy_DSP_Produktion 	: LREAL;								//{#lynus.ag#()}
+	rFlow_DSP_Produktion    	: REAL;
+	rPower_DSP_Produktion   	: REAL;									//{#lynus.ag#()}
+	rflow_VL_DSP_Produktion		: REAL;									//{#lynus.ag#()}
+	rflow_RL_DSP_Produktion		: REAL;									//{#lynus.ag#()}
+	
+	lrEnergy_Heizkoerper_buero  : LREAL;								//{#lynus.ag#()}
+	rFlow_Heizkoerper_buero     : REAL;
+	rPower_Heizkoerper_buero    : REAL;									//{#lynus.ag#()}
+	rflow_VL_Heizkoerper_buero	: REAL;									//{#lynus.ag#()}
+	rflow_RL_Heizkoerper_buero	: REAL;									//{#lynus.ag#()}
+	
+	lrEnergy_Halle_Bestand_S100 : LREAL;								//{#lynus.ag#()}
+	rFlow_Halle_Bestand_S100    : REAL;
+	rPower_Halle_Bestand_S100   : REAL;									//{#lynus.ag#()}
+	rflow_VL_Halle_Bestand_S100	: REAL;									//{#lynus.ag#()}
+	rflow_RL_Halle_Bestand_S100	: REAL;									//{#lynus.ag#()}
+	
+	lrEnergy_Lueftung           : LREAL;								//{#lynus.ag#()}
+	rFlow_Lueftung              : REAL;
+	rPower_Lueftung             : REAL;									//{#lynus.ag#()}
+	rflow_VL_Lueftung			: REAL;									//{#lynus.ag#()}
+	rflow_RL_Lueftung			: REAL;									//{#lynus.ag#()}
+
+	Err1 : E_MBUS_ERROR;
+	Err2 : E_MBUS_ERROR;
+	Err3 : E_MBUS_ERROR;
+	Err4 : E_MBUS_ERROR;
+	Err5 : E_MBUS_ERROR;
+	Err6 : E_MBUS_ERROR;
+	
+	Busy1Trig : R_TRIG;
+	DataReadyCount : DINT;
+	DevError : ST_MBus_Info; 
+
+	DataReadyCount2 : DINT;
+	DevError2       : ST_MBus_Info; 
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// ** M-Bus Hauptkommunikation **
+
+fbMBusKL6781(
+	usiRetries := 3,                    // Anzahl der Wiederholungen bei Fehler
+	bStart := TRUE,                     // Startet die M-Bus-Kommunikation
+	bDisabled := FALSE,                 // Deaktiviert die M-Bus-Kommunikation nicht
+	bBusy => , 
+	bReady => , 
+	bError => , 
+	eError => , 
+	stComIn := stComIn, 
+	stComOut := stComOut, 
+	stCom := stCom
+);
+
+fbScann(
+	bStart:= , 
+	bStop:= , 
+	eBaudrate:= E_MBUS_Baudrate.eMBus_Baud2400, 
+	bDisabled:= , 
+	bBusy=> , 
+	bReady=> , 
+	bError=> , 
+	eError=> , 
+	usiAddress=> , 
+	usiCount=> , 
+	arrDevice=> , 
+	stCom:= stCom);
+
+
+// ** Holzkessel (Supercal 531) auslesen **
+
+//fbSupercal1.stSecAdr.udiIdNumber:= 30868639;
+
+fbHolzkessel(
+	usiAddress 	:= 1,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start1,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              				// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbHolzkessel.bBusy AND fbHolzkessel.bError THEN
+
+	Err1:= fbHolzkessel.eError;
+END_IF
+
+IF fbHolzkessel.bReady THEN
+
+    lrEnergy_Holzkessel 	:= STRING_TO_REAL(fbHolzkessel.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_Holzkessel 		:= STRING_TO_REAL(fbHolzkessel.arrData[6].sValue);                  // Durchfluss (m³/h)
+    rPower_Holzkessel 	:= STRING_TO_REAL(fbHolzkessel.arrData[7].sValue);                    	// Leistung (kW)
+END_IF
+
+fbFussbodenheizung(
+	usiAddress 	:= 2,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start2,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              				// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbFussbodenheizung.bBusy AND fbFussbodenheizung.bError THEN
+
+	Err2:= fbFussbodenheizung.eError;
+END_IF
+
+IF fbFussbodenheizung.bReady THEN
+
+    lrEnergy_Fussboden 	:= STRING_TO_REAL(fbFussbodenheizung.arrData[1].sValue);                // Energie (kWh)
+    rFlow_Fussboden 	:= STRING_TO_REAL(fbFussbodenheizung.arrData[6].sValue);                // Durchfluss (m³/h)
+    rPower_Fussboden 	:= STRING_TO_REAL(fbFussbodenheizung.arrData[7].sValue);                // Leistung (kW)
+	rflow_VL_Fussboden	:= STRING_TO_REAL(fbFussbodenheizung.arrData[3].sValue);					// Temperatur in Grad C
+	rflow_RL_Fussboden	:= STRING_TO_REAL(fbFussbodenheizung.arrData[4].sValue);					// Temperatur in Grad C
+END_IF
+
+fbDSP_Produktion(
+	usiAddress 	:= 3,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start3,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              				// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbDSP_Produktion.bBusy AND fbDSP_Produktion.bError THEN
+
+	Err3:= fbDSP_Produktion.eError;
+END_IF
+
+IF fbDSP_Produktion.bReady THEN
+
+    lrEnergy_DSP_Produktion 	:= STRING_TO_REAL(fbDSP_Produktion.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_DSP_Produktion 		:= STRING_TO_REAL(fbDSP_Produktion.arrData[6].sValue);                  // Durchfluss (m³/h)
+    rPower_DSP_Produktion 		:= STRING_TO_REAL(fbDSP_Produktion.arrData[7].sValue);                  // Leistung (kW)
+	rflow_VL_DSP_Produktion		:= STRING_TO_REAL(fbDSP_Produktion.arrData[3].sValue);					// Temperatur in Grad C
+	rflow_RL_DSP_Produktion		:= STRING_TO_REAL(fbDSP_Produktion.arrData[4].sValue);					// Temperatur in Grad C
+END_IF
+
+fbHeizkoerper_buero(
+	usiAddress 	:= 4,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start4,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              				// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbHeizkoerper_buero.bBusy AND fbHeizkoerper_buero.bError THEN
+
+	Err4:= fbHeizkoerper_buero.eError;
+END_IF
+
+IF fbHeizkoerper_buero.bReady THEN
+
+    lrEnergy_Heizkoerper_buero 	:= STRING_TO_REAL(fbHeizkoerper_buero.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_Heizkoerper_buero 	:= STRING_TO_REAL(fbHeizkoerper_buero.arrData[6].sValue);                  // Durchfluss (m³/h)
+    rPower_Heizkoerper_buero 	:= STRING_TO_REAL(fbHeizkoerper_buero.arrData[7].sValue);                  // Leistung (kW)
+	rflow_VL_Heizkoerper_buero	:= STRING_TO_REAL(fbHeizkoerper_buero.arrData[3].sValue);					// Temperatur in Grad C
+	rflow_RL_Heizkoerper_buero	:= STRING_TO_REAL(fbHeizkoerper_buero.arrData[4].sValue);					// Temperatur in Grad C
+END_IF
+
+fbHalle_Bestand_S100(
+	usiAddress 	:= 5,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start5,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              				// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbHalle_Bestand_S100.bBusy AND fbHalle_Bestand_S100.bError THEN
+
+	Err5:= fbHalle_Bestand_S100.eError;
+END_IF
+
+IF fbHalle_Bestand_S100.bReady THEN
+
+    lrEnergy_Halle_Bestand_S100 	:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[1].sValue);                 	// Energie (kWh)
+    rFlow_Halle_Bestand_S100 		:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[6].sValue);                  // Durchfluss (m³/h)
+    rPower_Halle_Bestand_S100 		:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[7].sValue);                  // Leistung (kW)
+	rflow_VL_Halle_Bestand_S100		:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[3].sValue);					// Temperatur in Grad C
+	rflow_RL_Halle_Bestand_S100		:= STRING_TO_REAL(fbHalle_Bestand_S100.arrData[4].sValue);					// Temperatur in Grad C
+END_IF
+
+
+fbLueftung(
+	usiAddress 	:= 6,                    	// M-Bus-Adresse(Primär)
+	bStart 		:= m_Start6,                // Startflag
+	usiUnit     := 1,               		// KW
+	bDisabled 	:= FALSE,                 	
+	bBusy => , 
+	bReady => ,              				// Datenbereit-Status
+	bError => , 
+	eError => , 
+	stCom 		:= stCom
+);
+
+IF NOT fbLueftung.bBusy AND fbLueftung.bError THEN
+
+	Err6:= fbLueftung.eError;
+END_IF
+
+IF fbLueftung.bReady THEN
+
+    lrEnergy_Lueftung 	:= STRING_TO_REAL(fbLueftung.arrData[1].sValue);             	// Energie (kWh)
+    rFlow_Lueftung 		:= STRING_TO_REAL(fbLueftung.arrData[6].sValue);             	// Durchfluss (m³/h)
+    rPower_Lueftung 	:= STRING_TO_REAL(fbLueftung.arrData[7].sValue);            	// Leistung (kW)
+	rflow_VL_Lueftung	:= STRING_TO_REAL(fbLueftung.arrData[3].sValue);				// Temperatur in Grad C
+	rflow_RL_Lueftung	:= STRING_TO_REAL(fbLueftung.arrData[4].sValue);				// Temperatur in Grad C
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="prgMBUS">
+      <LineId Id="5782" Count="79" />
+      <LineId Id="6041" Count="1" />
+      <LineId Id="5862" Count="23" />
+      <LineId Id="6039" Count="1" />
+      <LineId Id="5886" Count="23" />
+      <LineId Id="6043" Count="1" />
+      <LineId Id="5910" Count="23" />
+      <LineId Id="6045" Count="1" />
+      <LineId Id="5934" Count="24" />
+      <LineId Id="6047" Count="1" />
+      <LineId Id="1585" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
