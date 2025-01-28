@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="prgMBUS" Id="{4c3b396a-f12b-42e8-b7b6-5bc930421441}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgMBUS
 VAR
@@ -11,12 +11,18 @@ VAR
 	fbScann         : FB_MBUS_Scan;
 
 	fbWaermeGesamt     : FB_MBUS_General:= (bStart:= TRUE);          	 // Funktionsbaustein für Holzkessel
-  eWaermeGesamtErr   : E_MBUS_ERROR;  
-	WaermeGesamtKWh    : LREAL;								//{#lynus.ag#()}
+  	eWaermeGesamtErr   : E_MBUS_ERROR;  
+	WaermeGesamtKWh    : LREAL;											//{#lynus.ag#()}
+	WaermeGesamtKW     : LREAL;											//{#lynus.ag#()}
+	
 
 	fbMattenrainstr11  : FB_MBUS_General:= (bStart:= TRUE);          	 // Funktionsbaustein für Holzkessel
-  eMattenrainstr11Err: E_MBUS_ERROR;  
-	Mattenrainstr11KWh : LREAL;								//{#lynus.ag#()}
+  	eMattenrainstr11Err: E_MBUS_ERROR;  
+	Mattenrainstr11KWh : LREAL;											//{#lynus.ag#()}
+	Mattenrainstr11KW  : LREAL;											//{#lynus.ag#()}
+	
+	Mattenrainstr9KWh  : LREAL;											//{#lynus.ag#()}
+	Mattenrainstr9KW   : LREAL;											//{#lynus.ag#()}
 
 END_VAR]]></Declaration>
     <Implementation>
@@ -71,6 +77,8 @@ IF fbWaermeGesamt.bReady THEN
   eWaermeGesamtErr:= E_MBUS_ERROR.eMBus_no_error;
 
   WaermeGesamtKWh:= STRING_TO_REAL(fbWaermeGesamt.arrData[4].sValue);                 	// Energie (kWh)
+  WaermeGesamtKW := STRING_TO_REAL(fbWaermeGesamt.arrData[9].sValue);					// Leistung (kW)
+	   
 END_IF
 {endregion}
 
@@ -96,8 +104,19 @@ IF fbMattenrainstr11.bReady THEN
   eMattenrainstr11Err:= E_MBUS_ERROR.eMBus_no_error;
 
   Mattenrainstr11KWh:= STRING_TO_REAL(fbMattenrainstr11.arrData[4].sValue);                 	// Energie (kWh)
+  Mattenrainstr11KW := STRING_TO_REAL(fbMattenrainstr11.arrData[9].sValue);                 	// Leistung (kW)
+	   
 END_IF
 {endregion}
+
+{region "Mattenrainstr. 9"} 
+
+	 Mattenrainstr9KWh := WaermeGesamtKWh - Mattenrainstr11KWh;									// Energie (kWh)
+	 Mattenrainstr9KW  := WaermeGesamtKW - Mattenrainstr11KW;									// Leistung (kW)
+	 
+{endregion}
+	 
+	 
 
 ]]></ST>
     </Implementation>
@@ -116,9 +135,22 @@ END_IF
       <LineId Id="874" Count="0" />
       <LineId Id="887" Count="0" />
       <LineId Id="889" Count="0" />
+      <LineId Id="953" Count="0" />
+      <LineId Id="956" Count="0" />
       <LineId Id="788" Count="0" />
       <LineId Id="883" Count="0" />
-      <LineId Id="890" Count="25" />
+      <LineId Id="890" Count="22" />
+      <LineId Id="954" Count="1" />
+      <LineId Id="913" Count="1" />
+      <LineId Id="966" Count="0" />
+      <LineId Id="963" Count="0" />
+      <LineId Id="970" Count="0" />
+      <LineId Id="969" Count="0" />
+      <LineId Id="971" Count="0" />
+      <LineId Id="968" Count="0" />
+      <LineId Id="967" Count="0" />
+      <LineId Id="964" Count="1" />
+      <LineId Id="915" Count="0" />
       <LineId Id="744" Count="0" />
     </LineIds>
   </POU>
