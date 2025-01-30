@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="prgSmartMe" Id="{c4927f3c-1a01-4513-b914-081793484677}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgSmartMe
+VAR
+  fbSmartMe: FB_Get_Data_SmartMeApi_ElectricMeter; // 
+
+  BilanzzaehlerKW                  : LREAL;  //{#lynus.ag#()}
+  ProduktionPVAnlageKW             : LREAL;  //{#lynus.ag#()}
+  TotalVerbraucherKW               : LREAL;  //{#lynus.ag#()}
+  UVHalleNetzbauKW                 : LREAL;  //{#lynus.ag#()}
+  UVGarderobentraktKW              : LREAL;  //{#lynus.ag#()}
+  UVEKopfbauNordKW                 : LREAL;  //{#lynus.ag#()}
+  UVSchulungsraumKW                : LREAL;  //{#lynus.ag#()}
+  UVLadestationenKW                : LREAL;  //{#lynus.ag#()}
+  UVErlebnisraumKW                 : LREAL;  //{#lynus.ag#()}
+  UVMattenrainstrasse11AllgemeinKW : LREAL;  //{#lynus.ag#()}
+  UVBueroKopfbauSuedKW             : LREAL;  //{#lynus.ag#()}
+  UVMattenrainstrasse11HalleOstKW  : LREAL;  //{#lynus.ag#()}
+  UVMattenrainstrasse11HalleWestKW : LREAL;  //{#lynus.ag#()}
+  UVHeizungMattenrainstrasseKW     : LREAL;  //{#lynus.ag#()}
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[{region "Verbindung zu smart-me.com"}
+  IF NOT fbSmartMe.bStart THEN
+    // Init.
+    fbSmartMe.sUsername    := 'ewsirnach'; 
+    fbSmartMe.sPassword    := 'EWSirnach8370'; 
+    fbSmartMe.tDelayRequest:= T#5S; 
+    fbSmartMe.bStart       := TRUE;
+  END_IF
+  fbSmartMe();
+{endregion}
+
+IF NOT fbSmartMe.bValidResult THEN
+  // Abbruch
+  RETURN;
+END_IF
+
+BilanzzaehlerKW                  := fbSmartMe.arrListOfDevices[1].lrActivePower;
+UVMattenrainstrasse11HalleWestKW := fbSmartMe.arrListOfDevices[2].lrActivePower;
+UVMattenrainstrasse11HalleOstKW  := fbSmartMe.arrListOfDevices[3].lrActivePower;
+UVHalleNetzbauKW                 := fbSmartMe.arrListOfDevices[4].lrActivePower;
+UVHeizungMattenrainstrasseKW     := fbSmartMe.arrListOfDevices[5].lrActivePower;
+ProduktionPVAnlageKW             := fbSmartMe.arrListOfDevices[6].lrActivePower;
+UVGarderobentraktKW              := fbSmartMe.arrListOfDevices[7].lrActivePower;
+UVEKopfbauNordKW                 := fbSmartMe.arrListOfDevices[8].lrActivePower;
+UVBueroKopfbauSuedKW             := fbSmartMe.arrListOfDevices[9].lrActivePower;
+UVSchulungsraumKW                := fbSmartMe.arrListOfDevices[10].lrActivePower;
+UVLadestationenKW                := fbSmartMe.arrListOfDevices[11].lrActivePower;
+UVErlebnisraumKW                 := fbSmartMe.arrListOfDevices[12].lrActivePower;
+UVMattenrainstrasse11AllgemeinKW := fbSmartMe.arrListOfDevices[13].lrActivePower;
+TotalVerbraucherKW               := fbSmartMe.arrListOfDevices[16].lrActivePower;
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgSmartMe">
+      <LineId Id="51" Count="2" />
+      <LineId Id="59" Count="2" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="64" Count="1" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="103" Count="2" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="92" Count="1" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="94" Count="3" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
