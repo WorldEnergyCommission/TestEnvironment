@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="prgEM" Id="{3af41ed4-b9b9-451d-86e6-0d7631ab8bb0}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgEM
 VAR
 		// Grid Objekt H 3-phase, 400V
-	fb_UV_Garderobe					: FB_Shelly_3EM;
+//	fb_UV_Garderobe					: FB_Shelly_3EM;
+	fb_UV_Garderobe					: FB_Shelly_Pro3EM;
 	
 	lrPower_UV_Garderobe_TotalkW		: LREAL;			//{#lynus.ag#()}
 	lrEnergy_UV_Garderobe_Total			: LREAL;			//{#lynus.ag#()}
@@ -28,6 +29,7 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[	// Grid Objekt H 3-phase, 400V
+(*
 fb_UV_Garderobe(
 	bStart:= , 
 	tDelayRequest:= T#20S, 
@@ -54,6 +56,14 @@ fb_UV_Garderobe(
 lrPower_UV_Garderobe_TotalkW := 	fb_UV_Garderobe.lrtotalpower / 1000;
 // sum-up energy
 lrEnergy_UV_Garderobe_Total :=  fb_UV_Garderobe.lrenergyL1 + fb_UV_Garderobe.lrenergyL2 + fb_UV_Garderobe.lrenergyL3;
+*)
+
+fb_UV_Garderobe(
+	bStart:= , 
+	tDelayRequest:= T#20S, 
+	sHostname:= '172.32.12.121', 
+	bValidResult=> , );
+
 
 
 fb_Temperature_1(
@@ -92,9 +102,14 @@ IF fb_Temperature_2.lr_Temperature<>0 THEN
 END_IF]]></ST>
     </Implementation>
     <LineIds Name="prgEM">
-      <LineId Id="26" Count="24" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="27" Count="23" />
       <LineId Id="61" Count="1" />
-      <LineId Id="67" Count="12" />
+      <LineId Id="67" Count="1" />
+      <LineId Id="138" Count="4" />
+      <LineId Id="135" Count="2" />
+      <LineId Id="69" Count="10" />
       <LineId Id="5" Count="0" />
       <LineId Id="83" Count="0" />
       <LineId Id="85" Count="12" />
