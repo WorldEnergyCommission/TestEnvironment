@@ -5,10 +5,10 @@
 VAR
 		// Grid Objekt H 3-phase, 400V
 //	fb_UV_Garderobe					: FB_Shelly_3EM;
-	fb_UV_Garderobe					: FB_Shelly_Pro3EM;
+	fb_UV_Garderobe					: FB_Shelly_Pro3EM:= (bStart:= TRUE);
 	
-	lrPower_UV_Garderobe_TotalkW		: LREAL;			//{#lynus.ag#()}
-	lrEnergy_UV_Garderobe_Total			: LREAL;			//{#lynus.ag#()}
+	lrPower_UV_Garderobe_TotalkW	: LREAL;			//{#lynus.ag#()}
+	lrEnergy_UV_Garderobe_Total		: LREAL;			//{#lynus.ag#()}
 	lrCurrent_UV_Garderobe_L1			: LREAL;			//{#lynus.ag#()}
 	lrCurrent_UV_Garderobe_L2			: LREAL;			//{#lynus.ag#()}
 	lrCurrent_UV_Garderobe_L3			: LREAL;			//{#lynus.ag#()}
@@ -62,8 +62,15 @@ fb_UV_Garderobe(
 	bStart:= , 
 	tDelayRequest:= T#20S, 
 	sHostname:= '172.32.12.121', 
-	bValidResult=> , );
-
+	bValidResult=> , 
+  lrpowerTotal=> lrPower_UV_Garderobe_TotalkW,
+  lrpoweraprtTotal=> lrEnergy_UV_Garderobe_Total,
+  lrcurrentP1=> lrCurrent_UV_Garderobe_L1,
+  lrvoltageP1=> lrVoltage_UV_Garderobe_L1,
+  lrcurrentP2=> lrCurrent_UV_Garderobe_L2,
+  lrvoltageP2=> lrVoltage_UV_Garderobe_L2,
+  lrcurrentP3=> lrCurrent_UV_Garderobe_L3,
+  lrvoltageP3=> lrVoltage_UV_Garderobe_L3);
 
 
 fb_Temperature_1(
@@ -108,7 +115,10 @@ END_IF]]></ST>
       <LineId Id="61" Count="1" />
       <LineId Id="67" Count="1" />
       <LineId Id="138" Count="4" />
-      <LineId Id="135" Count="2" />
+      <LineId Id="168" Count="1" />
+      <LineId Id="171" Count="1" />
+      <LineId Id="174" Count="3" />
+      <LineId Id="136" Count="1" />
       <LineId Id="69" Count="10" />
       <LineId Id="5" Count="0" />
       <LineId Id="83" Count="0" />

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="FB_Shelly_Pro3EM" Id="{4fb64124-ca1a-4f6d-b795-35461972a121}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_Pro3EM
 VAR_INPUT
@@ -64,7 +64,8 @@ FPStartRequest(CLK:= bStart, Q=> );
 				
 //Http Get Function
 fbHttpGet(
-	(*lrpowerP1 => lrpowerP1,
+(*
+	lrpowerP1 => lrpowerP1,
 	lrfrequencyP1 => lrfrequencyP1,
 	lrcurrentP1 => lrcurrentP1,
 	lrvoltageP1 => lrvoltageP1,
@@ -74,8 +75,16 @@ fbHttpGet(
 	lrvoltageP2 => lrvoltageP2,
 	lrpowerP3 => lrpowerP3,
 	lrfrequencyP3 => lrfrequencyP3,
-	lrcurrentP3 => lrcurrentP3,*)
+	lrcurrentP3 => lrcurrentP3,
 	lr_total_current => lrcurrentTotal,
+*)
+  lr_a_current=> lrcurrentP1,
+  lr_a_voltage=> lrvoltageP1,
+  lr_b_current=> lrcurrentP2,
+  lr_b_voltage=> lrvoltageP2,
+  lr_c_current=> lrcurrentP3,
+  lr_c_voltage=> lrvoltageP3,
+
 	lr_total_act_power => lrpowerTotal,
 	lr_total_aprt_power => lrpoweraprtTotal,
 	bSend:= , 
@@ -98,7 +107,14 @@ IF fbHttpGet.bError OR fbClient.bError THEN bError := TRUE; ELSE bError := FALSE
     </Implementation>
     <LineIds Name="FB_Shelly_Pro3EM">
       <LineId Id="48" Count="19" />
-      <LineId Id="264" Count="13" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="264" Count="11" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="325" Count="3" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="276" Count="1" />
       <LineId Id="80" Count="4" />
       <LineId Id="88" Count="4" />
       <LineId Id="97" Count="0" />
