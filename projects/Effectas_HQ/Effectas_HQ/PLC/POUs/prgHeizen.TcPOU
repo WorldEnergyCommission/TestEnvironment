@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="prgHeizen" Id="{92189520-e6a7-44cd-8fe5-f9273c6a4ce8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHeizen
+VAR
+  // Modbus Hoval
+
+
+  //Temperatursensor OG1 Büro (Shelly)
+  fbOG1BueroTemperatur  : FB_ShellyHT_Udp:= (Start:= TRUE, Port:= 50001);
+	OG1BueroTemperatur		: LREAL;			//{#lynus.ag#()}
+	OG1BueroFeuchte    		: LREAL;			//{#lynus.ag#()}
+	OG1BueroBatterie   		: LREAL;			//{#lynus.ag#()}
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[{region "Temperatursensor OG1 Büro (Shelly)"}
+  fbOG1BueroTemperatur();
+
+	OG1BueroTemperatur:= fbOG1BueroTemperatur.Temperatur;
+	OG1BueroFeuchte   := fbOG1BueroTemperatur.Feuchte;
+	OG1BueroBatterie  := fbOG1BueroTemperatur.Batterie;
+{endregion}
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgHeizen">
+      <LineId Id="13" Count="1" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

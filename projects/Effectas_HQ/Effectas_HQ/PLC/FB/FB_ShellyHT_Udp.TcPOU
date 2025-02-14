@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_ShellyHT_Udp" Id="{168fe4a3-53c2-49d4-b7e4-42e6fc9a3342}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ShellyHT_Udp
+// 14.02.2025 Elmar Vögel
+VAR_INPUT
+  Start : BOOL;         // Kommunikation aktivieren
+  Port  : UINT:= 50001; // Tcp Port
+END_VAR
+VAR_OUTPUT PERSISTENT
+  Temperatur   : LREAL;        // Istwerte
+  Feuchte      : LREAL;
+  Batterie     : LREAL;
+  Geraet       : T_MaxString;
+END_VAR
+VAR_OUTPUT
+  Bereit       : BOOL;        // Info
+  SocketState  : E_SocketConnectionlessState;
+  RecCount     : UINT;  
+END_VAR
+
+VAR
+  fbSocket  : FB_ConnectionlessSocket;
+  fbReceive : FB_SocketUdpReceiveFrom;
+  sReceive  : STRING(2000);
+  fbRecTon  : TON;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[{region "Init. Socket öffnen"}
+  IF Start AND NOT fbSocket.bEnable THEN
+    // Trig. Konfiguraton
+    fbSocket.nMode     := CONNECT_MODE_ENABLEDBG;
+    fbSocket.tReconnect:= T#60S;
+    
+    fbRecTon.PT:= T#100MS;
+  END_IF
+
+  fbSocket(
+    nLocalPort:= Port, 
+    bEnable   := Start, 
+    eState    => SocketState);
+{endregion}
+
+{region "Daten lesen"}
+  fbRecTon(IN:=  NOT fbReceive.bBusy);
+  IF fbRecTon.Q THEN
+  
+    fbReceive.bExecute:= TRUE;
+    fbRecTon(IN:= FALSE);
+  END_IF
+  
+  fbReceive(
+    sSrvNetId:= , 
+    hSocket  := fbSocket.hSocket, 
+    cbLen    := SIZEOF(sReceive), 
+    pDest    := ADR(sReceive));
+  
+  IF fbReceive.bExecute AND NOT fbReceive.bBusy THEN
+    
+    Bereit:= NOT fbReceive.bError;
+    fbReceive.bExecute:= FALSE;
+    IF fbReceive.nRecBytes > 0 THEN
+
+      ConvertData();
+      RecCount:= RecCount + 1;
+    END_IF
+  END_IF  
+
+  IF NOT Start THEN  
+
+    Bereit:= FALSE;
+  END_IF
+{endregion}
+
+]]></ST>
+    </Implementation>
+    <Method Name="ConvertData" Id="{2bb878dd-b553-4b18-9b48-653481f098b8}">
+      <Declaration><![CDATA[METHOD PRIVATE ConvertData
+VAR_INST
+  fbJson      : FB_JsonDomParser;
+	jsonDoc		  : SJsonValue;
+	jsonParams	: SJsonValue;
+	jsonProp	  : SJsonValue;
+	jsonValue	  : SJsonValue;
+END_VAR
+(* JSON
+{
+   "src":"shellyhtg3-8cbfea9a98d4",
+   "dst":"UDP_out",
+   "method":"NotifyFullStatus",
+   "params":{
+      "ts":1739462691.05,
+      "ble":{
+         
+      },
+      "cloud":{
+         "connected":false
+      },
+      "devicepower:0":{
+         "id":0,
+         "battery":{
+            "V":5.87,
+            "percent":93
+         },
+         "external":{
+            "present":false
+         }
+      },
+      "ht_ui":{
+         
+      },
+      "humidity:0":{
+         "id":0,
+         "rh":42.7
+      },
+      "mqtt":{
+         "connected":false
+      },
+      "sys":{
+         "mac":"8CBFEA9A98D4",
+         "restart_required":false,
+         "time":null,
+         "unixtime":null,
+         "uptime":0,
+         "ram_size":255900,
+         "ram_free":165324,
+         "fs_size":1048576,
+         "fs_free":745472,
+         "cfg_rev":55,
+         "kvs_rev":0,
+         "webhook_rev":0,
+         "available_updates":{
+            
+         },
+         "wakeup_reason":{
+            "boot":"deepsleep_wake",
+            "cause":"button"
+         },
+         "wakeup_period":7200,
+         "reset_reason":8
+      },
+      "temperature:0":{
+         "id":0,
+         "tC":21.3,
+         "tF":70.4
+      },
+      "wifi":{
+         "sta_ip":"192.168.66.90",
+         "status":"got ip",
+         "ssid":"VSA",
+         "rssi":-59
+      },
+      "ws":{
+         "connected":false
+      }
+   }
+}
+*)
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+  jsonDoc := fbJson.ParseDocument(sReceive);
+  MEMSET(ADR(sReceive), 0, SIZEOF(sReceive));
+
+  IF (jsonValue:= fbJson.FindMember(jsonDoc, 'src')) <> 0 THEN
+    Geraet:= fbJson.GetString(jsonValue);
+  END_IF  
+
+  IF (jsonParams:= fbJson.FindMember(jsonDoc, 'params')) <> 0 THEN
+
+    IF (jsonProp:= fbJson.FindMember(jsonParams, 'temperature:0')) <> 0 THEN
+      IF (jsonValue:= fbJson.FindMember(jsonProp, 'tC')) <> 0 THEN
+        Temperatur:= fbJson.GetDouble(jsonValue);
+      END_IF
+    END_IF
+
+    IF (jsonProp:= fbJson.FindMember(jsonParams, 'humidity:0')) <> 0 THEN
+      IF (jsonValue:= fbJson.FindMember(jsonProp, 'rh')) <> 0 THEN
+        Feuchte:= fbJson.GetDouble(jsonValue);
+      END_IF
+    END_IF
+
+    IF (jsonProp:= fbJson.FindMember(jsonParams, 'devicepower:0')) <> 0 THEN
+      IF (jsonProp:= fbJson.FindMember(jsonProp, 'battery')) <> 0 THEN
+        IF (jsonValue:= fbJson.FindMember(jsonProp, 'percent')) <> 0 THEN
+          Batterie:= fbJson.GetDouble(jsonValue);
+        END_IF
+      END_IF  
+    END_IF
+  END_IF  
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_ShellyHT_Udp">
+      <LineId Id="543" Count="7" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="552" Count="2" />
+      <LineId Id="560" Count="14" />
+      <LineId Id="583" Count="3" />
+      <LineId Id="589" Count="2" />
+      <LineId Id="597" Count="4" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="702" Count="0" />
+      <LineId Id="700" Count="0" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="703" Count="0" />
+      <LineId Id="207" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ShellyHT_Udp.ConvertData">
+      <LineId Id="704" Count="0" />
+      <LineId Id="719" Count="0" />
+      <LineId Id="749" Count="0" />
+      <LineId Id="748" Count="0" />
+      <LineId Id="720" Count="5" />
+      <LineId Id="728" Count="19" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="18" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
