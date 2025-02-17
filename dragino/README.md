@@ -39,3 +39,42 @@
 4. set Device address, App session key and Network session key<br>
    _(!) needed to be done in the first test, seems pretty strange, may this isn't really necessary_
 5. write settings to the sensor
+
+
+
+
+## Dragino LoraWan Setup
+
+	1. Gateway anstecken
+	2. WLAN anmelden (dragino+dragino)
+	3. Remote.it device hinzufügen
+		a. 10.130.1.1/cgi-bin/system-remoteit.has
+		b. Remote.it installieren
+		c. License Key eingeben , Speichern und Registrieren
+	4. Remote.it
+		a. SSH Verbindung erstellen
+		b. HTTP Verbindung erstellen
+	5. Über SSH verbinden
+		a. Username: root
+		b. Passwort: dragino
+		c. Eingabe -> 
+			i. opkg update
+			ii. opkg install luafilesystem
+	6. SSH WinSCP Verbinden und Daten Hochladen
+		a. /etc/lora/customized_scripts
+		b. Daten kopieren: eneries\dragino
+		c. cert, lua, sh & mapping
+		d. Mappings anpassen auf die Sensoren mit ihrer Device ID
+	7. HTTP Verbindung oder IP herstellen
+		a. ABP aktivieren - Erstes Feld links oben
+		b. Devices Sensoren Hinzufügen
+		c. Custom Feld
+			i. Parameter 1 mqttHost (mqtt.eneries.com)
+			ii. Parameter 2 mqttPort (8883)
+			iii. Parameter 3 mqttUser (Username Project)
+			iv. Parameter 4 mqttPass (Password Project)
+			v. Parameter 5 checkIntervalSeconds (zb 30)
+		d. Speichern
+	8. Reboot und fertig
+		
+
