@@ -1,0 +1,1259 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <POU Name="PrgModbus" Id="{bd48ccf7-60d4-4153-9907-f0378683a2e1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PrgModbus
+VAR
+	FB_Schneider_EVLink_1	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_2	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_3	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_4	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_5	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_6	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_7	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_8	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_9	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_10	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_11	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_12	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_13	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_14	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_15	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_16	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_17	:FB_Schneider_EVlinkWallbox;
+	FB_Schneider_EVLink_18	:FB_Schneider_EVlinkWallbox;
+	lr_CSPowerTotal: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_1: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_2: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_3: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_4: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_5: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_6: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_7: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_8: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_9: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_10: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_11: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_12: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_13: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_14: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_15: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_16: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_17: LREAL;													//{#lynus.ag#()}
+	lr_CSPower_18: LREAL;													//{#lynus.ag#()}
+ 	lr_CSEnergy_Total: LREAL;												//{#lynus.ag#()}
+	bIsEnabledCS_1			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_1		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_1		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_1		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_1		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_1			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_1		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_1			: bool;									//{#lynus.ag#()}
+	bStateOkCS_1			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_2			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_2		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_2		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_2		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_2		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_2			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_2		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_2			: bool;									//{#lynus.ag#()}
+	bStateOkCS_2			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_3			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_3		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_3		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_3		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_3		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_3			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_3		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_3			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_3			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_4			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_4		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_4		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_4		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_4		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_4			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_4		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_4			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_4			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_5			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_5		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_5		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_5		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_5		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_5			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_5		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_5			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_5			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_6			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_6		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_6		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_6		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_6		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_6			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_6		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_6			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_6			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_7			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_7		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_7		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_7		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_7		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_7			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_7		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_7			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_7			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_8			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_8		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_8		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_8		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_8		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_8			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_8		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_8			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_8			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_9			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_9		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_9		: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_9		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_9		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_9			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_9		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_9			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_9			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_10			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_10		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_10	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_10		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_10		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_10			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_10		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_10			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_10			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_11			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_11		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_11	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_11		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_11		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_11			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_11		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_11			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_11			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_12			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_12		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_12	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_12		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_12		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_12			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_12		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_12			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_12			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_13			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_13		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_13	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_13		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_13		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_13			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_13		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_13			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_13			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_14			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_14		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_14	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_14		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_14		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_14			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_14		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_14			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_14			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_15			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_15		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_15	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_15		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_15		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_15			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_15		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_15			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_15			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_16			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_16		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_16	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_16		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_16		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_16			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_16		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_16			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_16			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_17			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_17		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_17	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_17		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_17		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_17			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_17		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_17			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_17			: BOOL;									//{#lynus.ag#()}
+	bIsEnabledCS_18			: BOOL;									//{#lynus.ag#()}
+	byErrorWarningCS_18		: BYTE;									//{#lynus.ag#()}
+	byStateMinPowerCS_18	: BYTE;									//{#lynus.ag#()}
+	rTargetPowerCS_18		: REAL;									//{#lynus.ag#()}
+	bCarConnectedCS_18		: BOOL;									//{#lynus.ag#()}
+	rChrgTimeCS_18			: REAL;									//{#lynus.ag#()}
+	byChrgManuSPCS_18		: BYTE;									//{#lynus.ag#()}
+	bChrgManuCS_18			: BOOL;									//{#lynus.ag#()}
+	bStateOkCS_18			: BOOL;									//{#lynus.ag#()}
+	r_House: REAL;													//{#lynus.ag#()}
+	lr_EnergyCounterCS_1	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_2	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_3	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_4	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_5	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_6	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_7	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_8	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_9	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_10	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_11	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_12	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_13	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_14	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_15	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_16	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_17	: REAL;									//{#lynus.ag#()}
+	lr_EnergyCounterCS_18	: REAL;									//{#lynus.ag#()}
+
+
+END_VAR
+VAR PERSISTENT
+	bEnabledCS_1			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_1				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_1			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_1			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_1			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_1			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_2			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_2				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_2			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_2			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_2			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_2			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_3			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_3				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_3			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_3			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_3			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_3			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_4			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_4				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_4			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_4			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_4			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_4			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_5			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_5				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_5			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_5			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_5			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_5			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_6			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_6				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_6			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_6			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_6			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_6			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_7			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_7				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_7			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_7			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_7			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_7			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_8			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_8				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_8			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_8			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_8			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_8			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_9			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_9				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_9			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_9			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_9			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_9			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_10			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_10				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_10			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_10			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_10			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_10			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_11			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_11				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_11			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_11			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_11			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_11			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_12			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_12				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_12			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_12			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_12			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_12			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_13			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_13				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_13			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_13			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_13			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_13			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_14			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_14				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_14			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_14			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_14			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_14			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_15			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_15				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_15			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_15			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_15			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_15			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_16			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_16				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_16			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_16			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_16			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_16			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_17			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_17				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_17			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_17			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_17			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_17			: REAL;									//{#lynus.ag#()}
+	bEnabledCS_18			: BOOL;									//{#lynus.ag#()}
+	byPrioCS_18				: BYTE;									//{#lynus.ag#()}
+	bySOC_E_CS_18			: BYTE;									//{#lynus.ag#()}
+	bySOC_D_CS_18			: BYTE;									//{#lynus.ag#()}
+	byMinPowerCS_18			: BYTE;									//{#lynus.ag#()}
+	rMaxPowerCS_18			: REAL;									//{#lynus.ag#()}
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// 10.10.122.101 Ladestation Gast LOW EWW
+FB_Schneider_EVLink_1(
+	bEnable:= ,
+	bEnableWrite:= TRUE , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:= '10.10.122.101', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.102 Ladestation Gast LOW EWW
+FB_Schneider_EVLink_2(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.102', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+	
+// 10.10.122.103 Ladestation Intern Rechts LOW EWW
+FB_Schneider_EVLink_3(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.103', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.104 Ladestation Intern Rechts LOW EWW
+FB_Schneider_EVLink_4(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.104', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.105 Ladestation Intern Links LOW EWW
+FB_Schneider_EVLink_5(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.105', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.106 Ladestation Intern Links LOW EWW
+FB_Schneider_EVLink_6(
+	bEnable:= , 
+	bEnableWrite:= TRUE , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.106', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.113 Ladestation Neu 1 LOW Ladestation Intern1 Links
+FB_Schneider_EVLink_7(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.113', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.114 Ladestation Neu 2 LOW
+FB_Schneider_EVLink_8(
+	bEnable:= , 
+	bEnableWrite:= TRUE , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.114', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.115 Ladestation Neu 3 LOW Ladestation Intern1 Mitte
+FB_Schneider_EVLink_9(
+	bEnable:= , 
+	bEnableWrite:= TRUE , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.115', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.116 Ladestation Neu 4 LOW
+FB_Schneider_EVLink_10(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.116', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.117 Ladestation Neu 5 LOW Ladestation Intern2 Rechts
+FB_Schneider_EVLink_11(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.117', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.118 Ladestation Neu 6 LOW
+FB_Schneider_EVLink_12(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.118', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.119 Ladestation Neu 7 LOW Ladestation Intern2 Links
+FB_Schneider_EVLink_13(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.119', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.120 Ladestation Neu 8 LOW
+FB_Schneider_EVLink_14(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.120', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.121 Ladestation Neu 9 LOW
+FB_Schneider_EVLink_15(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.121', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.122 Ladestation Neu 10 LOW
+FB_Schneider_EVLink_16(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.122', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.123 Ladestation Neu 11 LOW
+FB_Schneider_EVLink_17(
+	bEnable:= , 
+	bEnableWrite:= TRUE, 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.123', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+// 10.10.122.124 Ladestation Neu 12 LOW
+FB_Schneider_EVLink_18(
+	bEnable:= , 
+	bEnableWrite:= TRUE , 
+	bPowerDataInvers:= , 
+	byElectricFuseLine:= , 
+	rMinCurrent:= , 
+	diNrOfEMS_IN:= prgEMS.fbEMS.diNrOfEMS_OUT,  
+	diNrOfEM_IN_CS:= , 
+	sIPAdress:=  '10.10.122.124', 
+	stSetupECS:= , 
+	stDataECS=> , 
+	diNrOfECS_OUT=> , 
+	lrTotalPowerECSRealTime=> , 
+	stDataElectric=> , 
+	str_Mode3State=> , 
+	bErrorCS=> , 
+	lrTotalCounterEnergy_Consumption=> , 
+	bCarConnected=> );
+
+	
+lr_CSPowerTotal :=	FB_Schneider_EVLink_1.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_2.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_3.stDataElectric.lrPowerTotal + 
+				FB_Schneider_EVLink_4.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_5.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_6.stDataElectric.lrPowerTotal +
+				FB_Schneider_EVLink_7.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_8.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_9.stDataElectric.lrPowerTotal +  
+				FB_Schneider_EVLink_10.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_11.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_12.stDataElectric.lrPowerTotal +
+				FB_Schneider_EVLink_13.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_14.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_15.stDataElectric.lrPowerTotal +
+				FB_Schneider_EVLink_16.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_17.stDataElectric.lrPowerTotal + FB_Schneider_EVLink_18.stDataElectric.lrPowerTotal;
+
+lr_CSEnergy_Total := FB_Schneider_EVLink_1.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_2.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_3.lrTotalCounterEnergy_Consumption + 
+				FB_Schneider_EVLink_4.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_5.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_6.lrTotalCounterEnergy_Consumption +
+				FB_Schneider_EVLink_7.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_8.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_9.lrTotalCounterEnergy_Consumption +  
+				FB_Schneider_EVLink_10.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_11.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_12.lrTotalCounterEnergy_Consumption +
+				FB_Schneider_EVLink_13.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_14.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_15.lrTotalCounterEnergy_Consumption +
+				FB_Schneider_EVLink_16.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_17.lrTotalCounterEnergy_Consumption + FB_Schneider_EVLink_18.lrTotalCounterEnergy_Consumption;
+	
+FB_Schneider_EVLink_1.stSetupECS.byDisableSOC 	:= bySOC_D_CS_1;		   			
+FB_Schneider_EVLink_1.stSetupECS.byEnableSOC 	:= bySOC_E_CS_1;	
+FB_Schneider_EVLink_1.stSetupECS.byPriority 	:= byPrioCS_1;
+FB_Schneider_EVLink_1.stSetupECS.rMaxPower 		:= rMaxPowerCS_1;
+FB_Schneider_EVLink_1.stSetupECS.byCSMinPower	:= byMinPowerCS_1;
+FB_Schneider_EVLink_1.bEnable					:= bEnabledCS_1;
+FB_Schneider_EVLink_1.stSetupECS.bManualyOn		:= bChrgManuCS_1;
+FB_Schneider_EVLink_1.stSetupECS.byManualyTargetPower := byChrgManuSPCS_1;
+
+bIsEnabledCS_1 		:= FB_Schneider_EVLink_1.stDataECS.bEnabled;
+byStateMinPowerCS_1 := FB_Schneider_EVLink_1.stDataECS.bySCSMinPower;
+rTargetPowerCS_1 	:= FB_Schneider_EVLink_1.stDataECS.rTargetPower;	
+byErrorWarningCS_1 	:= FB_Schneider_EVLink_1.stDataECS.byErrorWarning;
+bCarConnectedCS_1 	:= FB_Schneider_EVLink_1.stDataECS.bCarConnected;
+rChrgTimeCS_1 		:= FB_Schneider_EVLink_1.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_1 		:= FB_Schneider_EVLink_1.stDataElectric.lrPowerTotal;
+bStateOkCS_1		:= FB_Schneider_EVLink_1.bEnable AND FB_Schneider_EVLink_1.bEnableWrite;
+
+FB_Schneider_EVLink_2.stSetupECS.byDisableSOC 	:= bySOC_D_CS_2;		   			
+FB_Schneider_EVLink_2.stSetupECS.byEnableSOC 	:= bySOC_E_CS_2;	
+FB_Schneider_EVLink_2.stSetupECS.byPriority 	:= byPrioCS_2;
+FB_Schneider_EVLink_2.stSetupECS.rMaxPower 		:= rMaxPowerCS_2;
+FB_Schneider_EVLink_2.stSetupECS.byCSMinPower	:= byMinPowerCS_2;
+FB_Schneider_EVLink_2.bEnable					:= bEnabledCS_2;
+FB_Schneider_EVLink_2.stSetupECS.bManualyOn		:= bChrgManuCS_2;
+FB_Schneider_EVLink_2.stSetupECS.byManualyTargetPower := byChrgManuSPCS_2;
+
+bIsEnabledCS_2 		:= FB_Schneider_EVLink_2.stDataECS.bEnabled;
+byStateMinPowerCS_2 := FB_Schneider_EVLink_2.stDataECS.bySCSMinPower;
+rTargetPowerCS_2 	:= FB_Schneider_EVLink_2.stDataECS.rTargetPower;	
+byErrorWarningCS_2 	:= FB_Schneider_EVLink_2.stDataECS.byErrorWarning;
+bCarConnectedCS_2 	:= FB_Schneider_EVLink_2.stDataECS.bCarConnected;
+rChrgTimeCS_2 		:= FB_Schneider_EVLink_2.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_2 		:= FB_Schneider_EVLink_2.stDataElectric.lrPowerTotal;
+bStateOkCS_2		:= FB_Schneider_EVLink_2.bEnable AND FB_Schneider_EVLink_2.bEnableWrite;
+
+FB_Schneider_EVLink_3.stSetupECS.byDisableSOC 	:= bySOC_D_CS_3;		   			
+FB_Schneider_EVLink_3.stSetupECS.byEnableSOC 	:= bySOC_E_CS_3;	
+FB_Schneider_EVLink_3.stSetupECS.byPriority 	:= byPrioCS_3;
+FB_Schneider_EVLink_3.stSetupECS.rMaxPower 		:= rMaxPowerCS_3;
+FB_Schneider_EVLink_3.stSetupECS.byCSMinPower	:= byMinPowerCS_3;
+FB_Schneider_EVLink_3.bEnable					:= bEnabledCS_3;
+FB_Schneider_EVLink_3.stSetupECS.bManualyOn		:= bChrgManuCS_3;
+FB_Schneider_EVLink_3.stSetupECS.byManualyTargetPower := byChrgManuSPCS_3;
+
+bIsEnabledCS_3 		:= FB_Schneider_EVLink_3.stDataECS.bEnabled;
+byStateMinPowerCS_3 := FB_Schneider_EVLink_3.stDataECS.bySCSMinPower;
+rTargetPowerCS_3 	:= FB_Schneider_EVLink_3.stDataECS.rTargetPower;	
+byErrorWarningCS_3 	:= FB_Schneider_EVLink_3.stDataECS.byErrorWarning;
+bCarConnectedCS_3 	:= FB_Schneider_EVLink_3.stDataECS.bCarConnected;
+rChrgTimeCS_3 		:= FB_Schneider_EVLink_3.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_3 		:= FB_Schneider_EVLink_3.stDataElectric.lrPowerTotal;
+bStateOkCS_3		:= FB_Schneider_EVLink_3.bEnable AND FB_Schneider_EVLink_3.bEnableWrite;
+
+
+FB_Schneider_EVLink_4.stSetupECS.byDisableSOC 	:= bySOC_D_CS_4;		   			
+FB_Schneider_EVLink_4.stSetupECS.byEnableSOC 	:= bySOC_E_CS_4;	
+FB_Schneider_EVLink_4.stSetupECS.byPriority 	:= byPrioCS_4;
+FB_Schneider_EVLink_4.stSetupECS.rMaxPower 		:= rMaxPowerCS_4;
+FB_Schneider_EVLink_4.stSetupECS.byCSMinPower	:= byMinPowerCS_4;
+FB_Schneider_EVLink_4.bEnable					:= bEnabledCS_4;
+FB_Schneider_EVLink_4.stSetupECS.bManualyOn		:= bChrgManuCS_4;
+FB_Schneider_EVLink_4.stSetupECS.byManualyTargetPower := byChrgManuSPCS_4;
+
+bIsEnabledCS_4 		:= FB_Schneider_EVLink_4.stDataECS.bEnabled;
+byStateMinPowerCS_4 := FB_Schneider_EVLink_4.stDataECS.bySCSMinPower;
+rTargetPowerCS_4 	:= FB_Schneider_EVLink_4.stDataECS.rTargetPower;	
+byErrorWarningCS_4 	:= FB_Schneider_EVLink_4.stDataECS.byErrorWarning;
+bCarConnectedCS_4 	:= FB_Schneider_EVLink_4.stDataECS.bCarConnected;
+rChrgTimeCS_4 		:= FB_Schneider_EVLink_4.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_4 		:= FB_Schneider_EVLink_4.stDataElectric.lrPowerTotal;
+bStateOkCS_4		:= FB_Schneider_EVLink_4.bEnable AND FB_Schneider_EVLink_4.bEnableWrite;
+
+
+FB_Schneider_EVLink_5.stSetupECS.byDisableSOC 	:= bySOC_D_CS_5;		   			
+FB_Schneider_EVLink_5.stSetupECS.byEnableSOC 	:= bySOC_E_CS_5;	
+FB_Schneider_EVLink_5.stSetupECS.byPriority 	:= byPrioCS_5;
+FB_Schneider_EVLink_5.stSetupECS.rMaxPower 		:= rMaxPowerCS_5;
+FB_Schneider_EVLink_5.stSetupECS.byCSMinPower	:= byMinPowerCS_5;
+FB_Schneider_EVLink_5.bEnable					:= bEnabledCS_5;
+FB_Schneider_EVLink_5.stSetupECS.bManualyOn		:= bChrgManuCS_5;
+FB_Schneider_EVLink_5.stSetupECS.byManualyTargetPower := byChrgManuSPCS_5;
+
+bIsEnabledCS_5 		:= FB_Schneider_EVLink_5.stDataECS.bEnabled;
+byStateMinPowerCS_5 := FB_Schneider_EVLink_5.stDataECS.bySCSMinPower;
+rTargetPowerCS_5 	:= FB_Schneider_EVLink_5.stDataECS.rTargetPower;	
+byErrorWarningCS_5 	:= FB_Schneider_EVLink_5.stDataECS.byErrorWarning;
+bCarConnectedCS_5 	:= FB_Schneider_EVLink_5.stDataECS.bCarConnected;
+rChrgTimeCS_5 		:= FB_Schneider_EVLink_5.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_5 		:= FB_Schneider_EVLink_5.stDataElectric.lrPowerTotal;
+bStateOkCS_5		:= FB_Schneider_EVLink_5.bEnable AND FB_Schneider_EVLink_5.bEnableWrite;
+
+
+FB_Schneider_EVLink_6.stSetupECS.byDisableSOC 	:= bySOC_D_CS_6;		   			
+FB_Schneider_EVLink_6.stSetupECS.byEnableSOC 	:= bySOC_E_CS_6;	
+FB_Schneider_EVLink_6.stSetupECS.byPriority 	:= byPrioCS_6;
+FB_Schneider_EVLink_6.stSetupECS.rMaxPower 		:= rMaxPowerCS_6;
+FB_Schneider_EVLink_6.stSetupECS.byCSMinPower	:= byMinPowerCS_6;
+FB_Schneider_EVLink_6.bEnable					:= bEnabledCS_6;
+FB_Schneider_EVLink_6.stSetupECS.bManualyOn		:= bChrgManuCS_6;
+FB_Schneider_EVLink_6.stSetupECS.byManualyTargetPower := byChrgManuSPCS_6;
+
+bIsEnabledCS_6 		:= FB_Schneider_EVLink_6.stDataECS.bEnabled;
+byStateMinPowerCS_6 := FB_Schneider_EVLink_6.stDataECS.bySCSMinPower;
+rTargetPowerCS_6 	:= FB_Schneider_EVLink_6.stDataECS.rTargetPower;	
+byErrorWarningCS_6 	:= FB_Schneider_EVLink_6.stDataECS.byErrorWarning;
+bCarConnectedCS_6 	:= FB_Schneider_EVLink_6.stDataECS.bCarConnected;
+rChrgTimeCS_6 		:= FB_Schneider_EVLink_6.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_6 		:= FB_Schneider_EVLink_6.stDataElectric.lrPowerTotal;
+bStateOkCS_6		:= FB_Schneider_EVLink_6.bEnable AND FB_Schneider_EVLink_6.bEnableWrite;
+
+FB_Schneider_EVLink_7.stSetupECS.byDisableSOC 	:= bySOC_D_CS_7;		   			
+FB_Schneider_EVLink_7.stSetupECS.byEnableSOC 	:= bySOC_E_CS_7;	
+FB_Schneider_EVLink_7.stSetupECS.byPriority 	:= byPrioCS_7;
+FB_Schneider_EVLink_7.stSetupECS.rMaxPower 		:= rMaxPowerCS_7;
+FB_Schneider_EVLink_7.stSetupECS.byCSMinPower	:= byMinPowerCS_7;
+FB_Schneider_EVLink_7.bEnable					:= bEnabledCS_7;
+FB_Schneider_EVLink_7.stSetupECS.bManualyOn		:= bChrgManuCS_7;
+FB_Schneider_EVLink_7.stSetupECS.byManualyTargetPower := byChrgManuSPCS_7;
+
+bIsEnabledCS_7 		:= FB_Schneider_EVLink_7.stDataECS.bEnabled;
+byStateMinPowerCS_7 := FB_Schneider_EVLink_7.stDataECS.bySCSMinPower;
+rTargetPowerCS_7 	:= FB_Schneider_EVLink_7.stDataECS.rTargetPower;	
+byErrorWarningCS_7 	:= FB_Schneider_EVLink_7.stDataECS.byErrorWarning;
+bCarConnectedCS_7 	:= FB_Schneider_EVLink_7.stDataECS.bCarConnected;
+rChrgTimeCS_7 		:= FB_Schneider_EVLink_7.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_7 		:= FB_Schneider_EVLink_7.stDataElectric.lrPowerTotal;
+bStateOkCS_7		:= FB_Schneider_EVLink_7.bEnable AND FB_Schneider_EVLink_7.bEnableWrite;
+
+FB_Schneider_EVLink_8.stSetupECS.byDisableSOC 	:= bySOC_D_CS_8;		   			
+FB_Schneider_EVLink_8.stSetupECS.byEnableSOC 	:= bySOC_E_CS_8;	
+FB_Schneider_EVLink_8.stSetupECS.byPriority 	:= byPrioCS_8;
+FB_Schneider_EVLink_8.stSetupECS.rMaxPower 		:= rMaxPowerCS_8;
+FB_Schneider_EVLink_8.stSetupECS.byCSMinPower	:= byMinPowerCS_8;
+FB_Schneider_EVLink_8.bEnable					:= bEnabledCS_8;
+FB_Schneider_EVLink_8.stSetupECS.bManualyOn		:= bChrgManuCS_8;
+FB_Schneider_EVLink_8.stSetupECS.byManualyTargetPower := byChrgManuSPCS_8;
+
+bIsEnabledCS_8 		:= FB_Schneider_EVLink_8.stDataECS.bEnabled;
+byStateMinPowerCS_8 := FB_Schneider_EVLink_8.stDataECS.bySCSMinPower;
+rTargetPowerCS_8 	:= FB_Schneider_EVLink_8.stDataECS.rTargetPower;	
+byErrorWarningCS_8 	:= FB_Schneider_EVLink_8.stDataECS.byErrorWarning;
+bCarConnectedCS_8 	:= FB_Schneider_EVLink_8.stDataECS.bCarConnected;
+rChrgTimeCS_8 		:= FB_Schneider_EVLink_8.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_8 		:= FB_Schneider_EVLink_8.stDataElectric.lrPowerTotal;
+bStateOkCS_8		:= FB_Schneider_EVLink_8.bEnable AND FB_Schneider_EVLink_8.bEnableWrite;
+
+FB_Schneider_EVLink_9.stSetupECS.byDisableSOC 	:= bySOC_D_CS_9;		   			
+FB_Schneider_EVLink_9.stSetupECS.byEnableSOC 	:= bySOC_E_CS_9;	
+FB_Schneider_EVLink_9.stSetupECS.byPriority 	:= byPrioCS_9;
+FB_Schneider_EVLink_9.stSetupECS.rMaxPower 		:= rMaxPowerCS_9;
+FB_Schneider_EVLink_9.stSetupECS.byCSMinPower	:= byMinPowerCS_9;
+FB_Schneider_EVLink_9.bEnable					:= bEnabledCS_9;
+FB_Schneider_EVLink_9.stSetupECS.bManualyOn		:= bChrgManuCS_9;
+FB_Schneider_EVLink_9.stSetupECS.byManualyTargetPower := byChrgManuSPCS_9;
+
+bIsEnabledCS_9 		:= FB_Schneider_EVLink_9.stDataECS.bEnabled;
+byStateMinPowerCS_9 := FB_Schneider_EVLink_9.stDataECS.bySCSMinPower;
+rTargetPowerCS_9 	:= FB_Schneider_EVLink_9.stDataECS.rTargetPower;	
+byErrorWarningCS_9 	:= FB_Schneider_EVLink_9.stDataECS.byErrorWarning;
+bCarConnectedCS_9 	:= FB_Schneider_EVLink_9.stDataECS.bCarConnected;
+rChrgTimeCS_9 		:= FB_Schneider_EVLink_9.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_9 		:= FB_Schneider_EVLink_9.stDataElectric.lrPowerTotal;
+bStateOkCS_9		:= FB_Schneider_EVLink_9.bEnable AND FB_Schneider_EVLink_9.bEnableWrite;
+
+
+FB_Schneider_EVLink_10.stSetupECS.byDisableSOC 	:= bySOC_D_CS_10;		   			
+FB_Schneider_EVLink_10.stSetupECS.byEnableSOC 	:= bySOC_E_CS_10;	
+FB_Schneider_EVLink_10.stSetupECS.byPriority 	:= byPrioCS_10;
+FB_Schneider_EVLink_10.stSetupECS.rMaxPower 		:= rMaxPowerCS_10;
+FB_Schneider_EVLink_10.stSetupECS.byCSMinPower	:= byMinPowerCS_10;
+FB_Schneider_EVLink_10.bEnable					:= bEnabledCS_10;
+FB_Schneider_EVLink_10.stSetupECS.bManualyOn		:= bChrgManuCS_10;
+FB_Schneider_EVLink_10.stSetupECS.byManualyTargetPower := byChrgManuSPCS_10;
+
+bIsEnabledCS_10 		:= FB_Schneider_EVLink_10.stDataECS.bEnabled;
+byStateMinPowerCS_10 := FB_Schneider_EVLink_10.stDataECS.bySCSMinPower;
+rTargetPowerCS_10 	:= FB_Schneider_EVLink_10.stDataECS.rTargetPower;	
+byErrorWarningCS_10 	:= FB_Schneider_EVLink_10.stDataECS.byErrorWarning;
+bCarConnectedCS_10 	:= FB_Schneider_EVLink_10.stDataECS.bCarConnected;
+rChrgTimeCS_10 		:= FB_Schneider_EVLink_10.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_10 		:= FB_Schneider_EVLink_10.stDataElectric.lrPowerTotal;
+bStateOkCS_10		:= FB_Schneider_EVLink_10.bEnable AND FB_Schneider_EVLink_10.bEnableWrite;
+
+FB_Schneider_EVLink_11.stSetupECS.byDisableSOC 	:= bySOC_D_CS_11;		   			
+FB_Schneider_EVLink_11.stSetupECS.byEnableSOC 	:= bySOC_E_CS_11;	
+FB_Schneider_EVLink_11.stSetupECS.byPriority 	:= byPrioCS_11;
+FB_Schneider_EVLink_11.stSetupECS.rMaxPower 		:= rMaxPowerCS_11;
+FB_Schneider_EVLink_11.stSetupECS.byCSMinPower	:= byMinPowerCS_11;
+FB_Schneider_EVLink_11.bEnable					:= bEnabledCS_11;
+FB_Schneider_EVLink_11.stSetupECS.bManualyOn		:= bChrgManuCS_11;
+FB_Schneider_EVLink_11.stSetupECS.byManualyTargetPower := byChrgManuSPCS_11;
+
+bIsEnabledCS_11 		:= FB_Schneider_EVLink_11.stDataECS.bEnabled;
+byStateMinPowerCS_11 := FB_Schneider_EVLink_11.stDataECS.bySCSMinPower;
+rTargetPowerCS_11 	:= FB_Schneider_EVLink_11.stDataECS.rTargetPower;	
+byErrorWarningCS_11 	:= FB_Schneider_EVLink_11.stDataECS.byErrorWarning;
+bCarConnectedCS_11 	:= FB_Schneider_EVLink_11.stDataECS.bCarConnected;
+rChrgTimeCS_11 		:= FB_Schneider_EVLink_11.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_11 		:= FB_Schneider_EVLink_11.stDataElectric.lrPowerTotal;
+bStateOkCS_11		:= FB_Schneider_EVLink_11.bEnable AND FB_Schneider_EVLink_11.bEnableWrite;
+
+FB_Schneider_EVLink_12.stSetupECS.byDisableSOC 	:= bySOC_D_CS_12;		   			
+FB_Schneider_EVLink_12.stSetupECS.byEnableSOC 	:= bySOC_E_CS_12;	
+FB_Schneider_EVLink_12.stSetupECS.byPriority 	:= byPrioCS_12;
+FB_Schneider_EVLink_12.stSetupECS.rMaxPower 		:= rMaxPowerCS_12;
+FB_Schneider_EVLink_12.stSetupECS.byCSMinPower	:= byMinPowerCS_12;
+FB_Schneider_EVLink_12.bEnable					:= bEnabledCS_12;
+FB_Schneider_EVLink_12.stSetupECS.bManualyOn		:= bChrgManuCS_12;
+FB_Schneider_EVLink_12.stSetupECS.byManualyTargetPower := byChrgManuSPCS_12;
+
+bIsEnabledCS_12 		:= FB_Schneider_EVLink_12.stDataECS.bEnabled;
+byStateMinPowerCS_12 := FB_Schneider_EVLink_12.stDataECS.bySCSMinPower;
+rTargetPowerCS_12 	:= FB_Schneider_EVLink_12.stDataECS.rTargetPower;	
+byErrorWarningCS_12 	:= FB_Schneider_EVLink_12.stDataECS.byErrorWarning;
+bCarConnectedCS_12 	:= FB_Schneider_EVLink_12.stDataECS.bCarConnected;
+rChrgTimeCS_12 		:= FB_Schneider_EVLink_12.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_12 		:= FB_Schneider_EVLink_12.stDataElectric.lrPowerTotal;
+bStateOkCS_12		:= FB_Schneider_EVLink_12.bEnable AND FB_Schneider_EVLink_12.bEnableWrite;
+
+FB_Schneider_EVLink_13.stSetupECS.byDisableSOC 	:= bySOC_D_CS_13;		   			
+FB_Schneider_EVLink_13.stSetupECS.byEnableSOC 	:= bySOC_E_CS_13;	
+FB_Schneider_EVLink_13.stSetupECS.byPriority 	:= byPrioCS_13;
+FB_Schneider_EVLink_13.stSetupECS.rMaxPower 		:= rMaxPowerCS_13;
+FB_Schneider_EVLink_13.stSetupECS.byCSMinPower	:= byMinPowerCS_13;
+FB_Schneider_EVLink_13.bEnable					:= bEnabledCS_13;
+FB_Schneider_EVLink_13.stSetupECS.bManualyOn		:= bChrgManuCS_13;
+FB_Schneider_EVLink_13.stSetupECS.byManualyTargetPower := byChrgManuSPCS_13;
+
+bIsEnabledCS_13 		:= FB_Schneider_EVLink_13.stDataECS.bEnabled;
+byStateMinPowerCS_13 := FB_Schneider_EVLink_13.stDataECS.bySCSMinPower;
+rTargetPowerCS_13 	:= FB_Schneider_EVLink_13.stDataECS.rTargetPower;	
+byErrorWarningCS_13 	:= FB_Schneider_EVLink_13.stDataECS.byErrorWarning;
+bCarConnectedCS_13 	:= FB_Schneider_EVLink_13.stDataECS.bCarConnected;
+rChrgTimeCS_13 		:= FB_Schneider_EVLink_13.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_13 		:= FB_Schneider_EVLink_13.stDataElectric.lrPowerTotal;
+bStateOkCS_13		:= FB_Schneider_EVLink_13.bEnable AND FB_Schneider_EVLink_13.bEnableWrite;
+
+FB_Schneider_EVLink_14.stSetupECS.byDisableSOC 	:= bySOC_D_CS_14;		   			
+FB_Schneider_EVLink_14.stSetupECS.byEnableSOC 	:= bySOC_E_CS_14;	
+FB_Schneider_EVLink_14.stSetupECS.byPriority 	:= byPrioCS_14;
+FB_Schneider_EVLink_14.stSetupECS.rMaxPower 		:= rMaxPowerCS_14;
+FB_Schneider_EVLink_14.stSetupECS.byCSMinPower	:= byMinPowerCS_14;
+FB_Schneider_EVLink_14.bEnable					:= bEnabledCS_14;
+FB_Schneider_EVLink_14.stSetupECS.bManualyOn		:= bChrgManuCS_14;
+FB_Schneider_EVLink_14.stSetupECS.byManualyTargetPower := byChrgManuSPCS_14;
+
+bIsEnabledCS_14 		:= FB_Schneider_EVLink_14.stDataECS.bEnabled;
+byStateMinPowerCS_14 := FB_Schneider_EVLink_14.stDataECS.bySCSMinPower;
+rTargetPowerCS_14 	:= FB_Schneider_EVLink_14.stDataECS.rTargetPower;	
+byErrorWarningCS_14 	:= FB_Schneider_EVLink_14.stDataECS.byErrorWarning;
+bCarConnectedCS_14 	:= FB_Schneider_EVLink_14.stDataECS.bCarConnected;
+rChrgTimeCS_14 		:= FB_Schneider_EVLink_14.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_14 		:= FB_Schneider_EVLink_14.stDataElectric.lrPowerTotal;
+bStateOkCS_14		:= FB_Schneider_EVLink_14.bEnable AND FB_Schneider_EVLink_14.bEnableWrite;
+
+FB_Schneider_EVLink_15.stSetupECS.byDisableSOC 	:= bySOC_D_CS_15;		   			
+FB_Schneider_EVLink_15.stSetupECS.byEnableSOC 	:= bySOC_E_CS_15;	
+FB_Schneider_EVLink_15.stSetupECS.byPriority 	:= byPrioCS_15;
+FB_Schneider_EVLink_15.stSetupECS.rMaxPower 		:= rMaxPowerCS_15;
+FB_Schneider_EVLink_15.stSetupECS.byCSMinPower	:= byMinPowerCS_15;
+FB_Schneider_EVLink_15.bEnable					:= bEnabledCS_15;
+FB_Schneider_EVLink_15.stSetupECS.bManualyOn		:= bChrgManuCS_15;
+FB_Schneider_EVLink_15.stSetupECS.byManualyTargetPower := byChrgManuSPCS_15;
+
+bIsEnabledCS_15 		:= FB_Schneider_EVLink_15.stDataECS.bEnabled;
+byStateMinPowerCS_15 := FB_Schneider_EVLink_15.stDataECS.bySCSMinPower;
+rTargetPowerCS_15 	:= FB_Schneider_EVLink_15.stDataECS.rTargetPower;	
+byErrorWarningCS_15 	:= FB_Schneider_EVLink_15.stDataECS.byErrorWarning;
+bCarConnectedCS_15 	:= FB_Schneider_EVLink_15.stDataECS.bCarConnected;
+rChrgTimeCS_15 		:= FB_Schneider_EVLink_15.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_15 		:= FB_Schneider_EVLink_15.stDataElectric.lrPowerTotal;
+bStateOkCS_15		:= FB_Schneider_EVLink_15.bEnable AND FB_Schneider_EVLink_15.bEnableWrite;
+
+FB_Schneider_EVLink_16.stSetupECS.byDisableSOC 	:= bySOC_D_CS_16;		   			
+FB_Schneider_EVLink_16.stSetupECS.byEnableSOC 	:= bySOC_E_CS_16;	
+FB_Schneider_EVLink_16.stSetupECS.byPriority 	:= byPrioCS_16;
+FB_Schneider_EVLink_16.stSetupECS.rMaxPower 		:= rMaxPowerCS_16;
+FB_Schneider_EVLink_16.stSetupECS.byCSMinPower	:= byMinPowerCS_16;
+FB_Schneider_EVLink_16.bEnable					:= bEnabledCS_16;
+FB_Schneider_EVLink_16.stSetupECS.bManualyOn		:= bChrgManuCS_16;
+FB_Schneider_EVLink_16.stSetupECS.byManualyTargetPower := byChrgManuSPCS_16;
+
+bIsEnabledCS_16 		:= FB_Schneider_EVLink_16.stDataECS.bEnabled;
+byStateMinPowerCS_16 := FB_Schneider_EVLink_16.stDataECS.bySCSMinPower;
+rTargetPowerCS_16 	:= FB_Schneider_EVLink_16.stDataECS.rTargetPower;	
+byErrorWarningCS_16 	:= FB_Schneider_EVLink_16.stDataECS.byErrorWarning;
+bCarConnectedCS_16 	:= FB_Schneider_EVLink_16.stDataECS.bCarConnected;
+rChrgTimeCS_16 		:= FB_Schneider_EVLink_16.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_16 		:= FB_Schneider_EVLink_16.stDataElectric.lrPowerTotal;
+bStateOkCS_16		:= FB_Schneider_EVLink_16.bEnable AND FB_Schneider_EVLink_16.bEnableWrite;
+
+FB_Schneider_EVLink_17.stSetupECS.byDisableSOC 	:= bySOC_D_CS_17;		   			
+FB_Schneider_EVLink_17.stSetupECS.byEnableSOC 	:= bySOC_E_CS_17;	
+FB_Schneider_EVLink_17.stSetupECS.byPriority 	:= byPrioCS_17;
+FB_Schneider_EVLink_17.stSetupECS.rMaxPower 		:= rMaxPowerCS_17;
+FB_Schneider_EVLink_17.stSetupECS.byCSMinPower	:= byMinPowerCS_17;
+FB_Schneider_EVLink_17.bEnable					:= bEnabledCS_17;
+FB_Schneider_EVLink_17.stSetupECS.bManualyOn		:= bChrgManuCS_17;
+FB_Schneider_EVLink_17.stSetupECS.byManualyTargetPower := byChrgManuSPCS_17;
+
+bIsEnabledCS_17 		:= FB_Schneider_EVLink_17.stDataECS.bEnabled;
+byStateMinPowerCS_17 := FB_Schneider_EVLink_17.stDataECS.bySCSMinPower;
+rTargetPowerCS_17 	:= FB_Schneider_EVLink_17.stDataECS.rTargetPower;	
+byErrorWarningCS_17 	:= FB_Schneider_EVLink_17.stDataECS.byErrorWarning;
+bCarConnectedCS_17 	:= FB_Schneider_EVLink_17.stDataECS.bCarConnected;
+rChrgTimeCS_17 		:= FB_Schneider_EVLink_17.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_17 		:= FB_Schneider_EVLink_17.stDataElectric.lrPowerTotal;
+bStateOkCS_17		:= FB_Schneider_EVLink_17.bEnable AND FB_Schneider_EVLink_17.bEnableWrite;
+
+FB_Schneider_EVLink_18.stSetupECS.byDisableSOC 	:= bySOC_D_CS_18;		   			
+FB_Schneider_EVLink_18.stSetupECS.byEnableSOC 	:= bySOC_E_CS_18;	
+FB_Schneider_EVLink_18.stSetupECS.byPriority 	:= byPrioCS_18;
+FB_Schneider_EVLink_18.stSetupECS.rMaxPower 		:= rMaxPowerCS_18;
+FB_Schneider_EVLink_18.stSetupECS.byCSMinPower	:= byMinPowerCS_18;
+FB_Schneider_EVLink_18.bEnable					:= bEnabledCS_18;
+FB_Schneider_EVLink_18.stSetupECS.bManualyOn		:= bChrgManuCS_18;
+FB_Schneider_EVLink_18.stSetupECS.byManualyTargetPower := byChrgManuSPCS_18;
+
+bIsEnabledCS_18 		:= FB_Schneider_EVLink_18.stDataECS.bEnabled;
+byStateMinPowerCS_18 := FB_Schneider_EVLink_18.stDataECS.bySCSMinPower;
+rTargetPowerCS_18 	:= FB_Schneider_EVLink_18.stDataECS.rTargetPower;	
+byErrorWarningCS_18 	:= FB_Schneider_EVLink_18.stDataECS.byErrorWarning;
+bCarConnectedCS_18 	:= FB_Schneider_EVLink_18.stDataECS.bCarConnected;
+rChrgTimeCS_18 		:= FB_Schneider_EVLink_18.stDataECS.arrChargingTimeInMin[1];
+lr_CSPower_18 		:= FB_Schneider_EVLink_18.stDataElectric.lrPowerTotal;
+bStateOkCS_18		:= FB_Schneider_EVLink_18.bEnable AND FB_Schneider_EVLink_18.bEnableWrite;
+
+
+// calculate House Power   (Gesamt Bezug + PV Produktion - EV Lesitung Summe)
+r_House := GVL.ELEKTRO_1_Leistung + GVL.ELEKTRO_4_Leistung - LREAL_TO_REAL(lr_CSPowerTotal);
+
+// send kWh counters to cloud
+
+lr_EnergyCounterCS_1 := FB_Schneider_EVLink_1.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_2 := FB_Schneider_EVLink_2.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_3 := FB_Schneider_EVLink_3.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_4 := FB_Schneider_EVLink_4.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_5 := FB_Schneider_EVLink_5.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_6 := FB_Schneider_EVLink_6.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_7 := FB_Schneider_EVLink_7.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_8 := FB_Schneider_EVLink_8.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_9 := FB_Schneider_EVLink_9.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_10 := FB_Schneider_EVLink_10.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_11 := FB_Schneider_EVLink_11.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_12 := FB_Schneider_EVLink_12.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_13 := FB_Schneider_EVLink_13.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_14 := FB_Schneider_EVLink_14.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_15 := FB_Schneider_EVLink_15.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_16 := FB_Schneider_EVLink_16.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_17 := FB_Schneider_EVLink_17.fbCS.lrTotalCounterEnergy_Consumption;
+lr_EnergyCounterCS_18 := FB_Schneider_EVLink_18.fbCS.lrTotalCounterEnergy_Consumption;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="PrgModbus">
+      <LineId Id="50" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="9" Count="5" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="103" Count="6" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="82" Count="9" />
+      <LineId Id="93" Count="6" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="111" Count="9" />
+      <LineId Id="122" Count="6" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="130" Count="9" />
+      <LineId Id="141" Count="6" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="149" Count="9" />
+      <LineId Id="160" Count="6" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="168" Count="9" />
+      <LineId Id="179" Count="6" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="187" Count="9" />
+      <LineId Id="198" Count="6" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="206" Count="9" />
+      <LineId Id="217" Count="6" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="225" Count="9" />
+      <LineId Id="236" Count="6" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="244" Count="9" />
+      <LineId Id="255" Count="6" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="263" Count="9" />
+      <LineId Id="274" Count="6" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="282" Count="9" />
+      <LineId Id="293" Count="6" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="301" Count="9" />
+      <LineId Id="312" Count="6" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="320" Count="9" />
+      <LineId Id="331" Count="6" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="339" Count="9" />
+      <LineId Id="350" Count="6" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="358" Count="9" />
+      <LineId Id="369" Count="6" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="377" Count="9" />
+      <LineId Id="388" Count="6" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="396" Count="9" />
+      <LineId Id="407" Count="6" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="420" Count="1" />
+      <LineId Id="423" Count="2" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="458" Count="5" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="798" Count="3" />
+      <LineId Id="811" Count="0" />
+      <LineId Id="1215" Count="1" />
+      <LineId Id="1054" Count="0" />
+      <LineId Id="805" Count="5" />
+      <LineId Id="804" Count="0" />
+      <LineId Id="813" Count="0" />
+      <LineId Id="1270" Count="0" />
+      <LineId Id="816" Count="5" />
+      <LineId Id="1217" Count="1" />
+      <LineId Id="1055" Count="0" />
+      <LineId Id="822" Count="5" />
+      <LineId Id="814" Count="0" />
+      <LineId Id="1271" Count="0" />
+      <LineId Id="829" Count="6" />
+      <LineId Id="1219" Count="1" />
+      <LineId Id="1056" Count="0" />
+      <LineId Id="836" Count="5" />
+      <LineId Id="828" Count="0" />
+      <LineId Id="1273" Count="0" />
+      <LineId Id="1272" Count="0" />
+      <LineId Id="843" Count="6" />
+      <LineId Id="1221" Count="1" />
+      <LineId Id="1057" Count="0" />
+      <LineId Id="850" Count="5" />
+      <LineId Id="842" Count="0" />
+      <LineId Id="1275" Count="0" />
+      <LineId Id="1274" Count="0" />
+      <LineId Id="857" Count="6" />
+      <LineId Id="1223" Count="1" />
+      <LineId Id="1058" Count="0" />
+      <LineId Id="864" Count="5" />
+      <LineId Id="856" Count="0" />
+      <LineId Id="1277" Count="0" />
+      <LineId Id="1276" Count="0" />
+      <LineId Id="871" Count="6" />
+      <LineId Id="1225" Count="1" />
+      <LineId Id="1059" Count="0" />
+      <LineId Id="878" Count="5" />
+      <LineId Id="870" Count="0" />
+      <LineId Id="1278" Count="0" />
+      <LineId Id="885" Count="6" />
+      <LineId Id="1227" Count="1" />
+      <LineId Id="1060" Count="0" />
+      <LineId Id="892" Count="5" />
+      <LineId Id="884" Count="0" />
+      <LineId Id="1311" Count="0" />
+      <LineId Id="899" Count="6" />
+      <LineId Id="1229" Count="1" />
+      <LineId Id="1061" Count="0" />
+      <LineId Id="906" Count="5" />
+      <LineId Id="898" Count="0" />
+      <LineId Id="1280" Count="0" />
+      <LineId Id="913" Count="6" />
+      <LineId Id="1231" Count="1" />
+      <LineId Id="1062" Count="0" />
+      <LineId Id="920" Count="5" />
+      <LineId Id="912" Count="0" />
+      <LineId Id="1282" Count="0" />
+      <LineId Id="1281" Count="0" />
+      <LineId Id="927" Count="6" />
+      <LineId Id="1233" Count="1" />
+      <LineId Id="1063" Count="0" />
+      <LineId Id="934" Count="5" />
+      <LineId Id="926" Count="0" />
+      <LineId Id="1284" Count="0" />
+      <LineId Id="1283" Count="0" />
+      <LineId Id="942" Count="5" />
+      <LineId Id="1235" Count="1" />
+      <LineId Id="1064" Count="0" />
+      <LineId Id="948" Count="6" />
+      <LineId Id="1285" Count="0" />
+      <LineId Id="955" Count="6" />
+      <LineId Id="1237" Count="1" />
+      <LineId Id="1065" Count="0" />
+      <LineId Id="962" Count="6" />
+      <LineId Id="1287" Count="0" />
+      <LineId Id="969" Count="6" />
+      <LineId Id="1239" Count="1" />
+      <LineId Id="1066" Count="0" />
+      <LineId Id="976" Count="6" />
+      <LineId Id="1288" Count="0" />
+      <LineId Id="983" Count="6" />
+      <LineId Id="1241" Count="1" />
+      <LineId Id="1067" Count="0" />
+      <LineId Id="990" Count="6" />
+      <LineId Id="1289" Count="0" />
+      <LineId Id="997" Count="5" />
+      <LineId Id="1068" Count="0" />
+      <LineId Id="1243" Count="1" />
+      <LineId Id="1003" Count="7" />
+      <LineId Id="1290" Count="0" />
+      <LineId Id="1011" Count="5" />
+      <LineId Id="1069" Count="0" />
+      <LineId Id="1245" Count="1" />
+      <LineId Id="1017" Count="7" />
+      <LineId Id="1291" Count="0" />
+      <LineId Id="1025" Count="5" />
+      <LineId Id="1070" Count="0" />
+      <LineId Id="1247" Count="1" />
+      <LineId Id="1031" Count="7" />
+      <LineId Id="1292" Count="0" />
+      <LineId Id="1039" Count="6" />
+      <LineId Id="1249" Count="1" />
+      <LineId Id="1071" Count="0" />
+      <LineId Id="1046" Count="5" />
+      <LineId Id="940" Count="0" />
+      <LineId Id="1293" Count="2" />
+      <LineId Id="815" Count="0" />
+      <LineId Id="1296" Count="0" />
+      <LineId Id="1626" Count="0" />
+      <LineId Id="1297" Count="0" />
+      <LineId Id="1627" Count="0" />
+      <LineId Id="812" Count="0" />
+      <LineId Id="1664" Count="0" />
+      <LineId Id="1666" Count="15" />
+      <LineId Id="1665" Count="0" />
+      <LineId Id="1628" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

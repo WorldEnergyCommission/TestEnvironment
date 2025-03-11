@@ -1,0 +1,422 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <POU Name="MAIN" Id="{eadaad8c-32d3-4544-a1f5-7680a5b44564}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+
+l_ton_Trigger_Auslesen			: TON;
+l_ton_Trigger_Auslesen_BOOL		: TON;
+
+l_tp_VERSCHATTUNG_auf		: TP;
+l_tp_VERSCHATTUNG_ab		: TP;
+l_tp_ZENTRAL_LICHT_ein_EG	: TP;
+l_tp_ZENTRAL_LICHT_aus_EG	: TP;
+l_tp_ZENTRAL_LICHT_ein_OG	: TP;
+l_tp_ZENTRAL_LICHT_aus_OG	: TP;
+
+l_BA3_tp_VERSCHATTUNG_auf_OG	: TP;
+l_BA3_tp_VERSCHATTUNG_ab_OG		: TP;
+l_BA3_tp_VERSCHATTUNG_auf_EG	: TP;
+l_BA3_tp_VERSCHATTUNG_ab_EG		: TP;
+l_BA3_tp_ZENTRAL_LICHT_ein		: TP;
+l_BA3_tp_ZENTRAL_LICHT_aus		: TP;
+
+
+
+l_fb_ADS_read_HK_LA 		: ADSRDWRTEX; 
+l_fb_ADS_read_HK_LA_BOOL	: ADSRDWRTEX; 
+
+i :INT:= 1;
+l_b_only_once	:BOOL;
+l_b_test		:BOOL;
+l_r_destaddr	:REAL;
+gv_PCon_bAktivitaet_EG_OG :BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[_ARRAY_IP[1] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[1] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Gesamtzaehler_i1.EZ_Gesamtzaehler_Zaehlerwerte_1_ov_r_Wirkenergie_positivTotal.r_value';
+
+_ARRAY_IP[2] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[2] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Gesamtzaehler_i1.EZ_Gesamtzaehler_Zaehlerwerte_1_ov_r_Wirkleistung_positivTotal.r_value';
+
+_ARRAY_IP[3] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[3] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Waermepumpe_1_i1.EZ_Waermepumpe_1_Zaehlerwerte_ov_r_EnergyTotal.r_value';
+
+_ARRAY_IP[4] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[4] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Waermepumpe_1_i1.EZ_Waermepumpe_1_Zaehlerwerte_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[5] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[5] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Waermepumpe_2_i1.EZ_Waermepumpe_2_Zaehlerwerte_ov_r_EnergyTotal.r_value';
+
+_ARRAY_IP[6] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[6] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Waermepumpe_2_i1.EZ_Waermepumpe_2_Zaehlerwerte_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[7] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[7] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Ladestation_1_i1.EZ_Ladestation_1_Zaehlerwerte_ov_r_EnergyTotal.r_value';
+
+_ARRAY_IP[8] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[8] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Ladestation_1_i1.EZ_Ladestation_1_Zaehlerwerte_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[9] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[9] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Ladestation_2_i1.EZ_Ladestation_2_Zaehlerwerte_ov_r_EnergyTotal.r_value';
+
+_ARRAY_IP[10] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[10] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Ladestation_2_i1.EZ_Ladestation_2_Zaehlerwerte_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[11] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[11] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Ladestation_5_i1.EZ_Ladestation_5_Zaehlerwerte_ov_r_EnergyTotal.r_value';
+
+_ARRAY_IP[12] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[12] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Ladestation_5_i1.EZ_Ladestation_5_Zaehlerwerte_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[13] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[13] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_1_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[14] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[14] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_1_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[15] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[15] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_2_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[16] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[16] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_2_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[17] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[17] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ_01_Gaskessel_i1.WMZ_01_Gaskessel_Normaltarif_ov_r_EnergyTarif.r_value';
+
+_ARRAY_IP[18] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[18] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ_01_Gaskessel_i1.WMZ_01_Gaskessel_ov_r_Power.r_value';
+
+_ARRAY_IP[19] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[19] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ_03_WT01_WP_i1.WMZ_03_Waermetauscher_1_WP_ov_r_Power.r_value';
+
+_ARRAY_IP[20] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[20] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ_03_WT01_WP_i1.WMZ_03_Waermetauscher_1_WP_Normaltarif_ov_r_EnergyTarif.r_value';
+
+_ARRAY_IP[21] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[21] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ_03_WT01_WP_i1.WMZ_03_Waermetauscher_1_WP_Tarif_1_ov_r_EnergyTarif.r_value';
+
+//notdonecontrolle
+_ARRAY_IP[22] := '10.0.0.20.1.1';
+_ARRAY_name_of_var[22] := '.p_machineParameter_i1.ToZpoint.Visualisierung_Wettersation_i1.Wettersation.Wetterstation_1.Temperatur.ov_r_Data';
+
+_ARRAY_IP[23] := '10.0.0.20.1.1';
+_ARRAY_name_of_var[23] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_LA_Temperatursensoren_i1.LA_Temperatursensoren_Temperatur_Zuluft_ov_r_valueCorrected.r_value';
+
+_ARRAY_IP[24] := '10.0.0.20.1.1';
+_ARRAY_name_of_var[24] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_Raum_104_Buero_2_i1.Raum_104_Buero_2_ov_rRaumtemperatur.r_value';
+
+_ARRAY_IP[25] := '10.0.0.20.1.1';
+_ARRAY_name_of_var[25] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_Halle_027_Montage_i1.Halle_027_Montage_ov_rRaumtemperatur.r_value';
+
+_ARRAY_IP[26] := '10.0.0.20.1.1';
+_ARRAY_name_of_var[26] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_Raum_025_Mehrzweck_und_Aufenthaltsraum_i1.Raum_025_Mehrzweck_und_Aufenthaltsraum_ov_rRaumtemperatur.r_value';
+
+_ARRAY_IP[27] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[27] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Gesamtzaehler_i1.EZ_Gesamtzaehler_Zaehlerwerte_1_ov_r_Wirkenergie_nagativTotal.r_value';
+
+_ARRAY_IP[28] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[28] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_Gesamtzaehler_i1.EZ_Gesamtzaehler_Zaehlerwerte_1_ov_r_Wirkleistung_nagativTotal.r_value';
+
+_ARRAY_IP[29] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[29] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_3_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[30] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[30] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_3_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[31] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[31] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_4_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[32] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[32] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_4_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[33] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[33] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_5_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[34] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[34] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_5_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[35] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[35] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_6_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[36] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[36] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_6_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[37] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[37] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_7_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[38] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[38] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_7_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[39] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[39] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_8_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[40] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[40] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_8_ov_r_Wirkleistung.r_value';
+
+_ARRAY_IP[41] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[41] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_9_ov_r_ErzeugteWirkenergie.r_value';
+
+_ARRAY_IP[42] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[42] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_EZ_PV_Anlage_i1.EZ_PV_Wechselrichter_9_ov_r_Wirkleistung.r_value';
+
+//BA3 WP aktulle leistung
+_ARRAY_IP[43] := '10.0.0.30.1.1';
+_ARRAY_name_of_var[43] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ02_Waermepumpe_BA3E_i1.WMZ02_Waermepumpe_BA3E_ov_r_Power.r_value'; 
+//BA3 WP Wärme Energie
+_ARRAY_IP[44] := '10.0.0.30.1.1';
+_ARRAY_name_of_var[44] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ02_Waermepumpe_BA3E_i1.WMZ02_Waermepumpe_BA3E_ov_r_EnergyT1.r_value';
+//BA3 Kälte Energie
+_ARRAY_IP[45] := '10.0.0.30.1.1';
+_ARRAY_name_of_var[45] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WMZ02_Waermepumpe_BA3E_i1.WMZ02_Waermepumpe_BA3E_ov_r_EnergyT2.r_value';
+
+//BA3 Wasserzähler
+_ARRAY_IP[46] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[46] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WZ_Wasserzaehler_Gesamt_i1.WZ_Wasserzaehler_Gesamt_ov_r_Volume.r_value';
+//BA3 Wasserzähler
+_ARRAY_IP[47] := '10.0.0.10.1.1';
+_ARRAY_name_of_var[47] := '.p_machineParameter_i1.ToZpoint.ProductDataAttributes_WZ_Wasserzaehler_Gesamt_i1.WZ_Wasserzaehler_Gesamt_ov_r_Flow.r_value';
+
+l_ton_Trigger_Auslesen	(PT:= T#400MS);
+
+//KNX Signale senden/ via ADS and Bestands GLT
+l_tp_VERSCHATTUNG_auf	(PT:= T#2000MS,
+						 IN:=GVL_EfficientIO.lynus_in.Wert_41, 
+						 Q=>GVL_EfficientIO.VERSCHATTUNG_auf);
+						 
+l_tp_VERSCHATTUNG_ab	(PT:= T#2000MS,
+						 IN:=GVL_EfficientIO.lynus_in.Wert_42,
+						 Q=> GVL_EfficientIO.VERSCHATTUNG_ab);
+						 
+l_tp_ZENTRAL_LICHT_ein_EG	(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_43, 
+							 Q=>  GVL_EfficientIO.ZENTRAL_LICHT_ein_EG);
+						 
+l_tp_ZENTRAL_LICHT_aus_EG	(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_44, 
+							 Q=>  GVL_EfficientIO.ZENTRAL_LICHT_aus_EG);
+							 
+l_tp_ZENTRAL_LICHT_ein_OG	(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_45, 
+							 Q=>  GVL_EfficientIO.ZENTRAL_LICHT_ein_OG);
+						 
+l_tp_ZENTRAL_LICHT_aus_OG	(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_46, 
+							 Q=>  GVL_EfficientIO.ZENTRAL_LICHT_aus_OG);
+							 
+//BA3							 
+l_BA3_tp_VERSCHATTUNG_ab_OG(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_51, 
+							 Q=>  GVL_EfficientIO.BA3_VERSCHATTUNG_ab_OG);
+							 
+l_BA3_tp_VERSCHATTUNG_auf_OG(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_52, 
+							 Q=>  GVL_EfficientIO.BA3_VERSCHATTUNG_auf_OG);
+							 
+l_BA3_tp_VERSCHATTUNG_auf_EG(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_50, 
+							 Q=>  GVL_EfficientIO.BA3_VERSCHATTUNG_auf_EG);
+
+l_BA3_tp_VERSCHATTUNG_ab_EG(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_49, 
+							 Q=>  GVL_EfficientIO.BA3_VERSCHATTUNG_ab_EG);
+
+l_BA3_tp_ZENTRAL_LICHT_ein(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_47, 
+							 Q=>  GVL_EfficientIO.BA3_ZENTRAL_LICHT_ein);
+
+l_BA3_tp_ZENTRAL_LICHT_aus(PT:= T#2000MS,
+							 IN:= GVL_EfficientIO.lynus_in.Wert_48, 
+							 Q=>  GVL_EfficientIO.BA3_ZENTRAL_LICHT_aus);					 
+							 
+IF NOT l_fb_ADS_read_HK_LA.BUSY AND l_ton_Trigger_Auslesen.Q THEN
+	IF  i = 47 THEN
+		i := 1;
+	ELSE	
+		i := i+1;
+	END_IF
+	l_ton_Trigger_Auslesen.IN:= FALSE;
+ELSE
+	l_ton_Trigger_Auslesen.IN:= TRUE;
+END_IF
+	
+l_fb_ADS_read_HK_LA(
+NETID:=		_ARRAY_IP[i],
+PORT:= 		801, 
+IDXGRP:= 	16#F004, 
+IDXOFFS:= 	0, 
+WRITELEN:=	LEN(_ARRAY_name_of_var[i]),
+READLEN :=	SIZEOF(REAL),
+SRCADDR:= 	ADR(_ARRAY_name_of_var[i]), 
+DESTADDR:=	ADR(_ARRAY_var_value[i]),
+WRTRD:= 	NOT l_ton_Trigger_Auslesen.Q, 
+TMOUT:= 	T#1S
+);
+
+l_ton_Trigger_Auslesen_BOOL	(PT:= T#3000MS);
+
+IF NOT l_fb_ADS_read_HK_LA_BOOL.BUSY AND l_ton_Trigger_Auslesen_BOOL.Q THEN
+	l_ton_Trigger_Auslesen_BOOL.IN:= FALSE;
+ELSE
+	l_ton_Trigger_Auslesen_BOOL.IN:= TRUE;
+END_IF
+
+l_fb_ADS_read_HK_LA_BOOL(
+NETID:=		'10.0.0.20.1.1',
+PORT:= 		801, 
+IDXGRP:= 	16#F004, 
+IDXOFFS:= 	0, 
+WRITELEN:=	LEN('.gv_PCon_bAktivitaet_EG_OG'),
+READLEN :=	SIZEOF(BOOL),
+SRCADDR:= 	ADR('.gv_PCon_bAktivitaet_EG_OG'), 
+DESTADDR:=	ADR(GVL_EfficientIO.AKTIVITAET),
+WRTRD:= 	NOT l_ton_Trigger_Auslesen_BOOL.Q, 
+TMOUT:= 	T#3S
+);	
+
+p_Datenschnittstelle();]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="3" Count="1" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="235" Count="1" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="246" Count="1" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="249" Count="1" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="252" Count="1" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="255" Count="1" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="258" Count="1" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="261" Count="1" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="264" Count="1" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="267" Count="1" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="270" Count="1" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="273" Count="1" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="276" Count="1" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="279" Count="1" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="282" Count="1" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="311" Count="1" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="314" Count="1" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="285" Count="1" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="288" Count="1" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="291" Count="1" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="294" Count="1" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="297" Count="1" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="341" Count="1" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="345" Count="1" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="349" Count="1" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="355" Count="1" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="358" Count="1" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="361" Count="1" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="364" Count="1" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="367" Count="1" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="370" Count="1" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="373" Count="1" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="376" Count="1" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="379" Count="1" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="381" Count="1" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="384" Count="1" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="387" Count="1" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="557" Count="1" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="560" Count="1" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="565" Count="2" />
+      <LineId Id="599" Count="1" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="130" Count="1" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="419" Count="2" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="409" Count="1" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="414" Count="1" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="416" Count="1" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="431" Count="5" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="528" Count="21" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="133" Count="5" />
+      <LineId Id="140" Count="4" />
+      <LineId Id="164" Count="5" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="171" Count="1" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="459" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="484" Count="2" />
+      <LineId Id="477" Count="0" />
+      <LineId Id="461" Count="11" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <POU Name="MqttCommunicator" Id="{32f51d01-120d-4800-83df-4f7247739b36}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MqttCommunicator
+VAR
+	fbCom			: FB_MqttCommunicator_V5;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*notdonepoint Bitte UserName und UserPassword eintragen, dies bekommt man direkt von der LynusWebsite*)
+fbCom(
+	bConnect:= TRUE, 
+	strAuthKey:= 'ENE87365342998', 
+	sUserName:='7ad7b8b6-0630-4d31-a3b5-e626a3dca2b4', 
+	sUserPassword:='b0a3873e-12bb-4efd-a1d1-df77771e0e45', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionC, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+
+(*fbCom(
+	bConnect:= TRUE, 
+	sUserName:= '0d553fc2-e7f3-4571-9008-fb5428f4c828',
+	sUserPassword:= '8604f195-2f00-444b-ac81-e02a496b91e8', 
+	eSavePositionCertificate:= eSavePositionOnPLC.ePostionC, 
+	bConnected=> , 
+	bError=> , 
+	hrErrorCode=> , 
+	eConnectionState=> , 
+	eErrorMessage_Out=> );
+	*)]]></ST>
+    </Implementation>
+    <LineIds Name="MqttCommunicator">
+      <LineId Id="16" Count="0" />
+      <LineId Id="24" Count="9" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="3" Count="8" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="21" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

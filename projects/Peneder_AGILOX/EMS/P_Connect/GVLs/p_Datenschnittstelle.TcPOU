@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <POU Name="p_Datenschnittstelle" Id="{7204e41a-d042-46fe-ab27-a2df32de2911}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM p_Datenschnittstelle
+VAR
+	l_r_summe_WP1_WP2_kWH			:REAL;
+	l_r_summe_WP1_WP2_kW			:REAL;
+	l_r_summe_Ladestation_1_2_5_kWh	:REAL;
+	l_r_summe_Ladestation_1_2_5_kW	:REAL;
+	l_r_summe_PV1_PV2_kWh			:REAL;
+	l_r_summe_PV1_PV2_kW			:REAL;
+	l_r_summe_gessamt_Pos_und_gesamt_neg_kW :REAL;
+	Test_2_1 : REAL;
+	Test_2_2 : REAL;
+	Test_2_3 : REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//GVL_EfficientIO.lynusinout.Wert_1	:=;
+//GVL_EfficientIO.lynusinout.Wert_2	:=;
+//GVL_EfficientIO.lynusinout.Wert_3	:=;
+//GVL_EfficientIO.lynusinout.Wert_4	:=;
+//GVL_EfficientIO.lynusinout.Wert_5	:=;
+GVL_EfficientIO.lynus_out.Wert_6	:=_ARRAY_var_value[27];
+GVL_EfficientIO.lynus_out.Wert_7	:=GVL_EfficientIO.AKTIVITAET;
+GVL_EfficientIO.lynus_out.Wert_8	:=_ARRAY_var_value[1];
+GVL_EfficientIO.lynus_out.Wert_9	:=l_r_summe_gessamt_Pos_und_gesamt_neg_kW;
+GVL_EfficientIO.lynus_out.Wert_10	:=l_r_summe_WP1_WP2_kWH;
+GVL_EfficientIO.lynus_out.Wert_11	:=l_r_summe_WP1_WP2_kW;
+GVL_EfficientIO.lynus_out.Wert_12	:=l_r_summe_Ladestation_1_2_5_kWh;
+GVL_EfficientIO.lynus_out.Wert_13	:=l_r_summe_Ladestation_1_2_5_kW;
+GVL_EfficientIO.lynus_out.Wert_14	:=l_r_summe_PV1_PV2_kWh;
+GVL_EfficientIO.lynus_out.Wert_15	:=l_r_summe_PV1_PV2_kW;
+GVL_EfficientIO.lynus_out.Wert_16	:=_ARRAY_var_value[17];
+GVL_EfficientIO.lynus_out.Wert_17	:=_ARRAY_var_value[18];
+//GVL_EfficientIO.lynus_out.Wert_18	:=_ARRAY_var_value[43];
+//GVL_EfficientIO.lynus_out.Wert_19	:=_ARRAY_var_value[44];
+GVL_EfficientIO.lynus_out.Wert_20	:=_ARRAY_var_value[46];
+GVL_EfficientIO.lynus_out.Wert_21	:=_ARRAY_var_value[47];
+GVL_EfficientIO.lynus_out.Wert_22	:=_ARRAY_var_value[22];
+GVL_EfficientIO.lynus_out.Wert_23	:=_ARRAY_var_value[23];
+GVL_EfficientIO.lynus_out.Wert_24	:=_ARRAY_var_value[24];
+GVL_EfficientIO.lynus_out.Wert_25	:=_ARRAY_var_value[25];
+GVL_EfficientIO.lynus_out.Wert_26	:=_ARRAY_var_value[26];
+GVL_EfficientIO.lynus_out.Wert_27	:=_ARRAY_var_value[19];
+GVL_EfficientIO.lynus_out.Wert_28	:=_ARRAY_var_value[20];
+GVL_EfficientIO.lynus_out.Wert_29	:=_ARRAY_var_value[21];
+GVL_EfficientIO.lynus_out.Wert_30	:=_ARRAY_var_value[8];
+GVL_EfficientIO.lynus_out.Wert_31	:=_ARRAY_var_value[43];
+GVL_EfficientIO.lynus_out.Wert_32	:=_ARRAY_var_value[44];
+GVL_EfficientIO.lynus_out.Wert_33	:=_ARRAY_var_value[45];
+
+l_r_summe_WP1_WP2_kWH 			:= _ARRAY_var_value[3] + _ARRAY_var_value[5]; 
+l_r_summe_WP1_WP2_kW 			:= (_ARRAY_var_value[4]) + (_ARRAY_var_value[6]);
+l_r_summe_Ladestation_1_2_5_kWh	:= (_ARRAY_var_value[7]) + (_ARRAY_var_value[9]) + (_ARRAY_var_value[11]);
+l_r_summe_Ladestation_1_2_5_kW	:= (_ARRAY_var_value[8]) + (_ARRAY_var_value[10]) +(_ARRAY_var_value[12]);
+l_r_summe_PV1_PV2_kWh			:= (_ARRAY_var_value[13]) + (_ARRAY_var_value[15]) + (_ARRAY_var_value[29]) + (_ARRAY_var_value[31]) + (_ARRAY_var_value[33]) + (_ARRAY_var_value[35]) + (_ARRAY_var_value[37]) + (_ARRAY_var_value[39]) + (_ARRAY_var_value[41]);
+l_r_summe_PV1_PV2_kW			:= (_ARRAY_var_value[14]) + (_ARRAY_var_value[16]) + (_ARRAY_var_value[30]) + (_ARRAY_var_value[32]) + (_ARRAY_var_value[34]) + (_ARRAY_var_value[36]) + (_ARRAY_var_value[38]) + (_ARRAY_var_value[40]) + (_ARRAY_var_value[42]);
+l_r_summe_gessamt_Pos_und_gesamt_neg_kW :=(_ARRAY_var_value[2]) - (_ARRAY_var_value[28]);
+
+GVL_EfficientIO.VERSCHATTUNG_auf		:=GVL_EfficientIO.lynus_in.Wert_41;
+GVL_EfficientIO.VERSCHATTUNG_ab			:=GVL_EfficientIO.lynus_in.Wert_42;
+GVL_EfficientIO.ZENTRAL_LICHT_ein_EG	:=GVL_EfficientIO.lynus_in.Wert_43;
+GVL_EfficientIO.ZENTRAL_LICHT_aus_EG	:=GVL_EfficientIO.lynus_in.Wert_44;
+GVL_EfficientIO.ZENTRAL_LICHT_ein_OG	:=GVL_EfficientIO.lynus_in.Wert_45;
+GVL_EfficientIO.ZENTRAL_LICHT_aus_OG	:=GVL_EfficientIO.lynus_in.Wert_46;
+(*
+GVL_EfficientIO.BA3_ZENTRAL_LICHT_ein 	:=GVL_EfficientIO.lynus_in.Wert_47;
+GVL_EfficientIO.BA3_ZENTRAL_LICHT_aus	:=GVL_EfficientIO.lynus_in.Wert_48;
+GVL_EfficientIO.BA3_VERSCHATTUNG_auf_EG :=GVL_EfficientIO.lynus_in.Wert_49;
+GVL_EfficientIO.BA3_VERSCHATTUNG_ab_EG 	:=GVL_EfficientIO.lynus_in.Wert_50;
+GVL_EfficientIO.BA3_VERSCHATTUNG_auf_OG	:=GVL_EfficientIO.lynus_in.Wert_51;
+GVL_EfficientIO.BA3_VERSCHATTUNG_ab_OG	:=GVL_EfficientIO.lynus_in.Wert_52;*)
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="p_Datenschnittstelle">
+      <LineId Id="7" Count="1" />
+      <LineId Id="20" Count="25" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="154" Count="1" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="102" Count="1" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="109" Count="2" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="141" Count="4" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="70" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

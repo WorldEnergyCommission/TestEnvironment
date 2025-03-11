@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <POU Name="p_call_fast_task" Id="{a829a65b-3c12-425e-b440-fb072973ae10}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM p_call_fast_task
+VAR
+	EfficientIO: INT;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Es wird standartmäßig M-Bus verwendet, bei IMMODO wurden Mod-Bus zähler verbaut *)
+//Communication_KL6781();
+(*MAIN_Zaehlerbaustein()*);
+
+(*FB's von Lynus die den FastTask bennötigen*)
+EfficientIO_Read_Wirte();
+]]></ST>
+    </Implementation>
+    <LineIds Name="p_call_fast_task">
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

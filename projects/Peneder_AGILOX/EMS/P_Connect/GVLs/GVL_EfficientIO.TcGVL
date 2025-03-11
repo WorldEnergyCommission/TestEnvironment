@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <GVL Name="GVL_EfficientIO" Id="{dd387849-29e7-44c2-9df6-ef1fe5019103}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	lynus_out   				AT %Q* 	: st_P_Connect_to_Lynus;
+	lynus_in   					AT %I* 	: st_P_Connect_to_Lynus;	
+	
+	(*KNX*)
+	TEMP_INNEN_1			:REAL;	
+	RH_INNEN_1				:REAL;	
+	TEMP_INNEN_2			:REAL;	
+	RH_INNEN_2				:REAL;	
+	TEMP_AUSSEN				:REAL;	
+	RH_AUSSEN				:REAL;		
+	AKTIVITAET				:BOOL;
+	
+	(*M-Bus variablen für Lynus*)
+	ELEKTRO_1_Zaehler		:REAL;
+	ELEKTRO_1_Leistung		:REAL;
+	ELEKTRO_2_Zaehler		:REAL;
+	ELEKTRO_2_Leistung		:REAL;
+	ELEKTRO_3_Zaehler		:REAL;
+	ELEKTRO_3_Leistung		:REAL;
+	ELEKTRO_4_Zaehler		:REAL;
+	ELEKTRO_4_Leistung		:REAL;
+	ELEKTRO_5_Zaehler		:REAL;
+	ELEKTRO_5_Leistung		:REAL;
+	HEIZEN					:REAL;
+	
+	(*IMPULSZÄHLER*)
+	Wasseruhr_1				:REAL;
+	Wasseruhr_2				:REAL;
+
+	(*PT1000 Temp.*)
+	TEMP_HKLS_1				:REAL;
+	TEMP_HKLS_2				:REAL;
+	TEMP_HKLS_3				:REAL;
+	TEMP_HKLS_4				:REAL;
+	TEMP_HKLS_5				:REAL; 
+	TEMP_HKLS_6				:REAL;
+	TEMP_HKLS_7				:REAL;
+	TEMP_HKLS_8				:REAL;
+	
+	(*Zentalfunktionen*)
+	VERSCHATTUNG_auf		:BOOL;
+	VERSCHATTUNG_ab			:BOOL;
+	ZENTRAL_LICHT_ein_EG	:BOOL;
+	ZENTRAL_LICHT_aus_EG	:BOOL;
+	ZENTRAL_LICHT_ein_OG	:BOOL;
+	ZENTRAL_LICHT_aus_OG	:BOOL;
+	BA3_ZENTRAL_LICHT_ein	:BOOL;
+	BA3_ZENTRAL_LICHT_aus	:BOOL;
+	BA3_VERSCHATTUNG_auf_EG	:BOOL;
+	BA3_VERSCHATTUNG_ab_EG	:BOOL;
+	BA3_VERSCHATTUNG_auf_OG	:BOOL;
+	BA3_VERSCHATTUNG_ab_OG	:BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
