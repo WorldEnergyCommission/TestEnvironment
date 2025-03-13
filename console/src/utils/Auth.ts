@@ -3,7 +3,6 @@ import moment from "moment";
 import * as qs from "qs";
 
 import { envApi, envClientId, envRealm } from "./env";
-import { router } from "@/router";
 import { store } from "@/store";
 
 const REFRESHTOKEN_COOKIE_NAME = `efficientIO_${envClientId}_${envRealm}_refreshToken`;
@@ -89,6 +88,20 @@ export class Auth {
 
   /** Renew access token using refresh token, if refresh token is undefined the one from store is used */
   static renewToken(refreshToken?: string, setCookie = false) {
+    const { expiresAt, accessToken } = store.state.app.auth;
+
+    let expiresAtMoment: moment.Moment;
+    if (expiresAt == null) {
+      expiresAtMoment = moment();
+    } else {
+      expiresAtMoment = moment(expiresAt);
+    }
+
+    const mustRenewAccessToken = moment() > expiresAtMoment.subtract(1, "minute");
+    if (!mustRenewAccessToken && accessToken) {
+      return Promise.resolve(accessToken);
+    }
+
     return this.callTokenEndpoint(
       {
         client_id: envClientId,
@@ -102,6 +115,7 @@ export class Auth {
   /** Call open-id token endpoint with given data, and set refreshtoken in cookie */
   static callTokenEndpoint(data: any, setCookie = false) {
     const date = new Date();
+
     return axios({
       url: Auth.tokenURL(),
       method: "post",
@@ -317,12 +331,14 @@ export class Auth {
 
   static async getValidAccessToken(): Promise<string> {
     const { expiresAt, accessToken } = store.state.app.auth;
+
     let expiresAtMoment: moment.Moment;
     if (expiresAt == null) {
       expiresAtMoment = moment();
     } else {
       expiresAtMoment = moment(expiresAt);
     }
+
     const mustRenewAccessToken = moment() > expiresAtMoment.subtract(1, "minute");
     if (mustRenewAccessToken || accessToken == null) {
       return Auth.renewToken();

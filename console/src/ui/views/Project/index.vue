@@ -27,13 +27,12 @@
 import { Ref, computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 import { IRecord } from "@/store/modules/devices/types";
-import { IProject } from "@/store/modules/projects/types";
 import { RootState } from "@/store/types";
 import CircleSpinner from "@/ui/components/components/CircleSpinner.vue";
 import { envApi } from "@/utils/env";
-import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 // Constants
 const store = useStore();
