@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <POU Name="EfficientIO_Read_Wirte" Id="{9c627cc2-1646-4bdf-90ed-18a9db3e7aa7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM EfficientIO_Read_Wirte
+VAR
+	fbVar				: FB_VarInfo;
+	fbRW				: FB_ReadWrite;
+END_VAR
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Der FB_VarInfo sammelt die Informationen über alle kommentierten Variablen in der SPS.*)
+fbVar(
+	bReadInfo:= , 
+	eTMCFile:= eSelectTMCFile.eDontUseTMCFile, 
+	eSavePositionTMCFile:= eSavePositionOnPLC.ePostionC, 
+	udiCounterFoundVariables=> , 
+	bError=> , 
+	bBusy=> , 
+	byProgress=> , 
+	udiErrorCodeOut=> , 
+	eErrorVarInfo_Out=> , 
+	sVarWithError=> );
+
+(*Der FB_ReadWrite dient nach dem Scannen der Symbole dem Lesen und Schreiben der Werte.
+Die gelesenen Werte werden in Richtung Cloud geschickt und die schreibenden, kommend von
+der Cloud, werden auf den Wert der SPS geschrieben.*)
+fbrw();
+]]></ST>
+    </Implementation>
+    <LineIds Name="EfficientIO_Read_Wirte">
+      <LineId Id="23" Count="0" />
+      <LineId Id="3" Count="10" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <POU Name="p_slow_task" Id="{71817dfd-8862-47d0-b3a3-29d0dd89b5fb}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM p_slow_task
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Programmaufrufte im slow Task (10ms)*)
+//Call Slow Tasks for Lynus 	
+MqttCommunicator();
+p_Datenschnittstelle_L();
+
+
+//Stefan Lackner 14.02.2023
+PrgModbus();		// Modbus TCP functions
+PrgEMS();			// EMS Fucntion]]></ST>
+    </Implementation>
+    <LineIds Name="p_slow_task">
+      <LineId Id="6" Count="2" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="19" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

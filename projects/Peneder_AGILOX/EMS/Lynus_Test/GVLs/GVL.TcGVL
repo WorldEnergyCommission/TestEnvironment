@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+  <GVL Name="GVL" Id="{a205d071-aa5c-4887-81ac-52056043d0c8}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	lynus_in   				AT %I* 	: st_P_Connect_to_Lynus;
+	lynus_out   			AT %Q* 	: st_P_Connect_to_Lynus;
+	
+	NULL						:REAL;//{#lynus.ag#()}
+	
+	(*KNX*)
+	TEMP_INNEN_1					:REAL;//{#lynus.ag#()}
+	RH_INNEN_1						:REAL;//{#lynus.ag#()}
+	TEMP_INNEN_2					:REAL;//{#lynus.ag#()}
+	RH_INNEN_2						:REAL;//{#lynus.ag#()}
+	TEMP_AUSSEN						:REAL;//{#lynus.ag#()}
+	RH_AUSSEN						:REAL;//{#lynus.ag#()}
+	AKTIVITAET						:BOOL;//{#lynus.ag#()}
+	
+	(*M-Bus variablen für Lynus*)
+	ELEKTRO_1_Zaehler		:REAL;//{#lynus.ag#()}
+	ELEKTRO_1_Leistung		:REAL;//{#lynus.ag#()}
+	ELEKTRO_2_Zaehler		:REAL;//{#lynus.ag#()}
+	ELEKTRO_2_Leistung		:REAL;//{#lynus.ag#()}
+	ELEKTRO_3_Zaehler		:REAL;//{#lynus.ag#()}
+	ELEKTRO_3_Leistung		:REAL;//{#lynus.ag#()}
+	ELEKTRO_4_Zaehler		:REAL;//{#lynus.ag#()}
+	ELEKTRO_4_Leistung		:REAL;//{#lynus.ag#()}
+	ELEKTRO_5_Zaehler		:REAL;//{#lynus.ag#()}
+	ELEKTRO_5_Leistung		:REAL;//{#lynus.ag#()}
+	HEIZEN					:REAL;//{#lynus.ag#()}
+	HEIZEN_E_Lesitung		:REAL;//{#lynus.ag#()}
+	
+	(*IMPULSZÄHLER*)
+	Wasseruhr_1				:REAL;//{#lynus.ag#()}
+	Wasseruhr_2				:REAL;//{#lynus.ag#()}
+
+	(*PT1000 Temp.*)
+	TEMP_HKLS_1				:REAL;//{#lynus.ag#()}
+	TEMP_HKLS_2				:REAL;//{#lynus.ag#()}
+	TEMP_HKLS_3				:REAL;//{#lynus.ag#()}
+	TEMP_HKLS_4				:REAL;//{#lynus.ag#()}
+	TEMP_HKLS_5				:REAL;//{#lynus.ag#()}
+	TEMP_HKLS_6				:REAL;//{#lynus.ag#()}
+	TEMP_HKLS_7				:REAL;//{#lynus.ag#()}
+	TEMP_HKLS_8				:REAL;//{#lynus.ag#()}
+	
+	(*Zentalfunktionen*)
+	VERSCHATTUNG_auf		:BOOL;//{#lynus.ag#()}
+	VERSCHATTUNG_ab			:BOOL;//{#lynus.ag#()}
+	ZENTRAL_LICHT_ein_EG	:BOOL;//{#lynus.ag#()}
+	ZENTRAL_LICHT_aus_EG	:BOOL;//{#lynus.ag#()}
+	ZENTRAL_LICHT_ein_OG	:BOOL;//{#lynus.ag#()}
+	ZENTRAL_LICHT_aus_OG	:BOOL;//{#lynus.ag#()}
+	B3_ZENTRAL_LICHT_ein	:BOOL;//{#lynus.ag#()}
+	B3_ZENTRAL_LICHT_aus	:BOOL;//{#lynus.ag#()}
+	B3_SCHATTUNG_auf_EG		:BOOL;//{#lynus.ag#()}
+	B3_SCHATTUNG_ab_EG		:BOOL;//{#lynus.ag#()}
+	B3_SCHATTUNG_auf_OG		:BOOL;//{#lynus.ag#()}
+	B3_SCHATTUNG_ab_OG		:BOOL;//{#lynus.ag#()}
+	
+	Wert_30					:REAL;//{#lynus.ag#()}
+	Wert_31					:REAL;//{#lynus.ag#()}
+	Wert_32					:REAL;//{#lynus.ag#()}
+	Wert_33					:REAL;//{#lynus.ag#()}
+	dummy_					:BOOL;//{#lynus.ag#()}
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
