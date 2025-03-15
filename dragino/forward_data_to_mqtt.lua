@@ -433,25 +433,32 @@ function main()
                 local payloadBytes = getPayloadBytes(filePath)
                 logString('got these payload bytes: ' .. dump(payloadBytes))
                 local measurements = {}
-                if deviceType == 'LSN50v2-D23' then
-                    measurements = generateMeasurementsFromLSN50v2D23Payload(payloadBytes)
-                elseif deviceType == 'LHT65N' then
-                    measurements = generateMeasurementsFromLHT65NPayload(payloadBytes)
-                elseif deviceType == 'ERS-CO2' then
-                    measurements = generateMeasurementsFromERSCO2Payload(payloadBytes)
+                -- Überprüfen Sie die Länge der Payload-Bytes
+                if #payloadBytes <= 3 then
+                    logString('Ignoring file with insufficient payload bytes: ' .. filePath)
+                    deleteFile(filePath)  -- Datei löschen
+                    logString('Deleted the file: ' .. filePath)
+                else
+                    if deviceType == 'LSN50v2-D23' then
+                        measurements = generateMeasurementsFromLSN50v2D23Payload(payloadBytes)
+                    elseif deviceType == 'LHT65N' then
+                        measurements = generateMeasurementsFromLHT65NPayload(payloadBytes)
+                    elseif deviceType == 'ERS-CO2' then
+                        measurements = generateMeasurementsFromERSCO2Payload(payloadBytes)
+                    end
+                    logString('created these measurements : ' .. dump(measurements))
+                    local filteredMeasurements = filterMeasurements(processableIdWithoutIndex, measurements,
+                        lastMeasurementsTable)
+                    logString('got these new measurements : ' .. dump(filteredMeasurements))
+                    lastMeasurementsTable[processableIdWithoutIndex] = measurements
+                    for propertyName, measurement in pairs(filteredMeasurements) do
+                        publishMeasurementToMqtt(mqttHost, mqttPort, mqttUser, mqttPass, projectId,
+                            baseName .. '.' .. propertyName, measurement[1], measurement[2], measurement[3], 2,
+                            customScriptDirectory .. '/certificate.pem')
+                    end
+                    deleteFile(filePath)
+                    logString('deleted the file: ' .. filePath)
                 end
-                logString('created these measurements : ' .. dump(measurements))
-                local filteredMeasurements = filterMeasurements(processableIdWithoutIndex, measurements,
-                    lastMeasurementsTable)
-                logString('got these new measurements : ' .. dump(filteredMeasurements))
-                lastMeasurementsTable[processableIdWithoutIndex] = measurements
-                for propertyName, measurement in pairs(filteredMeasurements) do
-                    publishMeasurementToMqtt(mqttHost, mqttPort, mqttUser, mqttPass, projectId,
-                        baseName .. '.' .. propertyName, measurement[1], measurement[2], measurement[3], 2,
-                        customScriptDirectory .. '/certificate.pem')
-                end
-                deleteFile(filePath)
-                logString('deleted the file: ' .. filePath)
             end
         end
         sleepFor(checkIntervalSeconds)
