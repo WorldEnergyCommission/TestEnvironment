@@ -70,10 +70,6 @@ export default defineComponent({
     return {
       questions: [
         {
-          theme: "account",
-          topics: ["HowToCreateAccount"],
-        },
-        {
           theme: "project",
           topics: [
             "HowToCreateTheProject",
