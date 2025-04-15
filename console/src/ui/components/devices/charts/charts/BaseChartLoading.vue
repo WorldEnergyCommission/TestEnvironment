@@ -61,7 +61,7 @@ const chartData = computed(() => {
     datasets: [
       {
         data: generateRandomArray(),
-        label: "EfficientIO",
+        label: "EneRies",
         type: "line",
         borderColor: "#D3D3D3",
         borderWidth: 8,
