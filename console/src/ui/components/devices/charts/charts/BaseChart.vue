@@ -138,14 +138,6 @@ import { computed, onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 
-import DeviceActions from "@/ui/components/devices/actions/DeviceActions.vue";
-import ChartFooter from "@/ui/components/devices/charts/charts/ChartFooter.vue";
-import { isAbsolutePeriod as absolutePeriodCheck } from "@/ui/components/devices/charts/charts/ChartUtils";
-import DataExportNew from "@/ui/components/devices/charts/charts/DataExportNew.vue";
-import TimeConfigMenu from "@/ui/components/devices/charts/charts/TimeConfigMenu.vue";
-import { ChartData } from "@/ui/components/devices/charts/charts/types";
-import TotalValuesWindow from "@/ui/components/devices/charts/components/TotalValuesWindow.vue";
-import { getDateString } from "@/utils/utilsFunctions";
 import BaseChartLoading from "./BaseChartLoading.vue";
 import BaseChartView from "./BaseChartView.vue";
 import { calculate } from "./ChartMath";
@@ -156,6 +148,14 @@ import {
   useChartData,
   useChartOptions,
 } from "./ChartUtils";
+import DeviceActions from "@/ui/components/devices/actions/DeviceActions.vue";
+import ChartFooter from "@/ui/components/devices/charts/charts/ChartFooter.vue";
+import { isAbsolutePeriod as absolutePeriodCheck } from "@/ui/components/devices/charts/charts/ChartUtils";
+import DataExportNew from "@/ui/components/devices/charts/charts/DataExportNew.vue";
+import TimeConfigMenu from "@/ui/components/devices/charts/charts/TimeConfigMenu.vue";
+import { ChartData } from "@/ui/components/devices/charts/charts/types";
+import TotalValuesWindow from "@/ui/components/devices/charts/components/TotalValuesWindow.vue";
+import { getDateString } from "@/utils/utilsFunctions";
 
 // Properties
 interface Props {
@@ -219,24 +219,23 @@ const units = computed(() => {
 const tension = computed(() => props.chartData.data.tension || 0.1);
 
 const backgroundColor = computed(() =>
-  props.chartData.data.chartOptions.map((object) => object.backgroundColor).filter((i) => !!i),
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "backgroundColor"),
 );
 
 const borderColor = computed(() =>
-  props.chartData.data.chartOptions.map((object) => object.borderColor).filter((i) => !!i),
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "borderColor"),
 );
 
 const borderWidth = computed(() =>
-  props.chartData.data.chartOptions.map((object) => object.borderWidth).filter((i) => !!i),
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "borderWidth"),
 );
 
 const pointRadius = computed(() =>
-  props.chartData.data.chartOptions.map((object) => object.pointRadius).filter((i) => !!i),
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "pointRadius"),
 );
 
-const isAdam = computed(() => props.chartData.data.type === "adam");
-
 const scaleXMax = computed(() => props.chartData.data.scaleXMax);
+
 // DOM Element Reference
 const chartInstance = ref();
 
@@ -436,6 +435,9 @@ const updateChartWithLiveData = () => {
     });
   }
 };
+
+const customizeChartOptionsProperty = (options: any[], prop: string) =>
+  options.map((object, index) => object[prop]).filter((i) => !!i);
 
 // Watchers
 
