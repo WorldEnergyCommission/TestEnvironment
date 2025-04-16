@@ -121,6 +121,7 @@ const DEFAULT_WHITELABEL_CONFIG_VALUES = {
   DEFAULTS_TO_DARKMODE: false,
   HOME_SITE_TOP_CONTENT: "MAP", // can be overwritten
   DEVICES: [
+    "AdamCurve",
     "AirHumiditySensor",
     "Battery",
     "BrightnessSensor",

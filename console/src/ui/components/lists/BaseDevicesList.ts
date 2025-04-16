@@ -1,4 +1,4 @@
-import { defineComponent, defineAsyncComponent } from "vue";
+import { defineAsyncComponent, defineComponent } from "vue";
 
 import GridItem from "@/gridLayout/GridItem.vue";
 import GridLayout from "@/gridLayout/GridLayout.vue";
@@ -301,11 +301,17 @@ const WeekTrendSummary = defineAsyncComponent({
   loadingComponent: CircleSpinner,
 });
 
+const AdamCurve = defineAsyncComponent({
+  loader: () => import("@/ui/components/devices/devices/AdamCurve.vue"),
+  loadingComponent: CircleSpinner,
+});
+
 /**
  * Device list mixin used in multiple places to render devices by reflection
  */
 export default defineComponent({
   components: {
+    AdamCurve,
     AirHumiditySensor,
     Battery,
     BrightnessSensor,
