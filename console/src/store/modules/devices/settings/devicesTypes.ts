@@ -13,8 +13,10 @@ const devicesTypes = {
     mappings: {
       Input_actualValue: {
         optional: false,
+        type: "ExpressionTextArea",
       },
       Input_optimizedValue: {
+        type: "ExpressionTextArea",
         optional: false,
       },
     },

@@ -61,7 +61,7 @@ export default defineComponent({
             agg: "last",
             calculation: {
               aggregations: ["last"],
-              expression: `${item} * ${i == 0 ? 1 : 0.8}`,
+              expression: item,
             },
             miss: "locf",
             name: this.names[i],
