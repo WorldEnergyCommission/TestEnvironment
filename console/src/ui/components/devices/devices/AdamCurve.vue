@@ -17,6 +17,7 @@
           :show-time-selection="false"
           :show-device-actions="false"
           :post-processor="postprocessor"
+          :show-header="false"
         />
       </template>
     </DeviceCardWrapper>
