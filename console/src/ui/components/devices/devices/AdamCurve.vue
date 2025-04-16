@@ -48,7 +48,7 @@ export default defineComponent({
   data() {
     return {
       backgroundColors: ["transparent", "transparent"],
-      borderColors: ["red", "green"],
+      borderColors: ["#CF0302", "#75B73D"],
       names: ["regular", "savings"],
     };
   },
