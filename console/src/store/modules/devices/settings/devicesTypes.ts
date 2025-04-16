@@ -20,6 +20,7 @@ const devicesTypes = {
     },
     manageSchema: "DefaultSchema",
     isSettingsView: false,
+    unitSelection: true,
     devicesSchemas: {
       basicDevices: [],
       additionalBasicDevices: [],
