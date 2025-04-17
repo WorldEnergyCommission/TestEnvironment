@@ -5,7 +5,8 @@ import traceback
 
 import pandas as pd
 
-from ai.utils.http_utils import append_data_to_dataframe_http, fetch_data_from_http
+from ai.utils.http_utils import (append_data_to_dataframe_http,
+                                 fetch_data_from_http)
 
 
 class TemperatureControlSystem:
@@ -200,8 +201,8 @@ class AirTemperatureControlSystem(TemperatureControlSystem):
                  y1_y2_diff: int = -5) -> None:
         """creates the air temperature control system instance"""
 
-        super().__init__(flow_temperature, advanced_curve_settings, return_temperature, room_temperatures, status,
-                         optimized_flow_temperature, name, type_name, identifier,
+        super().__init__(flow_temperature, return_temperature, room_temperatures, status,
+                         optimized_flow_temperature, advanced_curve_settings, name, type_name, identifier,
                          max_flow_temperature=max_flow_temperature,
                          min_flow_temperature=min_flow_temperature, set_point_temperature=set_point_temperature,
                          timezone=timezone, weekly_schedule=weekly_schedule,
