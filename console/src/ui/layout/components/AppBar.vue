@@ -59,11 +59,6 @@
           <div v-if="!$route.meta?.appNavigation" class="d-flex align-center">
             <!-- Offline Timer Part -->
             <OfflineTimer v-if="!$vuetify.display.mobile" />
-            <StatusIndicator
-              v-if="isNavigation === 'projectNavigation'"
-              :status="projectStatus"
-              class="mx-2"
-            />
             <div v-if="!$vuetify.display.mobile" class="project-name">
               {{ projectName }}
             </div>
