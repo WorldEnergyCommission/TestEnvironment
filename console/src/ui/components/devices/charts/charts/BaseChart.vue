@@ -120,6 +120,7 @@
         :border-width="borderWidth"
         :point-radius="pointRadius"
         :scale-x-max="scaleXMax"
+        :plugins="plugins"
       />
       <BaseChartLoading v-else />
     </div>
@@ -138,6 +139,14 @@ import { computed, onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 
+import DeviceActions from "@/ui/components/devices/actions/DeviceActions.vue";
+import ChartFooter from "@/ui/components/devices/charts/charts/ChartFooter.vue";
+import { isAbsolutePeriod as absolutePeriodCheck } from "@/ui/components/devices/charts/charts/ChartUtils";
+import DataExportNew from "@/ui/components/devices/charts/charts/DataExportNew.vue";
+import TimeConfigMenu from "@/ui/components/devices/charts/charts/TimeConfigMenu.vue";
+import { ChartData } from "@/ui/components/devices/charts/charts/types";
+import TotalValuesWindow from "@/ui/components/devices/charts/components/TotalValuesWindow.vue";
+import { getDateString } from "@/utils/utilsFunctions";
 import BaseChartLoading from "./BaseChartLoading.vue";
 import BaseChartView from "./BaseChartView.vue";
 import { calculate } from "./ChartMath";
@@ -148,14 +157,6 @@ import {
   useChartData,
   useChartOptions,
 } from "./ChartUtils";
-import DeviceActions from "@/ui/components/devices/actions/DeviceActions.vue";
-import ChartFooter from "@/ui/components/devices/charts/charts/ChartFooter.vue";
-import { isAbsolutePeriod as absolutePeriodCheck } from "@/ui/components/devices/charts/charts/ChartUtils";
-import DataExportNew from "@/ui/components/devices/charts/charts/DataExportNew.vue";
-import TimeConfigMenu from "@/ui/components/devices/charts/charts/TimeConfigMenu.vue";
-import { ChartData } from "@/ui/components/devices/charts/charts/types";
-import TotalValuesWindow from "@/ui/components/devices/charts/components/TotalValuesWindow.vue";
-import { getDateString } from "@/utils/utilsFunctions";
 
 // Properties
 interface Props {
@@ -171,6 +172,7 @@ interface Props {
   showHeader?: boolean;
   showFooter?: boolean;
   postProcessor?: (data: number[][]) => number[][];
+  plugins?: unknown[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -185,6 +187,7 @@ const props = withDefaults(defineProps<Props>(), {
   postProcessor: undefined,
   showHeader: true,
   showFooter: true,
+  plugins: [] as any[],
 });
 
 // Emits
@@ -233,6 +236,8 @@ const borderWidth = computed(() =>
 const pointRadius = computed(() =>
   customizeChartOptionsProperty(props.chartData.data.chartOptions, "pointRadius"),
 );
+
+const plugins = computed(() => props.plugins || []);
 
 const scaleXMax = computed(() => props.chartData.data.scaleXMax);
 

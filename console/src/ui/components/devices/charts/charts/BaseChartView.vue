@@ -47,22 +47,6 @@ import {
   useTooltipTitleCallback,
 } from "./ChartUtils";
 
-ChartJS.register(
-  Title,
-  Legend,
-  Colors,
-  Filler,
-  Tooltip,
-  annotationPlugin,
-  BarElement,
-  LineElement,
-  LinearScale,
-  PointElement,
-  CategoryScale,
-  LineController,
-  TimeSeriesScale,
-);
-
 // Properties
 interface Props {
   xData: number[];
@@ -84,9 +68,27 @@ interface Props {
   areYAxisMerged?: boolean;
   thresholdValue?: number;
   scaleXMax?: string;
+  plugins?: any[];
 }
 
 const props = defineProps<Props>();
+
+ChartJS.register(
+  Title,
+  Legend,
+  Colors,
+  Filler,
+  Tooltip,
+  annotationPlugin,
+  BarElement,
+  LineElement,
+  LinearScale,
+  PointElement,
+  CategoryScale,
+  LineController,
+  TimeSeriesScale,
+  ...(props.plugins || []),
+);
 
 // Composables
 const i18nLocale = useI18n();
