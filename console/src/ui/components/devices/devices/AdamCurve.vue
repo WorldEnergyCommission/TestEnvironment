@@ -179,20 +179,20 @@ export default defineComponent({
 @import "./src/ui/scss/variables";
 
 .adam-energy-saving-logo {
-  width: 125px;
+  width: 200px;
 }
 
 .adam-energy-saving-value {
-  margin-top: 15px;
+  margin-top: 20px;
   margin-left: -100px;
-  font-size: 28px;
+  font-size: 42px;
   font-weight: 800;
   color: #75b73d;
 }
 
 .adam-energy-saving-seal {
-  width: 125px;
-  height: 125px;
+  width: 150px;
+  height: 150px;
   position: absolute;
   bottom: 60px;
   right: 15px;
@@ -200,6 +200,10 @@ export default defineComponent({
 }
 
 @media (max-width: 768px) {
+  .adam-energy-saving-logo {
+    width: 150px;
+  }
+
   .adam-energy-saving-seal {
     width: 50px;
     bottom: 150px;
