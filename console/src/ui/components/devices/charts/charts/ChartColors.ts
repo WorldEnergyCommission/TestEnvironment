@@ -70,7 +70,7 @@ export function useChartColors() {
     }
   });
 
-  const gridColor = computed(() => (theme.value.dark ? "#ffffff" : "#000000"));
+  const gridColor = computed(() => (theme.value.dark ? "#ffffff" : "#aaaaaa"));
   const tickColor = computed(() => (theme.value.dark ? "#aaaaaa" : "#333333"));
 
   return { colors, colorsDark, colorsLight, gridColor, tickColor };
