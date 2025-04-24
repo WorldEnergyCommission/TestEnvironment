@@ -2,10 +2,16 @@
   <div class="adam-curve">
     <DeviceCardWrapper>
       <template #title>
-        <img src="/assets/eneries/adam.png" class="adam-energy-saving-logo" />
-        <p class="adam-energy-saving-value">
-          {{ $t("devices.AdamCurve.mainView.title") }} -{{ savingsPercentage }}%
-        </p>
+        <CoreRow>
+          <CoreColumn cols="12" md="4"
+            ><img src="/assets/eneries/adam.png" class="adam-energy-saving-logo"
+          /></CoreColumn>
+          <CoreColumn cols="12" md="4"
+            ><p class="adam-energy-saving-value">
+              {{ $t("devices.AdamCurve.mainView.title") }} -{{ savingsPercentage }}%
+            </p></CoreColumn
+          >
+        </CoreRow>
       </template>
       <template #actions>
         <DeviceActions :device="deviceData" @chart-change="onChange" />
@@ -53,7 +59,7 @@ export default defineComponent({
   data() {
     return {
       backgroundColors: ["transparent", "transparent"],
-      borderColors: ["#CF0302", "#75B73D"],
+      borderColors: ["#CF0302", "#72B73C"],
       names: [
         this.$t("devices.AdamCurve.mainView.legend.regular"),
         this.$t("devices.AdamCurve.mainView.legend.savings"),
@@ -184,10 +190,10 @@ export default defineComponent({
 
 .adam-energy-saving-value {
   margin-top: 20px;
-  margin-left: -100px;
   font-size: 42px;
   font-weight: 800;
-  color: #75b73d;
+  color: #72b73c;
+  text-align: center;
 }
 
 .adam-energy-saving-seal {
@@ -201,12 +207,16 @@ export default defineComponent({
 
 @media (max-width: 768px) {
   .adam-energy-saving-logo {
-    width: 150px;
+    width: 125px;
+  }
+
+  .adam-energy-saving-value {
+    font-size: 24px;
   }
 
   .adam-energy-saving-seal {
     width: 50px;
-    bottom: 150px;
+    bottom: 140px;
   }
 }
 
