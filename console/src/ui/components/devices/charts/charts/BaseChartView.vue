@@ -37,7 +37,6 @@ import { computed, onBeforeMount, ref } from "vue";
 import { Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 
-import annotationPlugin from "@/ui/components/devices/mpc/LoadMonitoring/debugPlugin.js";
 import { useChartColors } from "./ChartColors";
 import {
   Periods,
@@ -46,6 +45,7 @@ import {
   useTooltipFooterCallback,
   useTooltipTitleCallback,
 } from "./ChartUtils";
+import annotationPlugin from "@/ui/components/devices/mpc/LoadMonitoring/debugPlugin.js";
 
 // Properties
 interface Props {
@@ -204,7 +204,7 @@ const chartOptions = computed(() => {
     x: scaleOptionsX.value,
     y: {
       ...scaleOptionsY.value,
-      ticks: { callback: createTickCallback(props.units[0]), color: colors.value[0] },
+      ticks: { callback: createTickCallback(props.units[0]), color: tickColor.value },
     },
   };
 
