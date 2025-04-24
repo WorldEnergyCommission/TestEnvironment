@@ -361,7 +361,7 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
               lynusTextSidebar: "#ffffff",
               projectBackground: "#ffffff",
               deviceBackground: "#ffffff",
-              secondaryDeviceBackground: "#D6D6D6",
+              secondaryDeviceBackground: "#ffffff",
               dndItemBackground: "#ffffff",
               inactiveItem: "#ffffff",
               activeItem: "#72b73d",
