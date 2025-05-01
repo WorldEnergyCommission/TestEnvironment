@@ -38,4 +38,8 @@ export default defineComponent({
 .v-card--link:before {
   background: transparent !important;
 }
+
+.v-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
 </style>

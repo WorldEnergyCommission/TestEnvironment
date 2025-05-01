@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-6">
+  <div :class="hasMarginComputed === true ? 'mt-6' : ''">
     <div style="width: 100%; display: table; align-content: end">
       <CoreTooltip location="bottom">
         <template #activator="{ props }">
@@ -56,7 +56,7 @@
         ref="textArea"
         v-model="localExpressionVariable"
         :height="400"
-        :label="$t('modals.manageCharts.form.mathExpression')"
+        :label="label || $t('modals.manageCharts.form.mathExpression')"
         :rules="[
           rulesForExpressionField.variableNameRule,
           rulesForExpressionField.parenthesisRule,
@@ -94,6 +94,8 @@ export default defineComponent({
   },
   props: {
     expressionVariable: String,
+    label: String,
+    hasMargin: Boolean,
   },
   setup() {
     const textArea = ref(null);
@@ -134,6 +136,9 @@ export default defineComponent({
     },
     measurementsKeys(): any {
       return this.$store.getters["measurements/measurementsKeys"];
+    },
+    hasMarginComputed() {
+      return this.hasMargin === undefined ? true : this.hasMargin;
     },
   },
   watch: {

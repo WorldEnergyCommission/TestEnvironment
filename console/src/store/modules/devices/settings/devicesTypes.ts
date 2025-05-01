@@ -9,6 +9,25 @@
  *                        additionalBasicDevices: basic controls which used on device settings view;
  */
 const devicesTypes = {
+  AdamCurve: {
+    mappings: {
+      Input_actualValue: {
+        optional: false,
+        type: "ExpressionTextArea",
+      },
+      Input_optimizedValue: {
+        type: "ExpressionTextArea",
+        optional: false,
+      },
+    },
+    manageSchema: "DefaultSchema",
+    isSettingsView: false,
+    unitSelection: true,
+    devicesSchemas: {
+      basicDevices: [],
+      additionalBasicDevices: [],
+    },
+  },
   LightSwitch: {
     mappings: {
       Switch_on: {

@@ -121,6 +121,7 @@ const DEFAULT_WHITELABEL_CONFIG_VALUES = {
   DEFAULTS_TO_DARKMODE: false,
   HOME_SITE_TOP_CONTENT: "MAP", // can be overwritten
   DEVICES: [
+    "AdamCurve",
     "AirHumiditySensor",
     "Battery",
     "BrightnessSensor",
@@ -360,7 +361,7 @@ export function getWhitelabelConfigForWhitelabelName(name: WhitelabelName): Whit
               lynusTextSidebar: "#ffffff",
               projectBackground: "#ffffff",
               deviceBackground: "#ffffff",
-              secondaryDeviceBackground: "#D6D6D6",
+              secondaryDeviceBackground: "#ffffff",
               dndItemBackground: "#ffffff",
               inactiveItem: "#ffffff",
               activeItem: "#72b73d",

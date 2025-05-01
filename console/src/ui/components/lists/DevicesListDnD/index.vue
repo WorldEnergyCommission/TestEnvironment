@@ -240,7 +240,7 @@ export default defineComponent({
 
       // define sizes for EnergyView, charts
       this.dndLayout.forEach((item: any, index: number) => {
-        const isEnergyDevice: boolean = item.device.data.type === "EnergyView";
+        const isEnergyDevice: boolean = ["EnergyView", "AdamCurve"].includes(item.device.data.type);
         const isChartOrAnomalyDevices: boolean = [
           "chart",
           "HistoryAnomalyDetection",

@@ -1,14 +1,14 @@
+import { CanceledError } from "axios";
+import { TooltipItem } from "chart.js";
 import Highstock from "highcharts/highstock";
 import moment from "moment";
 import { computed, Ref, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
-import { addAggsToExpression, calculate, getScope, getVariableNames } from "./ChartMath";
-import { ChartData, ChartOption } from "./types";
 import API from "@/store/api";
 import { getGuessedTimezoneAbbreviation } from "@/utils/utilsFunctions";
-import { TooltipItem } from "chart.js";
-import { CanceledError } from "axios";
+import { addAggsToExpression, calculate, getScope, getVariableNames } from "./ChartMath";
+import { ChartData, ChartOption } from "./types";
 
 export function isDot(method: string) {
   return method === "*" || method === "/";
@@ -470,7 +470,7 @@ export function isAbsolutePeriod(period: string): boolean {
 }
 
 export function isRelativePeriod(period: string): boolean {
-  return period.startsWith("last_");
+  return period?.startsWith("last_");
 }
 
 export function isLivePeriod(period: string): boolean {

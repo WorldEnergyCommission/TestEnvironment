@@ -12,40 +12,66 @@
 
 <script setup lang="ts">
 import {
+  BarElement,
+  CategoryScale,
+  ChartEvent,
   Chart as ChartJS,
-  Title,
-  Legend,
   Colors,
   Filler,
-  Tooltip,
-  BarElement,
+  Legend,
+  LegendElement,
+  LegendItem,
+  LineController,
   LineElement,
   LinearScale,
-  TooltipItem,
   PointElement,
-  CategoryScale,
-  LineController,
   TimeSeriesScale,
-  ChartEvent,
-  LegendItem,
-  LegendElement,
+  Title,
+  Tooltip,
+  TooltipItem,
 } from "chart.js";
+import "chartjs-adapter-moment";
 import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
 import { computed, onBeforeMount, ref } from "vue";
 import { Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
-import "chartjs-adapter-moment";
 
 import { useChartColors } from "./ChartColors";
 import {
-  periodConfigurations,
+  Periods,
   intervalsInSeconds,
+  periodConfigurations,
   useTooltipFooterCallback,
   useTooltipTitleCallback,
 } from "./ChartUtils";
-import { Periods } from "./ChartUtils";
 import annotationPlugin from "@/ui/components/devices/mpc/LoadMonitoring/debugPlugin.js";
+
+// Properties
+interface Props {
+  xData: number[];
+  yData: number[][];
+  label: string[];
+  type: string[];
+  units: string[];
+  loading: boolean;
+  start?: number;
+  end?: number;
+  period: string;
+  interval?: string;
+  stacked?: boolean;
+  tension?: number;
+  backgroundColor?: string[];
+  borderColor?: string[];
+  borderWidth?: string[];
+  pointRadius?: string[];
+  areYAxisMerged?: boolean;
+  thresholdValue?: number;
+  scaleXMax?: string;
+  plugins?: any[];
+}
+
+const props = defineProps<Props>();
 
 ChartJS.register(
   Title,
@@ -61,26 +87,8 @@ ChartJS.register(
   CategoryScale,
   LineController,
   TimeSeriesScale,
+  ...(props.plugins || []),
 );
-
-// Properties
-interface Props {
-  xData: number[];
-  yData: number[][];
-  label: string[];
-  type: string[];
-  units: string[];
-  loading: boolean;
-  start?: number;
-  end?: number;
-  period: string;
-  interval?: string;
-  stacked?: boolean;
-  areYAxisMerged?: boolean;
-  thresholdValue?: number;
-}
-
-const props = defineProps<Props>();
 
 // Composables
 const i18nLocale = useI18n();
@@ -125,13 +133,28 @@ const datasets = computed(() => {
       data.push(d);
     }
 
+    const borderWidth = props.borderWidth?.length > 0 ? props.borderWidth[i] : undefined;
+    const pointRadius = props.pointRadius?.length > 0 ? props.pointRadius[i] : undefined;
+
+    const borderColor =
+      props.borderColor?.length > 0
+        ? props.borderColor[i % props.borderColor.length]
+        : colors.value[i % colors.value.length];
+
+    const backgroundColor =
+      props.backgroundColor?.length > 0
+        ? props.backgroundColor[i % props.backgroundColor.length]
+        : colorsLight.value[i % colorsLight.value.length];
+
     result.push({
       data,
       label: props.label[i],
       type: props.type[i] === "area" ? "line" : props.type[i], // Only Push "line", "area" is only the fill effect below
       fill: props.type.includes("area") ? true : false,
-      borderColor: colors.value[i % colors.value.length],
-      backgroundColor: colorsLight.value[i % colorsLight.value.length],
+      borderWidth,
+      borderColor,
+      backgroundColor,
+      pointRadius,
       yAxisID: props.areYAxisMerged ? getAxisID(0) : getAxisID(i),
       pointStyle: pointStyle,
     });
@@ -181,7 +204,7 @@ const chartOptions = computed(() => {
     x: scaleOptionsX.value,
     y: {
       ...scaleOptionsY.value,
-      ticks: { callback: createTickCallback(props.units[0]), color: colors.value[0] },
+      ticks: { callback: createTickCallback(props.units[0]), color: tickColor.value },
     },
   };
 
@@ -210,13 +233,21 @@ const chartOptions = computed(() => {
     },
     responsive: true,
     maintainAspectRatio: false,
-    elements: { line: { tension: 0.1 } },
+    elements: { line: { tension: props.tension || 0.1 } },
     plugins: {
       legend: {
         labels: {
           color: tickColor.value,
           usePointStyle: true,
           pointStyle: "circle",
+          generateLabels: function (chart) {
+            return chart.data.datasets.map((dataset, i) => ({
+              text: dataset.label,
+              fillStyle: dataset.borderColor,
+              strokeStyle: dataset.borderColor,
+              lineWidth: 1,
+            }));
+          },
         },
         position: "bottom",
         // callback to hide scales and grid lines if series is unselected
@@ -305,6 +336,7 @@ const maxTicksLimit = computed(() => {
 // All scale options are found here: https://www.chartjs.org/docs/latest/axes/
 const scaleOptionsX = computed(() => ({
   type: "timeseries",
+  max: props.scaleXMax,
   border: {
     display: false,
   },

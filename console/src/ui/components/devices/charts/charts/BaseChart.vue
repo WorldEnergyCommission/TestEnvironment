@@ -28,7 +28,7 @@
         @update:output-interval="(newVal) => (interval = newVal)"
       />
       <!-- Action Bar -->
-      <div class="d-flex align-center justify-center py-2">
+      <div v-if="showHeader" class="d-flex align-center justify-center py-2">
         <!-- Fullscreen -->
         <CoreTooltip v-if="!$vuetify.display.mobile" location="bottom">
           <template #activator="{ props: activatorProps }">
@@ -112,13 +112,20 @@
         :period="period"
         :interval="interval"
         :stacked="isStacked"
+        :tension="tension"
         :are-y-axis-merged="areYAxisMerged"
         :threshold-value="thresholdValue"
+        :background-color="backgroundColor"
+        :border-color="borderColor"
+        :border-width="borderWidth"
+        :point-radius="pointRadius"
+        :scale-x-max="scaleXMax"
+        :plugins="plugins"
       />
       <BaseChartLoading v-else />
     </div>
     <!-- Footer -->
-    <div style="min-height: 0; min-width: 0">
+    <div v-if="showFooter" style="min-height: 0; min-width: 0">
       <ChartFooter v-model:date="date" :disabled="!isAbsolutePeriod" :period="period" />
     </div>
   </div>
@@ -126,21 +133,12 @@
 
 <script setup lang="ts">
 import { useFullscreen } from "@vueuse/core";
-import { throttle, sum, min, max, mean, cloneDeep } from "lodash";
-import { ref, watch, computed, onBeforeMount } from "vue";
+import { cloneDeep, max, mean, min, sum, throttle } from "lodash";
+import moment from "moment";
+import { computed, onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 
-import BaseChartLoading from "./BaseChartLoading.vue";
-import BaseChartView from "./BaseChartView.vue";
-import { calculate } from "./ChartMath";
-import {
-  Periods,
-  useChartData,
-  useChartOptions,
-  getChartOptions,
-  isYAxisMergeable,
-} from "./ChartUtils";
 import DeviceActions from "@/ui/components/devices/actions/DeviceActions.vue";
 import ChartFooter from "@/ui/components/devices/charts/charts/ChartFooter.vue";
 import { isAbsolutePeriod as absolutePeriodCheck } from "@/ui/components/devices/charts/charts/ChartUtils";
@@ -149,7 +147,16 @@ import TimeConfigMenu from "@/ui/components/devices/charts/charts/TimeConfigMenu
 import { ChartData } from "@/ui/components/devices/charts/charts/types";
 import TotalValuesWindow from "@/ui/components/devices/charts/components/TotalValuesWindow.vue";
 import { getDateString } from "@/utils/utilsFunctions";
-import moment from "moment";
+import BaseChartLoading from "./BaseChartLoading.vue";
+import BaseChartView from "./BaseChartView.vue";
+import { calculate } from "./ChartMath";
+import {
+  getChartOptions,
+  isYAxisMergeable,
+  Periods,
+  useChartData,
+  useChartOptions,
+} from "./ChartUtils";
 
 // Properties
 interface Props {
@@ -162,6 +169,10 @@ interface Props {
   minNumberOfSeriesForWideChart?: number;
   navigationItemsToExclude?: string[];
   onEditTrigger: boolean;
+  showHeader?: boolean;
+  showFooter?: boolean;
+  postProcessor?: (data: number[][]) => number[][];
+  plugins?: unknown[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -173,6 +184,10 @@ const props = withDefaults(defineProps<Props>(), {
   navigationItemsToExclude: undefined,
   minNumberOfSeriesForWideChart: 3,
   onEditTrigger: false,
+  postProcessor: undefined,
+  showHeader: true,
+  showFooter: true,
+  plugins: [] as any[],
 });
 
 // Emits
@@ -203,6 +218,28 @@ const type = computed<string[]>(() => {
 const units = computed(() => {
   return props.chartData.data.chartOptions.map((object) => object.unit);
 });
+
+const tension = computed(() => props.chartData.data.tension || 0.1);
+
+const backgroundColor = computed(() =>
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "backgroundColor"),
+);
+
+const borderColor = computed(() =>
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "borderColor"),
+);
+
+const borderWidth = computed(() =>
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "borderWidth"),
+);
+
+const pointRadius = computed(() =>
+  customizeChartOptionsProperty(props.chartData.data.chartOptions, "pointRadius"),
+);
+
+const plugins = computed(() => props.plugins || []);
+
+const scaleXMax = computed(() => props.chartData.data.scaleXMax);
 
 // DOM Element Reference
 const chartInstance = ref();
@@ -243,6 +280,7 @@ const yData = computed<number[][]>(() => {
     result.push(chart.map((pair) => pair[1]));
   }
 
+  if (!!props.postProcessor) return props.postProcessor(result);
   return result;
 });
 
@@ -402,6 +440,9 @@ const updateChartWithLiveData = () => {
     });
   }
 };
+
+const customizeChartOptionsProperty = (options: any[], prop: string) =>
+  options.map((object, index) => object[prop]).filter((i) => !!i);
 
 // Watchers
 

@@ -46,10 +46,20 @@
                   class="mapping-field"
                 >
                   <div>
-                    <div class="optional mb-2">
-                      <div v-if="deviceMappings[item].optional">Optional</div>
+                    <div v-if="deviceMappings[item].optional" class="optional mb-2">
+                      <div>Optional</div>
                     </div>
+
+                    <ExpressionTextArea
+                      v-if="deviceMappings[item].type === 'ExpressionTextArea'"
+                      :label="$t(`devices.${deviceData.data.type}.mappings.${item}.label`)"
+                      :expression-variable="device.data.mappings[item]"
+                      :has-margin="false"
+                      @expression-change="(e) => (device.data.mappings[item] = e.fullExpression)"
+                    />
+
                     <ComboboxField
+                      v-else
                       v-model="device.data.mappings[item]"
                       :items="measurementsKeysList"
                       :label="$t(`devices.${deviceData.data.type}.mappings.${item}.label`)"
@@ -172,6 +182,7 @@ import {
 import ComboboxField from "@/ui/components/modals/components/form/ComboboxField.vue";
 import StepperHeader from "@/ui/components/modals/components/ManageStepperHeader.vue";
 import { Step, Stepper, StepperWindow } from "@/ui/components/modals/components/Stepper";
+import ExpressionTextArea from "@/ui/components/modals/ManageCharts/ExpressionTextArea.vue";
 import SchemaBase from "@/ui/components/modals/ManageDevice/schemas/SchemaBase";
 
 /**
@@ -189,6 +200,7 @@ export default defineComponent({
     Step,
     Stepper,
     StepperWindow,
+    ExpressionTextArea,
   },
   extends: SchemaBase,
   data() {
