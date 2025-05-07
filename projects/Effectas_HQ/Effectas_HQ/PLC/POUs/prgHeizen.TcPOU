@@ -4,6 +4,22 @@
     <Declaration><![CDATA[PROGRAM prgHeizen
 VAR
   // Modbus Hoval
+  fbHoval                     : FB_Hoval:= (CfgIpAddr:= '172.20.1.152');
+  HalleMattenrain11Soll       : LREAL; //{#lynus.ag#()}
+  HalleMattenrain11VLIst      : LREAL; //{#lynus.ag#()}
+  RadGravierraumSoll          : LREAL; //{#lynus.ag#()}
+  FbhGaderobeWCSoll           : LREAL; //{#lynus.ag#()}
+  RadGravierraumIst           : LREAL; //{#lynus.ag#()}
+  FbhGaderobeWCIst            : LREAL; //{#lynus.ag#()}
+  LufterhitzerLagerSoll       : LREAL; //{#lynus.ag#()}
+  BueroHusSoll                : LREAL; //{#lynus.ag#()}
+  LufterhitzerLagerIst        : LREAL; //{#lynus.ag#()}
+  BueroHusIst                 : LREAL; //{#lynus.ag#()}
+  HalleMattenrain11Strategie  : INT;   //{#lynus.ag#()}
+  RadGravierraumStrategie     : INT;   //{#lynus.ag#()}
+  FbhGaderobeWCStrategie      : INT;   //{#lynus.ag#()}
+  LufterhitzerLagerStrategie  : INT;   //{#lynus.ag#()}
+  BueroHusStrategie           : INT;   //{#lynus.ag#()}
 
 
   //Temperatursensor OG1 Büro (Shelly)
@@ -16,7 +32,26 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[{region "Temperatursensor OG1 Büro (Shelly)"}
+      <ST><![CDATA[{region "Hoval Heizung"}
+  fbHoval(CfgIpAddr:= '172.20.1.152');
+  HalleMattenrain11Soll       := fbHoval.HalleMattenrain11Soll;
+  HalleMattenrain11VLIst      := fbHoval.HalleMattenrain11VLIst;
+  RadGravierraumSoll          := fbHoval.RadGravierraumSoll;
+  FbhGaderobeWCSoll           := fbHoval.FbhGaderobeWCSoll;
+  RadGravierraumIst           := fbHoval.RadGravierraumIst;
+  FbhGaderobeWCIst            := fbHoval.FbhGaderobeWCIst;
+  LufterhitzerLagerSoll       := fbHoval.LufterhitzerLagerSoll;
+  BueroHusSoll                := fbHoval.BueroHusSoll;
+  LufterhitzerLagerIst        := fbHoval.LufterhitzerLagerIst;
+  BueroHusIst                 := fbHoval.BueroHusIst;
+  HalleMattenrain11Strategie  := fbHoval.HalleMattenrain11Strategie;
+  RadGravierraumStrategie     := fbHoval.RadGravierraumStrategie;
+  FbhGaderobeWCStrategie      := fbHoval.FbhGaderobeWCStrategie;
+  LufterhitzerLagerStrategie  := fbHoval.LufterhitzerLagerStrategie;
+  BueroHusStrategie           := fbHoval.BueroHusStrategie;
+{endregion}
+
+{region "Temperatursensor OG1 Büro (Shelly)"}
   fbOG1BueroTemperatur();
 
 	OG1BueroTemperatur:= fbOG1BueroTemperatur.Temperatur;
@@ -26,6 +61,13 @@ END_VAR
 ]]></ST>
     </Implementation>
     <LineIds Name="prgHeizen">
+      <LineId Id="44" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="64" Count="9" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="74" Count="3" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="43" Count="0" />
       <LineId Id="13" Count="1" />
       <LineId Id="18" Count="0" />
       <LineId Id="25" Count="2" />

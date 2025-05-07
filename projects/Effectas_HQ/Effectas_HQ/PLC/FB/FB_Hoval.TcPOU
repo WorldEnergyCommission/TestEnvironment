@@ -1,0 +1,289 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Hoval" Id="{81f9879f-29c7-470a-91d2-1d4240ff5b65}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Hoval EXTENDS FbModbusTcpBase
+// 07.05.2025 Elmar Vögel
+VAR_INPUT
+  END_VAR
+VAR_OUTPUT
+  HalleMattenrain11Soll       : LREAL;
+  HalleMattenrain11VLIst      : LREAL;
+  RadGravierraumSoll          : LREAL;
+  FbhGaderobeWCSoll           : LREAL;
+  RadGravierraumIst           : LREAL;
+  FbhGaderobeWCIst            : LREAL;
+  LufterhitzerLagerSoll       : LREAL;
+  BueroHusSoll                : LREAL;
+  LufterhitzerLagerIst        : LREAL;
+  BueroHusIst                 : LREAL;
+  HalleMattenrain11Strategie  : INT;
+  RadGravierraumStrategie     : INT;
+  FbhGaderobeWCStrategie      : INT;
+  LufterhitzerLagerStrategie  : INT;
+  BueroHusStrategie           : INT;
+END_VAR
+
+VAR CONSTANT
+  cDelaySend : TIME:= T#1S;  
+END_VAR
+
+VAR
+  iState      : INT;
+  mPoll       : TON:= (PT:= T#1S);
+
+  mReg        : ARRAY[0..10] OF WORD;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[{region "Basis"}
+  SUPER^();
+{endregion}
+{region "Modbus bearbeiten"}
+  CASE iState OF
+  0:  
+
+    mPoll(IN:= TRUE);
+    IF mPoll.Q THEN
+
+      mPoll(IN:= FALSE);
+  
+      mCmd.UnitID   := 16#3;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#06DC; // 1756
+      mCmd.Quantity := 1; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+  
+      iState:= 100;
+    END_IF
+
+  100: SendNext(iState + 1);
+  101:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        HalleMattenrain11Soll:= TO_LREAL(mReg[0]) / 10.0;
+      END_IF
+         
+      mCmd.UnitID   := 16#3;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#06F3; // 1779
+      mCmd.Quantity := 1; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 110; 
+    END_IF
+
+  110: SendNext(iState + 1);
+  111:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        HalleMattenrain11VLIst:= TO_LREAL(mReg[0]) / 10.0;
+      END_IF
+         
+      mCmd.UnitID   := 16#9;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#1179; // 4473
+      mCmd.Quantity := 2; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 120; 
+    END_IF
+
+  120: SendNext(iState + 1);
+  121:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        RadGravierraumSoll:= TO_LREAL(mReg[0]) / 10.0;
+        FbhGaderobeWCSoll := TO_LREAL(mReg[1]) / 10.0;
+      END_IF
+         
+      mCmd.UnitID   := 16#9;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#118A; // 4490
+      mCmd.Quantity := 2; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 130; 
+    END_IF
+
+  130: SendNext(iState + 1);
+  131:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        RadGravierraumIst:= TO_LREAL(mReg[0]) / 10.0;
+        FbhGaderobeWCIst := TO_LREAL(mReg[1]) / 10.0;
+      END_IF
+         
+      mCmd.UnitID   := 16#A;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#11D7; // 4567
+      mCmd.Quantity := 2; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 140; 
+    END_IF
+
+  140: SendNext(iState + 1);
+  141:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        LufterhitzerLagerSoll:= TO_LREAL(mReg[0]) / 10.0;
+        BueroHusSoll         := TO_LREAL(mReg[1]) / 10.0;
+      END_IF
+         
+      mCmd.UnitID   := 16#A;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#11E8; // 4584
+      mCmd.Quantity := 2; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 150; 
+    END_IF
+
+  150: SendNext(iState + 1);
+  151:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        LufterhitzerLagerIst:= TO_LREAL(mReg[0]) / 10.0;
+        BueroHusIst         := TO_LREAL(mReg[1]) / 10.0;
+      END_IF
+         
+      mCmd.UnitID   := 16#3;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#6C02; // 27650
+      mCmd.Quantity := 1; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 160; 
+    END_IF
+
+  160: SendNext(iState + 1);
+  161:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        HalleMattenrain11Strategie:= TO_INT(mReg[0]);
+      END_IF
+         
+      mCmd.UnitID   := 16#9;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#78BB; // 30907
+      mCmd.Quantity := 2; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 170; 
+    END_IF
+
+  170: SendNext(iState + 1);
+  171:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        RadGravierraumStrategie:= TO_INT(mReg[0]);
+        FbhGaderobeWCStrategie := TO_INT(mReg[1]);
+      END_IF
+         
+      mCmd.UnitID   := 16#A;
+      mCmd.Funktion := ModbusFunktion.ReadRegs;
+      mCmd.MBAddr   := 16#78BE; // 30910
+      mCmd.Quantity := 2; 
+      mCmd.DatenAddr:= ADR(mReg);
+      mCmd.DatenLen := SIZEOF(mReg);
+
+      iState:= 180; 
+    END_IF
+
+  180: SendNext(iState + 1);
+  181:
+    IF Empfang(cDelaySend) THEN
+
+      IF NOT Error THEN
+        LufterhitzerLagerStrategie:= TO_INT(mReg[0]);
+        BueroHusStrategie         := TO_INT(mReg[1]);
+      END_IF
+         
+      iState:= 800; 
+    END_IF
+
+  800:
+    // Fertig
+    iState:= 0;
+  END_CASE
+{endregion}
+]]></ST>
+    </Implementation>
+    <Method Name="SendNext" Id="{3e1e2460-a785-4514-9c77-273926321810}">
+      <Declaration><![CDATA[METHOD PRIVATE SendNext : BOOL
+VAR_INPUT
+  StepNext : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+  SendNext:= FALSE;
+  IF SUPER^.Send() THEN
+
+    iState:= StepNext;
+    SendNext:= TRUE;
+  END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_Hoval">
+      <LineId Id="20" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="23" Count="17" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="42" Count="2" />
+      <LineId Id="46" Count="2" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="81" Count="5" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="89" Count="15" />
+      <LineId Id="107" Count="7" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="115" Count="9" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="132" Count="17" />
+      <LineId Id="152" Count="18" />
+      <LineId Id="173" Count="18" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="196" Count="6" />
+      <LineId Id="204" Count="9" />
+      <LineId Id="216" Count="7" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="224" Count="9" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="240" Count="8" />
+      <LineId Id="258" Count="1" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="56" Count="4" />
+      <LineId Id="51" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Hoval.SendNext">
+      <LineId Id="12" Count="1" />
+      <LineId Id="8" Count="2" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
