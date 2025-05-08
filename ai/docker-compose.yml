@@ -3,10 +3,10 @@ name: efficientio-ai-development
 services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: 'rabbit-mq'
+    container_name: "rabbit-mq"
     ports:
-        - 5672:5672
-        - 15672:15672
+      - 5672:5672
+      - 15672:15672
   proxy:
     restart: unless-stopped
     build:
@@ -19,7 +19,7 @@ services:
       - 1883:1883 # mosquitto (SenML)
       - 6379:6379 # redis
       - 9000:9000 # empa
-      - 7000:7000 # longhorn-ui
+      - 7001:7000 # longhorn-ui
   main:
     build:
       context: ..
@@ -30,7 +30,7 @@ services:
       - 5678:5678
     volumes:
       - .:/ai
-      
+
     env_file:
       - .env
     depends_on:
