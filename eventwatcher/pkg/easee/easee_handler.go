@@ -407,6 +407,8 @@ func EaseeChargerMessageToMeasurement(chargerMsg EaseeChargerMessage, mqttClient
 
 	newMeasurement := []measurement.Measurement{msmt}
 
+	l.Debug().Str("msg", msmt.Name).Str("type", flag).Msg("EaseeChargerMessageToMeasurement")
+
 	if flag == "AMQP" {
 		logMessage := fmt.Sprintf("project: %v measurement: %v", chargerMsg.ProjectId, newMeasurement)
 		l.Debug().Str("msg", logMessage).Str("type", flag).Msg("Publishing MQTT message")
