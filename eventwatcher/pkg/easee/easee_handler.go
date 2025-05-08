@@ -236,7 +236,8 @@ func StartReceivingAmqpEvents(cred *easeeapi.AmqpCredentials, mqttclient *mqtt.C
 	}
 
 	go func() {
-
+		l := utils.GetLogger()
+		l.Debug().Msg("Waiting for messages from Easee AMQP")
 		for d := range msgs {
 			valueReceived(d, mqttclient)
 		}
@@ -249,6 +250,8 @@ func StartReceivingAmqpEvents(cred *easeeapi.AmqpCredentials, mqttclient *mqtt.C
 func valueReceived(msg amqp091.Delivery, mqttClient *mqtt.Client) {
 	l := utils.GetLogger()
 
+	l.Debug().Msg("Received message from Easee AMQP")
+
 	chargerMsg, err := prepareAMQPMessage(msg)
 	if err != nil {
 		l.Error().Err(err).Msg("Error extracting Easee AMQP message")
@@ -256,7 +259,7 @@ func valueReceived(msg amqp091.Delivery, mqttClient *mqtt.Client) {
 	}
 
 	// Debug log for checking each received message
-	// l.Debug().Str("charger", chargerMsg.ChargerId).Str("observation", strconv.Itoa(chargerMsg.ObservationId)).Str("val", strconv.FormatFloat(chargerMsg.Value, 'f', -1, 64)).Msg("Got Easee message")
+	l.Debug().Str("charger", chargerMsg.ChargerId).Str("observation", strconv.Itoa(chargerMsg.ObservationId)).Str("val", strconv.FormatFloat(chargerMsg.Value, 'f', -1, 64)).Msg("Got Easee message")
 
 	var exists bool
 	var mapping project.EaseeMapping
@@ -478,7 +481,7 @@ func UpdateMeasurementsHTTPOnce(mqttClient *mqtt.Client) error {
 
 func convertObservationIdsAsString() string {
 	var parts []string
-	for id, _ := range observationIds {
+	for id := range observationIds {
 		parts = append(parts, strconv.Itoa(id))
 	}
 	return strings.Join(parts, ",")
