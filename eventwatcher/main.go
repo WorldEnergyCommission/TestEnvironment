@@ -47,7 +47,7 @@ var (
 
 	envOeamtcEventHubConnectionString        = os.Getenv("OEAMTC_EVENT_HUB_CONNECTION_STRING")
 	envOqdoSignalrConnectionString    string = "https://oqdo-apim-prod.azure-api.net/external 30bbd612-498d-4fb9-b935-e822574c8dbf 596d29edc2cd412892c10618ce2bb98a" //os.Getenv("OQDO_SIGNALR_CONNECTION_STRING")
-	envEaseeAmqpConnectionString      string = ""                                                                                                                    //	os.Getenv("EASEE_AMQP_CONNECTION_STRING")
+	envEaseeAmqpConnectionString      string = "https://api.easee.com/api/accounts/login integration@efficientio.com 4fVv@Vz57X9Y"                                   //	os.Getenv("EASEE_AMQP_CONNECTION_STRING")
 
 	variablesCreated    int64
 	measurementsCreated int64
