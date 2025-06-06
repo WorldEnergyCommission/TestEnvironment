@@ -1,18 +1,20 @@
+import logging
 import multiprocessing
 import typing
 
+from ai.data_holder.load_monitor_data_holder import LoadMonitorDataHolder
 from ai.interface.data_holder_factory import get_data_holder
 from ai.interface.model_holder import ModelHolder
 from ai.interface.model_holder_factory import get_model_holder
-from ai.data_holder.load_monitor_data_holder import LoadMonitorDataHolder
-from ai.model_holder.load_monitor_model_holder import LoadMonitorModelHolder
 from ai.model_holder.ems_model_holder import EmsModelHolder
-from ai.model_holder.setpoint_optimizer_model_holder import SetpointOptimizerModelHolder
+from ai.model_holder.load_monitor_model_holder import LoadMonitorModelHolder
+from ai.model_holder.setpoint_optimizer_model_holder import \
+    SetpointOptimizerModelHolder
 from ai.utils.autarchy_utils import calculate_autarchy
 from ai.utils.database_utils import DatabaseConnection
-from ai.utils.model_utils import save_request, update_request, delete_request
+from ai.utils.model_utils import delete_request, save_request, update_request
 from ai.utils.s3_utils import StoreMode
-from ai.utils.weather_utils import get_nearest_site, create_weather_site
+from ai.utils.weather_utils import create_weather_site, get_nearest_site
 from ai.weather.weather_holder import WeatherHolder
 
 
@@ -184,11 +186,17 @@ def create_site_handler(r: dict, project: str,
                         weather_sites: dict[str, typing.Type[WeatherHolder]]) -> dict[str, object]:
     """this handler creates a new weather site"""
 
+    logger = logging.getLogger()
+    logger.debug('Creating site for %s', project)
+    logger.debug('Creating weather sites %s', weather_sites)
+
     if project in weather_sites.keys():
         raise KeyError("project is already mapped to a weather site")
 
     site_id, site_longitude, site_latitude = get_nearest_site(
         r["longitude"], r["latitude"])
+
+    logger.debug('Got nearest site %s', site_id)
 
     # if the site id is 0, it means that no near site has been found, if that's the case a new site must be created
     if site_id != 0:
@@ -198,6 +206,8 @@ def create_site_handler(r: dict, project: str,
         site = \
             create_weather_site(project, lat=r["latitude"], long=r["longitude"]).json()["payload"]["solarforecast"][
                 "site"]
+        
+        logger.debug('Created weather site %s', site)
         weather_holder = WeatherHolder(project, int(site["id"]), r["username"], r["password"], r["longitude"],
                                        r["latitude"], site["longitude"], site["latitude"])
 
@@ -205,6 +215,8 @@ def create_site_handler(r: dict, project: str,
     WeatherHolder.store_weather_holder_to_s3(
         weather_holder, store_mode=StoreMode.CREATE_AND_UPDATE)
     weather_sites[project] = weather_holder.__class__
+
+    logger.debug('Got weather holder %s', weather_holder)
 
     return weather_holder.to_dict()
 
