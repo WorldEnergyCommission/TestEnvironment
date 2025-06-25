@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="PrgModbus" Id="{bd48ccf7-60d4-4153-9907-f0378683a2e1}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM PrgModbus
 VAR
+	FB_KEBA_CS1				:FB_ECS_KEBA_P30;
 	FB_Schneider_EVLink_1	:FB_Schneider_EVlinkWallbox;
 	FB_Schneider_EVLink_2	:FB_Schneider_EVlinkWallbox;
 	FB_Schneider_EVLink_3	:FB_Schneider_EVlinkWallbox;
@@ -337,6 +338,9 @@ VAR PERSISTENT
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// 10.10.122.101 Ladestation Gast LOW EWW
+FB_KEBA_CS1(
+	bEnable
+	
 FB_Schneider_EVLink_1(
 	bEnable:= ,
 	bEnableWrite:= TRUE , 
@@ -1052,6 +1056,7 @@ lr_EnergyCounterCS_18 := FB_Schneider_EVLink_18.fbCS.lrTotalCounterEnergy_Consum
     </Implementation>
     <LineIds Name="PrgModbus">
       <LineId Id="50" Count="0" />
+      <LineId Id="2016" Count="2" />
       <LineId Id="7" Count="1" />
       <LineId Id="24" Count="0" />
       <LineId Id="9" Count="5" />
