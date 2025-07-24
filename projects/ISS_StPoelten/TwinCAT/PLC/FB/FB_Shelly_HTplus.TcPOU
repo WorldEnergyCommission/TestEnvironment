@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Shelly_HTplus" Id="{3f561a5b-7f6c-487a-a3b4-5d85eccdad97}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Shelly_HTplus
+VAR_INPUT
+	bStart				: BOOL;
+	tDelayRequest		: TIME;		//Timer for delay before start with the next read or write Request
+	sHostname			: STRING(255);		//Hostname or IP Adress from the Server
+END_VAR
+
+VAR_IN_OUT
+END_VAR
+
+VAR_OUTPUT
+	bValidResult		: BOOL;							//Valid Result received from Server
+    bBusy				: BOOL;							//Function is Busy
+    bError				: BOOL;							//Error sucess
+	bDone				: BOOL;							//True after the decoding from the received Json File
+	bConnected			: BOOL;							//Connection to the Server
+	lr_Temperature		: LREAL;						//Received Value
+	lr_Humidity			: LREAL;
+	hrErrorCode       	: HRESULT;						//Error Result from Http Client
+END_VAR
+
+VAR
+	fbClient			: FB_IotHttpClient;
+	fbHttpGet			: FB_Shelly_HTplus_Helper;
+	timStartRequest		: TON;							//Timer to Start the Request
+	FPStartRequest		: R_TRIG;						//Internal positive Edge
+	FPDone				: R_TRIG;						//Internal positive Edge
+	FNStart				: F_TRIG;						//Internal negative Edge
+	y: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*------------------------------------------------------------------------------------Configure HTTP Client------------------------------------------------------------------------------------------------------*)
+
+fbClient.sHostName := sHostname;
+fbClient.tConnectionTimeout := T#30S;
+
+IF NOT fbClient.bConfigured THEN 
+	fbClient.nHostPort:= 80;
+	fbClient.bKeepAlive := TRUE;
+	fbClient.tConnectionTimeout := T#30S;
+END_IF
+
+
+//Timer to start the Request
+FPStartRequest(CLK:= bStart, Q=> );
+timStartRequest(IN:= fbClient.bConfigured AND bStart AND NOT timStartRequest.Q, PT:= tDelayRequest, Q=> , ET=> );
+
+IF ((timStartRequest.Q AND NOT bBusy) OR (FPStartRequest.Q AND NOT bBusy AND fbClient.bConfigured)) THEN 
+	y:=y+1;
+	fbHttpGet.bSend := TRUE; 
+END_IF
+
+				
+//Http Get Function
+
+fbHttpGet(
+	bSend:= , 
+	fbClient:= , 
+	bBusy=> , 
+	bError=> , 
+	lr_Temperature=> lr_Temperature, 
+	lr_Humidity=> lr_Humidity,
+	bSend:= , 
+	fbClient:= fbClient, 
+	bBusy=> bBusy, 
+	bError=> ,
+	sContentStatus=> ,
+	sContentM0=> ,
+	sContentM1=> ,
+	sContentM2=> );
+	
+
+
+
+fbHttpGet.bSend := FALSE;
+
+FPDone(CLK:= bDone, Q=> );
+
+(*
+//Http Client
+FNStart(CLK:= bStart, Q=> );
+	IF FNStart.Q THEN fbClient.Disconnect(); END_IF
+*)
+
+fbClient.Execute();
+
+//Error
+IF fbHttpGet.bError OR fbClient.bError THEN 
+	bError := TRUE; 
+ELSE 
+	bError := FALSE; 
+END_IF	
+
+hrErrorCode := fbClient.hrErrorCode;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Shelly_HTplus">
+      <LineId Id="49" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="320" Count="6" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="60" Count="3" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="65" Count="2" />
+      <LineId Id="417" Count="6" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="426" Count="6" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="89" Count="5" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="95" Count="3" />
+      <LineId Id="226" Count="1" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="101" Count="2" />
+      <LineId Id="370" Count="4" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

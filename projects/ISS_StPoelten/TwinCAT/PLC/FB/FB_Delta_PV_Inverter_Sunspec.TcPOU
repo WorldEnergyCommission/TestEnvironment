@@ -1,0 +1,1131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_Delta_PV_Inverter_Sunspec" Id="{cdb44a9c-ef01-42b2-851b-0b0fa89a3b8c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Delta_PV_Inverter_Sunspec
+VAR_INPUT PERSISTENT
+	bEnable										: BOOL;																			//{#lynus.ag#()} //Enable the Fuctionblock and his logic
+	byMBAdress									: BYTE;																			//The Modbus Adress from the Slave
+	diNrOfMBRTUMasterLine_IN					: DINT;																			//Number of the RTU Master Function on what this function can send or write data
+END_VAR
+VAR_OUTPUT
+	stDeltaInverterData							: ST_DeltaPvInverter_Data;														//Structure with specific Delta Inverter Data
+	stDataEMPower_PV							: ST_ElectricMeter_Output_Power;												//Output structure with Data from Electric Meter PV (Power Data)
+	stDataEMCounter_PV							: ST_ElectricMeter_Output_Counter;												//Output structure with Data from Electric Meter PV (Counter Data)
+	diNrOfEM_OUT_PV								: DINT;																			//Active Number from the Electric Meter for using on other functions
+END_VAR
+VAR
+	{attribute 'hide'}
+	fbElMeter									: FB_ElectricMeter;																//Electric Meter Function 
+	{attribute 'hide'}
+	fbNumberDevice								: FB_NumberOfDevice;															//Function block to calcualte the number of the Device
+	{attribute 'hide'}
+	timDelay									: TON;																			//Timer for Delay between Requests
+	{attribute 'hide'}
+	timTimeout									: TON;																			//Timer for Timeout
+	{attribute 'hide'}
+	timDissableFunctions						: TON;																			//Timer to dissable the Function after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions Days without connection to the Lynus Cloud
+	{attribute 'hide'}
+	timResetConnectionOnGVL						: TON;																			//Timer to try reset the connection Flag on the GVL. (When somebody delete the Connection Function and make only a onlinechange)
+	{attribute 'hide'}
+	FPErrorMaster								: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	FPEnable									: R_TRIG;																		//Internal positive Edge
+	{attribute 'hide'}
+	fbConvertWord								: FB_CV_WORD_TO_DWORD;															//Convert 2 WORD in a DWORD
+	{attribute 'hide'}
+	arrPD										: ARRAY[1..5] OF FB_PersistentData_Number;										//Function to save persistent data
+	{attribute 'hide'}
+	arrDefaultModbusAdress						: ARRAY[1..247] OF BYTE;														//Default Modbuss Adress Array to fill in in the GVL Array after a Online change
+	{attribute 'hide'}
+	arrDefaultReadWrite							: ARRAY[1..Constants_Bussystems.wQuantityOfRegistersMBRTUMaster] OF WORD;		//Default Read/Write Array to fill in in the GVL Array after a Online change
+	{attribute 'hide'}
+	arrCounterForGVL							: ARRAY[1..2] OF DINT;															//Counter to clean old data on GVL
+	{attribute 'hide'}
+	bAdressIsSet								: BOOL;																			//Its true when the new Modbus Adress from the Slave is set in the Array on the GVL for the Master	
+	{attribute 'hide'}
+	bErrorInverter								: BOOL;																			//Error or Fault from Inverter
+	{attribute 'hide'}
+	bWarningInverter							: BOOL;																			//Warning from Inverter
+	{attribute 'hide'}
+	byWaitInStep								: BYTE;																			//Wait in Step before start to clean data on PLC
+	{attribute 'hide'}
+	byNumberOfSameMBAdress						: BYTE;																			//Number of Same Modbus adress on 1 Modbus Master
+	{attribute 'hide'}
+	byMBAdress_Old								: BYTE;																			//Old Modbus Adress to compare with the new Modbus Adress to start the state machine to set in the Array on the GVL
+	{attribute 'hide'}
+	byMBAdress_CP								: BYTE;																			//Variable to compare the Modbus Adress in the State Machine. When the Adress change when the state machine is active then the state machine starts from new with the new adress 
+	{attribute 'hide'}
+	byLPSlaveAdress								: BYTE;																			//Loop for the state machine to set the adress from the Slave in the array on the GVL
+	{attribute 'hide'}
+	byLPFillDefaultData							: BYTE;																			//Variable for Loop to fill default values in the Delta output structure
+	{attribute 'hide'}
+	byLPVendor64062								: BYTE;																			//Variable for Loop to fill the Error,Warning and Faults from Vendor 64062 to the Delta output structure
+	{attribute 'hide'}
+	iStateGVLData								: INT;																			//State machine to handle the data on the GVL
+	{attribute 'hide'}
+	iStateModbusRead							: INT;																			//State machine for read out Data over Modbus RTU
+	{attribute 'hide'}
+	iStateModbusError							: INT;																			//State machine for error out Data over Modbus RTU	
+	{attribute 'hide'}
+	iStateModbus_CP								: INT;																			//Variable to compare the state machine variable to set or reset the timeout timer
+	{attribute 'hide'}
+	iSFPowerMPPT								: INT;																			//Scale Factor for MPPT Power
+	{attribute 'hide'}
+	wNumberOfMPPT								: WORD;																			//Number of MPPT
+	{attribute 'hide'}
+	wLPCleanBuffer								: WORD;																			//Loop to clear the send and write Buffer on the GVL
+	{attribute 'hide'}
+	wLPPowerMPPT								: WORD;																			//Variable for Loop to fill the power for each MPPT in the output structure
+	{attribute 'hide'}
+	wNextModbusStartAdress						: WORD;																			//Next Modbus Start Adress why in Pic 160 the Number of Registers is variabel and so the next Modbus Registers in the next Pics can be different
+	{attribute 'hide'}
+	wNumberOfInputs								: WORD;																			//Number of Inputs from Pic 401 to calculate the Next Modbus Start Adress
+	{attribute 'hide'}
+	wPicID										: WORD;																			//ID of the PIC
+	{attribute 'hide'}
+	diNrOfMBRTUMasterLine_IN_Old				: DINT;																			//Old Modbus RTU Line to compare with the new Modbus RTU Line to start the state machine to set in the Array on the GVL
+	{attribute 'hide'}
+	diNrOfMBRTUMasterLine_IN_CP					: DINT;																			//Variable to compare the Modbus RTU Line in the State Machine. When the Modbus RTU Line change when the state machine is active then the state machine starts from new with the new Modbus RTU Line
+	{attribute 'hide'}
+	lrRestNextAdress							: LREAL;																		//Rest of the calculation for new Star Adress. In Sunspec each new PIC start with a even adress
+END_VAR
+VAR PERSISTENT
+	{attribute 'conditionalshow'}
+	byMBAdress_ForChange						: BYTE;																			//When we have 2 same Adresses on 1 Modbus RTU Line the byMBAdress_Int is set to 0. After a other change on the Input Adress Field so we can start to set the Adress in the Array in the GVL
+	byMBAdress_Int								: BYTE;																			//Internal Adress what is using for the Read and Write functions
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Creator : Kai Ebensperger
+//Company : Lynus AG
+//Date : 26.10.2021
+//Version : 1.0.0.0
+
+//With this function its possible to read out values from the Delta PV Inverter over Modbus RTU
+//The Protocoll is the Sunspec Protocol
+//Versions that are supported : 1.16
+//This Function use the INT+Scalfactor Format
+
+//Infos for Operating State
+
+
+//NOTE for diNr.....Designation => 
+//_IN = Here Data come in from other Functions or go out to other functions about the GVL
+//_OUT = Here Data go out to other functions about the GVL
+
+(*--------------------------------------------------------------------------------------------Limits-------------------------------------------------------------------------------------*)
+
+byMBAdress := LIMIT(0,byMBAdress,247);
+	diNrOfMBRTUMasterLine_IN := LIMIT(0,diNrOfMBRTUMasterLine_IN,Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx);	
+
+(*-------------------------------------------------------------Calcualte the number of ECS---------------------------------------------------------------*)
+
+fbNumberDevice(
+	diActualNumberOfDevices:= Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters, 
+	diMaxNumberOfDevices:= Constants_Energy.diMaxNumberOfElectricMeters, 
+	udiCounterOnlineChange:= TwinCAT_SystemInfoVarList._AppInfo.OnlineChangeCnt, 
+	bNumberIsCalculatet=> , 
+	bFPNumberIsCalculatet=> , 
+	bOnlineChange=> , 
+	diNumberForThisDevice=> diNrOfEM_OUT_PV, 
+	diNumberOfTotalDevices=> );
+
+//Write new Numer on GVL
+IF fbNumberDevice.bFPNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := fbNumberDevice.diNumberOfTotalDevices;	
+END_IF 
+
+//Delete old Number on GVL
+IF fbNumberDevice.bOnlineChange THEN 
+	Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters := diNrOfEM_OUT_PV;	
+		iStateGVLData := 1;	
+			byMBAdress_Old := 0;
+				diNrOfMBRTUMasterLine_IN_Old := 0;
+END_IF
+
+(*-------------------------------------------------------------Service from Backend is ready and check the connection to backen for dissabel/enable Function---------------------------------------------------------------*)
+
+//Try to reset the variable for connection on the GVL. When all is normal then the Lynus Mqtt connection function set this variable to true in the next cycle
+//When we have no connection to the backend then after Lynus_Standards.Constants_General.tTimeDissableLynusFunctions days the Function is dissabled with all of his functionalities
+timResetConnectionOnGVL(IN:= NOT timResetConnectionOnGVL.Q, PT:= T#1H, Q=> , ET=> );
+	IF timResetConnectionOnGVL.Q THEN Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions := FALSE; END_IF
+		IF NOT Lynus_Standards.GVL_Communicator.bStateConnectionToEnableFunctions THEN timDissableFunctions.IN := TRUE; ELSE timDissableFunctions.IN := FALSE; END_IF  
+			timDissableFunctions(IN:= , PT:= Lynus_Standards.Constants_General.tTimeDissableLynusFunctions, Q=> , ET=> );
+			
+(*--------------------------------------------------------------------------------------------Error from the Master Function-------------------------------------------------------------------------------------*)
+
+FPErrorMaster(CLK:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 2 AND bEnable, Q=> );
+
+(*--------------------------------------------------------------------------------------------Modbus Adress Slave Function-------------------------------------------------------------------------------------*)
+
+FPEnable(CLK:= bEnable, Q=> );
+
+//When the Adress is changed then set the new Adress in the Array
+//When we have the Adress more then 1 time in 1 line then set to 0 and wait for the next change on the Input Variable for the Modbus Adress
+IF byMBAdress <> byMBAdress_ForChange AND bEnable THEN byMBAdress_ForChange := byMBAdress; byNumberOfSameMBAdress := 0; END_IF     
+	IF byMBAdress <> byMBAdress_Int AND byNumberOfSameMBAdress = 0 AND bEnable THEN byMBAdress_Int := byMBAdress; END_IF 
+		IF NOT bEnable THEN byMBAdress_Int := 0; END_IF 
+		
+IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bNoNewMBusAdress AND iStateGVLData = 0 AND (MEMCMP(ADR(byMBAdress_Int),ADR(byMBAdress_Old),SIZEOF(byMBAdress_Old)) <> 0 OR MEMCMP(ADR(diNrOfMBRTUMasterLine_IN),ADR(diNrOfMBRTUMasterLine_IN_Old),SIZEOF(diNrOfMBRTUMasterLine_IN_Old)) <> 0) THEN
+	//Check if we have more then 1 time this Adress in 1 Line
+	byNumberOfSameMBAdress := 0;	
+		FOR byLPSlaveAdress := 1 TO 247 BY 1 DO
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] = byMBAdress_Int AND 
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] <> 0 THEN 
+						byNumberOfSameMBAdress := byNumberOfSameMBAdress + 1; 
+				END_IF 
+		END_FOR
+			IF byNumberOfSameMBAdress > 0 THEN 
+				byMBAdress_Int := 0;
+			END_IF	
+				bAdressIsSet := FALSE; 
+					//Delte the old Adress from the old Array
+					FOR byLPSlaveAdress := 1 TO 247 BY 1 DO
+						IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN_Old].arrAllModbusSlaveAdresses[byLPSlaveAdress] = byMBAdress_Old THEN
+							Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN_Old].arrAllModbusSlaveAdresses[byLPSlaveAdress] := 0;
+						END_IF	 
+					END_FOR
+						//Set the New Adress in Array
+						byMBAdress_Old := byMBAdress_Int;
+							diNrOfMBRTUMasterLine_IN_Old := diNrOfMBRTUMasterLine_IN;
+								FOR byLPSlaveAdress := 1 TO 247 BY 1 DO
+									IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] = 0 AND NOT bAdressIsSet THEN 
+										Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrAllModbusSlaveAdresses[byLPSlaveAdress] := byMBAdress_Int; 
+											bAdressIsSet := TRUE;
+									END_IF 
+								END_FOR
+END_IF	
+
+(*--------------------------------------------------------------------------------------------State Machine Read--------------------------------------------------------------------------------------*)
+
+//Timer for Delay
+timDelay(IN:= , PT:= T#250MS, Q=> , ET=> );
+
+//Timer for Timeout in Statemachine
+IF iStateModbusRead > 0 AND iStateModbusRead <= 8 AND iStateModbusRead = iStateModbus_CP THEN
+		timTimeout.IN := TRUE;
+ELSE	
+		timTimeout.IN := FALSE;
+END_IF
+	//Timeout Timer is dissabled when the slave wait that his adress is in porgress on the RTU Master, or is dissabled or the Terminal is not configured
+	IF iStateModbusRead = 0 OR NOT bEnable OR NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured THEN timTimeout.IN := FALSE; END_IF
+		timTimeout(IN:= , PT:= T#15S, Q=> , ET=> );
+
+//Not Enabled
+IF NOT bEnable OR NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured THEN iStateModbusRead := 0; iStateModbusError := 0; END_IF		
+		
+CASE iStateModbusRead OF
+
+	0://Init Step (Wait that the Slave is enabled and the Terminal is configured)
+		
+		//Set Delta Output Structure to default
+		IF NOT bEnable OR NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured THEN 
+			stDeltaInverterData.rTotalMPPTPower := 0;
+				stDeltaInverterData.rCabinetTemp := 0;
+					stDeltaInverterData.rHeatSinkTemp := 0;
+						FOR byLPFillDefaultData := 1 TO 6 BY 1 DO
+							stDeltaInverterData.arrMPPTPower[byLPFillDefaultData] := 0;
+						END_FOR
+							stDeltaInverterData.eEvent1 := eDeltaEvent.eNoInfo;
+								stDeltaInverterData.eOperatingState := eDeltaOperatingState.eNoInfo;
+		END_IF
+		
+		iSFPowerMPPT := 0;
+			wNumberOfMPPT := 0;
+				wNextModbusStartAdress := 0;
+					wNumberOfInputs := 0;
+						lrRestNextAdress := 0;
+				
+		IF bEnable AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bTerminalIsConfigured THEN
+			//Start Timer for start the Statemachine
+			IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+		
+			//Reset the Read and Write Buffer on the GVL before starting
+			IF byMBAdress_Int = Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byActualMBAdressInProgrss THEN
+				FOR wLPCleanBuffer := 1 TO Constants_Bussystems.wQuantityOfRegistersMBRTUMaster BY 1 DO
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPCleanBuffer] := 0;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrWriteOutData[wLPCleanBuffer] := 0;
+				END_FOR
+			END_IF
+			
+			IF timDelay.Q AND byMBAdress_Int = Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byActualMBAdressInProgrss AND NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bReadWriteIsDone THEN
+				timDelay.IN := FALSE;
+					iStateModbusRead := 1;
+						diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN;
+							byMBAdress_CP := byMBAdress_Int; 	
+								Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+			END_IF
+		END_IF
+	
+	1://Read Out Values from Pic 103 of the Sunspec Protocol (Register 40084)
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 39;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := 40073;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			//Current L1
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]) <= 10 THEN
+				fbElMeter.lrCurrentL1 := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1] * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]));
+			END_IF
+			//Current L2
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]) <= 10 THEN
+				fbElMeter.lrCurrentL2 := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[2] * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]));
+			END_IF
+			//Current L3
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]) <= 10 THEN
+				fbElMeter.lrCurrentL3 := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[3] * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[4]));
+			END_IF
+			//Voltage L1/N
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]) <= 10 THEN
+				fbElMeter.lrVoltageL1N := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[8] * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]));
+			END_IF
+			//Voltage L2/N
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]) <= 10 THEN
+				fbElMeter.lrVoltageL2N := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[9] * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]));
+			END_IF
+			//Voltage L3/N
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]) <= 10 THEN
+				fbElMeter.lrVoltageL3N := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[10] * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[11]));
+			END_IF
+			//AC Power
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[13]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[13]) <= 10 THEN  
+				fbElMeter.lrPowerTotal := WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[12]) * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[13]));
+			END_IF
+			//Hz
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[15]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[15]) <= 10 THEN  
+				fbElMeter.lrFrequency := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[14] * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[15]));
+			END_IF
+			//Apparent Power
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[17]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[17]) <= 10 THEN  
+				fbElMeter.lrApparentPowerTotal := WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[16]) * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[17]));
+			END_IF
+			//Reactive Power
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[19]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[19]) <= 10 THEN  
+				fbElMeter.lrReactivePowerTotal := WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[18]) * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[19]));
+			END_IF
+			//Produced Energy
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[24]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[24]) <= 10 THEN  
+				fbConvertWord(wInputValue_1:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[22], wInputValue_2:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[23], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+					fbElMeter.lrCounterEnergyT1_Production := fbConvertWord.dwOutputValue * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[24]));
+						fbElMeter.lrCounterEnergyT1_Production := fbElMeter.lrCounterEnergyT1_Production / 1000;
+							fbElMeter.lrTotalCounterEnergy_Production := fbElMeter.lrCounterEnergyT1_Production; 	
+			END_IF
+			//Cabinet Temperature
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[35]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[35]) <= 10 THEN  
+				stDeltaInverterData.rCabinetTemp := LREAL_TO_REAL(WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[31]) * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[35])));
+			END_IF
+			//Heat Sink Temperature
+			IF WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[35]) >= - 10 AND WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[35]) <= 10 THEN  
+				stDeltaInverterData.rHeatSinkTemp := LREAL_TO_REAL(WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[32]) * EXPT(10,WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[35])));
+			END_IF
+			//Operating State
+			stDeltaInverterData.eOperatingState := eDeltaOperatingState.eNoInfo;
+			IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 1 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eOff;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 2 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eSleeping;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 3 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eStarting;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 4 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eMppt;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 5 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eThrottled;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 6 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eShuttingDown;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 7 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eFault;
+			ELSIF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[36] = 8 THEN stDeltaInverterData.eOperatingState := eDeltaOperatingState.eStandby;
+			END_IF 
+			//Event 1
+			fbConvertWord(wInputValue_1:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[38], wInputValue_2:= Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[39], eByteOrderForConvert:= eByteOrder.eBigEndian, dwOutputValue=> );
+			stDeltaInverterData.eEvent1 := eDeltaEvent.eNoInfo;
+			IF fbConvertWord.dwOutputValue.0 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eGroundFault;
+			ELSIF fbConvertWord.dwOutputValue.1 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eDCOverVolt;
+			ELSIF fbConvertWord.dwOutputValue.2 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eACDisconnect;
+			ELSIF fbConvertWord.dwOutputValue.3 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eDCDisconnect;
+			ELSIF fbConvertWord.dwOutputValue.4 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eGridDisconnect;
+			ELSIF fbConvertWord.dwOutputValue.5 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eCabinetOpen;
+			ELSIF fbConvertWord.dwOutputValue.6 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eManualShutdown;
+			ELSIF fbConvertWord.dwOutputValue.7 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eOverTemp;
+			ELSIF fbConvertWord.dwOutputValue.8 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eOverFrequency;
+			ELSIF fbConvertWord.dwOutputValue.9 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eUnderFrequency;
+			ELSIF fbConvertWord.dwOutputValue.10 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eACOverVolt;
+			ELSIF fbConvertWord.dwOutputValue.11 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eACUnderVolt;
+			ELSIF fbConvertWord.dwOutputValue.12 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eBlownStringFuse;
+			ELSIF fbConvertWord.dwOutputValue.13 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eUnderTemp;
+			ELSIF fbConvertWord.dwOutputValue.14 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eMemoryLoss;
+			ELSIF fbConvertWord.dwOutputValue.15 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eHWTestFailure;
+			ELSIF fbConvertWord.dwOutputValue.16 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eOtherAlarm;
+			ELSIF fbConvertWord.dwOutputValue.17 THEN stDeltaInverterData.eEvent1 := eDeltaEvent.eOtherWarning;	
+			END_IF
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 2;
+							wNextModbusStartAdress := 40122;		
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF 
+	
+	2://Read Out Values from Pic 120 to Start Adress for PIC 160 of the Sunspec Protocoll		
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 2;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := wNextModbusStartAdress;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			//PIC ID
+			wPicID := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1];
+			//Number of Inputs
+			wNumberOfInputs := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[2];
+		END_IF     					
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 3;	
+							lrRestNextAdress := 0;
+			//Calculate next Modbus Start Adress for next Pic
+			wNextModbusStartAdress := wNextModbusStartAdress + wNumberOfInputs + 2;
+				lrRestNextAdress := FRAC(WORD_TO_REAL(wNextModbusStartAdress) / 2);	
+					//If it ends with an odd number, the next PIC starts with an even address
+					IF lrRestNextAdress <> 0 THEN wNextModbusStartAdress := wNextModbusStartAdress + 1; END_IF 
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF		
+	
+	3://Check the PIC ID
+		iStateModbus_CP := iStateModbusRead;
+		
+		IF wPicID < 160 THEN
+			//Back to Step 2
+			iStateModbusRead := 2;
+		ELSE
+			//next Step with values
+			iStateModbusRead := 4;
+				//Calculate next Modbus Start Adress for next Pic
+				wNextModbusStartAdress := wNextModbusStartAdress - wNumberOfInputs - 2;
+		END_IF
+		
+	
+	4://Read Out Values from Pic 160 of the Sunspec Protocol
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 9;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := wNextModbusStartAdress;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			//PIC ID
+			wPicID := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1];
+			//Number of Inputs
+			wNumberOfInputs := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[2];
+			//Scale Factor for String Power
+			iSFPowerMPPT := WORD_TO_INT(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[5]);
+			//Number of MPPT Moduls
+			wNumberOfMPPT := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[9];
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 5;	
+							wNextModbusStartAdress := wNextModbusStartAdress + 10;	
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+
+	5://Read Out Values from Pic 160 of the Sunspec Protocol
+		iStateModbus_CP := iStateModbusRead;
+		
+		wNumberOfMPPT := LIMIT(1,wNumberOfMPPT,6);
+			iSFPowerMPPT := LIMIT(-10,iSFPowerMPPT,10);
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 20 * wNumberOfMPPT;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := wNextModbusStartAdress;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		IF wNumberOfMPPT <= 1 THEN
+			stDeltaInverterData.arrMPPTPower[2] := 0;
+				stDeltaInverterData.arrMPPTPower[3] := 0;
+					stDeltaInverterData.arrMPPTPower[4] := 0;
+						stDeltaInverterData.arrMPPTPower[5] := 0;
+							stDeltaInverterData.arrMPPTPower[6] := 0;
+		ELSIF  wNumberOfMPPT = 2 THEN
+			stDeltaInverterData.arrMPPTPower[3] := 0;
+				stDeltaInverterData.arrMPPTPower[4] := 0;
+					stDeltaInverterData.arrMPPTPower[5] := 0;
+						stDeltaInverterData.arrMPPTPower[6] := 0;
+		ELSIF  wNumberOfMPPT = 3 THEN
+			stDeltaInverterData.arrMPPTPower[4] := 0;
+				stDeltaInverterData.arrMPPTPower[5] := 0;
+					stDeltaInverterData.arrMPPTPower[6] := 0;
+		ELSIF  wNumberOfMPPT = 4 THEN
+			stDeltaInverterData.arrMPPTPower[5] := 0;
+				stDeltaInverterData.arrMPPTPower[6] := 0;	
+		ELSIF  wNumberOfMPPT = 5 THEN
+			stDeltaInverterData.arrMPPTPower[6] := 0;
+		END_IF
+		
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			//MPPT Power
+			FOR wLPPowerMPPT := 1 TO (20 * wNumberOfMPPT) BY 1 DO
+				IF wNumberOfMPPT >= 1 AND wLPPowerMPPT = 12 THEN stDeltaInverterData.arrMPPTPower[1] := LREAL_TO_REAL(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 2 AND wLPPowerMPPT = 32 THEN stDeltaInverterData.arrMPPTPower[2] := LREAL_TO_REAL(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 3 AND wLPPowerMPPT = 52 THEN stDeltaInverterData.arrMPPTPower[3] := LREAL_TO_REAL(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 4 AND wLPPowerMPPT = 72 THEN stDeltaInverterData.arrMPPTPower[4] := LREAL_TO_REAL(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 5 AND wLPPowerMPPT = 92 THEN stDeltaInverterData.arrMPPTPower[5] := LREAL_TO_REAL(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				ELSIF wNumberOfMPPT >= 6 AND wLPPowerMPPT = 112 THEN stDeltaInverterData.arrMPPTPower[6] := LREAL_TO_REAL(Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[wLPPowerMPPT] * EXPT(10,iSFPowerMPPT) / 1000);
+				END_IF     
+			END_FOR 
+		END_IF     				
+		
+		//Total DC Power
+		stDeltaInverterData.rTotalMPPTPower := 0;
+			FOR wLPPowerMPPT := 1 TO 6 BY 1 DO
+				stDeltaInverterData.rTotalMPPTPower := stDeltaInverterData.rTotalMPPTPower + stDeltaInverterData.arrMPPTPower[wLPPowerMPPT];
+			END_FOR
+			
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 6;
+							lrRestNextAdress := 0;		
+			//Calculate next Modbus Start Adress for Pic 401
+			wNextModbusStartAdress := wNextModbusStartAdress - 10;
+				wNextModbusStartAdress := wNextModbusStartAdress + wNumberOfInputs + 2;
+					lrRestNextAdress := FRAC(WORD_TO_REAL(wNextModbusStartAdress) / 2);	
+						//If it ends with an odd number, the next PIC starts with an even address
+						IF lrRestNextAdress <> 0 THEN wNextModbusStartAdress := wNextModbusStartAdress + 1; END_IF
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+	
+	6://Read Out Values from Pic 401 to Start Adress for Vendor 64062 of the Sunspec Protocoll	
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 2;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := wNextModbusStartAdress;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			//PIC ID
+			wPicID := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[1];
+			//Number of Inputs
+			wNumberOfInputs := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[2];
+		END_IF     					
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						iStateModbusRead := 7;	
+							lrRestNextAdress := 0;
+			//Calculate next Modbus Start Adress
+			wNextModbusStartAdress := wNextModbusStartAdress + wNumberOfInputs + 2;
+				lrRestNextAdress := FRAC(WORD_TO_REAL(wNextModbusStartAdress) / 2);	
+					//If it ends with an odd number, the next PIC starts with an even address
+					IF lrRestNextAdress <> 0 THEN wNextModbusStartAdress := wNextModbusStartAdress + 1; END_IF 
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+	
+	7://Check the PIC ID
+		iStateModbus_CP := iStateModbusRead;
+		
+		IF wPicID < 64062 THEN
+			//Back to Step 6
+			iStateModbusRead := 6;
+		ELSE
+			//next Step with values
+			iStateModbusRead := 8;
+				//Calculate next Modbus Start Adress for next Pic or Vendor
+				wNextModbusStartAdress := wNextModbusStartAdress - wNumberOfInputs - 2;
+		END_IF		
+			
+	8://Read Out Values from Pic Vendor 64062 of the Sunspec Protocol (Register wNextModbusStartAdress + 2)		
+		iStateModbus_CP := iStateModbusRead;
+		
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_ReadRegs;
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wNumberOfRegister := 16;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].wModbusRegister := wNextModbusStartAdress + 2;
+		
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy THEN timDelay.IN := TRUE; END_IF 
+
+		//Copy the read out Data
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP THEN
+			//Faults
+			FOR byLPVendor64062 := 1 TO 8 BY 1 DO 
+				stDeltaInverterData.arrCurrentFault[byLPVendor64062] := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[byLPVendor64062];
+			END_FOR
+			//Error
+			FOR byLPVendor64062 := 9 TO 13 BY 1 DO 
+				stDeltaInverterData.arrCurrentError[byLPVendor64062 - 8] := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[byLPVendor64062];
+			END_FOR
+			//Warning
+			FOR byLPVendor64062 := 14 TO 16 BY 1 DO 
+				stDeltaInverterData.arrCurrentError[byLPVendor64062 - 13] := Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].arrReadOutData[byLPVendor64062];
+			END_FOR
+		END_IF     				
+		
+		//Send the Read or Write Command to the Master
+		Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := TRUE;
+		
+		//Go to the Next Step
+		IF NOT Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bMasterIsBusy AND Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 0 AND timDelay.Q AND 
+			diNrOfMBRTUMasterLine_IN = diNrOfMBRTUMasterLine_IN_CP AND byMBAdress_Int = byMBAdress_CP AND NOT timTimeout.Q THEN
+				timDelay.IN := FALSE;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bReadWriteIsDone := TRUE;
+							iStateModbusRead := 0;		
+		END_IF
+
+			//Error on Master, changes on Inputs or Timeout
+		 	IF timTimeout.Q OR diNrOfMBRTUMasterLine_IN <> diNrOfMBRTUMasterLine_IN_CP OR byMBAdress_Int <> byMBAdress_CP OR FPErrorMaster.Q THEN 
+				iStateModbusError := 300; 
+					diNrOfMBRTUMasterLine_IN_CP := diNrOfMBRTUMasterLine_IN; 
+						byMBAdress_CP := byMBAdress_Int; 
+			END_IF
+	
+END_CASE
+
+(*------------------------------------------------------------------Error and Warning----------------------------------------------------------------------------*)	
+
+bErrorInverter := FALSE;
+	bWarningInverter := FALSE;
+		FOR byLPVendor64062 := 1 TO 8 BY 1 DO 
+			IF stDeltaInverterData.arrCurrentFault[byLPVendor64062] <> 0 AND stDeltaInverterData.eOperatingState = eDeltaOperatingState.eFault THEN bErrorInverter := TRUE; END_IF
+		END_FOR
+			FOR byLPVendor64062 := 1 TO 5 BY 1 DO 
+				IF stDeltaInverterData.arrCurrentError[byLPVendor64062] <> 0 AND stDeltaInverterData.eEvent1 = eDeltaEvent.eOtherAlarm THEN bErrorInverter := TRUE; END_IF
+			END_FOR
+				FOR byLPVendor64062 := 1 TO 3 BY 1 DO 
+					IF stDeltaInverterData.arrCurrentWarning[byLPVendor64062] <> 0 AND stDeltaInverterData.eEvent1 = eDeltaEvent.eOtherWarning THEN bWarningInverter := TRUE; END_IF
+				END_FOR
+					IF stDeltaInverterData.eOperatingState = eDeltaOperatingState.eFault THEN bErrorInverter := TRUE; END_IF
+						IF stDeltaInverterData.eEvent1 <> eDeltaEvent.eNoInfo THEN bErrorInverter := TRUE; END_IF    
+
+IF timDissableFunctions.Q OR bWarningInverter THEN fbElMeter.bWarning := TRUE; ELSE fbElMeter.bWarning := FALSE; fbElMeter.iWarningCode := 0; END_IF   
+	IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters OR bErrorInverter OR Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 2 OR timTimeout.Q THEN 
+		fbElMeter.bError := TRUE;
+	ELSE 
+		fbElMeter.bError := FALSE;
+			fbElMeter.iErrorCode := 0;
+	END_IF
+
+IF timDissableFunctions.Q THEN fbElMeter.iWarningCode := 0;
+ELSIF bWarningInverter THEN fbElMeter.iWarningCode := 1;
+END_IF    	
+	
+IF Lynus_Standards.GVL_Energy.stNumberOfDevices.diNumberOfElectricMeters > Constants_Energy.diMaxNumberOfElectricMeters THEN fbElMeter.iErrorCode := 1; END_IF
+	IF Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].byErrorWarning = 2 OR bErrorInverter OR timTimeout.Q THEN fbElMeter.iErrorCode := 0; END_IF   
+
+(*------------------------------------------------------------------Logic----------------------------------------------------------------------------*)
+
+//Read Out Data done for EM Function
+IF iStateModbusRead <> 1 THEN fbElMeter.bReadOutDataDone := TRUE; ELSE fbElMeter.bReadOutDataDone := FALSE; END_IF
+
+//Function block for meter data
+fbElMeter(
+	bEnable:= bEnable AND NOT timDissableFunctions.Q, 
+	bError:= , 
+	bEnableReadOutFunction:= FALSE, 
+	bWriteWithDelay:= TRUE,
+	bPowerDataInvers:= FALSE, 
+	bReadOutDataDone:= ,
+	iTimeReadOutInterval:= , 
+	iErrorCode:= , 
+	iWarningCode:= , 
+	lrTotalCounterEnergy_Consumption:= 0, 
+	lrTotalCounterEnergy_Production:= , 
+	lrCounterEnergyT1_Consumption:= 0, 
+	lrCounterEnergyT2_Consumption:= 0, 
+	lrCounterEnergyT1_Production:= , 
+	lrCounterEnergyT2_Production:= 0, 
+	lrCurrentL1:= , 
+	lrVoltageL1N:= , 
+	lrVoltageL1L2:= , 
+	lrPowerL1:= 0, 
+	lrCurrentL2:= , 
+	lrVoltageL2N:= , 
+	lrVoltageL2L3:= , 
+	lrPowerL2:= 0, 
+	lrCurrentL3:= , 
+	lrVoltageL3N:= , 
+	lrVoltageL3L1:= , 
+	lrPowerL3:= 0, 
+	lrPowerTotal:= , 
+	lrFrequency:= , 
+	lrReactivePowerTotal:= , 
+	lrApparentPowerTotal:= , 
+	tTimDelayOutput:= T#5S, 
+	stDataEMOutPower=> , 
+	stDataEMOutPowerDelay=> stDataEMPower_PV, 
+	stDataEMOutCounter=> ,
+	stDataEMOutCounterDelay=> stDataEMCounter_PV, 
+	bReadOutMeter=> );
+	
+(*------------------------------------------------------------------------------------------State Machine Error---------------------------------------------------------------------------------------------*)	
+
+CASE iStateModbusError OF
+	
+	300://Error
+		iStateModbus_CP := iStateModbusError;
+			timDelay.IN := FALSE;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].bSlaveStartReadOrWrite := FALSE;
+					//Restart from new with the Read out part after an Error
+					iStateModbusRead := 0;	
+						iStateModbusError := 0;
+END_CASE
+
+(*------------------------------------------------------------------------------------------Device Type for MB RTU Master---------------------------------------------------------------------------------------------*)	
+
+//Send the Device Type to the Master that he can configure the Termial with the right credentials
+Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[diNrOfMBRTUMasterLine_IN].eMBRTUDeviceType := E_MBRTUMaster_DeviceType.ePV_DeltaSunspec;
+
+(*-----------------------------------------------------------Handle data to Global structure for Electric Meter system and Modbus RTU Communication-----------------------------------------------------------------*)
+
+CASE iStateGVLData OF
+	
+	0://Init Step
+		byWaitInStep := 0;
+			arrCounterForGVL[1] := 1; arrCounterForGVL[2] := 1;
+	
+	1://Wait for 4 Steps before clean al Data on GVL
+		byWaitInStep := byWaitInStep + 1;
+			IF byWaitInStep >= 4 AND fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 2; END_IF
+				//To much Devices, back to the Init step
+				IF byWaitInStep >= 4 AND NOT fbNumberDevice.bNumberIsCalculatet THEN iStateGVLData := 0; END_IF	
+			
+	2://Clear all Data in GVL
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].bEnabled := FALSE;	
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].byErrorWarning := 0;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrCounterEnergyT1_Consumption := 0;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrCounterEnergyT1_Production := 0;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrCounterEnergyT2_Consumption := 0;
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrCounterEnergyT2_Production := 0;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrPower := 0;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrPowerConsumption := 0;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrPowerConsumption := 0;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrPowerProduction := 0;
+												Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrTotalCounterEnergy_Consumption := 0;
+													Lynus_Standards.GVL_Energy.stDataElectricMeters[arrCounterForGVL[1]].lrTotalCounterEnergy_Production := 0;
+		
+			//Reset this Part here and not in the RTU Master because on top we write then the New Adess in the List. So in the Master we delete only the GVL after a online change what set the Master by himself
+			Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].arrAllModbusSlaveAdresses := arrDefaultModbusAdress;
+				Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].arrReadOutData := arrDefaultReadWrite;
+					Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].arrWriteOutData := arrDefaultReadWrite;
+						Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].bSlaveStartReadOrWrite := FALSE;
+							Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].eMBRTUDeviceType := E_MBRTUMaster_DeviceType.eNoModbusRTUDevice;
+								Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].eMBRTUReadWriteMode := E_MBRTUMaster_ReadWriteMode.eModbusRTUMaster_NoMode;
+									Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].wModbusRegister := 0;
+										Lynus_Standards.GVL_Bussystems.stDataOfMBRTUMasterKL6xxx[arrCounterForGVL[2]].wNumberOfRegister := 0;			
+		
+			//Counter for MB RTU Master
+			arrCounterForGVL[2] := arrCounterForGVL[2] + 1;
+				arrCounterForGVL[2] := LIMIT(0,arrCounterForGVL[2],Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx);
+			//Counter for EM
+			arrCounterForGVL[1] := arrCounterForGVL[1] + 1;
+				arrCounterForGVL[1] := LIMIT(0,arrCounterForGVL[1],Constants_Energy.diMaxNumberOfElectricMeters);
+					//Back to the init step
+					IF arrCounterForGVL[1] >= Constants_Energy.diMaxNumberOfElectricMeters AND arrCounterForGVL[2] >= Constants_Bussystems.diMaxNumberOfMBRTUMasterKL6xxx THEN iStateGVLData := 0; END_IF
+
+END_CASE 	 
+
+IF diNrOfEM_OUT_PV > 0 AND fbNumberDevice.bNumberIsCalculatet THEN
+	Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].bEnabled := fbElMeter.stDataEMOutPower.bEnabled;
+		Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].byErrorWarning := fbElMeter.stDataEMOutPower.byErrorWarning;
+			Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Consumption;
+				Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT1_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT1_Production;
+					Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Consumption := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Consumption;
+						Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrCounterEnergyT2_Production := fbElMeter.stDataEMOutCounter.lrCounterEnergyT2_Production;		
+							Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPower := fbElMeter.stDataEMOutPower.lrPowerTotal;
+								Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerConsumption := fbElMeter.stDataEMOutPower.lrPowerConsumption;
+									Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrPowerProduction := fbElMeter.stDataEMOutPower.lrPowerProduction;
+										Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Consumption := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Consumption;
+											Lynus_Standards.GVL_Energy.stDataElectricMeters[diNrOfEM_OUT_PV].lrTotalCounterEnergy_Production := fbElMeter.stDataEMOutCounter.lrTotalCounterEnergy_Production;
+END_IF
+
+(*----------------------------------------------------------Save persistent data----------------------------------------------------------------*)
+
+arrPD[1](lrValue:= BOOL_TO_LREAL(bEnable), bEventBasedActive=> );
+arrPD[2](lrValue:= BYTE_TO_LREAL(byMBAdress), bEventBasedActive=> );
+arrPD[3](lrValue:= DINT_TO_LREAL(diNrOfMBRTUMasterLine_IN), bEventBasedActive=> );
+arrPD[4](lrValue:= BYTE_TO_LREAL(byMBAdress_ForChange), bEventBasedActive=> );
+arrPD[5](lrValue:= BYTE_TO_LREAL(byMBAdress_Int), bEventBasedActive=> );
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Delta_PV_Inverter_Sunspec">
+      <LineId Id="14" Count="2" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="2277" Count="0" />
+      <LineId Id="2282" Count="0" />
+      <LineId Id="2280" Count="0" />
+      <LineId Id="1206" Count="0" />
+      <LineId Id="2626" Count="2" />
+      <LineId Id="36" Count="2" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="149" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="2304" Count="1" />
+      <LineId Id="2327" Count="7" />
+      <LineId Id="2314" Count="2" />
+      <LineId Id="2335" Count="1" />
+      <LineId Id="2319" Count="7" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="717" Count="0" />
+      <LineId Id="719" Count="1" />
+      <LineId Id="1304" Count="4" />
+      <LineId Id="718" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="523" Count="2" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="529" Count="31" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="112" Count="2" />
+      <LineId Id="124" Count="1" />
+      <LineId Id="1100" Count="0" />
+      <LineId Id="1102" Count="3" />
+      <LineId Id="1097" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="2608" Count="0" />
+      <LineId Id="3565" Count="0" />
+      <LineId Id="2614" Count="2" />
+      <LineId Id="3583" Count="1" />
+      <LineId Id="3578" Count="2" />
+      <LineId Id="3566" Count="0" />
+      <LineId Id="2620" Count="0" />
+      <LineId Id="3569" Count="3" />
+      <LineId Id="3567" Count="1" />
+      <LineId Id="1106" Count="1" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="143" Count="4" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="158" Count="1" />
+      <LineId Id="163" Count="1" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="1108" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="243" Count="1" />
+      <LineId Id="167" Count="1" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="824" Count="0" />
+      <LineId Id="2549" Count="0" />
+      <LineId Id="2548" Count="0" />
+      <LineId Id="2550" Count="0" />
+      <LineId Id="2552" Count="2" />
+      <LineId Id="2551" Count="0" />
+      <LineId Id="2556" Count="2" />
+      <LineId Id="2555" Count="0" />
+      <LineId Id="2567" Count="0" />
+      <LineId Id="2573" Count="1" />
+      <LineId Id="2571" Count="0" />
+      <LineId Id="2576" Count="2" />
+      <LineId Id="2575" Count="0" />
+      <LineId Id="2580" Count="2" />
+      <LineId Id="2579" Count="0" />
+      <LineId Id="2547" Count="0" />
+      <LineId Id="2473" Count="0" />
+      <LineId Id="2472" Count="0" />
+      <LineId Id="2474" Count="0" />
+      <LineId Id="2584" Count="2" />
+      <LineId Id="2583" Count="0" />
+      <LineId Id="2588" Count="2" />
+      <LineId Id="2587" Count="0" />
+      <LineId Id="2592" Count="2" />
+      <LineId Id="2476" Count="0" />
+      <LineId Id="2596" Count="2" />
+      <LineId Id="2642" Count="0" />
+      <LineId Id="2599" Count="1" />
+      <LineId Id="2591" Count="0" />
+      <LineId Id="2605" Count="2" />
+      <LineId Id="2604" Count="0" />
+      <LineId Id="2611" Count="2" />
+      <LineId Id="2610" Count="0" />
+      <LineId Id="2624" Count="0" />
+      <LineId Id="4076" Count="0" />
+      <LineId Id="2625" Count="0" />
+      <LineId Id="2629" Count="0" />
+      <LineId Id="2631" Count="5" />
+      <LineId Id="2630" Count="0" />
+      <LineId Id="2637" Count="0" />
+      <LineId Id="2641" Count="0" />
+      <LineId Id="2638" Count="0" />
+      <LineId Id="4077" Count="0" />
+      <LineId Id="2643" Count="0" />
+      <LineId Id="2645" Count="0" />
+      <LineId Id="2718" Count="14" />
+      <LineId Id="2644" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="178" Count="1" />
+      <LineId Id="182" Count="1" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="2337" Count="0" />
+      <LineId Id="3929" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="191" Count="3" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="1406" Count="0" />
+      <LineId Id="3876" Count="0" />
+      <LineId Id="3880" Count="37" />
+      <LineId Id="3877" Count="1" />
+      <LineId Id="3918" Count="1" />
+      <LineId Id="3921" Count="1" />
+      <LineId Id="3927" Count="0" />
+      <LineId Id="3923" Count="1" />
+      <LineId Id="3928" Count="0" />
+      <LineId Id="3925" Count="0" />
+      <LineId Id="3931" Count="1" />
+      <LineId Id="3926" Count="0" />
+      <LineId Id="3920" Count="0" />
+      <LineId Id="3879" Count="0" />
+      <LineId Id="2734" Count="0" />
+      <LineId Id="2737" Count="10" />
+      <LineId Id="3867" Count="0" />
+      <LineId Id="3866" Count="0" />
+      <LineId Id="3773" Count="0" />
+      <LineId Id="3770" Count="0" />
+      <LineId Id="2875" Count="0" />
+      <LineId Id="2874" Count="0" />
+      <LineId Id="2848" Count="10" />
+      <LineId Id="2860" Count="0" />
+      <LineId Id="3935" Count="0" />
+      <LineId Id="2861" Count="6" />
+      <LineId Id="2735" Count="0" />
+      <LineId Id="2870" Count="1" />
+      <LineId Id="2880" Count="1" />
+      <LineId Id="2913" Count="0" />
+      <LineId Id="2924" Count="0" />
+      <LineId Id="2914" Count="0" />
+      <LineId Id="2882" Count="4" />
+      <LineId Id="3954" Count="0" />
+      <LineId Id="2887" Count="0" />
+      <LineId Id="3956" Count="0" />
+      <LineId Id="3958" Count="0" />
+      <LineId Id="3957" Count="0" />
+      <LineId Id="3959" Count="2" />
+      <LineId Id="3964" Count="2" />
+      <LineId Id="3955" Count="0" />
+      <LineId Id="3969" Count="1" />
+      <LineId Id="3972" Count="0" />
+      <LineId Id="3968" Count="0" />
+      <LineId Id="3974" Count="1" />
+      <LineId Id="3973" Count="0" />
+      <LineId Id="3979" Count="0" />
+      <LineId Id="3982" Count="1" />
+      <LineId Id="3963" Count="0" />
+      <LineId Id="2888" Count="2" />
+      <LineId Id="2915" Count="0" />
+      <LineId Id="2919" Count="0" />
+      <LineId Id="2923" Count="0" />
+      <LineId Id="2925" Count="0" />
+      <LineId Id="2922" Count="0" />
+      <LineId Id="2926" Count="2" />
+      <LineId Id="2918" Count="0" />
+      <LineId Id="2893" Count="0" />
+      <LineId Id="2895" Count="0" />
+      <LineId Id="3285" Count="0" />
+      <LineId Id="3287" Count="0" />
+      <LineId Id="3289" Count="2" />
+      <LineId Id="3676" Count="0" />
+      <LineId Id="3678" Count="0" />
+      <LineId Id="2897" Count="6" />
+      <LineId Id="2905" Count="0" />
+      <LineId Id="3381" Count="0" />
+      <LineId Id="3421" Count="0" />
+      <LineId Id="3936" Count="0" />
+      <LineId Id="3422" Count="2" />
+      <LineId Id="3420" Count="0" />
+      <LineId Id="2906" Count="6" />
+      <LineId Id="2733" Count="0" />
+      <LineId Id="2872" Count="0" />
+      <LineId Id="2942" Count="0" />
+      <LineId Id="2944" Count="0" />
+      <LineId Id="2948" Count="9" />
+      <LineId Id="3869" Count="0" />
+      <LineId Id="3868" Count="0" />
+      <LineId Id="2972" Count="1" />
+      <LineId Id="2977" Count="8" />
+      <LineId Id="2987" Count="0" />
+      <LineId Id="3411" Count="0" />
+      <LineId Id="3415" Count="1" />
+      <LineId Id="3418" Count="1" />
+      <LineId Id="3414" Count="0" />
+      <LineId Id="2988" Count="6" />
+      <LineId Id="2873" Count="0" />
+      <LineId Id="2943" Count="0" />
+      <LineId Id="3939" Count="10" />
+      <LineId Id="3937" Count="1" />
+      <LineId Id="3432" Count="0" />
+      <LineId Id="3044" Count="10" />
+      <LineId Id="3081" Count="0" />
+      <LineId Id="3055" Count="0" />
+      <LineId Id="3082" Count="0" />
+      <LineId Id="3084" Count="2" />
+      <LineId Id="3083" Count="0" />
+      <LineId Id="3088" Count="2" />
+      <LineId Id="3087" Count="0" />
+      <LineId Id="3056" Count="0" />
+      <LineId Id="3061" Count="17" />
+      <LineId Id="3041" Count="0" />
+      <LineId Id="103" Count="1" />
+      <LineId Id="728" Count="1" />
+      <LineId Id="2380" Count="0" />
+      <LineId Id="3188" Count="0" />
+      <LineId Id="3192" Count="0" />
+      <LineId Id="3186" Count="1" />
+      <LineId Id="3185" Count="0" />
+      <LineId Id="3190" Count="1" />
+      <LineId Id="3189" Count="0" />
+      <LineId Id="3194" Count="1" />
+      <LineId Id="3193" Count="0" />
+      <LineId Id="3179" Count="0" />
+      <LineId Id="3769" Count="0" />
+      <LineId Id="731" Count="3" />
+      <LineId Id="736" Count="1" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="730" Count="0" />
+      <LineId Id="3180" Count="0" />
+      <LineId Id="739" Count="0" />
+      <LineId Id="3182" Count="1" />
+      <LineId Id="3181" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="744" Count="1" />
+      <LineId Id="2376" Count="0" />
+      <LineId Id="2378" Count="0" />
+      <LineId Id="2377" Count="0" />
+      <LineId Id="747" Count="0" />
+      <LineId Id="2338" Count="37" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="809" Count="0" />
+      <LineId Id="198" Count="7" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="209" Count="1" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="705" Count="1" />
+      <LineId Id="109" Count="1" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="566" Count="1" />
+      <LineId Id="571" Count="12" />
+      <LineId Id="2381" Count="10" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="635" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="637" Count="5" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="644" Count="0" />
+      <LineId Id="646" Count="1" />
+      <LineId Id="645" Count="0" />
+      <LineId Id="596" Count="3" />
+      <LineId Id="614" Count="2" />
+      <LineId Id="2392" Count="11" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="707" Count="1" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="1080" Count="0" />
+      <LineId Id="1093" Count="3" />
+      <LineId Id="1092" Count="0" />
+      <LineId Id="1079" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

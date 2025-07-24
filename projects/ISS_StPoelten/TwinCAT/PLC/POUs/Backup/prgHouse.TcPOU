@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="prgHouse" Id="{2627c3a1-fabe-46fd-8396-cc823b8dfb91}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgHouse
+VAR
+	fbKBusState					: FB_K_Bus_State;
+	uint_KBusState				: UINT;							//{#lynus.ag#()}
+	lrHousePower				: LREAL;								//{#lynus.ag#()}
+	lrNetzEinspeisung			: LREAL;								//{#lynus.ag#()}
+	lrBetriebMuellerBau			: LREAL;								//{#lynus.ag#()}
+	lrElektromobilitaet			: LREAL;								//{#lynus.ag#()}
+	lrHolzschnitzel				: LREAL;								//{#lynus.ag#()}
+	lrLueftung_Kaelte			: LREAL;								//{#lynus.ag#()}
+	//rPVProd						: REAL;									//{#lynus.ag#()}
+	lrAbgaenge					: REAL;									//{#lynus.ag#()}
+	fbGrid1						: FB_EM_Beckhoff_KL3403;  	//Elektromobilität 
+	fbGrid2						: FB_EM_Beckhoff_KL3403;	//Holzschnitzelheizung
+	fbGrid3						: FB_EM_Beckhoff_KL3403;	//Lüftung/Kälte Büro
+	
+	
+
+    Volt1L1  AT %I* : REAL;
+    Strom1L1 AT %I* : REAL;
+	//UV Müller Holzbau
+	ActivePowerTotal_1	AT %I*	: REAL;									//{#lynus.ag#()}
+	//Abgang Direktmessung
+	ActivePowerTotal_2	AT %I*	: REAL;									//{#lynus.ag#()}
+	//Produktion PV
+	ActivePowerTotal_3	AT %I*	: REAL;									//{#lynus.ag#()}
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[lrNetzEinspeisung := ActivePowerTotal_1/1000 + ActivePowerTotal_2/1000 - prgPV.PV_Gesamt;
+
+lrElektromobilitaet	:= fbGrid1.stDataEMPower.lrPowerTotal;
+lrHolzschnitzel		:= fbGrid2.stDataEMPower.lrPowerTotal;
+lrLueftung_Kaelte	:= fbGrid3.stDataEMPower.lrPowerTotal;
+lrHousePower		:= ActivePowerTotal_1/1000 + fbGrid1.stDataEMPower.lrPowerTotal + fbGrid2.stDataEMPower.lrPowerTotal + fbGrid3.stDataEMPower.lrPowerTotal;
+
+lrBetriebMuellerBau := -fbGrid1.stDataEMPower.lrPowerTotal - fbGrid2.stDataEMPower.lrPowerTotal - fbGrid3.stDataEMPower.lrPowerTotal + lrHousePower;	
+
+//rPVProd				:= (ActivePowerTotal_3)/100 * -1;					//Invertieren
+lrAbgaenge 			:= ActivePowerTotal_2/1000;
+//lrHousePower 		:= lrBetriebMuellerBau * -1;						//Invertierte Einspeisung für Darstellung
+
+//The mapping of this function must be linked with the K-Bus State in the E/A Part
+fbKBusState(	uiKBusState_OUT=> , 
+				b_Kbus_notOk=> , 
+				word_ErrorCount=> );
+
+fbGrid1(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE, 
+	bChannel2Invers:= FALSE, 
+	bChannel3Invers:= FALSE, 
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= fbKBusState.uiKBusState_OUT, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+	
+	
+fbGrid2(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE, 
+	bChannel2Invers:= FALSE, 
+	bChannel3Invers:= FALSE, 
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= , 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+	
+fbGrid3(
+	bEnable:= TRUE, 
+	bChannel1Invers:= FALSE, 
+	bChannel2Invers:= FALSE, 
+	bChannel3Invers:= FALSE, 
+	uiCurrentTransformerRatioL1:= 400, 
+	uiCurrentTransformerRatioL2:= 400, 
+	uiCurrentTransformerRatioL3:= 400, 
+	uiKBusState_IN:= , 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgHouse">
+      <LineId Id="69" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="112" Count="1" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="76" Count="3" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="12" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="35" Count="12" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="50" Count="12" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
