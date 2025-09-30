@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_EL3446_StatusIx" Id="{edc2c35b-ab3d-4999-9b67-b9ea563b27c3}">
+    <Declaration><![CDATA[TYPE ST_EL3446_StatusIx :
+STRUCT
+	bOvercurrent : BOOL;                    //Overcurrent - Maximum measurable current is exceeded.
+	bInaccurate_Current : BOOL;             //Inaccurate Current - The measured current value is outside the limits for the current entered in CoE object 0x80n2
+	bCurrent_Guard_Warning : BOOL;          //Current Guard Warning - The measured current value is outside the warning limits entered in the CoE objects 0x80n2:06 and 0x80n2:07
+	bCurrent_Guard_Error : BOOL;            //Current Guard Error - The measured current value is outside the error limits entered in the CoE objects 0x80n2:05 and 0x80n2:08
+	bApparent_Power_Guard_Warning : BOOL;   //Apparent Power Guard Warning - The value for the apparent power is outside the warning limits entered in the CoE objects 0x80n2:0A and 0x80n2:0B
+	bApparent_Power_Guard_Error : BOOL;     //Apparent Power Guard Error - The value for the apparent power is outside the error limits for the current entered in the CoE objects 0x80n2:09 and 0x80n2:0C
+	bActive_Power_Guard_Warning : BOOL;     //Active Power Guard Warning - The value for active power is outside the warning limits entered in the CoE objects 0x80n2:0E and 0x80n2:0F
+	bActive_Power_Guard_Error : BOOL;       //Active Power Guard Error - The value for active power is outside the error limits for the current entered in CoE objects 0x80n2:0D and 0x80n2:10
+	bReactive_Power_Guard_Warning : BOOL;   //Reactive Power Guard Warning - The value for the reactive power is outside the warning limits entered in the CoE objects 0x80n2:12 and 0x80n2:13
+	bReactive_Power_Guard_Error : BOOL;     //Reactive Power Guard Error - The value for the reactive power is outside the error limits for the current entered in the CoE objects 0x80n2:11 and 0x80n2:14
+	bDPM_Inaccurate : BOOL;                 //DPM Inaccurate
+	bDPM_Timeout : BOOL;                    //DPM Toggl e- The DPM toggle is toggled by the slave when the DPM data has been updated.
+	bTxPDO_Toggle : BOOL;                   //TxPDO Toggle - The TxPDO toggle is toggled by the slave when the data of the associated TxPDO has been updated.
+	fCurrent : REAL;                        //Current - Actual measured current value
+	fActive_Power : REAL;                   //Active Power - Actually measured active power
+	fApparent_Power : REAL;                 //Apparent Power - Actual measured apparent power
+	fReactive_Power_Fundamental : REAL;     //Reactive Power Fundamental - Balanced reactive power fundamental oscillation
+	nActive_Energy : DINT;                  //Active Energy - Actually measured active energy
+END_STRUCT
+END_TYPE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

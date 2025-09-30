@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_EL3443_DPM_StatusLx" Id="{22fdb7c8-6916-4a86-a3f8-84156e8c6917}">
+    <Declaration><![CDATA[TYPE ST_EL3443_DPM_StatusLx :
+STRUCT
+    bStatus_Voltage_Sign_Bit : BOOL;             //Voltage Sign Bit - Indicates the sign of the current sine wave voltage: 1 = U > 0V, 0 = U < 0V
+    bStatus_Overvoltage : BOOL;                  //Overvoltage - Maximum measurable voltage is exceeded.
+    bStatus_Overcurrent : BOOL;                  //Overcurrent - Maximum measurable current is exceeded.
+    bStatus_Inaccurate_Voltage : BOOL;           //Inaccurate Voltage - The measured voltage value is smaller than the value entered in CoE object "F800:15 Inaccurate Threshold Voltage".
+    bStatus_Inaccurate_Current : BOOL;           //Inaccurate Current - The measured current value is smaller than the value entered in CoE object "F800:16 Inaccurate Threshold Current".
+    bStatus_Voltage_Guard_Warning : BOOL;        //Voltage Guard Warning - A warning limit of the voltage monitor has been breached.
+    bStatus_Voltage_Guard_Error : BOOL;          //Voltage Guard Error - An error limit of the voltage monitor has been breached.
+    bStatus_Current_Guard_Warning : BOOL;        //Voltage Current Warning - A warning limit of the Current monitor has been breached.
+    bStatus_Current_Guard_Error : BOOL;          //Voltage Current Error - An error limit of the Current monitor has been breached.
+    bStatus_TxPDO_Toggle : BOOL;                 //TxPDO Toggle - The TxPDO toggle is toggled by the slave when the data of the associated TxPDO is updated.
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

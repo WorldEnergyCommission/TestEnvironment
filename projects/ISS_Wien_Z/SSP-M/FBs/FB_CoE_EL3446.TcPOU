@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_CoE_EL3446" Id="{33fa00b6-3595-4c83-9d2d-7143fc5f9c84}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CoE_EL3446
+VAR_INPUT
+	m_start: BOOL;
+	nSlaveAddr	:UINT;
+	uiVoltagePhaseSelector_CH1		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 1
+	uiVoltagePhaseSelector_CH2		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 2
+	uiVoltagePhaseSelector_CH3		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 3
+	uiVoltagePhaseSelector_CH4		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 4
+	uiVoltagePhaseSelector_CH5		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 5
+	uiVoltagePhaseSelector_CH6		: UINT;											//Voltage Phase Selector 1/2/3 for Channel 6 
+END_VAR
+VAR_OUTPUT
+	m_Busy: BOOL;
+	m_CoE_Write_done: BOOL;
+	m_Error: bool;
+	udint_GetAMSNetID_Error: UDINT;
+	udint_WriteCoE_Error: UDINT;
+END_VAR
+VAR
+	i_State	:UINT:=1;
+	fb_GetAMSNetID	:FB_GetLocalAmsNetId;
+  	fb_coe_write          : FB_EcCoESdoWrite; // Function Block for writing in CoE
+
+
+	r_trig_Start: R_trig;
+	i_errorCount: INT;
+	i_AMSNetID_ReadOut_Succesfull: INT;
+	str_AMSNetID: STRING(30);
+ 	nValue     : UdINT ; (* variable to be written to the CoE Object *)
+ 	
+	i_CoE_Write_Succesfull: INT;
+	udint_Value: UDINT;
+	real_Value: REAL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+r_trig_Start(Clk := m_start);
+
+CASE i_State OF
+	1: 		// wait for start
+	IF r_trig_Start.Q THEN
+		i_State := i_State+1;
+		m_CoE_Write_done := FALSE;
+		m_Busy := TRUE;
+		m_Error := FALSE;
+	END_IF
+
+	2:		// read out ams net ID	
+	fb_GetAMSNetID.bExecute := TRUE;
+	i_State := i_State+1;
+	
+	3: 		// wait for read ot
+	IF fb_GetAMSNetID.bBusy = FALSE AND NOT fb_GetAMSNetID.bError = TRUE THEN
+		fb_GetAMSNetID.bExecute := FALSE;
+		i_AMSNetID_ReadOut_Succesfull := i_AMSNetID_ReadOut_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_GetAMSNetID.bError = TRUE THEN
+		fb_GetAMSNetID.bExecute := FALSE;
+		i_State := 100;
+	END_IF
+	
+	4: 		// read out AMS Net ID done, convert received data
+	str_AMSNetID := concat(BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[0]),'.');
+	str_AMSNetID := concat(str_AMSNetID,BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[1]));
+	str_AMSNetID := concat(str_AMSNetID,'.');	
+	str_AMSNetID := concat(str_AMSNetID,BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[2]));
+	str_AMSNetID := concat(str_AMSNetID,'.');
+	str_AMSNetID := concat(str_AMSNetID,BYTE_TO_STRING(fb_GetAMSNetID.AddrBytes[3]));
+	str_AMSNetID := concat(str_AMSNetID,'.3.1');
+	
+	i_State := 10;
+
+	10: 	// write channel 1 phase Selector
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8000;
+	fb_coe_write.nSubIndex	:= 16#11; 
+	udint_Value 			:= UINT_TO_UDINT(uiVoltagePhaseSelector_CH1);
+	fb_coe_write.pSrcBuf	:= ADR(udint_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(udint_Value);
+	i_State := i_State+1;
+	
+	11: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	12:		// wait 
+	i_State := 20;
+	
+	20: 	// write channel 2 phase Selector
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8010;
+	fb_coe_write.nSubIndex	:= 16#11; 
+	udint_Value 			:= UINT_TO_UDINT(uiVoltagePhaseSelector_CH2);
+	fb_coe_write.pSrcBuf	:= ADR(udint_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(udint_Value);
+	i_State := i_State+1;
+	
+	21: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	22:		// wait 
+	i_State := 30;
+
+	30: 	// write channel 3 phase Selector
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8020;
+	fb_coe_write.nSubIndex	:= 16#11; 
+	udint_Value 			:= UINT_TO_UDINT(uiVoltagePhaseSelector_CH3);
+	fb_coe_write.pSrcBuf	:= ADR(udint_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(udint_Value);
+	i_State := i_State+1;
+	
+	31: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	32:		// wait 
+	i_State := 40;
+	
+	40: 	// write channel 4 phase Selector
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8030;
+	fb_coe_write.nSubIndex	:= 16#11; 
+	udint_Value 			:= UINT_TO_UDINT(uiVoltagePhaseSelector_CH4);
+	fb_coe_write.pSrcBuf	:= ADR(udint_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(udint_Value);
+	i_State := i_State+1;
+	
+	41: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	42:		// wait 
+	i_State := 50;		
+
+	50: 	// write channel 5 phase Selector
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8040;
+	fb_coe_write.nSubIndex	:= 16#11; 
+	udint_Value 			:= UINT_TO_UDINT(uiVoltagePhaseSelector_CH5);
+	fb_coe_write.pSrcBuf	:= ADR(udint_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(udint_Value);
+	i_State := i_State+1;
+	
+	51: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	52:		// wait 
+	i_State := 60;		
+
+	60: 	// write channel 6 phase Selector
+	fb_coe_write.bExecute 	:= TRUE;
+	fb_coe_write.nIndex		:= 16#8050;
+	fb_coe_write.nSubIndex	:= 16#11; 
+	udint_Value 			:= UINT_TO_UDINT(uiVoltagePhaseSelector_CH6);
+	fb_coe_write.pSrcBuf	:= ADR(udint_Value);
+	fb_coe_write.cbBufLen	:= SIZEOF(udint_Value);
+	i_State := i_State+1;
+	
+	61: 	// wait for done or error
+	IF NOT fb_coe_write.bBusy AND NOT fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_CoE_Write_Succesfull := i_CoE_Write_Succesfull+1;
+		i_State := i_State+1;
+	ELSIF fb_coe_write.bError THEN
+		fb_coe_write.bExecute 	:= FALSE;
+		i_State := 100;
+	END_IF
+
+	62:		// wait 
+	m_CoE_Write_done := TRUE;
+	m_Busy := FALSE;
+	i_State := 1;		
+	
+	100: 	//error state
+	i_errorCount := i_errorCount +1;
+	udint_GetAMSNetID_Error := fb_GetAMSNetID.nErrId;
+	udint_WriteCoE_Error := fb_coe_write.nErrId;
+	m_Busy := FALSE;
+	m_Error := true;
+	i_State := 1;
+
+END_CASE
+
+
+fb_GetAMSNetID(
+	bExecute:= , 
+	tTimeOut:= T#2S, 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> , 
+	AddrString=> , 
+	AddrBytes=> );
+	
+fb_coe_write(
+	sNetId:= str_AMSNetID, 
+	nSlaveAddr:= nSlaveAddr, 
+	nSubIndex:= , 
+	nIndex:= , 
+    pSrcBuf    := ,
+    cbBufLen   := ,
+	bExecute:= , 
+	tTimeout:= T#2S , 
+	bBusy=> , 
+	bError=> , 
+	nErrId=> );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_CoE_EL3446">
+      <LineId Id="125" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="64" Count="1" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="180" Count="1" />
+      <LineId Id="144" Count="4" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="88" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="192" Count="19" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="215" Count="20" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="236" Count="19" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="257" Count="43" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="55" Count="8" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="106" Count="4" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="112" Count="4" />
+      <LineId Id="105" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
