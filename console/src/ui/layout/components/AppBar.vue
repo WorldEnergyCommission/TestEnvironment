@@ -344,7 +344,7 @@ export default defineComponent({
       return this.appState.workbenchCurrentTab ?? 0;
     },
     isWeatherServiceActive() {
-      return this.mpcState?.isWeatherServiceActive ?? false;
+      return true; //this.mpcState?.isWeatherServiceActive ?? false;
     },
     currentMember() {
       return this.membersState.currentMember;

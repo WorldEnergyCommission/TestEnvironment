@@ -176,7 +176,7 @@ const createDeviceOptions = computed(() => {
       form: "ManageMLModel",
       formTitle: t("modals.manageMLModel.createDeviceTitle"),
       btnTitle: t("uiComponents.buttons.addMlModel"),
-      visible: mpcState.value.isWeatherServiceActive && hasCurrentMemberPermission("createAI"),
+      visible: hasCurrentMemberPermission("createAI"),
     },
   ].filter((e) => e.visible && envWorkbenchButtons.includes(e.form));
 });
