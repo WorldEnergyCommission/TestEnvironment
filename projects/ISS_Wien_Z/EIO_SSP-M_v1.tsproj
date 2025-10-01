@@ -77,7 +77,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{628B03E2-02B3-471C-B8AF-3AFAD2027389}" Name="SSP-M" PrjFilePath="SSP-M\SSP-M.plcproj" TmcFilePath="SSP-M\SSP-M.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="SSP-M\SSP-M.tmc" TmcHash="{22CBD333-82E7-D6EC-B176-117E4667139F}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="SSP-M\SSP-M.tmc" TmcHash="{7B033EC1-CA57-83FB-CD9E-320A664DB056}">
 					<Name>SSP-M Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1" ContextId="1" AreaNo="16">
@@ -5528,14 +5528,68 @@
 			</Device>
 			<Device Id="3" DevType="138" AmsPort="28675" AmsNetId="5.146.126.209.4.1" RemoteName="Gerät 3 (RT-Ethernet Protocol)">
 				<Name>Gerät 3 (RT-Ethernet Protocol)</Name>
+				<AdditionalNetId>192.168.1.235.1.1</AdditionalNetId>
 				<AddressInfo>
 					<TcCom>
 						<ObjectId>#x03010014</ObjectId>
 					</TcCom>
 				</AddressInfo>
-				<Image Id="4" AddrType="1" ImageType="3">
+				<Image Id="4" AddrType="2" ImageType="3">
 					<Name>Prozessabbild</Name>
 				</Image>
+				<Box Id="7" BoxType="9005">
+					<Name>BK9050 (BK9050-0000 192.168.1.235)</Name>
+					<ImageId>103</ImageId>
+					<Vars VarGrpType="1">
+						<Name>Eingänge</Name>
+						<Var>
+							<Name>CouplerState</Name>
+							<Comment><![CDATA[0x0000 = No error
+0x0001 = Klemmenbus error
+0x0002 = Configuration error
+]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+						<Var>
+							<Name>BoxState</Name>
+							<Comment><![CDATA[0x0000 = No error
+0x0001 = No inputs received
+0x0002 = Outputs disabled
+0x0004 = No communication
+0x0008 = Old inputs
+0x0010 = Invalid input length
+0x0020 = Invalid output length
+]]></Comment>
+							<Type>UINT</Type>
+							<BitOffs>16</BitOffs>
+						</Var>
+						<Var>
+							<Name>MissedCnt</Name>
+							<Comment><![CDATA[Incremented each time new
+inputs missed
+]]></Comment>
+							<Type>UINT</Type>
+							<BitOffs>32</BitOffs>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2">
+						<Name>Ausgänge</Name>
+						<Var BoxStateVariable="true">
+							<Name>BoxCtrl</Name>
+							<Comment><![CDATA[0x0001 = Disable communication
+0x0002 = Disable outputs
+]]></Comment>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<BusCoupler ComplexTermSupport="true" NewHardware="true" RemoteName="BK9050 (BK9050-0000 192.168.1.235)_Gerät 3 (RT-Ethernet Protocol)" NetId="192.168.1.235.1.1">
+						<Term Id="1" TermType="#x2332" Fieldbus="7">
+							<Name>End-Klemme (KL9010)</Name>
+							<ImageId>32</ImageId>
+						</Term>
+					</BusCoupler>
+					<Ethernet HostName="BK9050" UDP="true"/>
+				</Box>
 				<Ethernet/>
 			</Device>
 		</Io>
