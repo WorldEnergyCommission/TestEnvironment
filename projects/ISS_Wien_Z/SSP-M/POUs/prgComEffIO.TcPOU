@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="prgComEffIO" Id="{cbcd318b-bf51-484c-bcaa-d6efcdf43fe3}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgComEffIO
 VAR
 	fbCom		: FB_MqttCommunicator_V5;
-	
+
+// 01.10.25 UserName Passwort geändert	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -12,8 +13,8 @@ END_VAR
 fbCom(
 	bConnect:= TRUE, 
 	strAuthKey:= 'ENE87365342998', 
-	sUserName:= 'c5a26c3c-d7be-49fa-bb4b-d09878f078e1', 
-	sUserPassword:= '835df6a6-a36a-4edd-98fd-f6a495ce7360', 
+	sUserName:= 'cb170005-4cd5-46fc-8835-3e3af7ea6e17', 
+	sUserPassword:= '17e5bb8d-7ef1-416f-b993-8a67621cfd7d', 
 	eSavePositionCertificate:= eSavePositionOnPLC.ePostionHardDisk,  
 	time_HeartBeat_sec:= T#15S, 
 	bConnected=> , 
@@ -22,7 +23,9 @@ fbCom(
 	eConnectionState=> , 
 	eErrorMessage_Out=> );
 
-
+// Bis 01.10.25
+//	sUserName:= 'c5a26c3c-d7be-49fa-bb4b-d09878f078e1', 
+//	sUserPassword:= '835df6a6-a36a-4edd-98fd-f6a495ce7360', 
 ]]></ST>
     </Implementation>
     <LineIds Name="prgComEffIO">
@@ -32,7 +35,9 @@ fbCom(
       <LineId Id="118" Count="6" />
       <LineId Id="112" Count="0" />
       <LineId Id="110" Count="0" />
-      <LineId Id="142" Count="1" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="156" Count="1" />
+      <LineId Id="143" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
