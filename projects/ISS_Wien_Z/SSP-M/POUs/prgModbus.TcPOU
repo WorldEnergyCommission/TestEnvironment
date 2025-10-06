@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="prgModbus" Id="{c5effa87-a89a-49c4-8da2-f92b21cd7ae1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM prgModbus
+// 06.10.25 Ladestationen
+VAR
+	FB_LS_125 :FB_ECS_KEBA_P30:= (bEnable:= TRUE, sIPAdress:= '192.168.1.125');
+	FB_LS_212 :FB_ECS_KEBA_P30:= (bEnable:= TRUE, sIPAdress:= '192.168.1.212');
+	FB_LS_120 :FB_ECS_KEBA_P30:= (bEnable:= TRUE, sIPAdress:= '192.168.1.120');
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+FB_LS_125();
+//FB_LS_212();
+//FB_LS_120();
+]]></ST>
+    </Implementation>
+    <LineIds Name="prgModbus">
+      <LineId Id="9" Count="1" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
