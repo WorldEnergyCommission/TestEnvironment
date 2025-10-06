@@ -1,13 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="prgEM" Id="{3dc4cc04-aac0-4135-8866-9b92abf24d27}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM prgEM
+// 06.10.25 Messung am BK9050 ergänzt (EM4) 
 VAR
  	fb_EL3443_EM0 		: FB_EM_Beckhoff_EL3443;
 	fb_EL3443_EM1 		: FB_EM_Beckhoff_EL3443;		//EL3443 | PDO Assignment "DPM" (DPM: Distributed Power Measurement) |3-phase power measurement terminal with extended functionality
 	fb_EL3446_1			: FB_EM_Beckhoff_EL3446;
 	fb_EL3446_2			: FB_EM_Beckhoff_EL3446;
-	
+  fb_KL3403       : FB_EM_Beckhoff_KL3403;	
+
+  iBkStatus  AT %I* : UINT;
+  
 	//EM0 (CEE32 3phase Measurement)
 	lr_RealPower_EM0		: LREAL;					//{#lynus.ag#()}
 	lr_ApparentPower_EM0	: LREAL;					//{#lynus.ag#()}
@@ -58,6 +62,11 @@ VAR
 	lrPower_EM3_3p1		: LREAL;						//{#lynus.ag#()}
 	lrPower_EM3_3p2		: LREAL;						//{#lynus.ag#()}
 
+	//EM3, connection BK9050
+	lrPower_EM4_1		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM4_2		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM4_3		: LREAL;						//{#lynus.ag#()}
+	lrPower_EM4_3p1		: LREAL;						//{#lynus.ag#()}
 END_VAR
 
 VAR_INPUT
@@ -104,6 +113,9 @@ VAR PERSISTENT
 	uiCurrentTransformerRatio_EM3_4	: UINT := 300;				//{#lynus.ag#()}
 	uiCurrentTransformerRatio_EM3_5	: UINT := 300;				//{#lynus.ag#()}
 	uiCurrentTransformerRatio_EM3_6	: UINT := 300;				//{#lynus.ag#()}
+	uiCurrentTransformerRatio_EM4_1	: UINT := 300;				//{#lynus.ag#()}
+	uiCurrentTransformerRatio_EM4_2	: UINT := 300;				//{#lynus.ag#()}
+	uiCurrentTransformerRatio_EM4_3	: UINT := 300;				//{#lynus.ag#()}
 	
 	b_Invers_EM1_1	:	BOOL := FALSE;							//{#lynus.ag#()}
 	b_Invers_EM1_2	:	BOOL := FALSE;							//{#lynus.ag#()}
@@ -120,6 +132,10 @@ VAR PERSISTENT
 	b_Invers_EM3_4	:	BOOL := FALSE;							//{#lynus.ag#()}
 	b_Invers_EM3_5	:	BOOL := FALSE;							//{#lynus.ag#()}
 	b_Invers_EM3_6	:	BOOL := FALSE;							//{#lynus.ag#()}
+	b_Invers_EM4_1	:	BOOL := FALSE;							//{#lynus.ag#()}
+	b_Invers_EM4_2	:	BOOL := FALSE;							//{#lynus.ag#()}
+	b_Invers_EM4_3	:	BOOL := FALSE;							//{#lynus.ag#()}
+
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[//EM0 (CEE32 3phase Measurement)
@@ -326,52 +342,40 @@ lrPower_EM3_5				:= 	LIMIT(0,fb_EL3446_2.stDataEMPower_CH5.lrPowerTotal,1000);
 lrPower_EM3_6				:= 	LIMIT(0,fb_EL3446_2.stDataEMPower_CH6.lrPowerTotal,1000);
 
 lrPower_EM3_3p1 			:= lrPower_EM3_1 + lrPower_EM3_2 + lrPower_EM3_3;
-lrPower_EM3_3p2 			:= lrPower_EM3_4 + lrPower_EM3_5 + lrPower_EM3_6;]]></ST>
+lrPower_EM3_3p2 			:= lrPower_EM3_4 + lrPower_EM3_5 + lrPower_EM3_6;
+
+//EM4 (for single Phase Measurements, connection BK9050)
+fb_KL3403(
+	bEnable:= TRUE, 
+	bChannel1Invers:= b_Invers_EM4_1, 
+	bChannel2Invers:= b_Invers_EM4_2, 
+	bChannel3Invers:= b_Invers_EM4_3, 
+	uiCurrentTransformerRatioL1:= uiCurrentTransformerRatio_EM4_1, 
+	uiCurrentTransformerRatioL2:= uiCurrentTransformerRatio_EM4_2, 
+	uiCurrentTransformerRatioL3:= uiCurrentTransformerRatio_EM4_3, 
+	uiKBusState_IN:= iBkStatus, 
+	stDataEMPower=> , 
+	stDataEMCounter=> , 
+	stDataEMPowerRealTime=> , 
+	stDataEMCounterRealTime=> , 
+	diNrOfEM_OUT=> );
+
+lrPower_EM4_1				:= 	LIMIT(0,fb_KL3403.stDataEMPower.lrPowerL1,1000);
+lrPower_EM4_2				:= 	LIMIT(0,fb_KL3403.stDataEMPower.lrPowerL2,1000);
+lrPower_EM4_3				:= 	LIMIT(0,fb_KL3403.stDataEMPower.lrPowerL3,1000);
+
+lrPower_EM3_3p1 		:= lrPower_EM4_1 + lrPower_EM4_2 + lrPower_EM4_3;
+
+
+]]></ST>
     </Implementation>
     <LineIds Name="prgEM">
-      <LineId Id="2167" Count="31" />
-      <LineId Id="2165" Count="1" />
-      <LineId Id="136" Count="0" />
-      <LineId Id="526" Count="5" />
-      <LineId Id="1643" Count="0" />
-      <LineId Id="1459" Count="0" />
-      <LineId Id="532" Count="4" />
-      <LineId Id="2086" Count="1" />
-      <LineId Id="2085" Count="0" />
-      <LineId Id="1505" Count="0" />
-      <LineId Id="537" Count="1" />
-      <LineId Id="610" Count="0" />
-      <LineId Id="617" Count="6" />
-      <LineId Id="616" Count="0" />
-      <LineId Id="637" Count="0" />
-      <LineId Id="1625" Count="1" />
-      <LineId Id="2082" Count="0" />
-      <LineId Id="1627" Count="0" />
-      <LineId Id="539" Count="21" />
-      <LineId Id="1702" Count="0" />
-      <LineId Id="562" Count="2" />
-      <LineId Id="1460" Count="0" />
-      <LineId Id="565" Count="22" />
-      <LineId Id="298" Count="0" />
-      <LineId Id="624" Count="0" />
-      <LineId Id="1506" Count="1" />
-      <LineId Id="2158" Count="4" />
-      <LineId Id="2157" Count="0" />
-      <LineId Id="2414" Count="1" />
-      <LineId Id="2413" Count="0" />
-      <LineId Id="2383" Count="0" />
-      <LineId Id="2163" Count="0" />
-      <LineId Id="2156" Count="0" />
-      <LineId Id="640" Count="4" />
-      <LineId Id="1759" Count="0" />
-      <LineId Id="2403" Count="0" />
-      <LineId Id="2096" Count="5" />
-      <LineId Id="2384" Count="16" />
-      <LineId Id="2119" Count="36" />
-      <LineId Id="1568" Count="0" />
-      <LineId Id="2411" Count="0" />
-      <LineId Id="2410" Count="0" />
-      <LineId Id="2412" Count="0" />
+      <LineId Id="2684" Count="206" />
+      <LineId Id="2893" Count="14" />
+      <LineId Id="2928" Count="2" />
+      <LineId Id="2937" Count="1" />
+      <LineId Id="2908" Count="1" />
+      <LineId Id="2537" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

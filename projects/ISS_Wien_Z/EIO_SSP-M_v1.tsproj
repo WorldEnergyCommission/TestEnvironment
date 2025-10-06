@@ -63,6 +63,11 @@
 	</ImageDatas>
 	<Project ProjectGUID="{841B03CC-0378-4467-85CF-EF7B995F7D6F}" TargetNetId="5.146.126.209.1.1" ShowHideConfigurations="#x3c6">
 		<System>
+			<Licenses>
+				<Target>
+					<ManualSelect>{6952449D-F68C-49A2-ADE4-8639D85B33A4}</ManualSelect>
+				</Target>
+			</Licenses>
 			<Tasks>
 				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
 					<Name>MiddleTask</Name>
@@ -77,7 +82,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{628B03E2-02B3-471C-B8AF-3AFAD2027389}" Name="SSP-M" PrjFilePath="SSP-M\SSP-M.plcproj" TmcFilePath="SSP-M\SSP-M.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="SSP-M\SSP-M.tmc" TmcHash="{7B033EC1-CA57-83FB-CD9E-320A664DB056}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="SSP-M\SSP-M.tmc" TmcHash="{80C74E7A-1F55-3F32-D1F4-F34A25FBC146}">
 					<Name>SSP-M Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1" ContextId="1" AreaNo="16">
@@ -1970,6 +1975,34 @@
 							<Name>prgHW.MDP5001_342_DPM_Variant_Value_In_Value_4_ULINT_2</Name>
 							<Type>ULINT</Type>
 						</Var>
+						<Var>
+							<Name>prgEM.iBkStatus</Name>
+							<Type>UINT</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.byStateCH1</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.iDataInCH1</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.byStateCH2</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.iDataInCH2</Name>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.byStateCH3</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.iDataInCH3</Name>
+							<Type>INT</Type>
+						</Var>
 					</Vars>
 					<Vars VarGrpType="2" ContextId="1" AreaNo="17">
 						<Name>PlcTask Outputs</Name>
@@ -2204,6 +2237,18 @@
 						<Var>
 							<Name>prgHW.MDP5001_342_DPM_Data_Data_20_2</Name>
 							<Type>UDINT</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.byCntrCH1</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.byCntrCH2</Name>
+							<Type>BYTE</Type>
+						</Var>
+						<Var>
+							<Name>prgEM.fb_KL3403.fbKL3403.byCntrCH3</Name>
+							<Type>BYTE</Type>
 						</Var>
 					</Vars>
 					<Contexts>
@@ -5549,6 +5594,7 @@
 0x0002 = Configuration error
 ]]></Comment>
 							<Type>UINT</Type>
+							<BitOffs>96</BitOffs>
 						</Var>
 						<Var>
 							<Name>BoxState</Name>
@@ -5561,7 +5607,7 @@
 0x0020 = Invalid output length
 ]]></Comment>
 							<Type>UINT</Type>
-							<BitOffs>16</BitOffs>
+							<BitOffs>112</BitOffs>
 						</Var>
 						<Var>
 							<Name>MissedCnt</Name>
@@ -5569,7 +5615,7 @@
 inputs missed
 ]]></Comment>
 							<Type>UINT</Type>
-							<BitOffs>32</BitOffs>
+							<BitOffs>128</BitOffs>
 						</Var>
 					</Vars>
 					<Vars VarGrpType="2">
@@ -5580,9 +5626,93 @@ inputs missed
 0x0002 = Disable outputs
 ]]></Comment>
 							<Type>UINT</Type>
+							<BitOffs>96</BitOffs>
 						</Var>
 					</Vars>
 					<BusCoupler ComplexTermSupport="true" NewHardware="true" RemoteName="BK9050 (BK9050-0000 192.168.1.235)_Gerät 3 (RT-Ethernet Protocol)" NetId="192.168.1.235.1.1">
+						<Term Id="2" TermType="#xd4b" Fieldbus="7">
+							<Name>Klemme 2 (KL3403)</Name>
+							<ImageId>33</ImageId>
+							<Vars VarGrpType="3">
+								<Name>Kanal 1</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>16</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>16</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 2</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>48</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>32</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>48</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+							<Vars VarGrpType="3">
+								<Name>Kanal 3</Name>
+								<Var>
+									<Name>Status</Name>
+									<Type>USINT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Ein</Name>
+									<Type>INT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>0</InOut>
+								</Var>
+								<Var>
+									<Name>Kontrolle</Name>
+									<Type>USINT</Type>
+									<BitOffs>64</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+								<Var>
+									<Name>Daten Aus</Name>
+									<Type>INT</Type>
+									<BitOffs>80</BitOffs>
+									<InOut>1</InOut>
+								</Var>
+							</Vars>
+						</Term>
 						<Term Id="1" TermType="#x2332" Fieldbus="7">
 							<Name>End-Klemme (KL9010)</Name>
 							<ImageId>32</ImageId>
@@ -5596,6 +5726,7 @@ inputs missed
 	</Project>
 	<Mappings>
 		<MappingInfo Identifier="{00000000-2002-0850-0120-500831000403}" Id="#x02030020"/>
+		<MappingInfo Identifier="{00000000-2002-0850-0120-500840000403}" Id="#x02030030"/>
 		<MappingInfo Identifier="{08502002-0010-0304-0020-500810000403}" Id="#x02030010" Watchdog="00000000000000000000000000000000"/>
 		<OwnerA Name="TIPC^SSP-M^SSP-M Instance">
 			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1200)^Term 2 (EL3443)">
@@ -6087,6 +6218,18 @@ inputs missed
 				<Link VarA="PlcTask Outputs^prgHW.MDP5001_341_Total_Variant_Value_Out_Index_2_REAL" VarB="Total Variant Value Out^Index 2 REAL" AutoLink="true"/>
 				<Link VarA="PlcTask Outputs^prgHW.MDP5001_341_Total_Variant_Value_Out_Index_3_REAL" VarB="Total Variant Value Out^Index 3 REAL" AutoLink="true"/>
 				<Link VarA="PlcTask Outputs^prgHW.MDP5001_341_Total_Variant_Value_Out_Index_4_ULINT" VarB="Total Variant Value Out^Index 4 ULINT" AutoLink="true"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 3 (RT-Ethernet Protocol)^BK9050 (BK9050-0000 192.168.1.235)">
+				<Link VarA="PlcTask Inputs^prgEM.fb_KL3403.fbKL3403.byStateCH1" VarB="Term 2 (KL3403)^Channel 1^Status"/>
+				<Link VarA="PlcTask Inputs^prgEM.fb_KL3403.fbKL3403.byStateCH2" VarB="Term 2 (KL3403)^Channel 2^Status"/>
+				<Link VarA="PlcTask Inputs^prgEM.fb_KL3403.fbKL3403.byStateCH3" VarB="Term 2 (KL3403)^Channel 3^Status"/>
+				<Link VarA="PlcTask Inputs^prgEM.fb_KL3403.fbKL3403.iDataInCH1" VarB="Term 2 (KL3403)^Channel 1^Daten Ein"/>
+				<Link VarA="PlcTask Inputs^prgEM.fb_KL3403.fbKL3403.iDataInCH2" VarB="Term 2 (KL3403)^Channel 2^Daten Ein"/>
+				<Link VarA="PlcTask Inputs^prgEM.fb_KL3403.fbKL3403.iDataInCH3" VarB="Term 2 (KL3403)^Channel 3^Daten Ein"/>
+				<Link VarA="PlcTask Inputs^prgEM.iBkStatus" VarB="Inputs^BoxState"/>
+				<Link VarA="PlcTask Outputs^prgEM.fb_KL3403.fbKL3403.byCntrCH1" VarB="Term 2 (KL3403)^Channel 1^Kontrolle"/>
+				<Link VarA="PlcTask Outputs^prgEM.fb_KL3403.fbKL3403.byCntrCH2" VarB="Term 2 (KL3403)^Channel 2^Kontrolle"/>
+				<Link VarA="PlcTask Outputs^prgEM.fb_KL3403.fbKL3403.byCntrCH3" VarB="Term 2 (KL3403)^Channel 3^Kontrolle"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>
