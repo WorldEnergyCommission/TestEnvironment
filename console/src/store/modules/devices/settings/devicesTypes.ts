@@ -2129,6 +2129,16 @@ const devicesTypes = {
       additionalBasicDevices: [],
     },
   },
+  LoadManagementList: {
+    mappings: {},
+    manageSchema: "LoadManagementSchema",
+    isSettingsView: false,
+    widthSelection: true,
+    devicesSchemas: {
+      basicDevices: [],
+      additionalBasicDevices: [],
+    },
+  },
 };
 
 export default devicesTypes;

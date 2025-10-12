@@ -50,3 +50,20 @@ export interface IRecord {
   // vs = Value string
   vs?: string;
 }
+
+export interface IVehicleRecord {
+  id?: string;
+  plate: string; // License plate
+  status: string; // aktiv/inactive
+  company: string; // Company
+  brand: string; // Brand
+  model: string; // Model Type
+  driver: string; // Current driver name
+  priority: number; // Priority level (1-3)
+  maxPower: number; // Maximum power draw (kW)
+  chipNummer: number; // Chip number (RFID) - required integer
+}
+
+export interface ILoadManagementData {
+  records: IVehicleRecord[];
+}

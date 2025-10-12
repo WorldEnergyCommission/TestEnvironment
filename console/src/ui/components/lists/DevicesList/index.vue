@@ -83,13 +83,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from "vue";
+import { defineComponent } from "vue";
 
-import BaseDevicesList from "../BaseDevicesList";
 import { IDevice } from "@/store/modules/devices/types";
-import { IProjectsState } from "@/store/modules/projects/types";
 import { RootState } from "@/store/types";
 import { DND } from "@/ui/mixins/dnd";
+import BaseDevicesList from "../BaseDevicesList";
 
 /**
  * Component that shows filtered devices, charts in the search
@@ -181,6 +180,7 @@ export default defineComponent({
         "chart",
         "HistoryAnomalyDetection",
         "StreamAnomalyDetection",
+        "LoadManagementList",
       ].some((type: string) => type === item.device.data.type);
       if (isChartOrAnomalyDevices || isEnergyDevice) {
         item.w = item.device.data.selectedWidth === "half" ? 2 : 4;

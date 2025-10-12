@@ -147,6 +147,7 @@ import EaseeSchema from "@/ui/components/modals/ManageDevice/schemas/EaseeSchema
 import EnergySchema from "@/ui/components/modals/ManageDevice/schemas/EnergySchema.vue";
 import GaugeSchema from "@/ui/components/modals/ManageDevice/schemas/GaugeSchema.vue";
 import KineticPowerSchema from "@/ui/components/modals/ManageDevice/schemas/KineticPowerSchema.vue";
+import LoadManagementSchema from "@/ui/components/modals/ManageDevice/schemas/LoadManagementSchema.vue";
 import SSPSchema from "@/ui/components/modals/ManageDevice/schemas/SSPSchema.vue";
 
 export default {
@@ -157,6 +158,7 @@ export default {
     EnergySchema,
     GaugeSchema,
     KineticPowerSchema,
+    LoadManagementSchema,
     SSPSchema,
   },
 };

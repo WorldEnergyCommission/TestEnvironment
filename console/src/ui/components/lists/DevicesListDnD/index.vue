@@ -48,12 +48,12 @@
 <script lang="ts">
 import { defineComponent, PropType } from "vue";
 
-import BaseDevicesList from "../BaseDevicesList";
 import { IDevice } from "@/store/modules/devices/types";
 import { IProject } from "@/store/modules/projects/types";
 import { IRoom } from "@/store/modules/rooms/types";
 import { RootState } from "@/store/types";
-import { DND, IDeviceDnDLayout, IDnDSize, IDnDPosition } from "@/ui/mixins/dnd";
+import { DND, IDeviceDnDLayout, IDnDPosition } from "@/ui/mixins/dnd";
+import BaseDevicesList from "../BaseDevicesList";
 
 /**
  * Component that represent all devices list in Drag and Drop grid.
@@ -246,6 +246,7 @@ export default defineComponent({
           "HistoryAnomalyDetection",
           "StreamAnomalyDetection",
           "WeekTrendSummary",
+          "LoadManagementList",
         ].some((type: string) => type === item.device.data.type);
         if (isChartOrAnomalyDevices || isEnergyDevice) {
           item.w = item.device.data.selectedWidth === "half" ? 2 : 4;

@@ -174,6 +174,7 @@ const DEFAULT_WHITELABEL_CONFIG_VALUES = {
     "WeatherStation",
     "EaseeWallbox",
     "WeekTrendSummary",
+    "LoadManagementList",
   ], // can be overwritten
   SHOW_PROJECT_TYPE_SELECTION: false,
   PROJECT_MENU_ENTRIES: [

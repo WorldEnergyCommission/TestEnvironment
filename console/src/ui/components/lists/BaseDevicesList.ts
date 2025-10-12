@@ -301,6 +301,11 @@ const WeekTrendSummary = defineAsyncComponent({
   loadingComponent: CircleSpinner,
 });
 
+const LoadManagementList = defineAsyncComponent({
+  loader: () => import("@/ui/components/devices/devices/LoadManagementList.vue"),
+  loadingComponent: CircleSpinner,
+});
+
 const AdamCurve = defineAsyncComponent({
   loader: () => import("@/ui/components/devices/devices/AdamCurve.vue"),
   loadingComponent: CircleSpinner,
@@ -382,6 +387,7 @@ export default defineComponent({
     VentilatorSwitch,
     WeatherStation,
     WeekTrendSummary,
+    LoadManagementList,
     // New Modules
     EnergyViewModule,
     LoadMonitor,
