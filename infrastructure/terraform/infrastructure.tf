@@ -23,16 +23,16 @@ provider "exoscale" {
 
 resource "exoscale_sks_cluster" "efficientio_sks_cluster" {
   zone           = local.zone
-  name           = "efficientio_sks_cluster"
+  name           = "${var.exoscale_cluster_name}_sks_cluster"
   auto_upgrade   = "false"
   exoscale_ccm   = "true"
   metrics_server = "true"
   service_level  = "pro"
-  version        = "1.31.0"
+  version        = "1.31.13"
 }
 
 resource "exoscale_security_group" "efficientio_security_group" {
-  name = "efficientio_security_group"
+  name = "${var.exoscale_cluster_name}_security_group"
 }
 
 resource "exoscale_security_group_rule" "efficientio_sks_kubelet_security_group_rule" {
@@ -63,7 +63,7 @@ resource "exoscale_security_group_rule" "efficientio_calico_traffic_security_gro
 }
 
 resource "exoscale_security_group" "ads_over_mqtt_security_group" {
-  name = "ads_over_mqtt_security_group"
+  name = "${var.exoscale_cluster_name}_ads_over_mqtt_security_group"
 }
 
 resource "exoscale_security_group_rule" "ads_over_mqtt_security_group_rule" {
@@ -76,7 +76,7 @@ resource "exoscale_security_group_rule" "ads_over_mqtt_security_group_rule" {
 }
 
 resource "exoscale_security_group" "ssh_access_security_group" {
-  name = "ssh_access_security_group"
+  name = "${var.exoscale_cluster_name}_ssh_access_security_group"
 }
 
 resource "exoscale_security_group_rule" "ssh_access_security_group_rule" {
@@ -89,7 +89,7 @@ resource "exoscale_security_group_rule" "ssh_access_security_group_rule" {
 }
 
 resource "exoscale_security_group" "rdp_access_security_group" {
-  name = "rdp_access_security_group"
+  name = "${var.exoscale_cluster_name}_rdp_access_security_group"
 }
 
 resource "exoscale_security_group_rule" "rdp_access_security_group_rule" {
@@ -103,13 +103,13 @@ resource "exoscale_security_group_rule" "rdp_access_security_group_rule" {
 
 resource "exoscale_private_network" "efficientio_private_network" {
   zone = local.zone
-  name = "efficientio_private_network"
+  name = "${var.exoscale_cluster_name}_private_network"
 }
 
 resource "exoscale_sks_nodepool" "efficientio_huge_sks_nodepool" {
   cluster_id         = exoscale_sks_cluster.efficientio_sks_cluster.id
   zone               = local.zone
-  name               = "efficientio_huge_sks_nodepool"
+  name               = "${var.exoscale_cluster_name}_huge_sks_nodepool"
   instance_type      = var.exoscale_huge_sks_nodepool_instance_type
   size               = var.exoscale_huge_sks_nodepool_size
   disk_size          = 400
@@ -121,7 +121,7 @@ resource "exoscale_sks_nodepool" "efficientio_huge_sks_nodepool" {
 resource "exoscale_sks_nodepool" "efficientio_large_sks_nodepool" {
   cluster_id         = exoscale_sks_cluster.efficientio_sks_cluster.id
   zone               = local.zone
-  name               = "efficientio_large_sks_nodepool"
+  name               = "${var.exoscale_cluster_name}_large_sks_nodepool"
   instance_type      = "standard.large"
   size               = 2
   disk_size          = 400
@@ -153,8 +153,8 @@ resource "aws_s3_bucket" "backup-s3-bucket" {
 }
 
 resource "exoscale_iam_role" "efficientio_s3_buckets_role" {
-  name        = "efficientio_s3_buckets_role"
-  description = "efficientio_s3_buckets_role"
+  name        = "${var.exoscale_cluster_name}_s3_buckets_role"
+  description = "${var.exoscale_cluster_name}_s3_buckets_role"
   editable    = false
   policy      = {
     default_service_strategy = "deny"
@@ -167,7 +167,7 @@ resource "exoscale_iam_role" "efficientio_s3_buckets_role" {
 }
 
 resource "exoscale_iam_api_key" "efficientio_s3_buckets_access_key" {
-  name    = "efficientio_s3_buckets_access_key"
+  name    = "${var.exoscale_cluster_name}_s3_buckets_access_key"
   role_id = exoscale_iam_role.efficientio_s3_buckets_role.id
 }
 

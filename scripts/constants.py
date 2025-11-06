@@ -1,4 +1,4 @@
-ALL_CLUSTERS = ['eneries', 'peneder']
+ALL_CLUSTERS = ['eneries', 'peneder', 'wec']
 
 
 def get_clusters(cluster: str) -> list[str]:
