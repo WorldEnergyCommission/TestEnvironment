@@ -218,7 +218,7 @@ spec:
       targetPort: 8000
   type: ClusterIP
 ---
-apiVersion: keda.sh/v2
+apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: mpc-worker
@@ -358,7 +358,7 @@ spec:
       priorityClassName: mpc-training-worker-priority
       terminationGracePeriodSeconds: 600 # Time to wait before moving from a TERM signal to the pod's main process to a KILL signal.
 ---
-apiVersion: keda.sh/v2
+apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: mpc-training-worker
